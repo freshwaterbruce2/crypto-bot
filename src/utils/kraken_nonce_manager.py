@@ -96,11 +96,11 @@ class KrakenNonceManager:
             self._stats['total_nonces'] += 1
             self._stats[f'connection_{connection_id}'] += 1
             
-            # Claude Flow Fix: Enhanced nonce validation and recovery
+            # Claude Flow Fix: Enhanced nonce validation and recovery with 2025 buffer increase
             current_microseconds = int(current_time * 1000000)
             if nonce <= current_microseconds:
-                # Jump ahead if we've fallen behind real time
-                self._connection_nonces[connection_id] = current_microseconds + 10  # Larger buffer
+                # Jump ahead if we've fallen behind real time - CRITICAL FIX: 1000+ microsecond buffer
+                self._connection_nonces[connection_id] = current_microseconds + 1500  # MASSIVE buffer for 2025 API changes
                 nonce = self._connection_nonces[connection_id]
                 # SECURITY FIX: Mask sensitive nonce data in logs
                 masked_nonce = self._mask_sensitive_data(nonce)

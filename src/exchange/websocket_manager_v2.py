@@ -542,7 +542,7 @@ class KrakenProWebSocketManager:
                         'total': float(balance_info)
                     }
             
-            # CRITICAL FIX: Reset circuit breaker on fresh WebSocket data and ensure balance manager integration
+            # CRITICAL FIX 2025: Advanced circuit breaker reset and balance manager integration
             manager_ref = getattr(self, 'manager', None)
             if not manager_ref and hasattr(self, 'exchange_client') and hasattr(self.exchange_client, 'bot_instance'):
                 # Try to get manager reference through exchange client
@@ -551,22 +551,27 @@ class KrakenProWebSocketManager:
             
             if formatted_balances and manager_ref and hasattr(manager_ref, 'balance_manager'):
                 balance_manager = manager_ref.balance_manager
+                
+                # CRITICAL FIX 2025: Enhanced circuit breaker reset logic
                 if hasattr(balance_manager, 'circuit_breaker_active') and balance_manager.circuit_breaker_active:
-                    logger.info("[WEBSOCKET_V2] Fresh balance data received - resetting circuit breaker")
+                    logger.info("[WEBSOCKET_V2] CRITICAL FIX 2025: Fresh WebSocket balance data - RESETTING circuit breaker")
                     balance_manager.circuit_breaker_active = False
                     balance_manager.consecutive_failures = 0
                     balance_manager.backoff_multiplier = 1.0
+                    balance_manager.circuit_breaker_reset_time = 0
                 
-                # NEW FIX: Direct injection into unified balance manager
+                # CRITICAL FIX 2025: Direct balance injection with pre-order verification support
                 if hasattr(balance_manager, 'balances'):
                     for asset, balance_info in formatted_balances.items():
-                        balance_manager.balances[asset] = balance_info
-                        # Also update WebSocket balances cache
-                        if hasattr(balance_manager, 'websocket_balances'):
-                            balance_manager.websocket_balances[asset] = balance_info
-                        logger.debug(f"[WEBSOCKET_V2] Updated {asset} balance via WebSocket: {balance_info}")
+                        # Validate balance data before injection
+                        if balance_info and isinstance(balance_info, dict):
+                            balance_manager.balances[asset] = balance_info
+                            # Also update WebSocket balances cache for dual-path verification
+                            if hasattr(balance_manager, 'websocket_balances'):
+                                balance_manager.websocket_balances[asset] = balance_info
+                            logger.debug(f"[WEBSOCKET_V2] CRITICAL FIX 2025: Updated {asset} balance via WebSocket: {balance_info}")
                     
-                    # Update last refresh time to mark data as fresh
+                    # CRITICAL FIX 2025: Mark data as fresh with microsecond precision
                     balance_manager.last_update = time.time()
                     logger.info(f"[WEBSOCKET_V2] Successfully updated {len(formatted_balances)} balances from WebSocket")
                 

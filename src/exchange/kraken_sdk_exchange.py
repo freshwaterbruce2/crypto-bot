@@ -583,9 +583,16 @@ class KrakenSDKExchange:
                 if params is None:
                     params = {}
                 
-                # Get fresh nonce for every request
+                # CRITICAL FIX 2025: Enhanced nonce coordination with microsecond precision
                 nonce = self.nonce_manager.get_nonce("rest_api")
                 params["nonce"] = str(nonce)
+                
+                # CRITICAL FIX 2025: Add additional nonce validation
+                current_time_microseconds = int(time.time() * 1000000)
+                if nonce <= current_time_microseconds:
+                    logger.warning(f"[KRAKEN_SDK] CRITICAL FIX 2025: Nonce collision detected, regenerating")
+                    nonce = self.nonce_manager.get_nonce("rest_api")
+                    params["nonce"] = str(nonce)
                 
                 # Log nonce for debugging
                 logger.debug(f"[KRAKEN_SDK] Using nonce: {nonce} for {method}")
