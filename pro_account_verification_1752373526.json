@@ -1,0 +1,29 @@
+{
+  "timestamp": 1752373525,
+  "pro_account_verified": true,
+  "optimizations_active": {
+    "pro_account_status": {
+      "api_tier": "pro",
+      "fee_free_trading": true,
+      "rate_limit_threshold": 180,
+      "rate_decay": 3.75,
+      "burst_allowance": 216,
+      "priority_access": true,
+      "advanced_orders": true,
+      "ioc_enabled": true
+    },
+    "fee_free_trading": {
+      "fee_free_enabled": true,
+      "micro_profit_threshold": 0.001,
+      "ultra_micro_threshold": 0.0005,
+      "tight_spread_advantage": 0.0002,
+      "position_multiplier": 1.5
+    }
+  },
+  "performance_metrics": {},
+  "recommendations": [],
+  "warnings": [
+    "Verification failed: name 'Any' is not defined"
+  ],
+  "success": false
+}

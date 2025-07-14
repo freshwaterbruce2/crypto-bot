@@ -1,0 +1,17 @@
+# Memory Server
+claude mcp add memory "npx" "@modelcontextprotocol/server-memory"
+
+# PostgreSQL Server (adjust connection string as needed)
+claude mcp add postgres "npx" "@modelcontextprotocol/server-postgres" "postgresql://user:password@localhost:5432/trading_bot"
+
+# Time/Scheduler Server (using cron-style scheduler)
+claude mcp add scheduler "npx" "@modelcontextprotocol/server-cron"
+
+# Alternative: SQLite for easier setup than PostgreSQL
+claude mcp add sqlite "npx" "@modelcontextprotocol/server-sqlite" "trading_bot.db"
+
+# List all servers
+claude mcp list
+
+# Start MCP server
+claude mcp serve

@@ -1,0 +1,46 @@
+QUICK INSTALLATION STEPS FOR CLAUDE CODE
+========================================
+
+You need to run these commands as Administrator.
+Here's the easiest way:
+
+STEP 1: Open Command Prompt as Administrator
+--------------------------------------------
+1. Press Windows Key + X
+2. Select "Terminal (Admin)" or "Command Prompt (Admin)"
+3. Click "Yes" on the UAC prompt
+
+STEP 2: Enable WSL Features (Copy & Paste These)
+------------------------------------------------
+Run these commands one by one:
+
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+STEP 3: Restart Your Computer
+-----------------------------
+This is MANDATORY. Restart now.
+
+STEP 4: After Restart - Install Ubuntu
+--------------------------------------
+1. Open Command Prompt as Administrator again
+2. Run: wsl --install -d Ubuntu
+3. Wait for download and installation
+4. Create username and password when prompted
+
+STEP 5: Install Claude Code in Ubuntu
+-------------------------------------
+1. Open Ubuntu from Start Menu
+2. Run these commands:
+
+cd /mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/
+bash setup_claude_ubuntu.sh
+
+3. After installation, run: claude auth
+4. Follow the browser authentication
+
+DONE! You can now use: claude
+
+For your trading bot, navigate to:
+cd /mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/

@@ -1,0 +1,196 @@
+You are tasked with conducting a comprehensive final review and optimization of a cryptocurrency trading bot. This is a critical analysis that will determine the success of a personal trading project that has been in development for an extended period.
+
+## IMMEDIATE EXECUTION PLAN
+
+### STEP 1: CODEBASE MAPPING AND ANALYSIS
+```bash
+# Use filesystem MCP to get complete project structure
+cd /mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025
+find . -name "*.py" | head -20
+ls -la src/
+ls -la config/
+tree -L 3 .
+```
+
+### STEP 2: CRITICAL ERROR DETECTION
+Execute these searches to identify key issues:
+
+```bash
+# Find all minimum order size references
+grep -r "minimum" src/ config/ --include="*.py" -n
+grep -r "min_order" src/ config/ --include="*.py" -n
+grep -r "2.0" src/ config/ --include="*.py" -n
+
+# Find sell logic implementations
+grep -r "sell" src/ --include="*.py" -n | grep -E "(def|class|async def)"
+grep -r "autonomous" src/ --include="*.py" -n
+
+# Find async/await issues
+grep -r "def " src/ --include="*.py" -n | grep -v "async def" | head -10
+grep -r "\.join\|\.sleep\|\.get" src/ --include="*.py" -n | grep -v "await"
+```
+
+### STEP 3: RESEARCH CURRENT KRAKEN REQUIREMENTS
+Use web search and puppeteer to research:
+
+```python
+# Web search for current information
+search_query = "Kraken exchange minimum order size 2025 cryptocurrency trading requirements"
+# Find current minimum order sizes for major cryptocurrencies on Kraken
+# Research fee-free trading conditions
+# Verify WebSocket V2 API best practices
+```
+
+### STEP 4: ANALYZE CORE TRADING MODULES
+Examine these critical files in detail:
+
+```bash
+# Core trading logic
+cat src/bot.py | head -50
+cat src/trade_execution.py | head -50
+cat src/trading_loop.py | head -50
+
+# Strategy implementations
+ls -la src/strategies/
+cat src/strategies/fast_start_strategy.py | head -30
+
+# Configuration management
+cat config.json
+cat src/config.py | head -30
+
+# Exchange integration
+cat src/kraken_interface.py | head -30
+cat src/enhanced_websocket_manager.py | head -30
+```
+
+### STEP 5: DATA FLOW ANALYSIS
+Map the complete data architecture:
+
+```bash
+# Find all data sources and destinations
+grep -r "websocket\|WebSocket" src/ --include="*.py" -n
+grep -r "REST\|rest\|api" src/ --include="*.py" -n
+grep -r "ccxt\|CCXT" src/ --include="*.py" -n
+grep -r "kraken" src/ --include="*.py" -n
+
+# Identify data transformation points
+grep -r "process\|transform\|convert" src/ --include="*.py" -n
+```
+
+### STEP 6: SPECIFIC PROBLEM AREAS TO INVESTIGATE
+
+**A. Minimum Order Size Implementation:**
+- Current implementation of minimum order checking
+- Variable definition and usage across modules
+- Asset price vs minimum order validation
+- Dynamic calculation based on current prices
+
+**B. Sell Logic Conflicts:**
+- Autonomous sell engine location and logic
+- Strategy-level selling implementations
+- Race condition possibilities
+- Decision priority and coordination
+
+**C. Initialization Order:**
+- Startup sequence analysis
+- Dependency injection patterns
+- Async initialization compliance
+- Error handling during startup
+
+**D. Capital Deployment Logic:**
+- Available capital calculation
+- Full deployment detection
+- Queue management for pending orders
+- Signal generation during deployment
+
+### STEP 7: ARCHITECTURAL ASSESSMENT
+Evaluate current vs target architecture:
+
+**Current Architecture Analysis:**
+- Identify existing manager/coordinator patterns
+- Map current assistant/helper implementations
+- Assess component communication methods
+- Evaluate separation of concerns
+
+**Target Architecture Requirements:**
+- Manager + 5 Assistants pattern implementation
+- Infinity loop trading cycle optimization
+- Self-management capability integration
+- Async-first design compliance
+
+### STEP 8: PERFORMANCE AND OPTIMIZATION REVIEW
+```bash
+# Find performance bottlenecks
+grep -r "time\.sleep\|asyncio\.sleep" src/ --include="*.py" -n
+grep -r "requests\." src/ --include="*.py" -n  # Should be async
+grep -r "\.get\|\.post" src/ --include="*.py" -n | grep -v "await"
+
+# Memory and resource usage
+grep -r "cache\|Cache" src/ --include="*.py" -n
+grep -r "log\|Log" src/ --include="*.py" -n | head -10
+```
+
+### STEP 9: INTEGRATION ANALYSIS
+Assess multi-library coordination:
+
+```bash
+# Library usage conflicts
+grep -r "import ccxt" src/ --include="*.py" -n
+grep -r "import kraken" src/ --include="*.py" -n
+grep -r "from ccxt" src/ --include="*.py" -n
+grep -r "from kraken" src/ --include="*.py" -n
+
+# API call redundancy
+grep -r "fetch\|get_\|create_order" src/ --include="*.py" -n | head -20
+```
+
+### STEP 10: DELIVERABLE GENERATION
+Based on analysis, provide:
+
+1. **CRITICAL ERROR REPORT**
+   - Line-by-line errors with specific fixes
+   - Priority ranking (P0, P1, P2)
+   - Estimated fix complexity
+
+2. **MINIMUM ORDER SIZE FIX**
+   - Global variable implementation: MINIMUM_ORDER_SIZE_TIER1 = 2.0
+   - Asset eligibility filtering logic
+   - Dynamic price-based validation
+
+3. **SELL LOGIC UNIFICATION**
+   - Conflict resolution strategy
+   - Unified decision architecture
+   - Race condition elimination
+
+4. **INFINITY LOOP OPTIMIZATION**
+   - Current implementation assessment
+   - Optimization recommendations
+   - Performance improvements
+
+5. **SELF-MANAGEMENT INTEGRATION**
+   - Learning capability assessment
+   - Diagnosis system implementation
+   - Repair mechanism design
+   - Optimization engine integration
+
+## EXECUTION REQUIREMENTS
+
+- Use advanced reasoning and step-by-step analysis
+- Leverage all available MCP tools (filesystem, web search, puppeteer)
+- Provide specific, actionable recommendations
+- Include code examples for critical fixes
+- Maintain async-first approach throughout
+- Focus on fast small profits accumulation strategy
+- Ensure Kraken-specific optimizations
+
+## SUCCESS METRICS
+
+- Zero initialization errors
+- Unified sell logic without conflicts
+- Proper minimum order size handling
+- Efficient infinity loop implementation
+- Functional self-management capabilities
+- Optimized data flow architecture
+- Robust error handling and recovery
+
+Begin immediate analysis and provide comprehensive findings with specific implementation plans for each identified issue.

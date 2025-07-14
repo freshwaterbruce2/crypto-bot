@@ -1,0 +1,28 @@
+# Kraken Trading Bot Requirements
+# Minimal dependencies for production
+
+# Kraken SDK for API and WebSocket V2 - UPDATED 2025
+python-kraken-sdk>=0.7.4
+
+# Core async and networking
+aiohttp>=3.9.0
+asyncio-throttle>=1.0.2
+websockets>=12.0
+
+# Data handling
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Environment and configuration
+python-dotenv>=1.0.0
+
+# Logging
+colorlog>=6.7.0
+
+# Trading calculations
+python-dateutil>=2.8.2
+
+# Enhanced trading performance (2025 optimizations)
+ccxt>=4.4.94      # Latest CCXT with Kraken Pro features
+aiofiles>=23.2.1  # Async file operations
+orjson>=3.9.10    # Fast JSON parsing

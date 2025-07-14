@@ -1,0 +1,457 @@
+{
+  "exchange": "kraken",
+  "exchange_config": {
+    "rate_limit": 180,
+    "rate_limit_decay": 3.75,
+    "nonce_window_ms": 10000,
+    "enable_websocket_auth": true,
+    "validate_minimums": true
+  },
+  "live_trading": true,
+  "trading_enabled": true,
+  "log_level": "INFO",
+  "trade_pairs": [
+    "SHIB/USDT",
+    "DOGE/USDT",
+    "ADA/USDT",
+    "XRP/USDT",
+    "TRX/USDT",
+    "VET/USDT",
+    "XLM/USDT"
+  ],
+  "interval_minutes": 1,
+  "position_size_usdt": 4.2,
+  "min_order_size_usdt": 4.2,
+  "max_order_size_usdt": 58.0,
+  "tier_1_trade_limit": 4.2,
+  "use_dynamic_position_sizing": true,
+  "position_size_percentage": 0.7,
+  "enable_size_validation": true,
+  "skip_insufficient_balance": true,
+  "take_profit_pct": 0.002,
+  "stop_loss_pct": 0.008,
+  "position_cycling": {
+    "enabled": true,
+    "max_hold_time_hours": 0.083,
+    "force_sell_profitable_after_hours": 0.017,
+    "check_interval_minutes": 0.167,
+    "min_profit_to_sell_early": 0.001
+  },
+  "risk_per_trade": 0.03,
+  "min_trade_value_usd": 2.0,
+  "emergency_min_trade_value": 2.0,
+  "minimum_balance_threshold": 1.0,
+  "portfolio_aware_min_balance": 1.0,
+  "dynamic_minimum_enabled": true,
+  "confidence_based_sizing": false,
+  "max_portfolio_risk": 0.5,
+  "max_asset_exposure": 0.6,
+  "max_position_pct": 0.7,
+  "circuit_breaker_drawdown": 3.0,
+  "circuit_breaker_volatility": 2.0,
+  "disable_risk_checks": false,
+  "disable_balance_checks": false,
+  "force_trade_execution": false,
+  "risk_management": {
+    "enabled": true,
+    "use_unified_risk_manager": true,
+    "use_stop_loss_orders": true,
+    "use_volatility_sizing": true,
+    "max_daily_loss_pct": 5.0,
+    "max_consecutive_losses": 3,
+    "emergency_shutdown_loss_pct": 10.0,
+    "circuit_breaker_cooldown_minutes": 30,
+    "trailing_stop_activation_pct": 0.5,
+    "trailing_stop_distance_pct": 0.3
+  },
+  "max_position_risk": 0.2,
+  "log_dir": "D:/trading_data/logs",
+  "historical_data_dir": "D:/trading_data/historical",
+  "kraken_enhanced_rate_limiting": true,
+  "kraken_api_tier": "pro",
+  "kraken_websocket_connections": 2,
+  "kraken_rate_limit_backoff": true,
+  "rate_limiting_v2": {
+    "enabled": true,
+    "max_orders_per_minute": 200,
+    "aggressive_counter_management": true,
+    "pro_tier_optimization": true
+  },
+  "websocket_health_monitoring": true,
+  "prevent_duplicate_launch": true,
+  "disk_space_threshold": 90,
+  "auto_cleanup_logs": true,
+  "websocket_reconnect_max_retries": 10,
+  "websocket_ping_interval": 30,
+  "websocket_reconnect_delay": 5,
+  "websocket_message_timeout": 60,
+  "websocket_2025_config": {
+    "connection_rate_limit": {
+      "enabled": true,
+      "max_attempts_per_window": 400,
+      "rate_limit_window_seconds": 600,
+      "pro_tier_buffer": 0.8
+    },
+    "proactive_token_refresh": {
+      "enabled": true,
+      "token_lifetime_minutes": 15,
+      "refresh_before_minutes": 2,
+      "multiple_token_support": true
+    },
+    "heartbeat_monitoring": {
+      "enabled": true,
+      "timeout_seconds": 30,
+      "warning_threshold_seconds": 15
+    }
+  },
+  "circuit_breaker_2025": {
+    "websocket_integration": true,
+    "max_websocket_errors": 5,
+    "websocket_error_window_seconds": 300,
+    "non_critical_error_tracking": true
+  },
+  "rate_limit_monitoring_interval": 30,
+  "rate_limit_metrics_retention": 100,
+  "rate_limit_alert_threshold": 0.8,
+  "api_tier": "pro",
+  "websocket_max_message_age": 120,
+  "enable_hot_reload": true,
+  "enable_dynamic_strategies": true,
+  "max_ohlc_records": 500,
+  "cleanup_interval_minutes": 60,
+  "log_rotation_days": 7,
+  "log_max_size_mb": 50,
+  "min_balance_threshold": 1.0,
+  "min_order_value_usd": 2.0,
+  "ai_learning_enabled": true,
+  "adaptive_sizing_enabled": true,
+  "regime_detection_enabled": true,
+  "target_execution_ms": 50,
+  "min_confidence_threshold": 0.3,
+  "ultra_aggressive_mode": true,
+  "emergency_mode": false,
+  "micro_scalping_engine": {
+    "enabled": true,
+    "pro_tier_optimization": true,
+    "parallel_execution": true,
+    "neural_optimized": true,
+    "ultra_fast_target": 0.0012,
+    "fast_target": 0.0024,
+    "medium_target": 0.0036,
+    "max_target": 0.0058
+  },
+  "fee_free_scalping": {
+    "enabled": true,
+    "min_profit_target": 0.001,
+    "max_hold_time_seconds": 300,
+    "rapid_fire_mode": true,
+    "consecutive_wins_boost": 3,
+    "target_daily_trades": 100,
+    "max_concurrent_positions": 10,
+    "ultra_tight_stops": true,
+    "stop_loss_pct": 0.001
+  },
+  "dynamic_profit_targets": {
+    "ultra_fast": 0.001,
+    "fast": 0.002,
+    "medium": 0.003,
+    "conservative": 0.005
+  },
+  "max_position_multiplier": 3.5,
+  "min_position_multiplier": 1.0,
+  "micro_scalping_mode": true,
+  "fee_free_optimization": true,
+  "fee_free_trading": true,
+  "profit_accumulation_target": 0.2,
+  "ultra_low_latency": true,
+  "aggressive_opportunity_detection": true,
+  "assistant_manager_enabled": true,
+  "portfolio_intelligence": {
+    "enabled": true,
+    "reallocation_threshold": 0.8,
+    "min_profit_for_reallocation": 0.3,
+    "max_positions_before_reallocation": 8,
+    "smart_balance_checking": true,
+    "deployed_capital_awareness": true,
+    "dynamic_minimums_based_on_confidence": true,
+    "reallocation_check_interval": 300
+  },
+  "data_directory": "D:/trading_data",
+  "position_sizing_aggressive": 0.7,
+  "max_capital_deployment_pct": 0.6,
+  "ultra_fresh_data_mode": true,
+  "learning_acceleration": true,
+  "order_settings": {
+    "default_order_type": "market",
+    "allow_limit_orders": false,
+    "allow_stop_orders": false,
+    "sell_full_position": true,
+    "track_exact_amounts": true
+  },
+  "strategy": "quantum_fluctuation_scalper",
+  "quantum_strategy_config": {
+    "enabled_pairs": [
+      "SHIB/USDT",
+      "DOGE/USDT",
+      "ADA/USDT",
+      "XRP/USDT",
+      "MATIC/USDT",
+      "ALGO/USDT",
+      "TRX/USDT",
+      "VET/USDT"
+    ],
+    "obi_levels": 10,
+    "collapse_threshold": 0.55,
+    "tunnel_activation_threshold": 0.6,
+    "position_size_pct": 2.0,
+    "profit_target_pct": 1.5
+  },
+  "mean_reversion_config": {
+    "window": 20,
+    "deviation": 2.0,
+    "stop_loss_pct": 0.008,
+    "take_profit_pct": 0.015,
+    "trailing_stop_pct": 0.005,
+    "signal_confirmation_period": 1
+  },
+  "fast_start_config": {
+    "profit_target": 1.5,
+    "stop_loss": 2.0,
+    "min_confidence": 0.3
+  },
+  "advanced_strategy_params": {
+    "tier_multipliers": {
+      "T1": 1.5,
+      "T2": 1.0,
+      "T3": 0.7,
+      "T4": 0.5,
+      "default": 0.6
+    },
+    "dca_params": {
+      "trigger_pct": -2.5,
+      "amount_usd": 2.0,
+      "max_dca_levels": 5,
+      "scaling_factor": 1.5,
+      "cooldown_minutes": 60
+    },
+    "position_sizing": {
+      "aggressive_multiplier": 0.85,
+      "conservative_multiplier": 0.5,
+      "micro_trade_minimum": 1.0,
+      "max_single_trade_pct": 10.0
+    },
+    "profit_taking": {
+      "fast_profit_threshold": 1.0,
+      "medium_profit_threshold": 1.5,
+      "large_profit_threshold": 2.0,
+      "trailing_stop_enabled": true,
+      "trailing_stop_pct": 0.5
+    },
+    "tier_management": {
+      "auto_tier_adjustment": true,
+      "performance_review_hours": 24,
+      "promotion_threshold": 5.0,
+      "demotion_threshold": -3.0,
+      "tier_rebalance_enabled": true
+    },
+    "market_conditions": {
+      "volatility_high_threshold": 5.0,
+      "volatility_low_threshold": 1.0,
+      "trend_strength_threshold": 0.7,
+      "market_sentiment_weight": 0.3
+    },
+    "execution_params": {
+      "order_retry_attempts": 3,
+      "retry_delay_seconds": 2,
+      "slippage_tolerance_pct": 0.1,
+      "execution_timeout_seconds": 30
+    },
+    "confidence_thresholds": {
+      "minimum": 0.25,
+      "preferred": 0.32,
+      "immediate": 0.42,
+      "emergency": 0.08,
+      "buy": 0.25,
+      "sell": 0.18
+    },
+    "signal_confidence_format": "decimal"
+  },
+  "pair_discovery": {
+    "last_update": "2025-07-01T09:58:08.725836",
+    "method": "kraken_api_assetpairs",
+    "total_usdt_pairs_available": 37,
+    "selected_pairs": 12,
+    "invalid_pairs_removed": [],
+    "recommended_pairs_added": []
+  },
+  "opportunity_scanner": {
+    "scan_interval": 5,
+    "min_arbitrage_profit": 0.1,
+    "min_momentum_change": 0.05,
+    "cooldown_seconds": 10
+  },
+  "capital_deployment": {
+    "enabled": true,
+    "min_available_usdt": 10.0,
+    "max_deployment_percentage": 70.0,
+    "deployment_check_interval": 30,
+    "prioritize_exits_when_deployed": true,
+    "log_deployment_status": true,
+    "force_liquidation_when_needed": true,
+    "liquidation_priority": [
+      "lowest_profit",
+      "oldest_position",
+      "highest_value"
+    ]
+  },
+  "portfolio_rebalancing": {
+    "enabled": true,
+    "min_confidence_threshold": 0.7,
+    "max_reallocation_percent": 50,
+    "prefer_small_positions": true,
+    "min_position_value_usd": 2.0,
+    "rebalance_cooldown_minutes": 5,
+    "priority_assets": [
+      "AI16Z",
+      "ALGO",
+      "AVAX",
+      "SOL"
+    ],
+    "protected_assets": [],
+    "auto_execute": true
+  },
+  "kraken": {
+    "use_official_sdk": true,
+    "sdk_version": "3.2.2",
+    "rate_limit_tier": "starter",
+    "websocket_version": "v2",
+    "use_authenticated_feeds": true,
+    "symbol_mapping_enabled": true,
+    "websocket_settings": {
+      "public_url": "wss://ws.kraken.com/v2",
+      "private_url": "wss://ws-auth.kraken.com/v2",
+      "token_refresh_interval": 600,
+      "ping_interval": 20,
+      "ping_timeout": 10,
+      "reconnect_interval": 5,
+      "max_reconnect_attempts": 10,
+      "enable_auth_manager": true
+    }
+  },
+  "rapid_fire_mode": {
+    "enabled": true,
+    "consecutive_profit_threshold": 0.01,
+    "max_consecutive_trades": 5,
+    "cooldown_after_series": 30,
+    "pairs_for_rapid_fire": [
+      "SHIB/USDT",
+      "DOGE/USDT",
+      "ADA/USDT",
+      "TRX/USDT",
+      "VET/USDT"
+    ]
+  },
+  "micro_profit_optimization": {
+    "target_latency_ms": 100,
+    "parallel_validation": true,
+    "fast_path_enabled": true,
+    "cache_ttl_seconds": 60,
+    "batch_processing": true,
+    "profit_tiers": [
+      0.01,
+      0.015,
+      0.02,
+      0.025,
+      0.03
+    ]
+  },
+  "compound_tracking": {
+    "enabled": true,
+    "track_hourly_rate": true,
+    "track_daily_projection": true,
+    "snowball_visualization": true,
+    "target_daily_trades": 100
+  },
+  "balance_management": {
+    "use_realtime_websocket": true,
+    "cache_duration_seconds": 0,
+    "min_tradeable_balance": 1.0,
+    "balance_check_before_trade": true,
+    "balance_refresh_interval": 30,
+    "websocket_channels": {
+      "balances": {
+        "enabled": true,
+        "snapshot": true
+      },
+      "executions": {
+        "enabled": true,
+        "snap_orders": true,
+        "snap_trades": false
+      }
+    }
+  },
+  "tier_1_optimization": {
+    "enabled": true,
+    "prefer_low_price": true,
+    "max_price_usd": 50.0,
+    "dynamic_pair_limits": {
+      "min_total_pairs": 10,
+      "max_total_pairs": 14,
+      "portfolio_threshold": 2,
+      "min_new_pairs_with_portfolio": 8,
+      "max_new_pairs_with_portfolio": 12
+    },
+    "prioritize_pairs": [
+      "SHIB/USDT",
+      "DOGE/USDT",
+      "ADA/USDT",
+      "ALGO/USDT",
+      "MATIC/USDT",
+      "XRP/USDT"
+    ],
+    "avoid_pairs": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "BNB/USDT",
+      "SOL/USDT",
+      "AVAX/USDT",
+      "LINK/USDT",
+      "UNI/USDT",
+      "LTC/USDT"
+    ]
+  },
+  "balance_manager_2025": {
+    "retry_settings": {
+      "enabled": true,
+      "max_retries": 3,
+      "exponential_backoff": true,
+      "base_delay_seconds": 2,
+      "max_delay_seconds": 16
+    },
+    "sync_triggers": {
+      "enabled": true,
+      "min_sync_interval_seconds": 5,
+      "trigger_on_ticker_updates": true
+    },
+    "kraken_asset_normalization": {
+      "enabled": true,
+      "check_variants": [
+        "ZUSDT",
+        "USDT.M",
+        "USDT.S",
+        "USDT.F",
+        "USDT.B"
+      ],
+      "fallback_to_usd": true
+    },
+    "websocket_integration": {
+      "prefer_websocket": true,
+      "rest_update_interval_seconds": 60,
+      "force_refresh_on_trade": true
+    }
+  },
+  "rate_limit_tier": "pro",
+  "balance_refresh_interval": 1.0,
+  "emergency_balance_mode": true,
+  "use_cached_balances": false
+}

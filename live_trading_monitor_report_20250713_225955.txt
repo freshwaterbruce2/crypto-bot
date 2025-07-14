@@ -1,0 +1,129 @@
+===============================================================================
+LIVE TRADING BOT MONITORING REPORT
+Generated: 2025-07-13 22:59:55 UTC
+Monitor Agent: Real-Time Trading Monitor
+===============================================================================
+
+🤖 BOT STATUS OVERVIEW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ Bot Process:           RUNNING (PID 75857)
+⏱️ Uptime:                32 minutes (since 18:29)
+🧠 CPU Usage:             2.5%
+💾 Memory Usage:          2.3% (163MB)
+📈 Performance:           Stable system resources
+
+💰 PORTFOLIO STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💵 Current USDT Balance:  $5.00
+📊 Deployed Capital:      $116.21 (6 assets)
+💎 Total Portfolio:       $121.21
+🎯 Target vs Actual:      $163.90 → $121.21 (25.9% below expected)
+
+📊 Current Positions:
+   • AVAX/USDT: $49.44 (2.331 coins @ $21.21)
+   • ALGO/USDT: $28.22 (113.682 coins @ $0.24824)
+   • ATOM/USDT: $25.97 (5.581 coins @ $4.653)
+   • SOL/USDT:  $3.90 (0.024 coins @ $162.34)
+   • AI16Z/USDT: $2.77 (14.895 coins @ $0.1861)
+   • BERA/USDT: $5.15 (2.569 coins @ $2.003)
+
+🔴 CRITICAL ISSUES DETECTED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❌ SEVERE: Position Size Validation Failures
+   • Total Failures: 3,406 in 32 minutes
+   • Failure Rate: 106.4 failures per minute
+   • Root Cause: Bot trying to sell 100% of positions
+   • Max Allowed: 80% position size
+   • Impact: NO TRADES EXECUTING
+
+❌ MAJOR: Trading Strategy Malfunction
+   • Sell signals: 85% confidence on ALL holdings
+   • Buy signals: 60% confidence (insufficient)
+   • Trade Amount Issue: Still using $5.00 instead of $3.50
+   • Signal validation: ALL signals failing validation
+
+❌ BALANCE REFRESH FAILURES
+   • Balance Manager: Multiple refresh failures detected
+   • Impact: Inaccurate balance calculations
+   • Risk: Position sizing errors
+
+🚫 TRADE EXECUTION STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📉 Successful Trades Today: 0
+📈 Trade Attempts: 3,406+ (all failed validation)
+💸 Trade Amount: $5.00 (INCORRECT - should be $3.50)
+⚠️ Success Rate: 0%
+🔄 Trading Loop: Active but ineffective
+
+SIGNAL GENERATION:
+✅ Signal Generation: Working
+✅ Scanner Active: Generating buy/sell signals
+❌ Signal Validation: All failing
+❌ Trade Execution: Blocked by position size limits
+
+🎯 EXPECTED vs ACTUAL BEHAVIOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+EXPECTED:
+   • $3.50 trade amounts
+   • Successful position cycling
+   • 80% max position sizes
+   • Balance stability at $163.90
+
+ACTUAL:
+   • $5.00 trade amounts (incorrect)
+   • 100% position sell attempts (exceeds limit)
+   • 0 successful trades
+   • Portfolio value down 25.9%
+
+📊 PROFIT/LOSS ANALYSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 Realized P&L: $0.00 (no trades executed)
+📊 Unrealized P&L: $0.00 (positions flat)
+💰 Total P&L Today: $0.00
+🎯 Expected Profit: BLOCKED due to execution failures
+
+Portfolio Variance:
+   • Expected Total: $163.90
+   • Current Total: $121.21
+   • Variance: -$42.69 (-25.9%)
+   • Status: UNDERPERFORMING
+
+🔧 IMMEDIATE ACTION REQUIRED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 🚨 Fix position size validation (100% → 80% max)
+2. 🔧 Update trade amounts ($5.00 → $3.50)
+3. 🛠️ Fix balance manager refresh failures
+4. ✅ Verify signal validation thresholds
+5. 📊 Investigate portfolio value discrepancy
+
+⚠️ RISK ASSESSMENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔴 HIGH RISK: Bot consuming resources without trading
+🟡 MEDIUM RISK: Portfolio value below expected
+🟢 LOW RISK: System stability maintained
+
+📋 MONITORING RECOMMENDATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Implement immediate fix for position size validation
+2. Monitor for successful trade execution after fixes
+3. Track portfolio value recovery
+4. Verify $3.50 trade amounts post-fix
+5. Set up alerts for validation failure rate thresholds
+
+🎯 SUCCESS METRICS TO TRACK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Trade success rate > 0% (currently 0%)
+• Position size validation pass rate > 95% (currently 0%)
+• Portfolio value recovery to $163.90
+• $3.50 trade amounts confirmed
+• Profit generation initiation
+
+===============================================================================
+CONCLUSION: Bot is technically running but functionally broken. Critical fixes
+required for position size validation and trade amount configuration.
+NO PROFITABLE OPERATIONS OCCURRING - IMMEDIATE INTERVENTION NEEDED.
+===============================================================================
+
+Monitor: Real-Time Trading Monitor
+Report ID: RTM-20250713-225955
+Next Check: Continuous monitoring recommended until fixes applied

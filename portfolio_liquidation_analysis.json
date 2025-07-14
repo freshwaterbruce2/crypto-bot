@@ -1,0 +1,113 @@
+{
+  "timestamp": "2025-07-12T16:50:38.547491",
+  "current_positions": {
+    "AI16Z": {
+      "value_usd": 34.47,
+      "tokens": 189.47,
+      "pair": "AI16Z/USDT"
+    },
+    "ALGO": {
+      "value_usd": 25.21,
+      "tokens": 113.41,
+      "pair": "ALGO/USDT"
+    },
+    "ATOM": {
+      "value_usd": 37.09,
+      "tokens": 3.6,
+      "pair": "ATOM/USDT"
+    },
+    "AVAX": {
+      "value_usd": 84.97,
+      "tokens": 2.12,
+      "pair": "AVAX/USDT"
+    },
+    "BERA": {
+      "value_usd": 10.19,
+      "tokens": 54.46,
+      "pair": "BERA/USDT"
+    },
+    "SOL": {
+      "value_usd": 5.0,
+      "tokens": 0.03,
+      "pair": "SOL/USDT"
+    }
+  },
+  "available_usdt": 1.33,
+  "total_portfolio_value": 321.32,
+  "positions_to_liquidate": [
+    {
+      "asset": "ALGO",
+      "pair": "ALGO/USDT",
+      "value_usd": 25.21,
+      "tokens": 113.41,
+      "reason": "In avoid list (high minimum requirements)"
+    },
+    {
+      "asset": "ATOM",
+      "pair": "ATOM/USDT",
+      "value_usd": 37.09,
+      "tokens": 3.6,
+      "reason": "In avoid list (high minimum requirements)"
+    },
+    {
+      "asset": "AVAX",
+      "pair": "AVAX/USDT",
+      "value_usd": 84.97,
+      "tokens": 2.12,
+      "reason": "In avoid list (high minimum requirements)"
+    }
+  ],
+  "positions_to_keep": [
+    {
+      "asset": "AI16Z",
+      "pair": "AI16Z/USDT",
+      "value_usd": 34.47,
+      "tokens": 189.47,
+      "reason": "In TIER_1_PRIORITY_PAIRS (optimized)"
+    },
+    {
+      "asset": "BERA",
+      "pair": "BERA/USDT",
+      "value_usd": 10.19,
+      "tokens": 54.46,
+      "reason": "In TIER_1_PRIORITY_PAIRS (optimized)"
+    },
+    {
+      "asset": "SOL",
+      "pair": "SOL/USDT",
+      "value_usd": 5.0,
+      "tokens": 0.03,
+      "reason": "In TIER_1_PRIORITY_PAIRS (optimized)"
+    }
+  ],
+  "liquidation_value": 147.27,
+  "expected_usdt_after_liquidation": 148.60000000000002,
+  "tier_1_priority_pairs": {
+    "ultra_low": [
+      "SHIB/USDT"
+    ],
+    "low": [
+      "MATIC/USDT",
+      "AI16Z/USDT",
+      "BERA/USDT",
+      "MANA/USDT"
+    ],
+    "medium": [
+      "DOT/USDT",
+      "LINK/USDT",
+      "SOL/USDT",
+      "BTC/USDT"
+    ]
+  },
+  "avoid_pairs": [
+    "ADA/USDT",
+    "ALGO/USDT",
+    "APE/USDT",
+    "ATOM/USDT",
+    "AVAX/USDT",
+    "BCH/USDT",
+    "BNB/USDT",
+    "CRO/USDT",
+    "DOGE/USDT"
+  ]
+}

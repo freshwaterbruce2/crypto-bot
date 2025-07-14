@@ -1,0 +1,74 @@
+{
+  "timestamp": "2025-07-10T21:48:56.661670",
+  "fixes": {
+    "config_percentages": {
+      "status": "success",
+      "backup": "/mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/config.json.backup",
+      "applied": [
+        "Standardized all percentages to decimal format"
+      ]
+    },
+    "decimal_precision": {
+      "status": "success",
+      "modules_patched": 6,
+      "total_fixes": 19,
+      "details": {
+        "enhanced_balance_manager": [
+          "Added MoneyDecimal import",
+          "Fixed: return float\\(price\\)...",
+          "Fixed: return float\\(free_balance\\)...",
+          "Fixed: if float\\(free_balance\\) > 0:...",
+          "Fixed: filled_amount = float\\(order_result\\.get\\([\\'\"]cos...",
+          "Fixed: filled_qty = float\\(order_result\\.get\\([\\'\"]filled...",
+          "Fixed: avg_price = float\\(order_result\\.get\\([\\'\"]average..."
+        ],
+        "core_bot": [
+          "Added MoneyDecimal import",
+          "Fixed: base_position_size = float\\(self\\.config\\.get\\([\\'...",
+          "Fixed: tier_1_limit = float\\(self\\.config\\.get\\([\\'\"]tier...",
+          "Fixed: self\\.capital_flow\\[[\\'\"]realized_pnl[\\'\\\"]\\] \\+= ...",
+          "Fixed: if balance < amount_usdt..."
+        ],
+        "trade_executor": [
+          "Added MoneyDecimal import",
+          "Fixed: amount=float\\(trade_params\\[[\\'\"]amount[\\'\\\"]\\]\\)...",
+          "Fixed: stats\\[[\\'\"]total_profit_pct[\\'\\\"]\\] \\+= profit_pc...",
+          "Fixed: position_pct = request\\.amount / balance...",
+          "Fixed: if balance < request\\.amount:..."
+        ],
+        "opportunity_scanner": [
+          "Added MoneyDecimal import"
+        ],
+        "profit_harvester": [],
+        "config_percentages": [
+          "Config percentages standardized to decimal format"
+        ]
+      },
+      "applied": [
+        "Fixed float precision in 6 modules"
+      ]
+    },
+    "balance_cache": {
+      "status": "success",
+      "fixes_applied": 3,
+      "applied": [
+        "Added force_fresh_balance method",
+        "Added balance reconciliation method",
+        "Added pre-trade balance check"
+      ]
+    },
+    "websocket": {
+      "status": "success",
+      "fixes_applied": 1,
+      "applied": [
+        "Enhanced WebSocket balance logging"
+      ]
+    }
+  },
+  "errors": [],
+  "summary": {
+    "total_fixes_applied": 6,
+    "errors_encountered": 0,
+    "profit_ready": false
+  }
+}

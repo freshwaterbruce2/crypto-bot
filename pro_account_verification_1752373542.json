@@ -1,0 +1,60 @@
+{
+  "timestamp": 1752373541,
+  "pro_account_verified": true,
+  "optimizations_active": {
+    "pro_account_status": {
+      "api_tier": "pro",
+      "fee_free_trading": true,
+      "rate_limit_threshold": 180,
+      "rate_decay": 3.75,
+      "burst_allowance": 216,
+      "priority_access": true,
+      "advanced_orders": true,
+      "ioc_enabled": true
+    },
+    "fee_free_trading": {
+      "fee_free_enabled": true,
+      "micro_profit_threshold": 0.001,
+      "ultra_micro_threshold": 0.0005,
+      "tight_spread_advantage": 0.0002,
+      "position_multiplier": 1.5
+    },
+    "rate_limit_optimizations": {
+      "tier": "pro",
+      "threshold": 180,
+      "decay_rate": 3.75,
+      "burst_threshold": 216,
+      "burst_allowance": 1.2,
+      "micro_scalping_mode": true,
+      "ioc_optimized": true,
+      "ultra_high_frequency": true
+    },
+    "micro_scalping": {
+      "strategy_available": true,
+      "min_profit_target": 0.001,
+      "default_profit_target": 0.003,
+      "max_profit_target": 0.005,
+      "tight_stop_loss": 0.002,
+      "max_positions": 20,
+      "min_hold_time": 10,
+      "max_hold_time": 120
+    },
+    "ioc_orders": {
+      "ioc_available": true,
+      "execution_speed_target": "sub-100ms",
+      "slippage_tolerance": 0.05,
+      "timeout_seconds": 10,
+      "retry_attempts": 3,
+      "fee_free_cancellation": true
+    }
+  },
+  "performance_metrics": {},
+  "recommendations": [
+    "\u26a0\ufe0f Address configuration warnings above",
+    "\ud83d\udcca Enable more trading pairs for maximum opportunity"
+  ],
+  "warnings": [
+    "Trading configuration not accessible"
+  ],
+  "success": true
+}

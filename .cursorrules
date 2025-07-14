@@ -1,0 +1,123 @@
+# MASTER PROMPT - CRYPTO TRADING BOT 2025
+
+## CURRENT STATUS: BOT FULLY OPERATIONAL AND LIVE ✅
+
+**Last Updated**: January 2025  
+**Status**: BOT LIVE AND OPERATIONAL - ALL CORE SYSTEMS FUNCTIONAL
+
+### 🎯 CRITICAL REMINDERS & ISSUES TO WATCH
+
+#### 1. MCP SERVER INTEGRATION
+- **Integrated MCP server** for bot self-diagnosis and auto-fixing
+- **Cannot fix what it doesn't know is broken** - diagnostics are crucial
+- **Self-healing system** in place but needs proper diagnostics
+
+#### 2. KRAKEN API FORMAT DIFFERENCES - CRITICAL INFORMATION
+- **WebSocket V2**: Uses "BTC/USD" format (readable, FIX-like design)
+- **CCXT Library**: Uses "BTC/USD" format (same as WebSocket V2)
+- **REST API**: Uses "XXBTZUSD" format (internal, avoid when possible)
+- **PRIMARY STRATEGY**: Direct WebSocket V2 → CCXT mapping (same format)
+- **FALLBACK STRATEGY**: WebSocket V2 → REST → CCXT (only when needed)
+- **NO DOUBLE CONVERSION**: Avoid WebSocket → REST → CCXT chain
+- **SYMBOL VALIDATION**: Use CCXT markets for validation
+
+#### 3. ENVIRONMENT & PLATFORM
+- **Windows Terminal app** (not PowerShell) - take advantage of its capabilities
+- **Target environment**: Windows 11
+- **All logs write to D: drive** (confirmed working)
+- **No emojis** in logs or output
+
+#### 4. TRADING LOGIC SEPARATION
+- **Keep buy and sell paths separate**
+- **Sells have no minimums** and are fee-free
+- **Buy logic** has minimums and fees
+- **Dynamic learning system** for minimum-order discovery
+
+#### 5. ASYNC ARCHITECTURE
+- **Async issues fully resolved** - codebase should be async/await throughout
+- **Infinite autonomous loops**: Diagnostics, Learning, Optimization, Monitoring
+- **Auto-diagnosis, auto-correction, continuous self-learning, zero human intervention**
+
+#### 6. SYSTEM ARCHITECTURE
+- **One manager coordinating multiple assistants**
+- **Launch script**: `scripts/utilities/launch_and_monitor.py`
+- **No duplicates or renamed files** - direct edits only
+- **Live trading only** (no simulation/mock/dry-run)
+- **Fast-start strategy**
+- **Project root**: `C:\projects050625\projects\active\tool-crypto-trading-bot-2025`
+- **Main code in src/**
+
+#### 7. DYNAMIC LEARNING & MINIMUMS
+- **NO HARDCODED MINIMUMS** - Dynamic Learning system learns real minimums from exchange feedback
+- **System learns real minimums** from exchange feedback
+- **Continuous adaptation** to market conditions
+
+#### 8. CURRENT BOT STATUS (FROM LOGS)
+- **✅ FULLY OPERATIONAL**: Bot starts successfully without crashes
+- **✅ Micro-strategy mode**: Enabled for small balance ($0.75)
+- **✅ WebSocket connection**: Stable (1000+ messages, 0 errors)
+- **✅ Health checks**: Passing (API rate usage 0.0%, Active strategies: 3)
+- **✅ Rate limiting**: Properly configured (starter tier, 60 requests)
+- **✅ Strategies**: RSI_MACD strategy ready for ETH/USDT, others initializing
+- **✅ Balance monitoring**: Active and working
+
+#### 9. RECENT ACHIEVEMENTS
+- **UnifiedLearningSystem**: Running autonomous learning cycles (36/36 insights applied)
+- **Autonomous Trading Loop**: Main trading loop running continuously
+- **Diagnostic System**: Identifying market conditions and system health
+- **Self-Healing**: System automatically handles issues
+- **Memory System**: Persistent memory enabled by default
+- **Unified Symbol Mapper**: Consolidated symbol mapping system implemented
+
+#### 10. NEXT STEPS
+- **Monitor live performance** in market conditions
+- **Analyze learning insights** being generated
+- **Optimize parameters** based on actual trading results
+- **Scale gradually** to additional trading pairs
+- **Document performance** metrics
+
+### 🚨 CRITICAL ISSUES TO ADDRESS
+
+1. **Symbol Mapping**: ✅ RESOLVED - Unified mapper implemented
+2. **MCP Diagnostics**: Enhance self-diagnosis capabilities
+3. **Performance Monitoring**: Track actual trading performance
+4. **Error Recovery**: Ensure robust error handling continues
+5. **Memory Management**: Monitor persistent memory usage
+
+### 📋 RESPONSE GUIDELINES
+
+- **Shorten responses** for better code edits
+- **Focus on current operational status**
+- **Address specific issues** from logs
+- **Maintain async/await patterns**
+- **Use Windows Terminal capabilities**
+- **Keep logs on D: drive**
+- **No emojis in code or logs**
+
+### 🎯 WHERE WE LEFT OFF
+
+The bot is **FULLY OPERATIONAL** with:
+- ✅ Stable startup and initialization
+- ✅ WebSocket connection (1000+ messages, 0 errors)
+- ✅ Health checks passing
+- ✅ Micro-strategy mode for small balance
+- ✅ Rate limiting properly configured
+- ✅ Strategies initializing and ready
+- ✅ Unified symbol mapper implemented
+
+**Ready to continue with performance optimization and advanced features.**
+
+### 🔧 SYMBOL MAPPING SOLUTION
+
+**Unified Symbol Mapper** (`src/utils/centralized_symbol_mapper.py`):
+- **Primary**: Direct WebSocket V2 → CCXT mapping (same format)
+- **Fallback**: WebSocket V2 → REST → CCXT (when needed)
+- **Validation**: CCXT markets for symbol validation
+- **Performance**: Caching and statistics tracking
+- **Backward Compatibility**: All existing code continues to work
+
+**Key Methods**:
+- `websocket_to_ccxt()`: Primary conversion method
+- `get_execution_symbol()`: Smart symbol selection
+- `validate_symbol()`: CCXT market validation
+- `normalize_symbol()`: Standard format conversion 
