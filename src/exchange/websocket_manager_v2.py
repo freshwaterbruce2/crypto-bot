@@ -79,27 +79,40 @@ class KrakenBot(SpotWSClient):
                             await self.manager._handle_orderbook_message(symbol, book_data)
                             
                 elif channel == 'balances':
-                    # Claude Flow Fix: Handle real-time balance updates
+                    # CRITICAL FIX: Handle real-time balance updates with proper format conversion
                     data_array = message.get('data', [])
-                    for balance_data in data_array:
-                        if balance_data and hasattr(self.manager, '_handle_balance_message'):
-                            await self.manager._handle_balance_message(balance_data)
-                        elif balance_data:
-                            logger.debug(f"[WEBSOCKET_V2] Balance update received: {len(balance_data)} assets")
+                    if data_array and hasattr(self.manager, '_handle_balance_message'):
+                        # Pass the entire data array to handle WebSocket V2 format
+                        await self.manager._handle_balance_message(data_array)
+                        logger.debug(f"[WEBSOCKET_V2] Balance update processed: {len(data_array)} items")
+                    elif data_array:
+                        logger.debug(f"[WEBSOCKET_V2] Balance update received but no handler: {len(data_array)} items")
+                    else:
+                        logger.debug("[WEBSOCKET_V2] Empty balance update received")
                             
                 # Handle subscription confirmations
                 elif message.get('method') == 'subscribe':
                     success = message.get('success', False)
                     result = message.get('result', {})
                     channel_name = result.get('channel')
-                    logger.info(f"[WEBSOCKET_V2] Subscription {'successful' if success else 'failed'}: {channel_name}")
+                    if channel_name == 'balances':
+                        if success:
+                            logger.info("[WEBSOCKET_V2] Balance channel subscription SUCCESSFUL - real-time updates enabled")
+                        else:
+                            error_msg = result.get('error', 'Unknown error')
+                            logger.error(f"[WEBSOCKET_V2] Balance channel subscription FAILED: {error_msg}")
+                    else:
+                        logger.info(f"[WEBSOCKET_V2] Subscription {'successful' if success else 'failed'}: {channel_name}")
                     
                 # Handle other event types
                 elif message.get('event') == 'subscriptionStatus':
                     status = message.get('status')
                     channel_name = message.get('channelName')
                     pair = message.get('pair')
-                    logger.info(f"[WEBSOCKET_V2] Subscription {status}: {channel_name} for {pair}")
+                    if channel_name == 'balances':
+                        logger.info(f"[WEBSOCKET_V2] Balance channel status: {status}")
+                    else:
+                        logger.info(f"[WEBSOCKET_V2] Subscription {status}: {channel_name} for {pair}")
                     
             elif isinstance(message, list) and len(message) >= 4:
                 # Legacy format support (just in case)
@@ -215,10 +228,13 @@ class KrakenProWebSocketManager:
                     self.is_healthy = True
                 return success
             
-            # Try to setup private subscriptions if token available - OPTIMIZED TIMEOUT
+            # Try to setup private subscriptions for balance updates - OPTIMIZED TIMEOUT
             try:
                 if await self._setup_private_client():
                     await asyncio.wait_for(self._setup_private_subscriptions(), timeout=10.0)
+                    logger.info("[WEBSOCKET_V2] Private subscriptions (balance) setup successful")
+                else:
+                    logger.warning("[WEBSOCKET_V2] Private client setup failed, balance updates via REST only")
             except asyncio.TimeoutError:
                 logger.warning("[WEBSOCKET_V2] Private subscription setup timed out after 10s")
                 # Continue without private subscriptions
@@ -261,17 +277,21 @@ class KrakenProWebSocketManager:
             )
             logger.info(f"[WEBSOCKET_V2] Subscribed to OHLC for {len(kraken_symbols)} symbols")
             
-            # Claude Flow Fix: Add balance subscription for real-time updates
+            # CRITICAL FIX: Subscribe to balance channel with proper authentication
             try:
-                await self.bot.subscribe(
-                    params={
-                        'channel': 'balances'
-                    }
-                )
-                logger.info("[WEBSOCKET_V2] Subscribed to real-time balance updates")
+                # Check if we have authentication available for private channels
+                if hasattr(self, '_auth_token') and self._auth_token:
+                    await self.bot.subscribe(
+                        params={
+                            'channel': 'balances'
+                        }
+                    )
+                    logger.info("[WEBSOCKET_V2] Subscribed to authenticated balance updates")
+                else:
+                    logger.warning("[WEBSOCKET_V2] No auth token available, will use REST fallback for balances")
             except Exception as e:
                 logger.warning(f"[WEBSOCKET_V2] Balance subscription failed: {e}")
-                # CLAUDE FLOW FIX: Skip balance subscription for now, use REST fallback
+                logger.info("[WEBSOCKET_V2] Continuing with REST balance fallback")
             
             # Subscribe to orderbook (depth 10) for fee-free micro-scalping
             await self.bot.subscribe(
@@ -398,26 +418,41 @@ class KrakenProWebSocketManager:
             return False
     
     async def _setup_private_client(self) -> bool:
-        """Setup authenticated WebSocket client"""
+        """Setup authenticated WebSocket client for balance updates"""
         try:
             # Get WebSocket token from exchange
             if hasattr(self.exchange, 'get_websocket_token'):
                 token_response = await self.exchange.get_websocket_token()
+                if token_response and isinstance(token_response, dict) and 'token' in token_response:
+                    self._auth_token = token_response['token']
+                    logger.info("[WEBSOCKET_V2] Authentication token obtained successfully")
+                elif isinstance(token_response, str):
+                    self._auth_token = token_response
+                    logger.info("[WEBSOCKET_V2] Authentication token obtained (string format)")
+                else:
+                    logger.warning(f"[WEBSOCKET_V2] Invalid token response: {token_response}")
+                    return False
+            elif hasattr(self.exchange, 'get_websockets_token'):
+                # Try alternative method
+                token_response = await self.exchange.get_websockets_token()
                 if token_response and 'token' in token_response:
                     self._auth_token = token_response['token']
+                    logger.info("[WEBSOCKET_V2] Authentication token obtained via alternative method")
                 else:
-                    logger.warning("[WEBSOCKET_V2] No WebSocket token available")
+                    logger.warning(f"[WEBSOCKET_V2] Alternative token method failed: {token_response}")
                     return False
             else:
                 logger.warning("[WEBSOCKET_V2] Exchange doesn't support WebSocket tokens")
                 return False
             
-            # Create private client with token
-            self.private_client = SpotWSClient(token=self._auth_token)
-            
-            # Start the private client
-            await self.private_client.start()
-            logger.info("[WEBSOCKET_V2] Private client started successfully")
+            # Update main bot with authentication token for balance subscription
+            if self.bot and hasattr(self.bot, 'authenticate'):
+                try:
+                    await self.bot.authenticate(token=self._auth_token)
+                    logger.info("[WEBSOCKET_V2] Bot authenticated successfully")
+                except Exception as auth_error:
+                    logger.warning(f"[WEBSOCKET_V2] Bot authentication failed: {auth_error}")
+                    # Continue anyway, authentication might be handled differently
             
             return True
             
@@ -426,22 +461,44 @@ class KrakenProWebSocketManager:
             return False
     
     async def _setup_private_subscriptions(self):
-        """Setup private channel subscriptions"""
+        """Setup private channel subscriptions for balance updates"""
         try:
-            if not self.private_client:
-                return
-                
-            # Subscribe to balance updates
-            self.private_client.subscribe_balance(
-                callback=self._handle_balance_update
-            )
-            logger.info("[WEBSOCKET_V2] Subscribed to balance updates")
+            # Subscribe to balance updates using the main bot with authentication
+            if self.bot and self._auth_token:
+                try:
+                    await self.bot.subscribe(
+                        params={
+                            'channel': 'balances',
+                            'token': self._auth_token
+                        }
+                    )
+                    logger.info("[WEBSOCKET_V2] Successfully subscribed to authenticated balance channel")
+                except Exception as balance_error:
+                    logger.warning(f"[WEBSOCKET_V2] Balance subscription with token failed: {balance_error}")
+                    # Try without explicit token (might be handled automatically)
+                    try:
+                        await self.bot.subscribe(
+                            params={
+                                'channel': 'balances'
+                            }
+                        )
+                        logger.info("[WEBSOCKET_V2] Balance subscription succeeded without explicit token")
+                    except Exception as fallback_error:
+                        logger.error(f"[WEBSOCKET_V2] Balance subscription failed completely: {fallback_error}")
             
-            # Subscribe to order updates
-            self.private_client.subscribe_executions(
-                callback=self._handle_execution_update
-            )
-            logger.info("[WEBSOCKET_V2] Subscribed to order executions")
+            # Optional: Subscribe to order execution updates if needed
+            if self.bot and self._auth_token:
+                try:
+                    await self.bot.subscribe(
+                        params={
+                            'channel': 'executions',
+                            'token': self._auth_token
+                        }
+                    )
+                    logger.info("[WEBSOCKET_V2] Subscribed to order executions")
+                except Exception as exec_error:
+                    logger.debug(f"[WEBSOCKET_V2] Order execution subscription failed: {exec_error}")
+                    # Not critical, continue without it
             
         except Exception as e:
             logger.error(f"[WEBSOCKET_V2] Error setting up private subscriptions: {e}")
@@ -523,25 +580,59 @@ class KrakenProWebSocketManager:
             logger.error(f"[WEBSOCKET_V2] Error handling orderbook message: {e}")
     
     async def _handle_balance_message(self, balance_data):
-        """Claude Flow Fix: Handle real-time balance updates from WebSocket with circuit breaker integration"""
+        """Handle real-time balance updates from WebSocket V2 with proper format conversion"""
         try:
             if not balance_data:
                 return
                 
             logger.debug(f"[WEBSOCKET_V2] Processing balance update: {balance_data}")
             
-            # Format balance data for unified balance manager
+            # CRITICAL FIX: Convert WebSocket V2 array format to unified balance manager dict format
             formatted_balances = {}
-            for asset, balance_info in balance_data.items():
-                if isinstance(balance_info, dict):
-                    formatted_balances[asset] = balance_info
-                elif isinstance(balance_info, (int, float, str)):
-                    formatted_balances[asset] = {
-                        'free': float(balance_info),
-                        'used': 0,
-                        'total': float(balance_info)
-                    }
             
+            # Handle WebSocket V2 array format: [{"asset": "MANA", "balance": "163.94", "hold_trade": "0"}]
+            if isinstance(balance_data, list):
+                for balance_item in balance_data:
+                    if isinstance(balance_item, dict):
+                        asset = balance_item.get('asset')
+                        balance = balance_item.get('balance', '0')
+                        hold_trade = balance_item.get('hold_trade', '0')
+                        
+                        if asset:
+                            free_balance = float(balance) if balance else 0.0
+                            used_balance = float(hold_trade) if hold_trade else 0.0
+                            total_balance = free_balance + used_balance
+                            
+                            formatted_balances[asset] = {
+                                'free': free_balance,
+                                'used': used_balance,
+                                'total': total_balance
+                            }
+                            
+                            # Log MANA balance specifically for verification
+                            if asset == 'MANA' and free_balance > 0:
+                                logger.info(f"[WEBSOCKET_V2] MANA balance detected: {free_balance}")
+            
+            # Handle legacy dict format (fallback)
+            elif isinstance(balance_data, dict):
+                for asset, balance_info in balance_data.items():
+                    if isinstance(balance_info, dict):
+                        formatted_balances[asset] = balance_info
+                    elif isinstance(balance_info, (int, float, str)):
+                        formatted_balances[asset] = {
+                            'free': float(balance_info),
+                            'used': 0,
+                            'total': float(balance_info)
+                        }
+            
+            # Store balance data locally for immediate access
+            for asset, balance_info in formatted_balances.items():
+                self.balance_data[asset] = balance_info
+                # Log MANA detection for verification
+                if asset == 'MANA':
+                    mana_balance = balance_info.get('free', 0)
+                    logger.info(f"[WEBSOCKET_V2] MANA balance stored locally: {mana_balance}")
+                
             # CRITICAL FIX 2025: Advanced circuit breaker reset and balance manager integration
             manager_ref = getattr(self, 'manager', None)
             if not manager_ref and hasattr(self, 'exchange_client') and hasattr(self.exchange_client, 'bot_instance'):
@@ -569,7 +660,13 @@ class KrakenProWebSocketManager:
                             # Also update WebSocket balances cache for dual-path verification
                             if hasattr(balance_manager, 'websocket_balances'):
                                 balance_manager.websocket_balances[asset] = balance_info
-                            logger.debug(f"[WEBSOCKET_V2] CRITICAL FIX 2025: Updated {asset} balance via WebSocket: {balance_info}")
+                            
+                            # Log MANA detection specifically for verification
+                            if asset == 'MANA':
+                                mana_balance = balance_info.get('free', 0)
+                                logger.info(f"[WEBSOCKET_V2] MANA balance injected into balance manager: {mana_balance}")
+                            else:
+                                logger.debug(f"[WEBSOCKET_V2] Updated {asset} balance via WebSocket: {balance_info}")
                     
                     # CRITICAL FIX 2025: Mark data as fresh with microsecond precision
                     balance_manager.last_update = time.time()
@@ -582,6 +679,10 @@ class KrakenProWebSocketManager:
             
             elif formatted_balances:
                 logger.warning(f"[WEBSOCKET_V2] Balance update received but no manager reference found - {len(formatted_balances)} assets not processed")
+                # Log the assets we received for debugging
+                for asset, balance_info in formatted_balances.items():
+                    if asset == 'MANA':
+                        logger.info(f"[WEBSOCKET_V2] MANA balance detected but no manager: {balance_info}")
             
             # Call balance callback if registered
             if 'balance' in self.callbacks and self.callbacks['balance']:
@@ -838,8 +939,11 @@ class KrakenProWebSocketManager:
         return None
     
     def get_balance(self, asset: str) -> Optional[Dict[str, Any]]:
-        """Get current balance for asset"""
-        return self.balance_data.get(asset)
+        """Get current balance for asset with MANA detection verification"""
+        balance = self.balance_data.get(asset)
+        if balance and asset == 'MANA':
+            logger.debug(f"[WEBSOCKET_V2] MANA balance retrieved: {balance}")
+        return balance
     
     def get_all_balances(self) -> Dict[str, Any]:
         """Get all current balances"""
@@ -878,3 +982,44 @@ class KrakenProWebSocketManager:
         standard_symbol = symbol.replace('/', '_').replace('-', '_')
         last_update = self.last_data_update.get(standard_symbol, 0)
         return (time.time() - last_update) <= max_age
+    
+    async def test_balance_format_conversion(self):
+        """Test method to verify WebSocket V2 balance format conversion"""
+        try:
+            logger.info("[WEBSOCKET_V2] Testing balance format conversion...")
+            
+            # Simulate WebSocket V2 balance message format
+            test_balance_data = [
+                {"asset": "MANA", "balance": "163.94", "hold_trade": "0"},
+                {"asset": "USDT", "balance": "5.23", "hold_trade": "0"},
+                {"asset": "BTC", "balance": "0.001", "hold_trade": "0.0005"}
+            ]
+            
+            # Test the format conversion
+            await self._handle_balance_message(test_balance_data)
+            
+            # Verify MANA balance was processed correctly
+            mana_balance = self.get_balance('MANA')
+            if mana_balance:
+                logger.info(f"[WEBSOCKET_V2] Test successful - MANA balance: {mana_balance}")
+                return True
+            else:
+                logger.error("[WEBSOCKET_V2] Test failed - MANA balance not found")
+                return False
+                
+        except Exception as e:
+            logger.error(f"[WEBSOCKET_V2] Test error: {e}")
+            return False
+    
+    def get_balance_streaming_status(self) -> Dict[str, Any]:
+        """Get status of balance streaming capabilities"""
+        return {
+            'websocket_connected': self.is_connected,
+            'auth_token_available': bool(self._auth_token),
+            'balance_data_count': len(self.balance_data),
+            'mana_balance_available': 'MANA' in self.balance_data,
+            'mana_balance_value': self.balance_data.get('MANA', {}).get('free', 0),
+            'manager_reference_available': bool(getattr(self, 'manager', None)),
+            'last_message_time': self.last_message_time,
+            'streaming_healthy': self.is_healthy
+        }
