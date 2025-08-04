@@ -659,10 +659,46 @@ class UnifiedLearningSystem:
                 self.logger.error(f"[UNIFIED_LEARNING] Error evaluating {name} performance: {e}")
     
     def _calculate_adaptation_speed(self, component_name: str) -> float:
-        """Calculate adaptation speed for a component"""
-        # Simple adaptation speed calculation
-        # In practice, this would analyze how quickly the component adapts to changes
-        return 0.5  # Placeholder
+        """Calculate adaptation speed for a component based on its performance history"""
+        try:
+            # Get recent performance data for the component
+            if component_name not in self.component_performance:
+                return 0.5  # Default moderate adaptation speed
+            
+            performance_history = self.component_performance[component_name]
+            
+            if len(performance_history) < 2:
+                return 0.5  # Need at least 2 data points
+            
+            # Calculate how quickly performance metrics change
+            recent_scores = [entry['performance_score'] for entry in performance_history[-10:]]
+            
+            if len(recent_scores) < 2:
+                return 0.5
+            
+            # Calculate variance in recent performance scores
+            # Higher variance indicates faster adaptation (more dynamic behavior)
+            import statistics
+            variance = statistics.variance(recent_scores) if len(recent_scores) > 1 else 0
+            
+            # Calculate trend direction (improving vs declining)
+            if len(recent_scores) >= 3:
+                early_avg = sum(recent_scores[:len(recent_scores)//2]) / len(recent_scores[:len(recent_scores)//2])
+                late_avg = sum(recent_scores[len(recent_scores)//2:]) / len(recent_scores[len(recent_scores)//2:])
+                trend = abs(late_avg - early_avg)
+            else:
+                trend = abs(recent_scores[-1] - recent_scores[0])
+            
+            # Combine variance and trend to get adaptation speed
+            # Higher values indicate faster adaptation
+            adaptation_speed = min(1.0, (variance * 2) + (trend * 0.5))
+            
+            # Ensure reasonable bounds
+            return max(0.1, min(0.9, adaptation_speed))
+            
+        except Exception as e:
+            logger.warning(f"[LEARNING_SYSTEM] Error calculating adaptation speed for {component_name}: {e}")
+            return 0.5  # Safe default
     
     def get_learning_status(self) -> Dict[str, Any]:
         """Get current learning system status"""

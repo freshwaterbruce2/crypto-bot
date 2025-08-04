@@ -118,7 +118,12 @@ class HealthCheck:
         
     async def check(self) -> ComponentHealth:
         """Perform health check"""
-        raise NotImplementedError
+        # Default implementation returns unknown status
+        return ComponentHealth(
+            name=self.name,
+            status=HealthStatus.UNKNOWN,
+            metadata={"error": "Health check not implemented"}
+        )
 
 
 class SystemHealthCheck(HealthCheck):

@@ -197,8 +197,8 @@ class SellSignalOptimizer:
             # Volatility estimation (simplified)
             volatility = spread_pct * 10  # Rough volatility estimate from spread
             
-            # Momentum (would calculate from price changes)
-            momentum = 0.0  # Placeholder
+            # Momentum calculation based on recent price action
+            momentum = await self._calculate_price_momentum(symbol, ticker_data)
             
             # Liquidity score
             liquidity_score = min(1.0, volume_ratio * (1 - spread_pct * 100))
@@ -466,3 +466,71 @@ class SellSignalOptimizer:
                                           if opt.get('confidence_boost', 0) > 0.1) / count
             }
         }
+    
+    async def _calculate_price_momentum(self, symbol: str, ticker_data: Dict[str, Any]) -> float:
+        """
+        Calculate price momentum based on recent price action.
+        Returns positive value for upward momentum, negative for downward.
+        """
+        try:
+            current_price = ticker_data.get('last', 0)
+            if not current_price:
+                return 0.0
+            
+            # Try to get historical prices from WebSocket or exchange
+            historical_prices = []
+            
+            if self.websocket_manager and hasattr(self.websocket_manager, 'get_recent_prices'):
+                try:
+                    historical_prices = await self.websocket_manager.get_recent_prices(symbol, limit=10)
+                except Exception:
+                    pass
+            
+            if not historical_prices and self.exchange:
+                try:
+                    # Fetch recent OHLCV data
+                    ohlcv = await self.exchange.fetch_ohlcv(symbol, '1m', limit=10)
+                    if ohlcv:
+                        historical_prices = [candle[4] for candle in ohlcv]  # Close prices
+                except Exception:
+                    pass
+            
+            if len(historical_prices) < 2:
+                # Fallback: use bid/ask spread to estimate momentum
+                bid = ticker_data.get('bid', current_price * 0.999)
+                ask = ticker_data.get('ask', current_price * 1.001)
+                mid_price = (bid + ask) / 2
+                
+                # Simple momentum approximation from price position within spread
+                if current_price > mid_price:
+                    return 0.1  # Slight positive momentum
+                elif current_price < mid_price:
+                    return -0.1  # Slight negative momentum
+                else:
+                    return 0.0
+            
+            # Calculate momentum from price changes
+            if len(historical_prices) >= 3:
+                # Short-term momentum (last 3 prices)
+                short_term_change = (historical_prices[-1] - historical_prices[-3]) / historical_prices[-3]
+                
+                # Medium-term momentum (if we have enough data)
+                medium_term_change = 0.0
+                if len(historical_prices) >= 6:
+                    medium_term_change = (historical_prices[-1] - historical_prices[-6]) / historical_prices[-6]
+                
+                # Weighted momentum (short-term has more weight)
+                momentum = (short_term_change * 0.7) + (medium_term_change * 0.3)
+                
+                # Normalize momentum to reasonable range (-1 to 1)
+                momentum = max(-1.0, min(1.0, momentum * 100))  # Scale by 100 for reasonable values
+                
+                return momentum
+            else:
+                # Simple momentum from last two prices
+                price_change = (historical_prices[-1] - historical_prices[0]) / historical_prices[0]
+                return max(-1.0, min(1.0, price_change * 100))
+                
+        except Exception as e:
+            logger.warning(f"[SELL_OPTIMIZER] Error calculating momentum for {symbol}: {e}")
+            return 0.0

@@ -221,6 +221,25 @@
     "micro_rebalancing": true
   },
   "data_directory": "D:/trading_data",
+  "database_config": {
+    "enabled": true,
+    "database_path": "D:/trading_data/crypto_bot.db",
+    "backup_path": "D:/trading_data/backups",
+    "backup_interval_hours": 24,
+    "max_backups_retained": 30,
+    "performance_optimizations": {
+      "wal_mode": true,
+      "synchronous": "NORMAL",
+      "cache_size": 10000,
+      "temp_store": "MEMORY"
+    },
+    "data_retention": {
+      "market_data_days": 365,
+      "debug_logs_days": 30,
+      "trade_records_permanent": true,
+      "balance_history_days": 730
+    }
+  },
   "position_sizing_aggressive": 0.7,
   "max_capital_deployment_pct": 0.95,
   "ultra_fresh_data_mode": true,

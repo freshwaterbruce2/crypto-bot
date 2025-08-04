@@ -2800,25 +2800,20 @@ class KrakenTradingBot:
                 # Update config to use SDK
                 self.config['kraken']['use_official_sdk'] = True
                 
-                # If we're using native implementation, switch to SDK
+                # SDK exchange no longer available - use native implementation recovery
                 if hasattr(self.exchange, '__class__') and 'Native' in self.exchange.__class__.__name__:
-                    # Close current exchange
-                    await self.exchange.close()
-                    
-                    # Import and create SDK exchange
-                    from src.exchange.kraken_sdk_exchange import KrakenSDKExchange
-                    self.exchange = KrakenSDKExchange(
-                        api_key=os.getenv('KRAKEN_API_KEY'),
-                        api_secret=os.getenv('KRAKEN_API_SECRET'),
-                        tier=self.config.get('kraken_api_tier', 'starter')
-                    )
-                    
-                    # Reconnect
-                    await self.exchange.connect()
-                    await self.exchange.load_markets()
-                    
-                    self.logger.info("[SELF_REPAIR] Successfully switched to SDK - nonce errors should be resolved")
-                    return True
+                    # Try to reinitialize the native exchange
+                    try:
+                        await self.exchange.close()
+                        await asyncio.sleep(1)
+                        await self.exchange.connect()
+                        await self.exchange.load_markets()
+                        
+                        self.logger.info("[SELF_REPAIR] Successfully reinitialized native exchange")
+                        return True
+                    except Exception as reinit_error:
+                        self.logger.error(f"[SELF_REPAIR] Failed to reinitialize native exchange: {reinit_error}")
+                        return False
                 
                 return True
                 

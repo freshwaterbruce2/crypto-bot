@@ -27,7 +27,7 @@ from enum import Enum
 import json
 
 from ..utils.decimal_precision_fix import safe_decimal, safe_float, is_zero
-from ..utils.unified_kraken_nonce_manager import UnifiedKrakenNonceManager as KrakenNonceManager
+from ..utils.consolidated_nonce_manager import ConsolidatedNonceManager as KrakenNonceManager
 
 logger = logging.getLogger(__name__)
 

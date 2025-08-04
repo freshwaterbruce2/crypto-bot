@@ -1,9 +1,6 @@
 # Kraken Trading Bot Requirements
 # Minimal dependencies for production
 
-# Kraken SDK for API and WebSocket V2 - UPDATED 2025
-python-kraken-sdk>=0.7.4
-
 # Core async and networking
 aiohttp>=3.9.0
 asyncio-throttle>=1.0.2

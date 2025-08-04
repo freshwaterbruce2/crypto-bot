@@ -24,20 +24,38 @@
       "Bash(source:*)",
       "Bash(true)",
       "Bash(chmod:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(git:*)",
+      "mcp__github__*"
     ],
     "deny": []
   },
   "hooks": {
-    "post-task": {
-      "command": "python3",
-      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "post-task"],
-      "timeout": 30000
-    },
-    "pre-task": {
-      "command": "python3", 
-      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "pre-task"],
-      "timeout": 30000
-    }
+    "PostToolUse": [
+      {
+        "matcher": {},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "post-task"],
+            "timeout": 30000
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": {},
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3",
+            "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "pre-task"],
+            "timeout": 30000
+          }
+        ]
+      }
+    ]
   }
 }

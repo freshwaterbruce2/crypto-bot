@@ -29,7 +29,10 @@ class AgentToolsBridge:
             'create_directory': self.create_directory,
             'delete_file': self.delete_file,
             'move_file': self.move_file,
-            'copy_file': self.copy_file
+            'copy_file': self.copy_file,
+            'github_commit': self.github_commit,
+            'github_push': self.github_push,
+            'github_status': self.github_status
         }
         
     def get_available_tools(self) -> List[str]:
@@ -321,6 +324,63 @@ class AgentToolsBridge:
             return f"Copied: {src} -> {dst}"
         except Exception as e:
             raise Exception(f"Error copying {src} to {dst}: {e}")
+    
+    def github_status(self) -> Dict[str, Any]:
+        """Get git status (equivalent to git status)"""
+        return self.bash_command("git status --porcelain")
+    
+    def github_commit(self, message: str, add_all: bool = True) -> Dict[str, Any]:
+        """Commit changes to git with Claude Code signature"""
+        try:
+            commands = []
+            
+            if add_all:
+                commands.append("git add .")
+            
+            # Create commit with Claude Code signature
+            commit_msg = f"""{message}
+
+🤖 Generated with [Claude Code](https://claude.ai/code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"""
+            
+            # Use heredoc for proper multi-line commit message
+            commit_cmd = f'''git commit -m "$(cat <<'EOF'
+{commit_msg}
+EOF
+)"'''
+            commands.append(commit_cmd)
+            
+            results = []
+            for cmd in commands:
+                result = self.bash_command(cmd)
+                results.append(result)
+                
+                # If any command fails, return the failure
+                if result.get('returncode', 0) != 0:
+                    return result
+            
+            return {
+                'stdout': '\n'.join([r.get('stdout', '') for r in results]),
+                'stderr': '\n'.join([r.get('stderr', '') for r in results]),
+                'returncode': 0,
+                'command': 'github_commit'
+            }
+        except Exception as e:
+            return {
+                'stdout': '',
+                'stderr': str(e),
+                'returncode': -1,
+                'command': 'github_commit'
+            }
+    
+    def github_push(self, branch: str = None) -> Dict[str, Any]:
+        """Push changes to GitHub"""
+        cmd = "git push"
+        if branch:
+            cmd += f" origin {branch}"
+        
+        return self.bash_command(cmd)
 
 
 # Global bridge instance
@@ -348,7 +408,9 @@ def register_agent_tools(agent_id: str, project_root: str = None) -> Dict[str, A
             'Bash command execution',
             'File reading/writing/editing',
             'Directory operations',
-            'Search and pattern matching'
+            'Search and pattern matching',
+            'Git and GitHub operations',
+            'Automated commits with Claude Code signature'
         ]
     }
 
@@ -361,3 +423,82 @@ def execute_agent_tool(agent_id: str, tool_name: str, **kwargs) -> Dict[str, Any
     result['timestamp'] = __import__('time').time()
     
     return result
+
+# Hook integration functions
+def handle_pre_task_hook(*args):
+    """Handle pre-task automation hook"""
+    try:
+        # Log the incoming task
+        task_info = {
+            'timestamp': __import__('time').time(),
+            'agent_id': 'automation-hook',
+            'phase': 'pre-task',
+            'args': args
+        }
+        
+        logger.info(f"Pre-task hook triggered: {task_info}")
+        return True
+    except Exception as e:
+        logger.error(f"Pre-task hook error: {e}")
+        return False
+
+def handle_post_task_hook(*args):
+    """Handle post-task automation hook"""
+    try:
+        # Check if we should auto-sync with GitHub
+        should_sync = _should_auto_sync()
+        
+        if should_sync:
+            # Import and run GitHub automation
+            automation_script = Path(__file__).parent.parent.parent / 'automation' / 'github_integration.py'
+            
+            if automation_script.exists():
+                result = subprocess.run([
+                    'python3', str(automation_script), 'sync', 
+                    '--message', 'Automated sync from agent task completion'
+                ], capture_output=True, text=True, cwd=str(automation_script.parent.parent))
+                
+                logger.info(f"Auto-sync result: {result.returncode}")
+                if result.stdout:
+                    logger.info(f"Auto-sync output: {result.stdout}")
+                if result.stderr and result.returncode != 0:
+                    logger.error(f"Auto-sync error: {result.stderr}")
+        
+        return True
+    except Exception as e:
+        logger.error(f"Post-task hook error: {e}")
+        return False
+
+def _should_auto_sync() -> bool:
+    """Determine if we should auto-sync with GitHub"""
+    # Check for significant changes or time-based triggers
+    # This is a simple implementation - can be enhanced based on needs
+    
+    try:
+        bridge = get_agent_bridge()
+        status_result = bridge.execute_tool('github_status')
+        
+        if status_result['success']:
+            # If there are changes, sync them
+            status_output = status_result['result']['stdout'].strip()
+            return bool(status_output)  # True if there are changes
+        
+        return False
+    except:
+        return False
+
+# Entry point for hook scripts
+if __name__ == "__main__":
+    import sys
+    
+    if len(sys.argv) > 1:
+        if sys.argv[1] == 'pre-task':
+            handle_pre_task_hook(*sys.argv[2:])
+        elif sys.argv[1] == 'post-task':
+            handle_post_task_hook(*sys.argv[2:])
+        else:
+            print(f"Unknown hook: {sys.argv[1]}")
+            sys.exit(1)
+    else:
+        print("Usage: agent_tools_bridge.py [pre-task|post-task] [args...]")
+        sys.exit(1)

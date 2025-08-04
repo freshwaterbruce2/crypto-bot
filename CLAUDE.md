@@ -13,6 +13,36 @@
 - 44 USDT pairs actively monitored
 - Real-time WebSocket V2 integration
 
+### Database Schema (2025 Best Practices)
+**Location:** D: drive for optimal performance
+**Type:** SQLite with comprehensive trading bot schema
+
+**Core Trading Tables:**
+- `trades` - All executed trades with P&L tracking, fees, timestamps
+- `crypto_orders` - Order management (market, limit, stop-loss, take-profit)
+- `positions` - Open/closed positions with unrealized/realized PnL
+
+**Market Data Storage:**
+- `market_data` - OHLCV candle data (1m, 5m, 15m, 1h, 4h, 1d timeframes)
+- `tickers` - Real-time price feeds, bid/ask, 24h volume and changes
+
+**Performance & Analytics:**
+- `performance_metrics` - Daily P&L, win rates, Sharpe ratio, max drawdown
+- `portfolio_snapshots` - Historical portfolio composition and valuations
+
+**System Management:**
+- `bot_config` - Bot settings, strategy parameters, feature flags
+- `bot_logs` - Comprehensive logging (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+- `wallets` - Current balances per exchange/asset (available, locked)
+- `balance_history` - Historical balance tracking for audit trails
+
+**Schema Features:**
+- High precision DECIMAL(20,8) for crypto amounts
+- Proper indexing with UNIQUE constraints for performance
+- Audit trails with created_at/updated_at timestamps
+- Data integrity with CHECK constraints
+- Multi-exchange and multi-strategy support
+
 ### Agent Setup and File Access
 - MCP claude-flow agents have FULL file system access through AgentToolsBridge
 - Agents can read, write, edit, delete files and run bash commands like Claude Code

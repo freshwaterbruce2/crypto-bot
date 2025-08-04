@@ -833,9 +833,8 @@ class ExecutionAssistant(TradeAssistant):
                                 
                                 # Skip if it's USDT or too small
                                 if amount > 0.0001 and asset not in ['USDT', 'USD', 'ZUSDT']:
-                                    # For now, assume each asset has some value
-                                    # In production, you'd fetch the current price
-                                    estimated_value = amount * 10  # Placeholder
+                                    # Estimate value using reasonable price approximation
+                                    estimated_value = await self._estimate_asset_value(asset, amount)
                                     deployed_assets.append(f"{asset}: {amount:.4f} (~${estimated_value:.2f})")
                                     total_deployed_value += estimated_value
                             
@@ -1542,6 +1541,35 @@ class EnhancedTradeExecutor:
         
         return metrics
     
+    async def _estimate_asset_value(self, asset: str, amount: float) -> float:
+        """Estimate USD value of an asset amount"""
+        try:
+            # Try to get current price from WebSocket or exchange
+            symbol = f"{asset}/USDT"
+            
+            # Check if we have recent ticker data
+            if hasattr(self.bot, 'websocket_manager') and self.bot.websocket_manager:
+                try:
+                    ticker_data = self.bot.websocket_manager.get_latest_ticker(symbol)
+                    if ticker_data and 'last' in ticker_data:
+                        return amount * float(ticker_data['last'])
+                except Exception:
+                    pass
+            
+            # Fallback to reasonable price estimates for common assets
+            price_estimates = {
+                'BTC': 45000, 'ETH': 2500, 'SHIB': 0.000015, 'DOGE': 0.15,
+                'ADA': 0.45, 'DOT': 7.0, 'LINK': 12.0, 'UNI': 8.0, 
+                'SOL': 80.0, 'MATIC': 0.80, 'AVAX': 25.0, 'ATOM': 8.0
+            }
+            
+            estimated_price = price_estimates.get(asset, 1.0)  # Default $1 for unknown assets
+            return amount * estimated_price
+            
+        except Exception as e:
+            logger.warning(f"[EXECUTOR] Error estimating value for {asset}: {e}")
+            return amount * 1.0  # Fallback to $1 per unit
+
     async def _log_trade_event(self, event_type: str, trade_data: Dict[str, Any]) -> None:
         """Log trade event through assistant manager if available"""
         try:

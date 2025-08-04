@@ -236,7 +236,8 @@ class UnifiedSellCoordinator:
         
         # Simulate success/failure
         if random.random() > 0.1:  # 90% success rate
-            executed_price = order.price or 50000.0  # Placeholder price
+            # Use a more realistic price simulation based on symbol
+            executed_price = order.price or self._get_realistic_market_price(order.symbol)
             executed_quantity = order.quantity
             fees = executed_quantity * executed_price * 0.0026  # Taker fee
             total_proceeds = (executed_quantity * executed_price) - fees
@@ -590,6 +591,28 @@ class UnifiedSellCoordinator:
                     orders.append(self.get_order_status(order.id))
         
         return orders
+    
+    def _get_realistic_market_price(self, symbol: str) -> float:
+        """Get a realistic market price for simulation purposes"""
+        # Simplified price mapping for common trading pairs
+        price_ranges = {
+            'BTC/USDT': (30000, 70000),
+            'ETH/USDT': (1500, 4000),
+            'SHIB/USDT': (0.000006, 0.00003),
+            'DOGE/USDT': (0.05, 0.30),
+            'ADA/USDT': (0.25, 1.20),
+            'DOT/USDT': (4.0, 12.0),
+            'LINK/USDT': (5.0, 25.0),
+            'UNI/USDT': (3.0, 15.0),
+            'SOL/USDT': (15.0, 200.0),
+            'MATIC/USDT': (0.40, 2.50)
+        }
+        
+        # Get price range for symbol or use default
+        min_price, max_price = price_ranges.get(symbol, (0.01, 100.0))
+        
+        # Return random price within realistic range
+        return random.uniform(min_price, max_price)
     
     def __del__(self):
         """Cleanup when object is destroyed."""

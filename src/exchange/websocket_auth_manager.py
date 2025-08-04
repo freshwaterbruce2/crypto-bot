@@ -87,26 +87,64 @@ class WebSocketAuthManager:
             Authentication token or None if failed
         """
         try:
-            # This would typically make a REST API call to get the auth token
-            # For now, we'll simulate the token generation process
+            import aiohttp
+            import urllib.parse
             
-            # In a real implementation, you would:
-            # 1. Make a POST request to the Kraken API
-            # 2. Sign the request with your API credentials
-            # 3. Return the token from the response
-            
-            # Placeholder implementation
+            # Create nonce for the request
             nonce = str(int(time.time() * 1000))
             
+            # Prepare request data
+            data = {
+                'nonce': nonce
+            }
+            
+            # Create URL encoded data
+            encoded_data = urllib.parse.urlencode(data)
+            uri_path = "/0/private/GetWebSocketsToken"
+            
             # Create message to sign
-            message = nonce + "GetWebSocketsToken"
+            message = nonce + encoded_data
             
             # Sign the message
-            signature = self._sign_message(message, "/0/private/GetWebSocketsToken")
+            signature = self._sign_message(message, uri_path)
             
-            # In a real implementation, you would send this to the API
-            # For now, we'll return a placeholder token
-            return f"auth_token_{nonce}"
+            # Prepare headers
+            headers = {
+                'API-Key': self.api_key,
+                'API-Sign': signature,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            # Make the actual API request
+            async with aiohttp.ClientSession() as session:
+                async with session.post(
+                    f"https://api.kraken.com{uri_path}",
+                    data=encoded_data,
+                    headers=headers,
+                    timeout=aiohttp.ClientTimeout(total=10)
+                ) as response:
+                    
+                    if response.status != 200:
+                        logger.error(f"Auth token request failed with status {response.status}")
+                        return None
+                    
+                    response_data = await response.json()
+                    
+                    if response_data.get('error'):
+                        error_msg = ', '.join(response_data['error'])
+                        logger.error(f"API error getting auth token: {error_msg}")
+                        return None
+                    
+                    # Extract token from response
+                    result = response_data.get('result', {})
+                    token = result.get('token')
+                    
+                    if not token:
+                        logger.error("No token in API response")
+                        return None
+                    
+                    logger.info("Successfully obtained WebSocket authentication token")
+                    return token
             
         except Exception as e:
             logger.error(f"Error getting auth token: {e}")

@@ -291,11 +291,11 @@ class KrakenV2MessageHandler:
         start_time = time.time()
         
         try:
-            # DEBUG: Log raw message structure to understand format
+            # Log message structure for debugging if needed
             if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("[KRAKEN_V2_HANDLER] Raw message type: %s", type(raw_message))
-                logger.debug("[KRAKEN_V2_HANDLER] Raw message keys: %s", list(raw_message.keys()) if isinstance(raw_message, dict) else "N/A")
-                logger.debug("[KRAKEN_V2_HANDLER] Raw message content: %s", raw_message)
+                logger.debug("[KRAKEN_V2_HANDLER] Processing message type: %s", type(raw_message))
+                if isinstance(raw_message, dict):
+                    logger.debug("[KRAKEN_V2_HANDLER] Message keys: %s", list(raw_message.keys()))
             
             # Basic validation
             if not self._validate_raw_message(raw_message):
@@ -404,6 +404,8 @@ class KrakenV2MessageHandler:
             await self._handle_heartbeat_message(raw_message)
         elif channel == 'status':
             await self._handle_status_message(raw_message)
+        elif channel == 'pong' or message_type == 'pong' or method == 'pong':
+            await self._handle_pong_message(raw_message)
         elif message_type == 'subscribe' or message_type == 'unsubscribe' or method in ['subscribe', 'unsubscribe']:
             await self._handle_subscription_response(raw_message)
         else:
@@ -645,13 +647,20 @@ class KrakenV2MessageHandler:
             status_type = raw_message.get('type', 'unknown')
             data = raw_message.get('data', {})
             
+            # Handle case where data might be a list
+            if isinstance(data, list):
+                if len(data) > 0:
+                    data = data[0]  # Use first item
+                else:
+                    data = {}  # Empty list means no data
+            
             logger.info("[KRAKEN_V2_HANDLER] Status message received: type=%s", status_type)
             logger.debug("[KRAKEN_V2_HANDLER] Status data: %s", data)
             
             # Update connection status based on message content
             if status_type == 'update':
-                connection_info = data.get('connection', {})
-                api_info = data.get('api_version', {})
+                connection_info = data.get('connection', {}) if isinstance(data, dict) else {}
+                api_info = data.get('api_version', {}) if isinstance(data, dict) else {}
                 
                 with self._lock:
                     if connection_info.get('status') == 'online':
@@ -666,6 +675,20 @@ class KrakenV2MessageHandler:
             
         except Exception as e:
             logger.error("[KRAKEN_V2_HANDLER] Error handling status message: %s", e)
+    
+    async def _handle_pong_message(self, raw_message: Dict[str, Any]):
+        """Handle pong messages from WebSocket V2"""
+        try:
+            with self._lock:
+                self.connection_status.last_heartbeat = time.time()
+            
+            logger.debug("[KRAKEN_V2_HANDLER] Pong message received")
+            
+            # Call pong callbacks
+            await self._call_callbacks('pong', raw_message)
+            
+        except Exception as e:
+            logger.error("[KRAKEN_V2_HANDLER] Error handling pong message: %s", e)
     
     async def _handle_subscription_response(self, raw_message: Dict[str, Any]):
         """Handle subscription/unsubscription responses"""
@@ -698,7 +721,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling subscription response: %s", e)
     
     async def _handle_unknown_message(self, raw_message: Dict[str, Any]):
-        """Handle unknown message types with detailed debugging"""
+        """Handle unknown message types with appropriate logging"""
         try:
             channel = raw_message.get('channel', 'NO_CHANNEL')
             message_type = raw_message.get('type', 'NO_TYPE')

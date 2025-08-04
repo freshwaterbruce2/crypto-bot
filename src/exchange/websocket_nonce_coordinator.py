@@ -11,7 +11,7 @@ from typing import Dict, Optional, Any, Callable
 from datetime import datetime
 import json
 
-from ..utils.unified_kraken_nonce_manager import get_unified_nonce_manager, UnifiedKrakenNonceManager
+from ..utils.consolidated_nonce_manager import get_nonce_manager, ConsolidatedNonceManager
 
 logger = logging.getLogger(__name__)
 
@@ -27,14 +27,14 @@ class WebSocketNonceCoordinator:
     - Integration with existing WebSocket managers
     """
     
-    def __init__(self, nonce_manager: Optional[UnifiedKrakenNonceManager] = None):
+    def __init__(self, nonce_manager: Optional[ConsolidatedNonceManager] = None):
         """
         Initialize the coordinator.
         
         Args:
             nonce_manager: Optional custom nonce manager, uses global if None
         """
-        self.nonce_manager = nonce_manager or get_unified_nonce_manager()
+        self.nonce_manager = nonce_manager or get_nonce_manager()
         self._connection_handlers: Dict[str, Callable] = {}
         self._nonce_history: Dict[str, list] = {}
         self._failed_nonces: Dict[str, list] = {}

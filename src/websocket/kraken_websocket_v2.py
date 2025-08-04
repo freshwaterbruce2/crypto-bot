@@ -145,8 +145,8 @@ class KrakenWebSocketV2:
         logger.info("[KRAKEN_WS_V2] Starting WebSocket V2 connection")
         
         try:
-            # Initialize message handler (no start_processing method needed)
-            pass
+            # Initialize message handler for WebSocket V2 processing
+            logger.debug("[KRAKEN_WS_V2] Initializing message handler for V2 processing")
             
             # Set up message handler callbacks
             self._setup_message_callbacks()

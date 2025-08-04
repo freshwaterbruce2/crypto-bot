@@ -204,11 +204,15 @@ class BotAuthenticationTest:
                 logger.warning("⚠️  No config available, skipping balance access test")
                 return True
             
-            # Try to initialize exchange client
-            from src.exchange.kraken_sdk_exchange import KrakenSDKExchange
+            # Try to initialize exchange client (using native implementation)
+            from src.exchange.native_kraken_exchange import NativeKrakenExchange
             
-            exchange = KrakenSDKExchange(self.config)
-            await exchange.initialize()
+            exchange = NativeKrakenExchange(
+                api_key=self.config.get('api_key', ''),
+                api_secret=self.config.get('api_secret', ''),
+                tier=self.config.get('tier', 'starter')
+            )
+            await exchange.connect()
             
             # Test balance retrieval
             balances = await exchange.get_balance()

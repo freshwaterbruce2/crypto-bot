@@ -558,37 +558,9 @@ class FunctionalStrategyManager:
     #     Returns:
     #         Initialized sell engine or None if creation failed
     #     """
-    #     try:
-    #         logger.info(f"[SELL_ENGINE_DEBUG] {symbol}: Starting sell engine creation...")
-    #         
-    #         # Create sell engine configuration
-    #         sell_config = SellEngineConfig(
-    #             symbol=symbol,
-    #             take_profit_pct=config.get('take_profit_pct', 0.5),  # 0.5% quick profits
-    #             stop_loss_pct=config.get('stop_loss_pct', 0.8),        # 0.8% tight stops
-    #             trailing_stop_pct=config.get('trailing_stop_pct', 0.3),
-    #             check_interval=config.get('check_interval', 3),        # Quick monitoring
-    #             min_profit_threshold=config.get('min_profit_threshold', 0.1)  # 0.1% minimum
-    #         )
-    #         
-    #         logger.info(f"[SELL_ENGINE_DEBUG] {symbol}: SellEngineConfig created successfully")
-    #         
-    #         # Initialize the sell engine
-    #         sell_engine = AutonomousSellEngine(
-    #             exchange=getattr(self.bot, 'exchange', None),
-    #             symbol=symbol,
-    #             config=sell_config,
-    #             bot_reference=self.bot
-    #         )
-    #         
-    #         logger.info(f"[SELL_ENGINE_CREATE] {symbol}: AutonomousSellEngine created with {sell_config.take_profit_pct}% target")
-    #         return sell_engine
-    #         
-    #     except Exception as e:
-    #         logger.error(f"[SELL_ENGINE_CREATE] Error creating sell engine for {symbol}: {e}")
-    #         import traceback
-    #         logger.error(f"[SELL_ENGINE_DEBUG] Full traceback: {traceback.format_exc()}")
-    #         return None
+    #     # This method was deprecated in favor of the enhanced sell logic system
+    #     # Keeping placeholder for potential future enhancements
+    #     pass
     
     async def update_ohlc_data(self, symbol: str, ohlc_data: Dict[str, Any]):
         """

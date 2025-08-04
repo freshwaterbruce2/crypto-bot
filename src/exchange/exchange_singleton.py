@@ -91,26 +91,14 @@ class ExchangeSingleton:
                 
                 logger.info(f"[EXCHANGE_SINGLETON] Configuration check: use_sdk={use_sdk}")
                 
-                if use_sdk:
-                    logger.info("[EXCHANGE_SINGLETON] Using Kraken SDK implementation with unified coordination")
-                    from src.exchange.kraken_sdk_exchange import KrakenSDKExchange
-                    
-                    # Enhanced SDK exchange with data coordination
-                    cls._instance = KrakenSDKExchange(
-                        api_key=api_key,
-                        api_secret=api_secret,
-                        tier=tier,
-                        enable_websocket_integration=True,
-                        optimize_for_minimal_nonce_conflicts=True
-                    )
-                else:
-                    logger.info("[EXCHANGE_SINGLETON] Using native implementation")
-                    from src.exchange.native_kraken_exchange import NativeKrakenExchange
-                    cls._instance = NativeKrakenExchange(
-                        api_key=api_key,
-                        api_secret=api_secret,
-                        tier=tier
-                    )
+                # SDK no longer available - always use native implementation
+                logger.info("[EXCHANGE_SINGLETON] Using native Kraken implementation")
+                from src.exchange.native_kraken_exchange import NativeKrakenExchange
+                cls._instance = NativeKrakenExchange(
+                    api_key=api_key,
+                    api_secret=api_secret,
+                    tier=tier
+                )
                 
                 # Configure connection pool
                 if hasattr(cls._instance, 'configure_connection_pool'):

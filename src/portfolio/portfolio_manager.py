@@ -956,6 +956,36 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error calculating portfolio value: {e}")
             return Decimal('0')
     
+    async def force_sync_with_exchange(self) -> bool:
+        """
+        Force synchronization with exchange data
+        
+        Returns:
+            True if sync successful
+        """
+        try:
+            logger.info("[PORTFOLIO_MANAGER] Force syncing with exchange...")
+            
+            # Sync balances if balance manager available
+            if self.balance_manager and hasattr(self.balance_manager, 'force_refresh'):
+                await self.balance_manager.force_refresh()
+            
+            # Update position tracker with current exchange data
+            if hasattr(self.position_tracker, 'sync_with_exchange'):
+                await self.position_tracker.sync_with_exchange()
+            
+            # Update portfolio value
+            current_value = await self._get_portfolio_value()
+            if self.config.analytics_enabled:
+                self.analytics.record_portfolio_value(current_value)
+            
+            logger.info("[PORTFOLIO_MANAGER] Exchange sync completed successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"[PORTFOLIO_MANAGER] Error syncing with exchange: {e}")
+            return False
+    
     # Context manager support
     async def __aenter__(self):
         """Async context manager entry"""

@@ -199,14 +199,74 @@ python3 scripts/manual_sell_positions.py
 - **Balance Verification**: Continuous balance checking
 - **Emergency Rebalancing**: Automatic position cleanup
 
-## 📈 Performance Monitoring
+## 📈 Production Monitoring System
 
-The bot provides real-time metrics including:
-- Total trades executed
-- Success/failure rates
-- Profit/loss tracking
-- Capital deployment efficiency
-- Rate limit usage
+**NEW: Comprehensive Real-time Monitoring** with web dashboard and health checks:
+
+### Quick Start with Monitoring
+```bash
+# Launch bot with production monitoring
+python launch_with_monitoring.py
+
+# Or use Windows batch file
+START_WITH_MONITORING.bat
+```
+
+### Dashboard Features
+- **Real-time Web Dashboard**: http://localhost:8000
+- **Live Health Checks**: Every 5 minutes automated monitoring
+- **Performance Metrics**: Trading success rates, P&L tracking, resource usage
+- **Alert System**: Configurable thresholds with notifications
+- **Emergency Controls**: Manual emergency stop functionality
+- **Mobile Responsive**: Access from any device
+
+### Monitored Metrics
+- **Trading Performance**: trades_executed, success_rate, total_pnl, daily_pnl
+- **System Health**: nonce_failures, websocket_reconnects, api_errors
+- **Resource Usage**: memory_usage_mb, log_file_size_mb, cpu_usage
+- **Component Health**: balance_manager_health, websocket_status
+- **Performance Timings**: trade_execution_time, balance_check_time
+
+### Alert Thresholds
+- Memory usage > 500MB
+- API error rate > 0.1%
+- Trading success rate < 85%
+- Daily P&L loss > $50
+- WebSocket reconnects > 5/hour
+
+### Configuration Options
+```bash
+# Production monitoring (aggressive thresholds)
+python launch_with_monitoring.py --config production
+
+# Development monitoring (relaxed thresholds)
+python launch_with_monitoring.py --config development
+
+# Custom dashboard port
+python launch_with_monitoring.py --dashboard-port 8001
+```
+
+See [Monitoring Documentation](src/monitoring/README.md) for complete details.
+
+## 🚨 Emergency Controls
+
+### Automated Emergency Shutdown
+The monitoring system automatically triggers emergency shutdown on:
+- Memory usage > 1000MB
+- API error rate > 1%
+- Daily losses > $100
+- Critical system failures
+
+### Manual Emergency Stop
+- **Dashboard**: Red emergency stop button
+- **API**: POST to `/api/control/emergency-stop`
+- **Keyboard**: Ctrl+C for graceful shutdown
+
+### Emergency Actions
+1. Halt all trading loops
+2. Cancel all open orders
+3. Optionally liquidate positions
+4. Set emergency mode flag
 
 ## 🔧 Troubleshooting
 

@@ -2309,15 +2309,29 @@ class LoggingAnalyticsAssistant:
     async def _collect_system_wide_metrics(self) -> Dict:
         """Collect system-wide performance metrics."""
         try:
-            # Get basic system info (would use psutil in production)
+            # Get real system metrics using psutil
+            import psutil
+            import threading
+            
+            # Basic system metrics
+            cpu_usage = psutil.cpu_percent(interval=0.1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+            
+            # Network and threading info
+            network_connections = len(psutil.net_connections())
+            active_threads = threading.active_count()
+            
             return {
-                "cpu_usage": 45.0,  # Placeholder
-                "memory_usage": 62.0,  # Placeholder
-                "disk_usage": 35.0,  # Placeholder
-                "network_latency": 25.0,  # ms
-                "api_response_time": 150.0,  # ms
-                "active_threads": 12,
-                "open_connections": 8
+                "cpu_usage": round(cpu_usage, 1),
+                "memory_usage": round(memory.percent, 1),
+                "disk_usage": round(disk.percent, 1),
+                "network_latency": 25.0,  # Would require actual network test
+                "api_response_time": 150.0,  # Would require actual API timing
+                "active_threads": active_threads,
+                "open_connections": network_connections,
+                "memory_available_gb": round(memory.available / (1024**3), 2),
+                "disk_free_gb": round(disk.free / (1024**3), 2)
             }
             
         except Exception as e:

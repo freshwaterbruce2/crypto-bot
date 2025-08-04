@@ -32,7 +32,7 @@ import hashlib
 import base64
 
 from .kraken_auth import KrakenAuth, KrakenAuthError
-from ..utils.unified_kraken_nonce_manager import UnifiedKrakenNonceManager
+from ..utils.consolidated_nonce_manager import ConsolidatedNonceManager
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class WebSocketAuthenticationManager:
                 logger.warning(f"[WS_AUTH] REST auth test issues: {test_result}")
             
             # Test nonce manager access
-            nonce_manager = UnifiedKrakenNonceManager.get_instance()
+            nonce_manager = ConsolidatedNonceManager.get_instance()
             test_nonce = nonce_manager.get_nonce("websocket_auth_test")
             logger.debug(f"[WS_AUTH] Test nonce generated: {test_nonce}")
             
@@ -395,7 +395,7 @@ class WebSocketAuthenticationManager:
         
         try:
             # Get nonce manager and force reset
-            nonce_manager = UnifiedKrakenNonceManager.get_instance()
+            nonce_manager = ConsolidatedNonceManager.get_instance()
             nonce_manager.handle_invalid_nonce_error("websocket_auth")
             
             # Force token refresh with new nonce
@@ -427,7 +427,7 @@ class WebSocketAuthenticationManager:
         
         try:
             # Reset both nonce and token
-            nonce_manager = UnifiedKrakenNonceManager.get_instance()
+            nonce_manager = ConsolidatedNonceManager.get_instance()
             nonce_manager.handle_invalid_nonce_error("websocket_auth")
             
             if self._current_token:
@@ -572,7 +572,7 @@ class WebSocketAuthenticationManager:
                 logger.info(f"🔑 Enhanced WebSocket token request (attempt {attempt + 1}/{max_retries})")
                 
                 # Get fresh nonce with collision prevention
-                nonce_manager = UnifiedKrakenNonceManager.get_instance()
+                nonce_manager = ConsolidatedNonceManager.get_instance()
                 nonce = await nonce_manager.get_nonce_async("websocket_token_enhanced")
                 
                 # Add small delay to prevent nonce collisions
@@ -620,101 +620,9 @@ class WebSocketAuthenticationManager:
                 if 'nonce' in error_str and attempt < max_retries - 1:
                     # Handle nonce error with recovery
                     logger.info("🔄 Applying nonce error recovery...")
-                    nonce_manager = UnifiedKrakenNonceManager.get_instance()
+                    nonce_manager = ConsolidatedNonceManager.get_instance()
                     recovery_nonce = nonce_manager.handle_invalid_nonce_error("websocket_token_recovery")
                     logger.info(f"🔄 Recovery nonce: {recovery_nonce}")
-                
-                if attempt < max_retries - 1:
-                    delay = base_delay * (2 ** attempt)
-                    logger.info(f"⏳ Retrying in {delay:.1f} seconds...")
-                    await asyncio.sleep(delay)
-                else:
-                    logger.error(f"❌ All token request attempts failed: {e}")
-                    return None
-        
-        return None
-
-        """Enhanced WebSocket token request with comprehensive error handling"""
-        max_retries = 5
-        base_delay = 1.0
-        
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"🔑 Enhanced WebSocket token request (attempt {attempt + 1}/{max_retries})")
-                
-                # Get fresh nonce with collision prevention using enhanced nonce generation
-                nonce_manager = UnifiedKrakenNonceManager.get_instance()
-                
-                # Try enhanced nonce first, fallback to regular if not available
-                try:
-                    nonce = nonce_manager.get_enhanced_nonce("websocket_token_enhanced")
-                    logger.debug(f"[WS_AUTH] Using enhanced nonce for token request")
-                except Exception as e:
-                    logger.debug(f"[WS_AUTH] Enhanced nonce not available, using regular: {e}")
-                    nonce = await nonce_manager.get_nonce_async("websocket_token_enhanced")
-                
-                # Add small delay to prevent nonce collisions
-                await asyncio.sleep(0.1)
-                
-                # Create signature with debug info
-                uri_path = '/0/private/GetWebSocketsToken'
-                post_data = f"nonce={nonce}"
-                
-                # Generate signature
-                import hmac
-                import hashlib
-                import base64
-                
-                sha256_hash = hashlib.sha256(post_data.encode('utf-8')).digest()
-                message = uri_path.encode('utf-8') + sha256_hash
-                secret = base64.b64decode(self.private_key)
-                signature = base64.b64encode(hmac.new(secret, message, hashlib.sha512).digest()).decode('utf-8')
-                
-                # Prepare headers
-                headers = {
-                    'API-Key': self.api_key,
-                    'API-Sign': signature,
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                }
-                
-                # Make request with comprehensive error handling
-                import aiohttp
-                async with aiohttp.ClientSession() as session:
-                    url = f"https://api.kraken.com{uri_path}"
-                    async with session.post(url, headers=headers, data=post_data, timeout=30) as resp:
-                        result = await resp.json()
-                        
-                        if resp.status == 200 and 'result' in result and 'token' in result['result']:
-                            logger.info(f"✅ WebSocket token obtained successfully (attempt {attempt + 1})")
-                            return {'token': result['result']['token']}
-                        else:
-                            error_info = result.get('error', [f'HTTP {resp.status}'])
-                            raise Exception(f"API error: {error_info}")
-                            
-            except Exception as e:
-                error_str = str(e).lower()
-                logger.warning(f"⚠️  Token request attempt {attempt + 1} failed: {e}")
-                
-                if 'nonce' in error_str and attempt < max_retries - 1:
-                    # Handle nonce error with enhanced recovery
-                    logger.info("🔄 Applying enhanced nonce error recovery...")
-                    nonce_manager = UnifiedKrakenNonceManager.get_instance()
-                    
-                    # Use enhanced recovery if available
-                    try:
-                        # Force a significant jump forward using enhanced nonce system
-                        if hasattr(nonce_manager, '_nonce_fixer') and nonce_manager._nonce_fixer:
-                            nonce_manager._nonce_fixer._base_nonce = int(time.time() * 1000000) + 300000000  # 300 second jump
-                            nonce_manager._nonce_fixer._nonce_counter = 0
-                            recovery_nonce = nonce_manager.get_enhanced_nonce("websocket_token_recovery")
-                            logger.info(f"🔄 Enhanced recovery nonce: {recovery_nonce}")
-                        else:
-                            recovery_nonce = nonce_manager.handle_invalid_nonce_error("websocket_token_recovery")
-                            logger.info(f"🔄 Standard recovery nonce: {recovery_nonce}")
-                    except Exception as recovery_error:
-                        logger.warning(f"🔄 Enhanced recovery failed: {recovery_error}, using standard recovery")
-                        recovery_nonce = nonce_manager.handle_invalid_nonce_error("websocket_token_recovery")
-                        logger.info(f"🔄 Fallback recovery nonce: {recovery_nonce}")
                 
                 if attempt < max_retries - 1:
                     delay = base_delay * (2 ** attempt)

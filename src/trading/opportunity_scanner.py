@@ -319,8 +319,8 @@ class OpportunityScanner:
             # Get market data
             ticker_data = await self._get_ticker_data(symbol)
             if not ticker_data:
-                # DEBUG: Log when we can't get ticker data
-                self.logger.debug(f"[SCANNER] No ticker data for {symbol} - WebSocket may not be feeding data")
+                # Log data availability for troubleshooting
+                self.logger.debug(f"[SCANNER] No ticker data available for {symbol}")
                 return None
                 
             current_price = float(ticker_data.get('last', 0))
@@ -331,8 +331,7 @@ class OpportunityScanner:
             base_asset = symbol.split('/')[0]  # Extract base currency (e.g., BTC from BTC/USD)
             holds_position = await self._check_existing_position(base_asset)
             
-            # DEBUG: Log ticker data and scanning progress
-            # Only log first few symbols to avoid spam, but show we're processing all
+            # Log scanning progress for monitoring (limited to avoid spam)
             if self.symbols.index(symbol) < 3 or self.symbols.index(symbol) == len(self.symbols) - 1:
                 position_status = "HELD" if holds_position else "AVAILABLE"
                 self.logger.info(f"[SCANNER] [{self.symbols.index(symbol)+1}/{len(self.symbols)}] {symbol} - Price: ${current_price:.2f}, Status: {position_status}")
@@ -344,13 +343,9 @@ class OpportunityScanner:
             rsi = await self._get_rsi(symbol)
             volume_ratio = await self._get_volume_ratio(symbol)
             
-            # DEBUG: Log what indicators we have
+            # Log technical indicators for first symbol to monitor data quality
             if self.symbols.index(symbol) == 0:
-                self.logger.debug(f"[SCANNER] {symbol} - RSI: {rsi}, Volume Ratio: {volume_ratio}, entering signal logic")
-            
-            # DEBUG: Log what data we have for first symbol
-            if symbol == self.symbols[0]:
-                self.logger.debug(f"[SCANNER] {symbol} - RSI: {rsi}, Volume Ratio: {volume_ratio}")
+                self.logger.debug(f"[SCANNER] Technical indicators for {symbol} - RSI: {rsi:.2f}, Volume Ratio: {volume_ratio:.2f}")
             
             # [TARGET] PORTFOLIO-AWARE SIGNAL GENERATION
             opportunity = None
@@ -415,7 +410,7 @@ class OpportunityScanner:
                     }
                     price_str = f"{current_price:.8f}" if current_price < 0.01 else f"{current_price:.2f}"
                     self.logger.info(f"[SCANNER] {mode_str} SELL signal generated for held {base_asset} at ${price_str}")
-                    self.logger.info(f"[SCANNER] DEBUG: Returning opportunity: {opportunity}")
+                    self.logger.info(f"[SCANNER] Generated sell opportunity: {opportunity}")
                     return opportunity  # CRITICAL FIX: Return the sell opportunity immediately
                 
             else:

@@ -1,7 +1,11 @@
 """
-Unified Kraken Nonce Manager - Single authoritative source for all nonce generation
+DEPRECATED: Unified Kraken Nonce Manager - REPLACED BY CONSOLIDATED NONCE MANAGER
 
-This is the ONLY nonce manager that should be used across the entire application.
+⚠️  WARNING: This module is DEPRECATED as of 2025-08-04
+⚠️  Use ConsolidatedNonceManager from utils.consolidated_nonce_manager instead
+
+This module has been superseded by the ConsolidatedNonceManager which consolidates
+ALL nonce management systems into a single, authoritative implementation.
 It provides:
 - Global singleton pattern to prevent multiple instances
 - Microsecond precision with guaranteed minimum increments
@@ -21,11 +25,21 @@ import logging
 import os
 import threading
 import time
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Union, Any
 
 logger = logging.getLogger(__name__)
+
+# Issue deprecation warning when module is imported
+warnings.warn(
+    "unified_kraken_nonce_manager is DEPRECATED. "
+    "Use ConsolidatedNonceManager from utils.consolidated_nonce_manager instead. "
+    "This module will be REMOVED in a future version.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class KrakenNonceFixer:
@@ -622,9 +636,11 @@ class UnifiedKrakenNonceManager:
 
 
 # Convenience function for getting the global instance
-def get_unified_nonce_manager() -> UnifiedKrakenNonceManager:
-    """Get the global unified nonce manager instance"""
-    return UnifiedKrakenNonceManager.get_instance()
+def get_unified_nonce_manager():
+    """Get the global unified nonce manager instance - DEPRECATED, redirects to consolidated manager"""
+    # Import here to avoid circular imports
+    from .consolidated_nonce_manager import get_nonce_manager
+    return get_nonce_manager()
 
 
 def initialize_enhanced_nonce_manager(api_key: str, api_secret: str) -> UnifiedKrakenNonceManager:

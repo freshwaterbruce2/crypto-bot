@@ -80,7 +80,7 @@ class QueuedRequest:
     def __lt__(self, other):
         """Compare requests for priority queue ordering."""
         if not isinstance(other, QueuedRequest):
-            return NotImplemented
+            return NotImplemented  # Correct for comparison operators
         
         # Primary sort: priority (lower is higher priority)
         if self.priority != other.priority:

@@ -540,19 +540,57 @@ class SellLogicHandler:
     
     def _batch_update_market_data(self, symbols: List[str]) -> Dict[str, float]:
         """Batch update market data for multiple symbols"""
-        # This would integrate with WebSocket manager for real-time prices
-        # Placeholder for batch price fetching optimization
         prices = {}
         try:
-            # In a real implementation, this would use the bot's WebSocket manager
-            # to get all prices in a single batch operation
-            for symbol in symbols:
-                # This is where WebSocket integration would happen
-                prices[symbol] = 0.0  # Placeholder
+            # Try to get prices from WebSocket manager first
+            if hasattr(self.bot, 'websocket_manager') and self.bot.websocket_manager:
+                for symbol in symbols:
+                    try:
+                        ticker_data = self.bot.websocket_manager.get_latest_ticker(symbol)
+                        if ticker_data and 'last' in ticker_data:
+                            prices[symbol] = float(ticker_data['last'])
+                        else:
+                            # Fallback to exchange client
+                            prices[symbol] = self._get_fallback_price(symbol)
+                    except Exception:
+                        prices[symbol] = self._get_fallback_price(symbol)
+            else:
+                # Fallback to individual price fetches
+                for symbol in symbols:
+                    prices[symbol] = self._get_fallback_price(symbol)
+                    
         except Exception as e:
             logger.error(f"[SELL_HANDLER] Error in batch price update: {e}")
+            # Return zero prices on complete failure
+            prices = {symbol: 0.0 for symbol in symbols}
         
         return prices
+    
+    def _get_fallback_price(self, symbol: str) -> float:
+        """Get fallback price for a symbol when WebSocket data is unavailable"""
+        try:
+            # Try to get from exchange balance manager or position data
+            if hasattr(self.bot, 'balance_manager') and self.bot.balance_manager:
+                # Check if we have recent price data in balance manager
+                base_asset = symbol.replace('/USDT', '').replace('/USD', '')
+                balance_data = self.bot.balance_manager.get_asset_balance(base_asset)
+                if balance_data and 'last_price' in balance_data:
+                    return float(balance_data['last_price'])
+            
+            # Try to get from position data
+            if hasattr(self.bot, 'position_tracker') and self.bot.position_tracker:
+                position = self.bot.position_tracker.get_position(symbol)
+                if position and 'entry_price' in position:
+                    # Use entry price as rough estimate (not ideal but better than 0)
+                    return float(position['entry_price'])
+            
+            # Last resort: return a small positive value to indicate unknown price
+            logger.warning(f"[SELL_HANDLER] No price data available for {symbol}, using fallback")
+            return 0.01  # Small fallback value
+            
+        except Exception as e:
+            logger.warning(f"[SELL_HANDLER] Error getting fallback price for {symbol}: {e}")
+            return 0.01
     
     def get_sell_summary(self) -> Dict[str, Any]:
         """Get enhanced summary of sell handler state"""
