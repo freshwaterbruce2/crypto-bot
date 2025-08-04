@@ -1,10 +1,27 @@
-"""
-Kraken Nonce Manager - Thread-safe nonce generation for WebSocket connections
+# DEPRECATED - DO NOT USE THIS NONCE MANAGER
+# This file has been temporarily disabled to prevent nonce conflicts.
+# All nonce operations should use src/utils/unified_kraken_nonce_manager.py
+# 
+# If you see import errors, update your imports to use UnifiedKrakenNonceManager
+#
+# Emergency fix applied: 2025-08-03
+# Issue: Multiple nonce managers causing "EAPI:Invalid nonce" errors
 
-This module provides a thread-safe nonce management system with microsecond
-precision for Kraken API authentication. Each connection gets its own
-sequential nonce sequence to prevent conflicts.
 """
+Kraken Nonce Manager - DEPRECATED
+
+WARNING: This module is DEPRECATED.
+Use UnifiedKrakenNonceManager from utils.unified_kraken_nonce_manager instead.
+
+This file is kept for backward compatibility but should not be used in new code.
+"""
+
+import warnings
+warnings.warn(
+    "kraken_nonce_manager is deprecated. Use UnifiedKrakenNonceManager from utils.unified_kraken_nonce_manager",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 import threading
 import time
@@ -293,7 +310,7 @@ class NonceGenerationError(Exception):
 _global_nonce_manager: Optional[KrakenNonceManager] = None
 
 
-def get_nonce_manager() -> KrakenNonceManager:
+def get_unified_nonce_manager() -> KrakenNonceManager:
     """
     Get or create the global nonce manager instance.
     
@@ -302,7 +319,7 @@ def get_nonce_manager() -> KrakenNonceManager:
     """
     global _global_nonce_manager
     if _global_nonce_manager is None:
-        _global_nonce_manager = KrakenNonceManager()
+        _global_nonce_manager = KrakenUnifiedUnifiedKrakenNonceManager()
     return _global_nonce_manager
 
 

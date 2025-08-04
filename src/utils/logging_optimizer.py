@@ -123,7 +123,7 @@ def configure_optimized_logging(log_dir="logs", max_file_size_mb=50, backup_coun
         logger.setLevel(logging.WARNING)
     
     # Special handling for balance manager logs
-    balance_logger = logging.getLogger('src.trading.unified_balance_manager')
+    balance_logger = logging.getLogger('src.balance.balance_manager')
     balance_logger.setLevel(logging.INFO)  # Reduce DEBUG spam
     
     # Log rotation on startup if file is too large

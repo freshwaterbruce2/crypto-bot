@@ -1,0 +1,10 @@
+{
+  "last_nonce": 1754285107711305,
+  "timestamp": 1754285102.7113066,
+  "iso_time": "2025-08-04T05:25:02Z",
+  "reset_reason": "Authentication fix - synchronized to current time",
+  "synchronization_offset_seconds": 5,
+  "total_generated": 0,
+  "error_recoveries": 0,
+  "connections": 0
+}

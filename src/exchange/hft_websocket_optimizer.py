@@ -13,7 +13,8 @@ import asyncio
 import logging
 import time
 import json
-from typing import Dict, Any, Optional, Callable, List, Queue
+from typing import Dict, Any, Optional, Callable, List
+from queue import Queue
 from datetime import datetime, timedelta
 from collections import deque
 from dataclasses import dataclass, field

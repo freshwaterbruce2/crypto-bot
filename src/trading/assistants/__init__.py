@@ -4,7 +4,6 @@ Provides assistant classes for trading operations
 """
 
 from .trade_assistant import TradeAssistant
-from .balance_assistant import BalanceAssistant
 from .execution_assistant import ExecutionAssistant
 from .data_analysis_assistant import DataAnalysisAssistant
 from .signal_generation_assistant import SignalGenerationAssistant
@@ -14,7 +13,6 @@ from .performance_tracking_assistant import PerformanceTrackingAssistant
 
 __all__ = [
     'TradeAssistant',
-    'BalanceAssistant', 
     'ExecutionAssistant',
     'DataAnalysisAssistant',
     'SignalGenerationAssistant',

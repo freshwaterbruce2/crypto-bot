@@ -38,8 +38,8 @@ from src.strategies.mean_reversion_strategy import MeanReversionStrategy
 from src.utils.custom_logging import configure_logging
 
 # Import Kraken helpers
-from src.helpers.kraken_rate_limiter import KrakenRateLimitManager
-from src.helpers.kraken_order_validator import KrakenOrderValidator
+from src.utils.kraken_rl import KrakenRateLimiter as KrakenRateLimitManager
+from src.utils.kraken_order_validator import KrakenOrderValidator
 
 logger = configure_logging()
 

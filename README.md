@@ -1,6 +1,6 @@
-# Kraken Crypto Trading Bot 🤖
+# Kraken Crypto Trading Bot
 
-**PRODUCTION READY 2025** - An advanced crypto trading bot optimized for low-priced altcoin trading with comprehensive error handling and decimal precision.
+**PRODUCTION READY 2025** - An advanced cryptocurrency trading bot optimized for Kraken exchange using fee-free micro-scalping strategies with comprehensive error handling and decimal precision.
 
 ## 🎯 Current Strategy: Low-Priced Pair Focus
 
@@ -42,8 +42,8 @@
 
 1. **Clone the repository**:
 ```bash
-git clone https://github.com/yourusername/kraken-trading-bot.git
-cd kraken-trading-bot
+git clone https://github.com/yourusername/crypto-trading-bot-2025.git
+cd crypto-trading-bot-2025
 ```
 
 2. **Install dependencies**:
@@ -56,11 +56,33 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-4. **Configure your Kraken API credentials** in `.env`:
-```
-KRAKEN_API_KEY=your_api_key_here
-KRAKEN_API_SECRET=your_api_secret_here
-```
+4. **Configure your Kraken API credentials**:
+
+   **CRITICAL**: Your API key must have specific permissions enabled. See complete setup guide:
+   📖 **[KRAKEN_API_PERMISSIONS_GUIDE.md](KRAKEN_API_PERMISSIONS_GUIDE.md)**
+
+   **Required Permissions Checklist**:
+   - ✅ Query Funds
+   - ✅ Access Websockets connection
+   - ✅ Create & Modify Orders  
+   - ✅ Query Open Orders & Trades
+   - ✅ Cancel/Close Orders
+   - ❌ Withdraw Funds (NOT recommended)
+
+   **Update your `.env` file**:
+   ```bash
+   KRAKEN_API_KEY=your_api_key_here
+   KRAKEN_API_SECRET=your_api_secret_here
+   ```
+
+   **Test your API setup**:
+   ```bash
+   # Windows
+   DIAGNOSE_API.bat
+   
+   # Linux/WSL
+   python diagnose_api_key.py
+   ```
 
 ## ⚙️ Configuration
 
@@ -68,12 +90,21 @@ The bot is configured through `config.json`. Key settings include:
 
 ```json
 {
-  "position_size_usdt": 5.0,        // Minimum order size ($5)
-  "take_profit_pct": 0.002,         // 0.2% profit target
-  "stop_loss_pct": 0.008,           // 0.8% stop loss
-  "max_position_pct": 0.8,          // Max 80% of balance per position
-  "kraken_api_tier": "starter",     // API tier (starter/intermediate/pro)
-  "trade_pairs": ["BTC/USDT", ...] // Trading pairs (auto-populated)
+  "exchange": "kraken",
+  "position_size_usdt": 0.5,
+  "max_order_size_usdt": 1.0, 
+  "trade_pairs": [
+    "SHIB/USDT",
+    "DOGE/USDT",
+    "ADA/USDT",
+    "XRP/USDT",
+    "TRX/USDT"
+  ],
+  "exchange_config": {
+    "rate_limit": 180,
+    "validate_minimums": true
+  },
+  "live_trading": true
 }
 ```
 
@@ -81,12 +112,23 @@ The bot is configured through `config.json`. Key settings include:
 
 ### Production Mode
 ```bash
-python3 scripts/live_launch.py
+# Linux/WSL
+python scripts/live_launch.py
+
+# Or use main entry point
+python main.py
 ```
 
-### Windows (Batch File)
+### Windows (Batch Files)
 ```batch
+# Main trading bot
 START_BOT_OPTIMIZED.bat
+
+# SHIB-focused trading
+START_SHIB_BOT_V2.bat
+
+# Test API connection
+TEST_API.bat
 ```
 
 ### Manual Sell Script (Emergency Capital Release)

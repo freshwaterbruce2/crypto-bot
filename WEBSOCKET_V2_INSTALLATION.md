@@ -1,23 +1,45 @@
 # WebSocket V2 Installation Guide
 
-## Quick Fix for Windows
+## Prerequisites
 
-To install the required `python-kraken-sdk` on Windows:
+- Python 3.8+ installed
+- pip package manager
+- Valid Kraken API credentials
 
-1. **Option 1: Run the installation batch file**
-   ```
-   INSTALL_KRAKEN_SDK.bat
-   ```
+## Installation Methods
 
-2. **Option 2: Manual installation in PowerShell**
-   ```powershell
-   python -m pip install python-kraken-sdk
-   ```
+### Option 1: Install Dependencies (Recommended)
+```bash
+# Install all requirements including WebSocket V2 SDK
+pip install -r requirements.txt
+```
 
-3. **Option 3: If you get "externally-managed-environment" error**
-   ```powershell
-   python -m pip install --user python-kraken-sdk
-   ```
+### Option 2: Manual SDK Installation
+
+#### Windows:
+```powershell
+# Use virtual environment (recommended)
+python -m venv venv
+venv\Scripts\activate
+pip install python-kraken-sdk
+
+# Or install globally
+python -m pip install python-kraken-sdk
+
+# If you get "externally-managed-environment" error
+python -m pip install --user python-kraken-sdk
+```
+
+#### Linux/WSL:
+```bash
+# Use virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate
+pip install python-kraken-sdk
+
+# Or install globally
+pip3 install python-kraken-sdk
+```
 
 ## What This Fixes
 
@@ -36,16 +58,75 @@ If the SDK is not installed, the bot will:
 
 ## Verify Installation
 
-After installing, you can verify the SDK is available:
-```python
-python -c "from kraken.spot import SpotWSClient; print('SDK installed successfully!')"
+After installing, verify the SDK is available:
+
+```bash
+# Test WebSocket V2 SDK import
+python -c "from kraken.spot import SpotWSClient; print('✅ WebSocket V2 SDK installed successfully!')"
+
+# Test basic bot imports
+python -c "from src.bot import KrakenTradingBot; print('✅ Bot imports working!')"
+
+# Run comprehensive test
+python scripts/test_imports.py
 ```
 
-## Next Steps
+## Configuration
 
-Once installed, run the bot normally:
+Ensure your `config.json` has WebSocket V2 enabled:
+
+```json
+{
+  "websocket": {
+    "enabled": true,
+    "version": "v2",
+    "channels": ["ticker", "trade", "book"]
+  },
+  "exchange": {
+    "name": "kraken",
+    "api_tier": "pro"
+  }
+}
 ```
+
+## Launch Options
+
+### Development/Testing:
+```bash
+# Test WebSocket connection only
+python websocket_v2_explorer.py
+
+# Test full bot functionality
+python scripts/test_websocket_v2.py
+```
+
+### Production:
+```bash
+# Start main trading bot
 python scripts/live_launch.py
+
+# Start with monitoring
+python scripts/live_launch.py --monitor
 ```
 
-The bot will automatically detect and use the WebSocket V2 implementation.
+## Troubleshooting
+
+### Common Issues:
+
+1. **Import Error**: `ModuleNotFoundError: No module named 'kraken'`
+   - Solution: Install python-kraken-sdk as shown above
+
+2. **WebSocket Connection Failed**
+   - Check internet connection
+   - Verify API credentials in `.env` file
+   - Test with: `python scripts/test_kraken_connection.py`
+
+3. **Permission Errors**
+   - Use virtual environment or `--user` flag
+   - On Linux: `sudo pip3 install python-kraken-sdk`
+
+4. **Authentication Errors**
+   - Verify API key permissions include WebSocket access
+   - Check API key/secret format in configuration
+
+The bot will automatically detect and use the WebSocket V2 implementation when available.

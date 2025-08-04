@@ -5,7 +5,7 @@ Uses official python-kraken-sdk for all API interactions
 
 import asyncio
 from ..utils.base_exchange_connector import BaseExchangeConnector
-from ..utils.unified_balance import get_balance_manager
+from ..balance.balance_manager import BalanceManager
 import logging
 import time
 from typing import Dict, Optional, Any, List, Union
@@ -30,8 +30,8 @@ except ImportError as e:
     SDKKrakenAPIError = Exception
 
 from ..utils.kraken_rl import KrakenRateLimiter
-from ..utils.kraken_nonce_manager import KrakenNonceManager
-from ..utils.circuit_breaker import circuit_breaker_manager, CircuitBreakerConfig
+from ..utils.unified_kraken_nonce_manager import UnifiedKrakenNonceManager
+from ..circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 
 
 class KrakenSDKExchange:
@@ -92,13 +92,13 @@ class KrakenSDKExchange:
             rate_limit_timeout=900.0,  # 15 minutes for rate limits
             timeout=60.0
         )
-        self.circuit_breaker = circuit_breaker_manager.get_or_create(
-            f"kraken_sdk_{tier}",
-            cb_config
+        self.circuit_breaker = CircuitBreaker(
+            name=f"kraken_sdk_{tier}",
+            config=cb_config
         )
         
-        # Initialize nonce manager
-        self.nonce_manager = KrakenNonceManager()
+        # Initialize unified nonce manager (singleton)
+        self.nonce_manager = UnifiedKrakenNonceManager.get_instance()
         
         logger.info(f"[KRAKEN_SDK] Initialized for {tier} tier using official SDK (max API calls: {self.max_api_counter})")
     
@@ -583,16 +583,9 @@ class KrakenSDKExchange:
                 if params is None:
                     params = {}
                 
-                # CRITICAL FIX 2025: Enhanced nonce coordination with microsecond precision
-                nonce = self.nonce_manager.get_nonce("rest_api")
-                params["nonce"] = str(nonce)
-                
-                # CRITICAL FIX 2025: Add additional nonce validation
-                current_time_microseconds = int(time.time() * 1000000)
-                if nonce <= current_time_microseconds:
-                    logger.warning(f"[KRAKEN_SDK] CRITICAL FIX 2025: Nonce collision detected, regenerating")
-                    nonce = self.nonce_manager.get_nonce("rest_api")
-                    params["nonce"] = str(nonce)
+                # Use unified nonce manager for guaranteed unique nonces
+                nonce = self.nonce_manager.get_nonce("kraken_sdk_rest")
+                params["nonce"] = nonce  # Already a string from unified manager
                 
                 # Log nonce for debugging
                 logger.debug(f"[KRAKEN_SDK] Using nonce: {nonce} for {method}")

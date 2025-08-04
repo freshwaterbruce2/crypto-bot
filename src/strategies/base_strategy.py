@@ -56,10 +56,10 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         name: str,
         exchange: Any,
         symbol: str,
-        stop_loss_pct: float = 0.02,   # 2% stop loss for $2 positions
-        take_profit_pct: float = 0.015,  # 1.5% default (1-3% range for $2 positions)
+        stop_loss_pct: float = 0.008,   # 0.8% stop loss for $5+ positions (2025 update)
+        take_profit_pct: float = 0.005,  # 0.5% default optimized for Pro fee-free accounts
         position_side: str = "long_only",
-        order_size_usdt: float = 50.0,
+        order_size_usdt: float = 5.0,  # Updated for 2025 Kraken $5 minimum compliance
         min_candles: int = 5,
         status_update_callback: Optional[Callable[[str, str, str, Dict], None]] = None,
         bot_reference: Optional[Any] = None,  # Reference to main bot for component access

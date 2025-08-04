@@ -11,7 +11,7 @@ from typing import Dict, Optional, Any, Callable
 from datetime import datetime
 import json
 
-from ..utils.kraken_nonce_manager import get_nonce_manager, KrakenNonceManager
+from ..utils.unified_kraken_nonce_manager import get_unified_nonce_manager, UnifiedKrakenNonceManager
 
 logger = logging.getLogger(__name__)
 
@@ -20,21 +20,21 @@ class WebSocketNonceCoordinator:
     """
     Coordinates nonce generation for WebSocket connections.
     
-    Integrates with the KrakenNonceManager to provide:
+    Integrates with the UnifiedKrakenNonceManager to provide:
     - Connection-specific nonce sequences
     - Automatic retry with new nonces
     - Nonce monitoring and debugging
     - Integration with existing WebSocket managers
     """
     
-    def __init__(self, nonce_manager: Optional[KrakenNonceManager] = None):
+    def __init__(self, nonce_manager: Optional[UnifiedKrakenNonceManager] = None):
         """
         Initialize the coordinator.
         
         Args:
             nonce_manager: Optional custom nonce manager, uses global if None
         """
-        self.nonce_manager = nonce_manager or get_nonce_manager()
+        self.nonce_manager = nonce_manager or get_unified_nonce_manager()
         self._connection_handlers: Dict[str, Callable] = {}
         self._nonce_history: Dict[str, list] = {}
         self._failed_nonces: Dict[str, list] = {}
@@ -143,11 +143,10 @@ class WebSocketNonceCoordinator:
         
         # Determine recovery strategy
         if "EOrder:Invalid nonce" in error_message:
-            # Reset connection nonces
-            self.nonce_manager.reset_connection(connection_id)
-            new_nonce = self.get_auth_nonce(connection_id)
+            # Use unified manager's recovery mechanism
+            new_nonce = self.nonce_manager.handle_invalid_nonce_error(connection_id)
             
-            logger.warning(f"[NONCE_COORDINATOR] Invalid nonce {nonce}, reset to {new_nonce}")
+            logger.warning(f"[NONCE_COORDINATOR] Invalid nonce {nonce}, recovered to {new_nonce}")
             
             return {
                 'action': 'retry',
@@ -198,7 +197,8 @@ class WebSocketNonceCoordinator:
         Args:
             connection_id: Connection to clean up
         """
-        self.nonce_manager.remove_connection(connection_id)
+        # Unified manager handles connections internally, just log the cleanup
+        logger.debug(f"[NONCE_COORDINATOR] Cleaned up connection: {connection_id}")
         
         if connection_id in self._connection_handlers:
             del self._connection_handlers[connection_id]

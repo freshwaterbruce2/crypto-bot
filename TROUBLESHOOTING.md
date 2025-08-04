@@ -37,13 +37,19 @@ def _ensure_float(self, value, default=0.0):
 ### Verification Steps
 ```bash
 # Test trade execution without format errors
+python scripts/test_decimal_precision.py
+
+# Or test directly
 python3 -c "
 from src.trading.enhanced_trade_executor_with_assistants import TradeExecutor
+import sys
+sys.path.append('/mnt/c/dev/tools/crypto-trading-bot-2025')
+
 executor = TradeExecutor({})
 test_value = {'free': 10.5}
 result = executor._ensure_float(test_value)
 assert result == 10.5
-print('Format string fix verified')
+print('✅ Format string fix verified')
 "
 ```
 

@@ -4,28 +4,32 @@
     "rate_limit": 180,
     "rate_limit_decay": 3.75,
     "nonce_window_ms": 10000,
-    "enable_websocket_auth": true,
-    "validate_minimums": true
+    "enable_websocket_auth": false,
+    "require_websocket_permissions": true,
+    "validate_minimums": true,
+    "kraken_2025_compliance": {
+      "enhanced_rate_limiting": true,
+      "proper_error_handling": true,
+      "counter_based_limiting": true,
+      "temporary_lockout_handling": true,
+      "nonce_microsecond_precision": true
+    }
   },
   "live_trading": true,
+  "paper_trading": false,
+  "paper_starting_balance": 1000.0,
   "trading_enabled": true,
   "log_level": "INFO",
   "trade_pairs": [
-    "SHIB/USDT",
-    "DOGE/USDT",
-    "ADA/USDT",
-    "XRP/USDT",
-    "TRX/USDT",
-    "VET/USDT",
-    "XLM/USDT"
+    "SHIB/USDT"
   ],
-  "interval_minutes": 1,
-  "position_size_usdt": 4.2,
-  "min_order_size_usdt": 4.2,
-  "max_order_size_usdt": 58.0,
-  "tier_1_trade_limit": 4.2,
+  "interval_minutes": 0.2,
+  "position_size_usdt": 2.5,
+  "min_order_size_usdt": 2.0,
+  "max_order_size_usdt": 5.0,
+  "tier_1_trade_limit": 1.0,
   "use_dynamic_position_sizing": true,
-  "position_size_percentage": 0.7,
+  "position_size_percentage": 0.9,
   "enable_size_validation": true,
   "skip_insufficient_balance": true,
   "take_profit_pct": 0.002,
@@ -69,13 +73,39 @@
   "historical_data_dir": "D:/trading_data/historical",
   "kraken_enhanced_rate_limiting": true,
   "kraken_api_tier": "pro",
+  "kraken_tier": "pro",
   "kraken_websocket_connections": 2,
   "kraken_rate_limit_backoff": true,
   "rate_limiting_v2": {
     "enabled": true,
-    "max_orders_per_minute": 200,
+    "kraken_2025_specs": {
+      "rest_api_limits": {
+        "starter": {"max_counter": 15, "decay_rate": 0.33},
+        "intermediate": {"max_counter": 20, "decay_rate": 0.5},
+        "pro": {"max_counter": 20, "decay_rate": 1.0}
+      },
+      "trading_limits": {
+        "starter": {"max_orders": 60, "max_ratecount": 60, "decay_rate": 1.0},
+        "intermediate": {"max_orders": 80, "max_ratecount": 125, "decay_rate": 2.34},
+        "pro": {"max_orders": 225, "max_ratecount": 180, "decay_rate": 3.75}
+      }
+    },
+    "max_orders_per_minute": 53,
+    "burst_orders_allowed": 45,
     "aggressive_counter_management": true,
-    "pro_tier_optimization": true
+    "pro_tier_optimization": true,
+    "prefer_market_orders": true,
+    "use_ioc_for_scalping": true,
+    "max_concurrent_orders": 20,
+    "safety_buffer_pct": 0.8,
+    "temporary_lockout_wait": 900.0,
+    "rate_limit_backoff_multiplier": 2.0,
+    "lockout_2025_compliance": {
+      "exact_15_minute_wait": true,
+      "lockout_detection_improved": true,
+      "automatic_recovery": true,
+      "counter_reset_on_success": true
+    }
   },
   "websocket_health_monitoring": true,
   "prevent_duplicate_launch": true,
@@ -102,13 +132,25 @@
       "enabled": true,
       "timeout_seconds": 30,
       "warning_threshold_seconds": 15
+    },
+    "authentication_fixes": {
+      "enhanced_token_management": true,
+      "websocket_permissions_check": true,
+      "fallback_to_rest": true,
+      "balance_format_conversion": true
     }
   },
   "circuit_breaker_2025": {
     "websocket_integration": true,
     "max_websocket_errors": 5,
     "websocket_error_window_seconds": 300,
-    "non_critical_error_tracking": true
+    "non_critical_error_tracking": true,
+    "rate_limit_integration": {
+      "temporary_lockout_threshold": 3,
+      "lockout_recovery_time": 900,
+      "progressive_backoff": true,
+      "counter_reset_on_success": true
+    }
   },
   "rate_limit_monitoring_interval": 30,
   "rate_limit_metrics_retention": 100,
@@ -168,17 +210,19 @@
   "assistant_manager_enabled": true,
   "portfolio_intelligence": {
     "enabled": true,
-    "reallocation_threshold": 0.8,
-    "min_profit_for_reallocation": 0.3,
-    "max_positions_before_reallocation": 8,
+    "reallocation_threshold": 0.95,
+    "min_profit_for_reallocation": 0.1,
+    "max_positions_before_reallocation": 3,
     "smart_balance_checking": true,
     "deployed_capital_awareness": true,
     "dynamic_minimums_based_on_confidence": true,
-    "reallocation_check_interval": 300
+    "reallocation_check_interval": 15,
+    "single_pair_mode": true,
+    "micro_rebalancing": true
   },
   "data_directory": "D:/trading_data",
   "position_sizing_aggressive": 0.7,
-  "max_capital_deployment_pct": 0.6,
+  "max_capital_deployment_pct": 0.95,
   "ultra_fresh_data_mode": true,
   "learning_acceleration": true,
   "order_settings": {
@@ -188,17 +232,10 @@
     "sell_full_position": true,
     "track_exact_amounts": true
   },
-  "strategy": "quantum_fluctuation_scalper",
+  "strategy": "pro_fee_free_micro_scalper",
   "quantum_strategy_config": {
     "enabled_pairs": [
-      "SHIB/USDT",
-      "DOGE/USDT",
-      "ADA/USDT",
-      "XRP/USDT",
-      "MATIC/USDT",
-      "ALGO/USDT",
-      "TRX/USDT",
-      "VET/USDT"
+      "SHIB/USDT"
     ],
     "obi_levels": 10,
     "collapse_threshold": 0.55,
@@ -292,7 +329,7 @@
   },
   "capital_deployment": {
     "enabled": true,
-    "min_available_usdt": 10.0,
+    "min_available_usdt": 2.0,
     "max_deployment_percentage": 70.0,
     "deployment_check_interval": 30,
     "prioritize_exits_when_deployed": true,
@@ -309,7 +346,7 @@
     "min_confidence_threshold": 0.7,
     "max_reallocation_percent": 50,
     "prefer_small_positions": true,
-    "min_position_value_usd": 2.0,
+    "min_position_value_usd": 1.0,
     "rebalance_cooldown_minutes": 5,
     "priority_assets": [
       "AI16Z",
@@ -321,11 +358,16 @@
     "auto_execute": true
   },
   "kraken": {
-    "use_official_sdk": true,
+    "use_official_sdk": false,
     "sdk_version": "3.2.2",
-    "rate_limit_tier": "starter",
+    "rate_limit_tier": "pro",
     "websocket_version": "v2",
-    "use_authenticated_feeds": true,
+    "use_authenticated_feeds": false,
+    "optimal_architecture": {
+      "websocket_for_market_data": true,
+      "rest_for_account_operations": true,
+      "description": "Following Kraken's recommended hybrid approach"
+    },
     "symbol_mapping_enabled": true,
     "websocket_settings": {
       "public_url": "wss://ws.kraken.com/v2",
@@ -336,6 +378,14 @@
       "reconnect_interval": 5,
       "max_reconnect_attempts": 10,
       "enable_auth_manager": true
+    },
+    "kraken_2025_compliance": {
+      "api_version": "2025.1",
+      "enhanced_error_handling": true,
+      "proper_rate_limiting": true,
+      "balance_format_fixes": true,
+      "websocket_v2_optimization": true,
+      "temporary_lockout_handling": true
     }
   },
   "rapid_fire_mode": {
@@ -344,11 +394,7 @@
     "max_consecutive_trades": 5,
     "cooldown_after_series": 30,
     "pairs_for_rapid_fire": [
-      "SHIB/USDT",
-      "DOGE/USDT",
-      "ADA/USDT",
-      "TRX/USDT",
-      "VET/USDT"
+      "SHIB/USDT"
     ]
   },
   "micro_profit_optimization": {
@@ -373,20 +419,40 @@
     "target_daily_trades": 100
   },
   "balance_management": {
-    "use_realtime_websocket": true,
-    "cache_duration_seconds": 0,
+    "use_realtime_websocket": false,
+    "use_kraken_optimal_architecture": true,
+    "cache_duration_seconds": 30,
     "min_tradeable_balance": 1.0,
     "balance_check_before_trade": true,
-    "balance_refresh_interval": 30,
+    "balance_refresh_interval": 15,
+    "kraken_2025_fixes": {
+      "enhanced_balance_parsing": true,
+      "may_2024_format_support": true,
+      "wallet_breakdown_parsing": true,
+      "asset_class_detection": true,
+      "direct_api_fallback": true,
+      "usdt_variant_detection": true,
+      "rate_limit_protection": true,
+      "temporary_lockout_recovery": true
+    },
+    "small_account_optimizations": {
+      "enabled": true,
+      "aggressive_balance_tracking": true,
+      "micro_balance_threshold": 10.0,
+      "reserve_buffer_pct": 0.02,
+      "emergency_liquidation_threshold": 0.5
+    },
     "websocket_channels": {
       "balances": {
         "enabled": true,
-        "snapshot": true
+        "snapshot": true,
+        "format_conversion": true,
+        "mana_detection_fix": true
       },
       "executions": {
         "enabled": true,
         "snap_orders": true,
-        "snap_trades": false
+        "snap_trades": true
       }
     }
   },
@@ -402,12 +468,7 @@
       "max_new_pairs_with_portfolio": 12
     },
     "prioritize_pairs": [
-      "SHIB/USDT",
-      "DOGE/USDT",
-      "ADA/USDT",
-      "ALGO/USDT",
-      "MATIC/USDT",
-      "XRP/USDT"
+      "SHIB/USDT"
     ],
     "avoid_pairs": [
       "BTC/USDT",
@@ -426,12 +487,15 @@
       "max_retries": 3,
       "exponential_backoff": true,
       "base_delay_seconds": 2,
-      "max_delay_seconds": 16
+      "max_delay_seconds": 16,
+      "rate_limit_aware": true,
+      "temporary_lockout_handling": true
     },
     "sync_triggers": {
       "enabled": true,
-      "min_sync_interval_seconds": 5,
-      "trigger_on_ticker_updates": true
+      "min_sync_interval_seconds": 15,
+      "trigger_on_ticker_updates": true,
+      "balance_mismatch_threshold": 0.01
     },
     "kraken_asset_normalization": {
       "enabled": true,
@@ -440,18 +504,48 @@
         "USDT.M",
         "USDT.S",
         "USDT.F",
-        "USDT.B"
+        "USDT.B",
+        "USDT.HOLD",
+        "USDT.STAKED"
       ],
-      "fallback_to_usd": true
+      "fallback_to_usd": true,
+      "enhanced_parsing": true
     },
     "websocket_integration": {
       "prefer_websocket": true,
-      "rest_update_interval_seconds": 60,
-      "force_refresh_on_trade": true
+      "rest_update_interval_seconds": 30,
+      "force_refresh_on_trade": true,
+      "format_conversion_enabled": true,
+      "circuit_breaker_reset": true
+    },
+    "kraken_2025_fixes": {
+      "direct_api_fallback": true,
+      "enhanced_error_recovery": true,
+      "balance_structure_detection": true,
+      "usdt_aggregation": true,
+      "counter_based_rate_limiting": true
     }
   },
   "rate_limit_tier": "pro",
-  "balance_refresh_interval": 1.0,
-  "emergency_balance_mode": true,
-  "use_cached_balances": false
+  "balance_refresh_interval": 15.0,
+  "emergency_balance_mode": false,
+  "use_cached_balances": true,
+  "kraken_2025_compliance_mode": true,
+  "enhanced_error_handling": true,
+  "temporary_lockout_recovery": true,
+  "single_pair_focus": {
+    "enabled": true,
+    "primary_pair": "SHIB/USDT",
+    "balance_accumulation_mode": true,
+    "aggressive_capital_deployment": 0.95,
+    "min_order_shib": 100000,
+    "target_daily_compound_rate": 0.02,
+    "micro_profit_reinvestment": true,
+    "single_pair_advantages": {
+      "reduced_spread_costs": true,
+      "concentrated_liquidity": true,
+      "faster_execution": true,
+      "simplified_risk_management": true
+    }
+  }
 }

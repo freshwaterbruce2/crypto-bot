@@ -502,13 +502,23 @@ class CriticalErrorGuardian:
     async def _recover_balance_manager(self, event: CriticalEvent) -> bool:
         """Recover balance manager"""
         try:
-            if hasattr(self.bot, 'enhanced_balance_manager'):
+            # Fix: Add proper null checking for enhanced_balance_manager
+            if (hasattr(self.bot, 'enhanced_balance_manager') and 
+                self.bot.enhanced_balance_manager is not None):
                 # Clear cache and force refresh
                 self.bot.enhanced_balance_manager._cache.clear()
                 await self.bot.enhanced_balance_manager.refresh_all_balances()
                 return True
+            
+            # Also check for regular balance_manager
+            elif (hasattr(self.bot, 'balance_manager') and 
+                  self.bot.balance_manager is not None):
+                await self.bot.balance_manager.refresh_all_balances()
+                return True
+                
             return False
-        except:
+        except Exception as e:
+            logger.warning(f"[RECOVERY] Balance manager recovery failed: {e}")
             return False    
     async def _recover_trade_executor(self, event: CriticalEvent) -> bool:
         """Recover trade executor"""

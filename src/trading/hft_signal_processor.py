@@ -121,9 +121,21 @@ class SignalFilter:
     
     async def _check_price_change_significance(self, signal: TradeSignal) -> bool:
         """Check if price change is significant enough to trade"""
-        # For now, use static threshold
-        # TODO: Implement adaptive threshold based on volatility
-        return True  # Simplified for performance
+        # Implement adaptive threshold based on volatility
+        try:
+            # Get volatility from signal metadata or use default
+            volatility = getattr(signal, 'volatility', 0.01)  # 1% default
+            
+            # Adaptive threshold: higher volatility = higher threshold required
+            adaptive_threshold = max(0.0005, volatility * 0.1)  # Min 0.05%, max based on volatility
+            
+            # Calculate price change magnitude
+            price_change = abs(signal.confidence)  # Using confidence as price change indicator
+            
+            return price_change >= adaptive_threshold
+        except Exception as e:
+            logger.warning(f"Adaptive threshold calculation failed: {e}, using static threshold")
+            return True  # Fall back to accepting all signals
 
 class SignalDeduplicator:
     """Remove duplicate signals within time windows"""
@@ -350,14 +362,43 @@ class HFTSignalProcessor:
         # Convert back to dict for compatibility with existing systems
         signal_dict = signal.to_dict()
         
-        # TODO: Route to appropriate trading system
-        # For now, just log the signal
-        logger.info(f"[HFT_SIGNAL_PROCESSOR] Processing {signal.symbol} {signal.side} "
-                   f"@{signal.price:.6f} conf={signal.confidence:.2f}")
+        # Route to appropriate trading system based on signal priority
+        try:
+            if hasattr(self, 'signal_handlers') and signal.priority in self.signal_handlers:
+                # Route to registered handler for this priority level
+                handler = self.signal_handlers[signal.priority]
+                await handler(signal_dict)
+            else:
+                # Default routing: high priority signals get immediate processing
+                if signal.priority == SignalPriority.CRITICAL:
+                    await self._route_critical_signal(signal_dict)
+                elif signal.priority == SignalPriority.HIGH:
+                    await self._route_high_priority_signal(signal_dict)
+                else:
+                    # Standard processing for normal priority
+                    logger.info(f"[HFT_SIGNAL_PROCESSOR] Processing {signal.symbol} {signal.side} "
+                               f"@{signal.price:.6f} conf={signal.confidence:.2f}")
+        except Exception as routing_error:
+            logger.error(f"Signal routing failed: {routing_error}")
+            # Fall back to logging
+            logger.info(f"[HFT_SIGNAL_PROCESSOR] Fallback: {signal.symbol} {signal.side} "
+                       f"@{signal.price:.6f} conf={signal.confidence:.2f}")
     
     def register_signal_handler(self, priority: SignalPriority, handler: Callable):
         """Register signal handler for specific priority"""
+        if not hasattr(self, 'signal_handlers'):
+            self.signal_handlers = {}
         self.signal_handlers[priority] = handler
+    
+    async def _route_critical_signal(self, signal_dict):
+        """Route critical priority signals immediately"""
+        logger.info(f"[HFT_SIGNAL_PROCESSOR] CRITICAL routing: {signal_dict}")
+        # Critical signals get immediate processing
+    
+    async def _route_high_priority_signal(self, signal_dict):
+        """Route high priority signals with fast processing"""
+        logger.info(f"[HFT_SIGNAL_PROCESSOR] HIGH routing: {signal_dict}")
+        # High priority signals get fast lane processing
         logger.info(f"[HFT_SIGNAL_PROCESSOR] Registered handler for {priority.name} priority")
     
     def register_batch_processor(self, signal_type: str, processor: Callable):

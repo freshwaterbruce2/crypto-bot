@@ -1,12 +1,28 @@
 """
 Trading Configuration Manager
-Handles trading-specific parameters and optimization
+Handles trading-specific parameters and optimization with API protection
 """
 
 import logging
 from typing import Dict, Any, List
 
 logger = logging.getLogger(__name__)
+
+
+class TradingConfig:
+    """Simple trading configuration class for validation"""
+    
+    def __init__(self):
+        """Initialize with default trading configuration"""
+        self.pairs = [
+            "SHIB/USDT", "BTC/USDT", "ETH/USDT", "SOL/USDT", 
+            "AVAX/USDT", "DOT/USDT", "LINK/USDT", "MATIC/USDT"
+        ]
+        self.position_size_usdt = 4.2
+        self.profit_target_pct = 0.2
+        self.stop_loss_pct = 0.15
+        self.strategy = "pro_fee_free_micro_scalper"
+        self.max_hold_time_minutes = 5
 
 
 class TradingConfigManager:
@@ -27,7 +43,7 @@ class TradingConfigManager:
             # Position sizing (Neural optimized based on 65.7% accuracy improvement)
             "position_size_usdt": self.core_config.get("position_size_usdt", 4.2 if is_pro_account else 2.4),
             "tier_1_trade_limit": self.core_config.get("tier_1_trade_limit", 55.0 if is_pro_account else 2.4),
-            "min_order_size_usdt": self.core_config.get("min_order_size_usdt", 0.6 if is_pro_account else 1.2),
+            "min_order_size_usdt": self.core_config.get("min_order_size_usdt", 2.0),  # Kraken requires $2 minimum for TIER-1
             
             # Trading strategy (Pro fee-free optimized)
             "strategy": "pro_fee_free_micro_scalper" if is_pro_account else "standard_scalper",
@@ -66,7 +82,20 @@ class TradingConfigManager:
             "micro_scalping_enabled": is_pro_account,
             "max_trades_per_minute": 30 if is_pro_account else 10,
             "capital_velocity_mode": is_pro_account,
-            "compound_growth_optimization": is_pro_account
+            "compound_growth_optimization": is_pro_account,
+            
+            # API Protection Settings (2025 Enhancement)
+            "api_protection_enabled": True,
+            "comprehensive_rate_limiting": True,
+            "circuit_breaker_protection": True,
+            "emergency_mode_threshold": 5,  # consecutive errors before emergency mode
+            "nonce_collision_prevention": True,
+            "api_health_monitoring": True,
+            
+            # Balance API specific protection
+            "balance_api_rate_limit": 1.0,    # 1 second between balance calls
+            "balance_retry_attempts": 3,      # retry attempts for balance calls
+            "balance_timeout_seconds": 30,    # timeout for balance calls
         }
         
         return base_config

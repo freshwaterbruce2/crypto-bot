@@ -1778,9 +1778,8 @@ class UniversalLearningManager:
                     exchange._nonce_lock = asyncio.Lock()
                     self.logger.info("[LEARNING] Added nonce lock to exchange")
                 
-                # Clear any cached nonce to force fresh generation
-                if hasattr(exchange, '_last_nonce'):
-                    exchange._last_nonce = 0
+                # Unified nonce manager handles nonce generation automatically
+                # No manual nonce clearing needed
                 
                 return {'success': True, 'action': 'nonce_generation_fixed'}
             

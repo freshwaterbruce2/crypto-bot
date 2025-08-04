@@ -31,21 +31,19 @@ KRAKEN_API_TIER=pro
 ### Phase 1: Forward Testing (24-48 Hours)
 
 ```bash
-# Run bot with minimal position sizes
-python3 -c "
-from src.core.bot import KrakenTradingBot
-import json
+# Create test configuration
+cp config.json config_test.json
 
-# Override config for testing
-config = {
-    'position_size_usdt': 5.0,
-    'max_order_size_usdt': 10.0,
-    'test_mode': True
-}
+# Edit config_test.json to set minimal position sizes:
+# "position_size_usdt": 5.0
+# "max_position_size_usdt": 10.0
+# "paper_trading": true
 
-bot = KrakenTradingBot(config_override=config)
-asyncio.run(bot.start())
-"
+# Run bot with test config
+python scripts/live_launch.py --config config_test.json
+
+# Or use the dedicated test script
+python scripts/test_bot_startup.py
 ```
 
 ### Phase 2: Performance Validation
@@ -105,7 +103,7 @@ sudo usermod -aG sudo tradingbot
 
 # Clone repository
 cd /home/tradingbot
-git clone [repository_url] crypto-bot
+git clone https://github.com/your-username/crypto-trading-bot-2025.git crypto-bot
 cd crypto-bot
 
 # Install dependencies
@@ -119,7 +117,13 @@ chmod 600 .env
 nano .env  # Configure API keys
 
 # Test installation
-python3 -c "from src.core.bot import KrakenTradingBot; print('✅ Bot import successful')"
+python3 -c "from src.bot import KrakenTradingBot; print('✅ Bot import successful')"
+
+# Test all critical imports
+python3 scripts/test_imports.py
+
+# Test API connectivity
+python3 scripts/test_kraken_connection.py
 
 echo "✅ Production deployment complete!"
 echo "⚠️  CONFIGURE .env FILE BEFORE STARTING"
@@ -199,7 +203,10 @@ sudo nano /etc/logrotate.d/tradingbot
 1. **Start with Minimal Risk**
    ```bash
    # Begin with smallest position sizes
-   python3 start_minimal_bot.py
+   python3 scripts/live_launch.py --config config_test.json
+   
+   # Or use paper trading mode first
+   python3 scripts/live_launch.py --paper-trading
    ```
 
 2. **Monitor First 24 Hours**
@@ -218,13 +225,17 @@ sudo nano /etc/logrotate.d/tradingbot
 
 ```bash
 # Emergency stop
-pkill -f "KrakenTradingBot"
+pkill -f "live_launch.py"
+pkill -f "python.*main.py"
 
 # Check current positions
-python3 check_positions.py
+python3 scripts/check_portfolio_status.py
 
-# Manual trade execution if needed
-python3 emergency_close_positions.py
+# Force close positions if needed
+python3 scripts/emergency_sell.py
+
+# Check bot status
+python3 scripts/check_bot_status.py
 ```
 
 ## 📈 POST-DEPLOYMENT OPTIMIZATION

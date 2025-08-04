@@ -85,12 +85,13 @@ class OpportunityScanner:
         self._last_scan_time = 0
         
         # Opportunity detection parameters for fee-free trading
-        self.min_profit_threshold = 0.001  # 0.1% minimum profit - perfect for fee-free!
-        self.max_opportunities_per_scan = 20  # More opportunities with lower thresholds
+        # OPTIMIZED: Ultra-aggressive profit thresholds for immediate gains
+        self.min_profit_threshold = 0.0003  # 0.03% minimum profit - ULTRA micro!
+        self.max_opportunities_per_scan = 30  # More opportunities with ultra-low thresholds
         
-        # Profit tier thresholds for fee-free micro-scalping
+        # OPTIMIZED: Ultra-aggressive profit tier thresholds
         self.profit_tiers = {
-            'ultra_micro': 0.001,  # 0.1% - minimum viable profit
+            'ultra_micro': 0.0005,  # 0.05% - ultra minimum viable profit
             'micro': 0.0015,       # 0.15%
             'fast': 0.002,         # 0.2%
             'medium': 0.0025,      # 0.25%

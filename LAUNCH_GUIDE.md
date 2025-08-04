@@ -16,9 +16,19 @@
 
 ## Testing the Fixes
 
-### 1. Run the Test Script
+### 1. Run Pre-Launch Tests
 ```bash
-python scripts/test_fixes.py
+# Test API connection and credentials
+python scripts/test_kraken_connection.py
+
+# Check bot readiness and components
+python scripts/check_bot_ready.py
+
+# Test balance detection
+python scripts/check_balance_simple.py
+
+# Comprehensive system validation
+python tests/quick_validation_test.py
 ```
 
 This will verify:
@@ -30,21 +40,36 @@ This will verify:
 
 For production autonomous trading:
 ```bash
-python scripts/infinity_loop_launch.py
+# Main production launch (recommended)
+python main.py
+
+# Alternative production launch with monitoring
+python scripts/live_launch.py
+
+# Windows batch file (if on Windows)
+START_TRADING_BOT.bat
 ```
 
-For testing with live data:
+For testing and development:
 ```bash
-python scripts/live_launch.py
+# Paper trading (safe testing)
+python start_paper_trading.py
+
+# Development mode with debugging
+python scripts/dev_launch.py
+
+# Force launch bypassing some checks
+python scripts/force_launch.py
 ```
 
 ## What to Monitor
 
-### 1. Check Logs for Portfolio Intelligence
-Look for these log messages in `kraken_infinity_bot.log`:
-- `[RISK] Low USDT balance ($X), checking deployed funds...`
-- `[PORTFOLIO_INTEL] Not blocking trade - capital is deployed, not missing`
-- `[EXECUTION] Low free balance but sufficient portfolio value`
+### 1. Check Logs for System Health
+Monitor log files in the `logs/` directory or console output:
+- API connection status and authentication
+- Balance detection and portfolio valuation
+- Signal generation and trade execution
+- Error messages and warnings
 
 ### 2. Check Minimum Learning in Action
 Watch for:

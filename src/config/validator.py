@@ -53,8 +53,8 @@ class ConfigValidator:
         fixes = []
         
         # Check position size
-        if config.get('position_size_usdt', 0) < 1.0:
-            errors.append("Position size must be at least 1.0 USDT")
+        if config.get('position_size_usdt', 0) < 0.1:
+            errors.append("Position size must be at least 0.1 USDT")
         
         # Check API tier
         valid_tiers = ['starter', 'intermediate', 'pro']

@@ -1,0 +1,1127 @@
+{
+  "status": {
+    "initialized": false,
+    "running": false,
+    "uptime": 0,
+    "health": "unknown",
+    "metrics": {
+      "startup_time": null,
+      "component_init_times": {},
+      "health_checks": 0,
+      "errors": 0
+    },
+    "components": {
+      "ConfigManager": true,
+      "HealthMonitor": true,
+      "CredentialManager": false,
+      "AuthService": false,
+      "KrakenRateLimiter2025": false,
+      "CircuitBreaker": false,
+      "KrakenRestClient": false,
+      "KrakenWebSocketV2": false,
+      "BalanceManager": false,
+      "PortfolioManager": false,
+      "DatabaseManager": false,
+      "ExchangeSingleton": false
+    }
+  },
+  "config": {
+    "config_dir": ".",
+    "sections": [
+      "exchange_config",
+      "position_cycling",
+      "risk_management",
+      "rate_limiting_v2",
+      "websocket_2025_config",
+      "circuit_breaker_2025",
+      "micro_scalping_engine",
+      "fee_free_scalping",
+      "dynamic_profit_targets",
+      "portfolio_intelligence",
+      "order_settings",
+      "quantum_strategy_config",
+      "mean_reversion_config",
+      "fast_start_config",
+      "advanced_strategy_params",
+      "pair_discovery",
+      "opportunity_scanner",
+      "capital_deployment",
+      "portfolio_rebalancing",
+      "kraken",
+      "rapid_fire_mode",
+      "micro_profit_optimization",
+      "compound_tracking",
+      "balance_management",
+      "tier_1_optimization",
+      "balance_manager_2025",
+      "single_pair_focus",
+      ".mcp",
+      "agent_baseline",
+      "balance_manager_test_results_1754263422",
+      "claude_desktop_complete_config",
+      "claude_desktop_config",
+      "config",
+      "config_low_minimum_pairs",
+      "deployment_info_20250712_223227",
+      "deployment_info_20250712_223317",
+      "emergency_diagnostics_20250802_212042",
+      "emergency_diagnostics_20250803_211404",
+      "emergency_diagnostics_20250803_211511",
+      "FINAL_100_PERCENT_COMPLETION_CERTIFICATE",
+      "kraken_success_state",
+      "mcp_validation_report",
+      "nonce_state_rYOFiSAo",
+      "package-lock",
+      "package",
+      "validation_report_1754252020",
+      "system",
+      "exchange",
+      "websocket",
+      "rate_limiting",
+      "circuit_breaker",
+      "trading",
+      "portfolio",
+      "monitoring"
+    ],
+    "section_details": {
+      "exchange_config": {
+        "keys": [
+          "rate_limit",
+          "rate_limit_decay",
+          "nonce_window_ms",
+          "enable_websocket_auth",
+          "require_websocket_permissions",
+          "validate_minimums",
+          "kraken_2025_compliance"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841008",
+        "validators": 0,
+        "is_valid": true
+      },
+      "position_cycling": {
+        "keys": [
+          "enabled",
+          "max_hold_time_hours",
+          "force_sell_profitable_after_hours",
+          "check_interval_minutes",
+          "min_profit_to_sell_early"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841015",
+        "validators": 0,
+        "is_valid": true
+      },
+      "risk_management": {
+        "keys": [
+          "enabled",
+          "use_unified_risk_manager",
+          "use_stop_loss_orders",
+          "use_volatility_sizing",
+          "max_daily_loss_pct",
+          "max_consecutive_losses",
+          "emergency_shutdown_loss_pct",
+          "circuit_breaker_cooldown_minutes",
+          "trailing_stop_activation_pct",
+          "trailing_stop_distance_pct"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841018",
+        "validators": 0,
+        "is_valid": true
+      },
+      "rate_limiting_v2": {
+        "keys": [
+          "enabled",
+          "kraken_2025_specs",
+          "max_orders_per_minute",
+          "burst_orders_allowed",
+          "aggressive_counter_management",
+          "pro_tier_optimization",
+          "prefer_market_orders",
+          "use_ioc_for_scalping",
+          "max_concurrent_orders",
+          "safety_buffer_pct",
+          "temporary_lockout_wait",
+          "rate_limit_backoff_multiplier",
+          "lockout_2025_compliance"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841020",
+        "validators": 0,
+        "is_valid": true
+      },
+      "websocket_2025_config": {
+        "keys": [
+          "connection_rate_limit",
+          "proactive_token_refresh",
+          "heartbeat_monitoring",
+          "authentication_fixes"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841024",
+        "validators": 0,
+        "is_valid": true
+      },
+      "circuit_breaker_2025": {
+        "keys": [
+          "websocket_integration",
+          "max_websocket_errors",
+          "websocket_error_window_seconds",
+          "non_critical_error_tracking",
+          "rate_limit_integration"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841027",
+        "validators": 0,
+        "is_valid": true
+      },
+      "micro_scalping_engine": {
+        "keys": [
+          "enabled",
+          "pro_tier_optimization",
+          "parallel_execution",
+          "neural_optimized",
+          "ultra_fast_target",
+          "fast_target",
+          "medium_target",
+          "max_target"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841029",
+        "validators": 0,
+        "is_valid": true
+      },
+      "fee_free_scalping": {
+        "keys": [
+          "enabled",
+          "min_profit_target",
+          "max_hold_time_seconds",
+          "rapid_fire_mode",
+          "consecutive_wins_boost",
+          "target_daily_trades",
+          "max_concurrent_positions",
+          "ultra_tight_stops",
+          "stop_loss_pct"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841031",
+        "validators": 0,
+        "is_valid": true
+      },
+      "dynamic_profit_targets": {
+        "keys": [
+          "ultra_fast",
+          "fast",
+          "medium",
+          "conservative"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841032",
+        "validators": 0,
+        "is_valid": true
+      },
+      "portfolio_intelligence": {
+        "keys": [
+          "enabled",
+          "reallocation_threshold",
+          "min_profit_for_reallocation",
+          "max_positions_before_reallocation",
+          "smart_balance_checking",
+          "deployed_capital_awareness",
+          "dynamic_minimums_based_on_confidence",
+          "reallocation_check_interval",
+          "single_pair_mode",
+          "micro_rebalancing"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841034",
+        "validators": 0,
+        "is_valid": true
+      },
+      "order_settings": {
+        "keys": [
+          "default_order_type",
+          "allow_limit_orders",
+          "allow_stop_orders",
+          "sell_full_position",
+          "track_exact_amounts"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841035",
+        "validators": 0,
+        "is_valid": true
+      },
+      "quantum_strategy_config": {
+        "keys": [
+          "enabled_pairs",
+          "obi_levels",
+          "collapse_threshold",
+          "tunnel_activation_threshold",
+          "position_size_pct",
+          "profit_target_pct"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841037",
+        "validators": 0,
+        "is_valid": true
+      },
+      "mean_reversion_config": {
+        "keys": [
+          "window",
+          "deviation",
+          "stop_loss_pct",
+          "take_profit_pct",
+          "trailing_stop_pct",
+          "signal_confirmation_period"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841038",
+        "validators": 0,
+        "is_valid": true
+      },
+      "fast_start_config": {
+        "keys": [
+          "profit_target",
+          "stop_loss",
+          "min_confidence"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841039",
+        "validators": 0,
+        "is_valid": true
+      },
+      "advanced_strategy_params": {
+        "keys": [
+          "tier_multipliers",
+          "dca_params",
+          "position_sizing",
+          "profit_taking",
+          "tier_management",
+          "market_conditions",
+          "execution_params",
+          "confidence_thresholds",
+          "signal_confidence_format"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841040",
+        "validators": 0,
+        "is_valid": true
+      },
+      "pair_discovery": {
+        "keys": [
+          "last_update",
+          "method",
+          "total_usdt_pairs_available",
+          "selected_pairs",
+          "invalid_pairs_removed",
+          "recommended_pairs_added"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841044",
+        "validators": 0,
+        "is_valid": true
+      },
+      "opportunity_scanner": {
+        "keys": [
+          "scan_interval",
+          "min_arbitrage_profit",
+          "min_momentum_change",
+          "cooldown_seconds"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841045",
+        "validators": 0,
+        "is_valid": true
+      },
+      "capital_deployment": {
+        "keys": [
+          "enabled",
+          "min_available_usdt",
+          "max_deployment_percentage",
+          "deployment_check_interval",
+          "prioritize_exits_when_deployed",
+          "log_deployment_status",
+          "force_liquidation_when_needed",
+          "liquidation_priority"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841046",
+        "validators": 0,
+        "is_valid": true
+      },
+      "portfolio_rebalancing": {
+        "keys": [
+          "enabled",
+          "min_confidence_threshold",
+          "max_reallocation_percent",
+          "prefer_small_positions",
+          "min_position_value_usd",
+          "rebalance_cooldown_minutes",
+          "priority_assets",
+          "protected_assets",
+          "auto_execute"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841048",
+        "validators": 0,
+        "is_valid": true
+      },
+      "kraken": {
+        "keys": [
+          "use_official_sdk",
+          "sdk_version",
+          "rate_limit_tier",
+          "websocket_version",
+          "use_authenticated_feeds",
+          "optimal_architecture",
+          "symbol_mapping_enabled",
+          "websocket_settings",
+          "kraken_2025_compliance"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841049",
+        "validators": 0,
+        "is_valid": true
+      },
+      "rapid_fire_mode": {
+        "keys": [
+          "enabled",
+          "consecutive_profit_threshold",
+          "max_consecutive_trades",
+          "cooldown_after_series",
+          "pairs_for_rapid_fire"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841052",
+        "validators": 0,
+        "is_valid": true
+      },
+      "micro_profit_optimization": {
+        "keys": [
+          "target_latency_ms",
+          "parallel_validation",
+          "fast_path_enabled",
+          "cache_ttl_seconds",
+          "batch_processing",
+          "profit_tiers"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841053",
+        "validators": 0,
+        "is_valid": true
+      },
+      "compound_tracking": {
+        "keys": [
+          "enabled",
+          "track_hourly_rate",
+          "track_daily_projection",
+          "snowball_visualization",
+          "target_daily_trades"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841054",
+        "validators": 0,
+        "is_valid": true
+      },
+      "balance_management": {
+        "keys": [
+          "use_realtime_websocket",
+          "use_kraken_optimal_architecture",
+          "cache_duration_seconds",
+          "min_tradeable_balance",
+          "balance_check_before_trade",
+          "balance_refresh_interval",
+          "kraken_2025_fixes",
+          "small_account_optimizations",
+          "websocket_channels"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841056",
+        "validators": 0,
+        "is_valid": true
+      },
+      "tier_1_optimization": {
+        "keys": [
+          "enabled",
+          "prefer_low_price",
+          "max_price_usd",
+          "dynamic_pair_limits",
+          "prioritize_pairs",
+          "avoid_pairs"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841057",
+        "validators": 0,
+        "is_valid": true
+      },
+      "balance_manager_2025": {
+        "keys": [
+          "retry_settings",
+          "sync_triggers",
+          "kraken_asset_normalization",
+          "websocket_integration",
+          "kraken_2025_fixes"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841058",
+        "validators": 0,
+        "is_valid": true
+      },
+      "single_pair_focus": {
+        "keys": [
+          "enabled",
+          "primary_pair",
+          "balance_accumulation_mode",
+          "aggressive_capital_deployment",
+          "min_order_shib",
+          "target_daily_compound_rate",
+          "micro_profit_reinvestment",
+          "single_pair_advantages"
+        ],
+        "last_updated": "2025-08-04T00:19:20.841061",
+        "validators": 0,
+        "is_valid": true
+      },
+      ".mcp": {
+        "keys": [
+          "mcpServers"
+        ],
+        "last_updated": "2025-08-04T00:19:20.845132",
+        "validators": 0,
+        "is_valid": true
+      },
+      "agent_baseline": {
+        "keys": [
+          "timestamp",
+          "files"
+        ],
+        "last_updated": "2025-08-04T00:19:20.847337",
+        "validators": 0,
+        "is_valid": true
+      },
+      "balance_manager_test_results_1754263422": {
+        "keys": [
+          "test_results",
+          "timestamps",
+          "errors",
+          "summary",
+          "total_execution_time"
+        ],
+        "last_updated": "2025-08-04T00:19:20.849368",
+        "validators": 0,
+        "is_valid": true
+      },
+      "claude_desktop_complete_config": {
+        "keys": [
+          "mcpServers"
+        ],
+        "last_updated": "2025-08-04T00:19:20.851226",
+        "validators": 0,
+        "is_valid": true
+      },
+      "claude_desktop_config": {
+        "keys": [
+          "mcpServers"
+        ],
+        "last_updated": "2025-08-04T00:19:20.853175",
+        "validators": 0,
+        "is_valid": true
+      },
+      "config": {
+        "keys": [
+          "exchange",
+          "exchange_config",
+          "live_trading",
+          "paper_trading",
+          "paper_starting_balance",
+          "trading_enabled",
+          "log_level",
+          "trade_pairs",
+          "interval_minutes",
+          "position_size_usdt",
+          "min_order_size_usdt",
+          "max_order_size_usdt",
+          "tier_1_trade_limit",
+          "use_dynamic_position_sizing",
+          "position_size_percentage",
+          "enable_size_validation",
+          "skip_insufficient_balance",
+          "take_profit_pct",
+          "stop_loss_pct",
+          "position_cycling",
+          "risk_per_trade",
+          "min_trade_value_usd",
+          "emergency_min_trade_value",
+          "minimum_balance_threshold",
+          "portfolio_aware_min_balance",
+          "dynamic_minimum_enabled",
+          "confidence_based_sizing",
+          "max_portfolio_risk",
+          "max_asset_exposure",
+          "max_position_pct",
+          "circuit_breaker_drawdown",
+          "circuit_breaker_volatility",
+          "disable_risk_checks",
+          "disable_balance_checks",
+          "force_trade_execution",
+          "risk_management",
+          "max_position_risk",
+          "log_dir",
+          "historical_data_dir",
+          "kraken_enhanced_rate_limiting",
+          "kraken_api_tier",
+          "kraken_tier",
+          "kraken_websocket_connections",
+          "kraken_rate_limit_backoff",
+          "rate_limiting_v2",
+          "websocket_health_monitoring",
+          "prevent_duplicate_launch",
+          "disk_space_threshold",
+          "auto_cleanup_logs",
+          "websocket_reconnect_max_retries",
+          "websocket_ping_interval",
+          "websocket_reconnect_delay",
+          "websocket_message_timeout",
+          "websocket_2025_config",
+          "circuit_breaker_2025",
+          "rate_limit_monitoring_interval",
+          "rate_limit_metrics_retention",
+          "rate_limit_alert_threshold",
+          "api_tier",
+          "websocket_max_message_age",
+          "enable_hot_reload",
+          "enable_dynamic_strategies",
+          "max_ohlc_records",
+          "cleanup_interval_minutes",
+          "log_rotation_days",
+          "log_max_size_mb",
+          "min_balance_threshold",
+          "min_order_value_usd",
+          "ai_learning_enabled",
+          "adaptive_sizing_enabled",
+          "regime_detection_enabled",
+          "target_execution_ms",
+          "min_confidence_threshold",
+          "ultra_aggressive_mode",
+          "emergency_mode",
+          "micro_scalping_engine",
+          "fee_free_scalping",
+          "dynamic_profit_targets",
+          "max_position_multiplier",
+          "min_position_multiplier",
+          "micro_scalping_mode",
+          "fee_free_optimization",
+          "fee_free_trading",
+          "profit_accumulation_target",
+          "ultra_low_latency",
+          "aggressive_opportunity_detection",
+          "assistant_manager_enabled",
+          "portfolio_intelligence",
+          "data_directory",
+          "position_sizing_aggressive",
+          "max_capital_deployment_pct",
+          "ultra_fresh_data_mode",
+          "learning_acceleration",
+          "order_settings",
+          "strategy",
+          "quantum_strategy_config",
+          "mean_reversion_config",
+          "fast_start_config",
+          "advanced_strategy_params",
+          "pair_discovery",
+          "opportunity_scanner",
+          "capital_deployment",
+          "portfolio_rebalancing",
+          "kraken",
+          "rapid_fire_mode",
+          "micro_profit_optimization",
+          "compound_tracking",
+          "balance_management",
+          "tier_1_optimization",
+          "balance_manager_2025",
+          "rate_limit_tier",
+          "balance_refresh_interval",
+          "emergency_balance_mode",
+          "use_cached_balances",
+          "kraken_2025_compliance_mode",
+          "enhanced_error_handling",
+          "temporary_lockout_recovery",
+          "single_pair_focus"
+        ],
+        "last_updated": "2025-08-04T00:19:20.855328",
+        "validators": 0,
+        "is_valid": true
+      },
+      "config_low_minimum_pairs": {
+        "keys": [
+          "low_minimum_trading_pairs"
+        ],
+        "last_updated": "2025-08-04T00:19:20.857257",
+        "validators": 0,
+        "is_valid": true
+      },
+      "deployment_info_20250712_223227": {
+        "keys": [
+          "deployment_timestamp",
+          "version",
+          "fixes_applied",
+          "pro_account_optimized",
+          "sdk_compliance_2025",
+          "status"
+        ],
+        "last_updated": "2025-08-04T00:19:20.859238",
+        "validators": 0,
+        "is_valid": true
+      },
+      "deployment_info_20250712_223317": {
+        "keys": [
+          "deployment_timestamp",
+          "version",
+          "fixes_applied",
+          "pro_account_optimized",
+          "sdk_compliance_2025",
+          "status"
+        ],
+        "last_updated": "2025-08-04T00:19:20.860990",
+        "validators": 0,
+        "is_valid": true
+      },
+      "emergency_diagnostics_20250802_212042": {
+        "keys": [
+          "status",
+          "config",
+          "dependencies",
+          "health",
+          "startup"
+        ],
+        "last_updated": "2025-08-04T00:19:20.863421",
+        "validators": 0,
+        "is_valid": true
+      },
+      "emergency_diagnostics_20250803_211404": {
+        "keys": [
+          "status",
+          "config",
+          "dependencies",
+          "health",
+          "startup"
+        ],
+        "last_updated": "2025-08-04T00:19:20.865749",
+        "validators": 0,
+        "is_valid": true
+      },
+      "emergency_diagnostics_20250803_211511": {
+        "keys": [
+          "status",
+          "config",
+          "dependencies",
+          "health",
+          "startup"
+        ],
+        "last_updated": "2025-08-04T00:19:20.867887",
+        "validators": 0,
+        "is_valid": true
+      },
+      "FINAL_100_PERCENT_COMPLETION_CERTIFICATE": {
+        "keys": [
+          "project",
+          "status",
+          "completion_date",
+          "bot_process_id",
+          "key_achievements",
+          "technical_validation",
+          "certification_authority",
+          "digital_signature"
+        ],
+        "last_updated": "2025-08-04T00:19:20.869981",
+        "validators": 0,
+        "is_valid": true
+      },
+      "kraken_success_state": {
+        "keys": [
+          "timestamp",
+          "working_nonce",
+          "balances"
+        ],
+        "last_updated": "2025-08-04T00:19:20.871978",
+        "validators": 0,
+        "is_valid": true
+      },
+      "mcp_validation_report": {
+        "keys": [
+          "mcp_configs",
+          "agent_tools",
+          "mcp_servers",
+          "hooks",
+          "agent_definitions",
+          "recommendations",
+          "dependencies"
+        ],
+        "last_updated": "2025-08-04T00:19:20.874224",
+        "validators": 0,
+        "is_valid": true
+      },
+      "nonce_state_rYOFiSAo": {
+        "keys": [
+          "last_nonce",
+          "timestamp",
+          "iso_time",
+          "reset_reason",
+          "synchronization_offset_seconds",
+          "total_generated",
+          "error_recoveries",
+          "connections"
+        ],
+        "last_updated": "2025-08-04T00:19:20.876123",
+        "validators": 0,
+        "is_valid": true
+      },
+      "package-lock": {
+        "keys": [
+          "name",
+          "lockfileVersion",
+          "requires",
+          "packages"
+        ],
+        "last_updated": "2025-08-04T00:19:20.878105",
+        "validators": 0,
+        "is_valid": true
+      },
+      "package": {
+        "keys": [
+          "dependencies",
+          "name",
+          "version",
+          "description",
+          "main",
+          "directories",
+          "devDependencies",
+          "scripts",
+          "keywords",
+          "author",
+          "license"
+        ],
+        "last_updated": "2025-08-04T00:19:20.880132",
+        "validators": 0,
+        "is_valid": true
+      },
+      "validation_report_1754252020": {
+        "keys": [
+          "timestamp",
+          "iso_time",
+          "validation_results",
+          "fix_effectiveness",
+          "next_steps"
+        ],
+        "last_updated": "2025-08-04T00:19:20.882313",
+        "validators": 0,
+        "is_valid": true
+      },
+      "system": {
+        "keys": [
+          "debug",
+          "log_level",
+          "timezone",
+          "health_check_interval"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815134",
+        "validators": 0,
+        "is_valid": true
+      },
+      "exchange": {
+        "keys": [
+          "name",
+          "api_version",
+          "timeout",
+          "max_retries"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815141",
+        "validators": 0,
+        "is_valid": true
+      },
+      "websocket": {
+        "keys": [
+          "ping_interval",
+          "reconnect_delay",
+          "max_reconnect_attempts",
+          "heartbeat_timeout"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815143",
+        "validators": 0,
+        "is_valid": true
+      },
+      "rate_limiting": {
+        "keys": [
+          "tier",
+          "burst_multiplier",
+          "cooldown_period",
+          "adaptive_mode"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815145",
+        "validators": 0,
+        "is_valid": true
+      },
+      "circuit_breaker": {
+        "keys": [
+          "failure_threshold",
+          "recovery_timeout",
+          "half_open_max_calls",
+          "monitoring_period"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815147",
+        "validators": 0,
+        "is_valid": true
+      },
+      "trading": {
+        "keys": [
+          "max_position_size",
+          "min_position_size",
+          "profit_target",
+          "stop_loss",
+          "fee_rate"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815149",
+        "validators": 0,
+        "is_valid": true
+      },
+      "portfolio": {
+        "keys": [
+          "max_open_positions",
+          "reserve_balance",
+          "rebalance_threshold",
+          "risk_per_trade"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815150",
+        "validators": 0,
+        "is_valid": true
+      },
+      "monitoring": {
+        "keys": [
+          "metrics_interval",
+          "alert_thresholds"
+        ],
+        "last_updated": "2025-08-04T00:19:20.815151",
+        "validators": 0,
+        "is_valid": true
+      }
+    },
+    "observers": 0,
+    "file_watcher_active": true
+  },
+  "dependencies": {
+    "registered_services": 12,
+    "active_instances": 2,
+    "active_scopes": 0,
+    "services_by_lifetime": {
+      "singleton": 12,
+      "transient": 0,
+      "scoped": 0
+    },
+    "dependency_graph": {
+      "CredentialManager": [
+        "Optional"
+      ],
+      "AuthService": [],
+      "KrakenRateLimiter2025": [],
+      "CircuitBreaker": [
+        "str",
+        "Optional"
+      ],
+      "KrakenRestClient": [
+        "bool",
+        "Union",
+        "Optional",
+        "str",
+        "float",
+        "int"
+      ],
+      "KrakenWebSocketV2": [
+        "str",
+        "Optional"
+      ],
+      "BalanceManager": [
+        "Optional"
+      ],
+      "PortfolioManager": [
+        "Optional"
+      ],
+      "DatabaseManager": [
+        "Optional"
+      ],
+      "ExchangeSingleton": []
+    },
+    "initialization_order": [
+      "CredentialManager",
+      "AuthService",
+      "KrakenRateLimiter2025",
+      "CircuitBreaker",
+      "KrakenRestClient",
+      "KrakenWebSocketV2",
+      "BalanceManager",
+      "PortfolioManager",
+      "DatabaseManager",
+      "ExchangeSingleton"
+    ]
+  },
+  "health": {
+    "system_status": "unknown",
+    "check_interval": 60,
+    "components": {
+      "storage": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.897167",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "credentials": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.897618",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "auth": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.897886",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "rate_limiter": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.898522",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "circuit_breaker": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.898975",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "rest_api": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.899302",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "websocket": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.899877",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "balance_manager": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.900543",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      },
+      "portfolio_manager": {
+        "status": "unknown",
+        "last_check": "2025-08-04T00:19:20.900785",
+        "error_count": 0,
+        "consecutive_failures": 0,
+        "metrics": {}
+      }
+    },
+    "recent_alerts": [],
+    "recovery_handlers": [
+      "websocket",
+      "rest_api"
+    ],
+    "dependencies": {}
+  },
+  "startup": {
+    "is_running": false,
+    "registered_steps": 16,
+    "completed_steps": 0,
+    "shutdown_handlers": 6,
+    "startup_report": {
+      "is_running": false,
+      "completed_steps": [],
+      "total_steps": 16,
+      "results": [
+        {
+          "step": "config_validation",
+          "success": true,
+          "duration": 0.000399,
+          "retry_count": 0,
+          "error": null
+        },
+        {
+          "step": "storage_init",
+          "success": true,
+          "duration": 0.001188,
+          "retry_count": 0,
+          "error": null
+        },
+        {
+          "step": "websocket_token_generation",
+          "success": true,
+          "duration": 0.00034,
+          "retry_count": 0,
+          "error": null
+        },
+        {
+          "step": "config_validation",
+          "success": true,
+          "duration": 0.000547,
+          "retry_count": 0,
+          "error": null
+        },
+        {
+          "step": "storage_init",
+          "success": true,
+          "duration": 0.003752,
+          "retry_count": 0,
+          "error": null
+        },
+        {
+          "step": "websocket_token_generation",
+          "success": true,
+          "duration": 0.000461,
+          "retry_count": 0,
+          "error": null
+        }
+      ],
+      "phases": {
+        "core": {
+          "steps": [
+            "config_validation"
+          ]
+        },
+        "infra": {
+          "steps": [
+            "storage_init"
+          ]
+        },
+        "websocket_auth": {
+          "steps": [
+            "websocket_token_generation"
+          ]
+        },
+        "websocket_init": {
+          "steps": [
+            "websocket_connection_init",
+            "websocket_balance_stream",
+            "websocket_data_pipeline"
+          ]
+        },
+        "auth": {
+          "steps": [
+            "credentials_init",
+            "auth_service_init"
+          ]
+        },
+        "network": {
+          "steps": [
+            "rate_limiter_init",
+            "circuit_breaker_init",
+            "rest_api_init",
+            "websocket_init"
+          ]
+        },
+        "services": {
+          "steps": [
+            "balance_manager_init",
+            "portfolio_manager_init"
+          ]
+        },
+        "strategies": {
+          "steps": [
+            "trading_bot_init",
+            "strategy_init"
+          ]
+        },
+        "monitoring": {
+          "steps": []
+        },
+        "ready": {
+          "steps": []
+        }
+      }
+    }
+  }
+}

@@ -1,12 +1,43 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
-      "mcp__ruv-swarm",
-      "mcp__claude-flow",
-      "Bash(python test:*)",
+      "WebFetch(domain:docs.kraken.com)",
+      "Bash(find:*)",
+      "Bash(rm:*)",
       "Bash(mkdir:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(ls:*)",
+      "Bash(timeout:*)",
+      "mcp__memory__create_entities",
+      "mcp__memory__create_relations",
+      "mcp__claude-flow__memory_persist",
+      "mcp__claude-flow__neural_patterns",
+      "mcp__claude-flow__swarm_init",
+      "mcp__claude-flow__agent_spawn",
+      "mcp__claude-flow__task_orchestrate",
+      "mcp__claude-flow__swarm_status",
+      "mcp__claude-flow__neural_train",
+      "mcp__claude-flow__performance_report",
+      "mcp__claude-flow__bottleneck_analyze",
+      "mcp__claude-flow__token_usage",
+      "Bash(source:*)",
+      "Bash(true)",
+      "Bash(chmod:*)",
+      "Bash(pip install:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "post-task": {
+      "command": "python3",
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "post-task"],
+      "timeout": 30000
+    },
+    "pre-task": {
+      "command": "python3", 
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/src/utils/agent_tools_bridge.py", "pre-task"],
+      "timeout": 30000
+    }
   }
 }

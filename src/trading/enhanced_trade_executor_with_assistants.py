@@ -4,7 +4,9 @@ Unified execution pipeline with assistants and Portfolio Intelligence
 """
 
 import asyncio
-from ..utils.unified_balance import get_balance_manager
+from ..balance.balance_manager import BalanceManager
+from ..utils.trade_cooldown import get_cooldown_manager
+from ..utils.kraken_order_validator import kraken_validator
 import logging
 import time
 from typing import Dict, Any, Optional, List
@@ -134,11 +136,11 @@ class RiskAssistant(TradeAssistant):
                 logger.info(f"[RISK] Low USDT balance (${balance:.2f}), checking deployed funds...")
                 
                 # Check deployment status
-                deployment_status = await self.balance_manager.get_deployment_status('USDT')
+                deployment_status = self.balance_manager.get_deployment_status('USDT')
                 
                 if deployment_status == 'funds_deployed':
                     # Analyze portfolio for reallocation opportunities
-                    portfolio_analysis = await self.balance_manager.analyze_portfolio_state('USDT')
+                    portfolio_analysis = self.balance_manager.analyze_portfolio_state('USDT')
                     
                     logger.info(
                         f"[RISK] Portfolio deployed: ${portfolio_analysis['portfolio_value']:.2f} "
@@ -303,8 +305,21 @@ class ExecutionAssistant(TradeAssistant):
             return None
     
     async def execute(self, request: TradeRequest) -> Dict[str, Any]:
-        """Execute the trade with intelligent fund management"""
+        """Execute the trade with intelligent fund management and compliance checks"""
         try:
+            # COMPLIANCE CHECK: Same-side trade cooling period
+            cooldown_manager = get_cooldown_manager()
+            can_trade, cooldown_reason = cooldown_manager.can_trade(request.symbol, request.side.lower())
+            
+            if not can_trade:
+                logger.warning(f"[COMPLIANCE] Trade blocked by cooldown: {cooldown_reason}")
+                return {
+                    'success': False,
+                    'error': f"Trade cooling down: {cooldown_reason}",
+                    'skip_reason': 'trade_cooldown_active'
+                }
+            
+            logger.info(f"[COMPLIANCE] Trade cooldown check passed for {request.side} {request.symbol}")
             # CRITICAL FIX: Force refresh balance right before checking with claude-flow coordination
             if self.balance_manager and request.side.upper() == 'BUY':
                 logger.info("[EXECUTION] Forcing balance refresh before trade...")
@@ -636,17 +651,64 @@ class ExecutionAssistant(TradeAssistant):
                 order_amount = request.amount / current_price
                 logger.info(f"[EXECUTION] SELL order: ${request.amount:.2f} USDT / ${current_price:.4f} = {order_amount:.8f} {request.symbol.split('/')[0]}")
             
-            # Create order with IOC if specified
-            logger.info(f"[EXECUTION] Creating {request.side} order for {request.symbol}: volume={order_amount:.8f}, IOC={use_ioc}")
+            # CRITICAL FIX: Pre-order balance verification to prevent "EOrder:Insufficient funds"
+            if hasattr(self.balance_manager, 'verify_balance_before_order'):
+                try:
+                    if request.side.lower() == 'sell':
+                        base_asset = request.symbol.split('/')[0]
+                        verification = await self.balance_manager.verify_balance_before_order(base_asset, order_amount, 'sell')
+                    else:
+                        verification = await self.balance_manager.verify_balance_before_order('USDT', request.amount, 'buy')
+                    
+                    if not verification.get('verified', False):
+                        logger.warning(f"[EXECUTION] Pre-order verification failed: {verification.get('reason', 'Unknown')}")
+                        return {
+                            'success': False,
+                            'error': f"Pre-order verification failed: {verification.get('reason', 'Insufficient balance')}",
+                            'skip_reason': 'pre_order_verification_failed'
+                        }
+                    else:
+                        logger.info(f"[EXECUTION] Pre-order verification passed: {verification.get('message', 'Balance sufficient')}")
+                except Exception as e:
+                    logger.warning(f"[EXECUTION] Pre-order verification error: {e}")
+            
+            # KRAKEN PRECISION VALIDATION - Ensure order meets Kraken requirements
+            logger.info(f"[EXECUTION] Validating Kraken precision for {request.symbol}: volume={order_amount:.8f}")
+            
+            # Validate order against Kraken precision requirements
+            order_price = request.price or request.signal.get('price') if use_ioc else request.price
+            validation_result = kraken_validator.validate_and_format_order(
+                request.symbol, 
+                request.side, 
+                order_amount, 
+                order_price,
+                'limit' if use_ioc else 'market'
+            )
+            
+            if not validation_result['valid']:
+                logger.error(f"[KRAKEN_PRECISION] Order validation failed: {validation_result['error']}")
+                return {
+                    'success': False,
+                    'error': f"Kraken precision validation failed: {validation_result['error']}",
+                    'skip_reason': 'kraken_precision_validation_failed',
+                    'validation_details': validation_result
+                }
+            
+            # Use Kraken-formatted values for the order
+            kraken_amount = validation_result['amount_float']
+            kraken_price = validation_result.get('price_float')
+            
+            logger.info(f"[KRAKEN_PRECISION] ✅ Order validated - Amount: {kraken_amount}, Price: {kraken_price or 'market'}")
+            logger.info(f"[EXECUTION] Creating {request.side} order for {request.symbol}: volume={kraken_amount:.8f}, IOC={use_ioc}")
             
             if use_ioc:
                 # IOC orders for micro-profits (0 penalty on failure!)
                 order = await self.exchange.create_order(
                     symbol=request.symbol,
                     side=request.side,
-                    amount=order_amount,
+                    amount=kraken_amount,  # Use Kraken-validated amount
                     order_type='limit',  # IOC must be limit orders
-                    price=request.price or request.signal.get('price'),
+                    price=kraken_price or request.price or request.signal.get('price'),  # Use Kraken-validated price
                     params={'timeInForce': 'IOC'}  # Immediate-or-cancel
                 )
                 
@@ -661,9 +723,9 @@ class ExecutionAssistant(TradeAssistant):
                 order = await self.exchange.create_order(
                     symbol=request.symbol,
                     side=request.side,
-                    amount=order_amount,  # Use calculated order_amount instead of request.amount
+                    amount=kraken_amount,  # Use Kraken-validated amount
                     order_type=order_type_value,
-                    price=request.price
+                    price=kraken_price or request.price  # Use Kraken-validated price
                 )
             
             if order and order.get('id'):
@@ -679,6 +741,9 @@ class ExecutionAssistant(TradeAssistant):
                     asyncio.create_task(self._handle_sell_completion(request, order))
                 elif request.side == 'buy':
                     asyncio.create_task(self._handle_buy_completion(request, order))
+                
+                # COMPLIANCE: Record trade for cooldown tracking
+                cooldown_manager.record_trade(request.symbol, request.side.lower(), request.amount)
                 
                 return {
                     'success': True,

@@ -36,16 +36,16 @@ class SellUrgency(Enum):
 @dataclass
 class SellEngineConfig:
     """Configuration for autonomous sell engine"""
-    # Micro-profit optimized targets (aligned with config)
-    min_profit_pct: float = 0.1  # 0.1% minimum
-    target_profit_pct: float = 0.2  # 0.2% target (from config)
-    fast_profit_pct: float = 0.15  # 0.15% fast target
-    max_profit_pct: float = 0.5  # 0.5% maximum before immediate sell
+    # OPTIMIZED: Ultra-aggressive profit-taking for immediate gains
+    min_profit_pct: float = 0.03  # 0.03% minimum (ULTRA aggressive)
+    target_profit_pct: float = 0.08  # 0.08% target (ULTRA fast)
+    fast_profit_pct: float = 0.08  # 0.08% fast target
+    max_profit_pct: float = 0.25  # 0.25% maximum before immediate sell
     
-    # Aggressive time-based selling for micro-profits
-    max_hold_time_minutes: int = 5  # 5 minutes max hold
-    force_sell_after_minutes: int = 15  # 15 minutes force sell
-    micro_profit_hold_minutes: int = 2  # 2 minutes for micro-profits
+    # OPTIMIZED: Ultra-aggressive time-based selling for immediate profits
+    max_hold_time_minutes: int = 1  # 1 minute max hold (ULTRA fast)
+    force_sell_after_minutes: int = 8  # 8 minutes force sell (reduced from 15)
+    micro_profit_hold_minutes: int = 1  # 1 minute for micro-profits (reduced from 2)
     profit_decay_enabled: bool = True
     
     # Enhanced risk management

@@ -2,16 +2,16 @@
   "mcpServers": {
     "ccxt": {
       "command": "node",
-      "args": ["/mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/extensions/ccxt-mcp/build/index.js"],
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/extensions/ccxt-mcp/build/index.js"],
       "env": {
         "DEFAULT_EXCHANGE": "kraken"
       }
     },
     "mcp-trader": {
       "command": "python",
-      "args": ["/mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/extensions/mcp-trader/src/mcp_trader/server.py"],
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/extensions/mcp-trader/src/mcp_trader/server.py"],
       "env": {
-        "PYTHONPATH": "/mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/extensions/mcp-trader/src"
+        "PYTHONPATH": "/mnt/c/dev/tools/crypto-trading-bot-2025/extensions/mcp-trader/src"
       }
     },
     "memory": {
@@ -20,16 +20,34 @@
     },
     "sqlite": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sqlite", "/mnt/d/trading_data/trading_bot.db"]
+      "args": ["-y", "@modelcontextprotocol/server-sqlite", "D:/trading_data/trading_bot.db"]
     },
-    "filesystem": {
+    "filesystem-project": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/mnt/c/dev/tools/crypto-trading-bot-2025"]
+    },
+    "filesystem-data": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "D:/trading_data"]
     },
     "claude-flow": {
       "command": "npx",
       "args": ["claude-flow@alpha", "mcp", "start"],
-      "env": {}
+      "env": {
+        "AGENT_CONFIG_PATH": "/mnt/c/dev/tools/crypto-trading-bot-2025/.claude/agents"
+      }
+    },
+    "desktop-commander": {
+      "command": "python",
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/extensions/desktop-commander/server.py"]
+    },
+    "time": {
+      "command": "npx", 
+      "args": ["-y", "@modelcontextprotocol/server-time"]
+    },
+    "financial-datasets": {
+      "command": "python",
+      "args": ["/mnt/c/dev/tools/crypto-trading-bot-2025/extensions/financial-datasets-mcp/server.py"]
     }
   }
 }

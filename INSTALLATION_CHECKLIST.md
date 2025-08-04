@@ -1,61 +1,117 @@
-# Claude Code Installation Checklist
+# Crypto Trading Bot 2025 - Installation Checklist
 
-## Current Status
-- [ ] WSL is NOT installed (wsl command not recognized)
-- [ ] Need to enable Windows features first
-- [ ] Scripts created in project directory
+## Pre-Installation Requirements
+- [ ] Windows 10/11 (version 2004 or higher)
+- [ ] Python 3.9+ installed and in PATH
+- [ ] Administrator access for WSL setup
+- [ ] Kraken account with API access enabled
 
-## Installation Steps Order
+## Installation Progress Checklist
 
-### 1. Enable WSL (DO THIS FIRST!)
-Run ONE of these as Administrator:
-- Option A: Run `enable_wsl_proper.ps1` in PowerShell as Admin
-- Option B: Run `enable_wsl.bat` as Administrator
+### Phase 1: System Setup
+- [ ] WSL2 features enabled (requires admin privileges)
+- [ ] Computer restarted after WSL feature enablement
+- [ ] Ubuntu installed via `wsl --install -d Ubuntu`
+- [ ] Ubuntu initial setup completed (username/password created)
 
-### 2. RESTART YOUR COMPUTER
-This is mandatory after enabling WSL features!
+### Phase 2: Project Setup
+- [ ] Project directory accessible at `/mnt/c/dev/tools/crypto-trading-bot-2025/`
+- [ ] Python dependencies installed (`pip install -r requirements.txt`)
+- [ ] Virtual environment created (optional but recommended)
+- [ ] Configuration file prepared (`config.json`)
 
-### 3. Install Ubuntu (After Restart)
-Open PowerShell as Administrator and run:
-```
+### Phase 3: API Configuration
+- [ ] Kraken API key obtained from account settings
+- [ ] API secret safely stored
+- [ ] API permissions verified (trading enabled)
+- [ ] Configuration file updated with credentials
+
+### Phase 4: Verification Tests
+- [ ] API connection test passed (`python scripts/test_kraken_connection.py`)
+- [ ] Balance check working (`python scripts/check_balance_simple.py`)
+- [ ] Bot status check passed (`python scripts/check_bot_status.py`)
+- [ ] Paper trading mode tested (`python start_paper_trading.py`)
+
+## Installation Commands Reference
+
+### WSL2 Setup (Run as Administrator)
+```powershell
+# Enable WSL features
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+
+# Restart computer, then install Ubuntu
 wsl --install -d Ubuntu
 ```
 
-### 4. Set up Ubuntu
-- Open Ubuntu from Start Menu
-- Create username and password
-- Wait for initial setup to complete
-
-### 5. Install Claude Code
-In Ubuntu terminal:
+### Python Environment Setup
 ```bash
-cd /mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/
-bash setup_claude_ubuntu.sh
+# In WSL Ubuntu terminal
+cd /mnt/c/dev/tools/crypto-trading-bot-2025/
+
+# Install dependencies
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+# Optional: Create virtual environment
+python -m venv venv
+source venv/bin/activate
 ```
 
-### 6. Authenticate
+### Configuration Setup
 ```bash
-claude auth
+# Backup and configure
+cp config.json config.json.backup
+# Edit config.json with your API credentials using nano or vim
+nano config.json
 ```
 
-## Files Created
-- `enable_wsl.bat` - Batch script to enable WSL
-- `enable_wsl_proper.ps1` - PowerShell script to enable WSL (recommended)
-- `install_claude_code.ps1` - Original installation attempt
-- `setup_claude_ubuntu.sh` - Ubuntu setup script for Claude Code
-- `CLAUDE_CODE_SETUP_GUIDE.md` - Comprehensive guide
-
-## Quick Commands Reference
+### Verification Commands
 ```bash
-# After everything is installed:
-claude                    # Start Claude Code
-claude "write a function" # Quick command
-claude auth              # Re-authenticate
-claude logout            # Logout
+# Test API connection
+python scripts/test_kraken_connection.py
+
+# Check system status
+python scripts/check_bot_status.py
+
+# Test paper trading
+python start_paper_trading.py
+
+# Start live trading (after successful tests)
+python main.py
 ```
 
-## For Trading Bot Development
-```bash
-cd /mnt/c/projects050625/projects/active/tool-crypto-trading-bot-2025/
-claude "create a grid trading strategy in Python"
-```
+## Common Issues and Solutions
+
+### WSL Installation Issues
+- **Error**: "WSL not found" → Run enable WSL commands as Administrator
+- **Error**: "Ubuntu installation failed" → Check Windows version compatibility
+- **Fix**: Use `wsl --install -d Ubuntu --no-launch` if GUI fails
+
+### Python Dependencies Issues
+- **Error**: "pip not found" → Install Python via Microsoft Store or python.org
+- **Error**: "Permission denied" → Use `--user` flag: `pip install --user -r requirements.txt`
+- **Error**: "Package conflicts" → Create virtual environment first
+
+### API Configuration Issues
+- **Error**: "Invalid API key" → Verify key copied correctly without spaces
+- **Error**: "Permission denied" → Enable trading permissions in Kraken account
+- **Error**: "Nonce error" → Delete any existing nonce files: `rm kraken_nonce.json`
+
+## Files Created During Installation
+- `config.json` - Main configuration with API credentials
+- `logs/` - Directory for bot operation logs
+- `trading_data/` - Directory for trading history and analysis
+- `paper_trading_data/` - Directory for paper trading records
+
+## Post-Installation Next Steps
+1. Run paper trading mode first to test strategies safely
+2. Monitor logs for any issues or warnings
+3. Start with small trade amounts for live trading
+4. Set up monitoring and alerts as needed
+
+## Security Checklist
+- [ ] API keys stored securely (not in git repository)
+- [ ] File permissions set correctly (`chmod 600 config.json`)
+- [ ] Backup of configuration created
+- [ ] Test environment separated from production

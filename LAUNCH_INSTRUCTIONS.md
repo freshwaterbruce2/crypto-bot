@@ -2,26 +2,53 @@
 
 ## Pre-Launch Checklist
 
-### 1. Verify API Credentials
-- Check `.env` file has:
-  ```
-  KRAKEN_API_KEY=your_actual_key
-  KRAKEN_API_SECRET=your_actual_secret
-  ```
-- Ensure these are for the account with $161.39 USDT
+### 1. Verify API Credentials & Permissions
 
-### 2. Run Diagnostic Test
+**CRITICAL**: Run the API diagnostic first to avoid "EAPI:Invalid key" errors:
+
 ```bash
-python scripts/diagnose_balance.py
+# Windows
+DIAGNOSE_API.bat
+
+# Linux/WSL
+python diagnose_api_key.py
+```
+
+**Required Kraken API permissions**:
+- ✅ Query Funds
+- ✅ Access Websockets connection  
+- ✅ Create & Modify Orders
+- ✅ Query Open Orders & Trades
+- ✅ Cancel/Close Orders
+
+**If diagnostic fails**: See [KRAKEN_API_PERMISSIONS_GUIDE.md](KRAKEN_API_PERMISSIONS_GUIDE.md)
+
+### 2. Run System Diagnostic Test
+```bash
+# Check balance and API connection
+python scripts/check_balance_simple.py
+
+# Run comprehensive status check
+python scripts/check_bot_ready.py
+
+# Test API connectivity
+python scripts/test_kraken_connection.py
 ```
 
 Should show:
 - Connected to Kraken API ✓
-- USDT Balance: $161.39
-- Portfolio includes ALGO and AI16Z
+- Current USDT balance displayed
+- Available trading pairs listed
 
 ### 3. Launch the Bot
 ```bash
+# Recommended: Start with paper trading first
+python start_paper_trading.py
+
+# Or launch directly for live trading
+python main.py
+
+# Alternative with monitoring
 python scripts/live_launch.py
 ```
 
@@ -67,11 +94,11 @@ python scripts/live_launch.py
 
 ## Troubleshooting
 
-### If Balance Shows $1.97
+### If Balance Detection Issues
 1. Stop the bot (Ctrl+C)
-2. Run diagnostic: `python scripts/diagnose_balance.py`
-3. Check output for actual balance format
-4. Verify API credentials are correct
+2. Run balance check: `python scripts/check_balance_simple.py`
+3. Check balance using: `python scripts/force_refresh_balance.py`
+4. Verify API credentials are correct in config.json
 
 ### If No Signals Collected
 - Check WebSocket connection
@@ -100,4 +127,4 @@ Once trading successfully:
 2. Check logs for any warnings
 3. Let the snowball effect build profits!
 
-The bot is now ready to trade with your $161.39 USDT!
+The bot is now ready to trade with your available USDT balance!

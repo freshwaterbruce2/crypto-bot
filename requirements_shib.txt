@@ -1,0 +1,15 @@
+# SHIB Fee-Free Scalping Bot Requirements
+# Minimal dependencies for maximum speed!
+
+# WebSocket for real-time data
+websockets>=11.0.3
+
+# Async HTTP for API calls
+aiohttp>=3.8.5
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Data handling (minimal)
+pandas>=2.0.3
+numpy>=1.24.3

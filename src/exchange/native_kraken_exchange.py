@@ -5,7 +5,7 @@ Direct API integration with full compliance
 
 import asyncio
 from ..utils.base_exchange_connector import BaseExchangeConnector
-from ..utils.unified_balance import get_balance_manager
+from ..balance.balance_manager import BalanceManager
 import hashlib
 import hmac
 import time
@@ -21,6 +21,8 @@ from ..utils.network import ResilientRequest
 from ..utils.kraken_rl import KrakenRateLimiter
 from ..utils.rate_limit_handler import safe_exchange_call
 from ..utils.decimal_precision_fix import safe_decimal, safe_float
+from ..utils.unified_kraken_nonce_manager import UnifiedKrakenNonceManager
+# from ..utils.comprehensive_api_protection import get_comprehensive_protection  # Module missing
 
 logger = logging.getLogger(__name__)
 
@@ -47,9 +49,11 @@ class NativeKrakenExchange:
         self.session: Optional[aiohttp.ClientSession] = None
         self.connector: Optional[aiohttp.TCPConnector] = None
         
-        # Thread-safe nonce generation
+        # Thread-safe nonce generation with persistence
         self._nonce_lock = asyncio.Lock()
-        self._last_nonce = 0
+        # Use unified nonce manager (singleton)
+        self.nonce_manager = UnifiedKrakenNonceManager.get_instance()
+        logger.info(f"[KRAKEN] Initialized with unified nonce manager: {self.nonce_manager.__class__.__name__}")
         
         # Resilient request handler - CRITICAL FIX: Use RequestConfig
         from ..utils.network import RequestConfig
@@ -69,18 +73,32 @@ class NativeKrakenExchange:
         self.markets = {}
         self._markets_loaded = False
         
-        # Use the sophisticated KrakenRateLimiter
+        # CRITICAL FIX 2025: Enhanced rate limiting based on latest Kraken specs
         self.kraken_rate_limiter = KrakenRateLimiter(tier)
         
-        # Rate limiting based on tier (keep for legacy compatibility)
-        self.rate_limits = {
-            'starter': {'counter': 60, 'decay': 1.0},
-            'intermediate': {'counter': 125, 'decay': 2.34},
-            'pro': {'counter': 180, 'decay': 3.75}
+        # ENHANCED 2025: Comprehensive API protection system
+        # self.comprehensive_protection = get_comprehensive_protection(api_key, api_secret, tier)  # Module missing
+        self.comprehensive_protection = self._create_simple_protection()  # Simple fallback
+        
+        # 2025 Kraken API Rate Limits by Tier:
+        # Starter: Max Counter 15, Decay -0.33/sec
+        # Intermediate: Max Counter 20, Decay -0.5/sec  
+        # Pro: Max Counter 20, Decay -1/sec
+        tier_configs = {
+            'starter': {'max_counter': 15, 'decay_rate': 0.33},
+            'intermediate': {'max_counter': 20, 'decay_rate': 0.5},
+            'pro': {'max_counter': 20, 'decay_rate': 1.0}
         }
         
-        self.rate_counter = 0
-        self.last_request_time = time.time()
+        self.rate_config = tier_configs.get(tier.lower(), tier_configs['starter'])
+        self.api_counter = 0
+        self.last_counter_update = time.time()
+        
+        # Minimum delay between API calls (enhanced for 2025)
+        self.min_api_delay = 0.1  # 100ms minimum
+        self.last_api_call_time = 0
+        
+        logger.info(f"[KRAKEN_2025] Rate limiting configured for {tier} tier: max_counter={self.rate_config['max_counter']}, decay={self.rate_config['decay_rate']}/sec")
         
         # DNS failure tracking
         self.dns_failures = 0
@@ -365,7 +383,26 @@ class NativeKrakenExchange:
         """Fetch account balances using BalanceEx endpoint for accurate available balance"""
         try:
             logger.info("[KRAKEN_BALANCE] Fetching extended balance from Kraken BalanceEx API...")
-            result = await self._private_request('BalanceEx')
+            
+            # Use comprehensive protection for balance calls
+            success, result, error = await self.comprehensive_protection.safe_api_call(
+                'BalanceEx', self._private_request, 'BalanceEx'
+            )
+            
+            if not success:
+                logger.error(f"[KRAKEN_BALANCE] BalanceEx call failed: {error}")
+                
+                # Check if this is a circuit breaker error and handle appropriately
+                if await self._handle_circuit_breaker_error(error, 'BalanceEx'):
+                    # Circuit breaker detected and handled, try fallback
+                    logger.warning("[KRAKEN_BALANCE] Circuit breaker detected, falling back to standard Balance endpoint")
+                    return await self.fetch_balance()
+                
+                raise KrakenAPIError(f"BalanceEx failed: {error}")
+            
+            if not result:
+                logger.warning("[KRAKEN_BALANCE] BalanceEx returned empty result")
+                return await self.fetch_balance()  # Fallback to standard balance
             
             # Log raw response
             logger.info(f"[KRAKEN_BALANCE] Raw BalanceEx response keys: {list(result.keys())}")
@@ -450,7 +487,26 @@ class NativeKrakenExchange:
         except Exception as ex:
             # Fallback to standard implementation
             logger.info(f"[KRAKEN_BALANCE] BalanceEx failed ({ex}), using standard Balance endpoint...")
-            result = await self._private_request('Balance')
+            
+            # Use comprehensive protection for fallback balance call
+            success, result, error = await self.comprehensive_protection.safe_api_call(
+                'Balance', self._private_request, 'Balance'
+            )
+            
+            if not success:
+                logger.error(f"[KRAKEN_BALANCE] Balance call failed: {error}")
+                
+                # Check if this is a circuit breaker error for fallback too
+                if await self._handle_circuit_breaker_error(error, 'Balance'):
+                    logger.warning("[KRAKEN_BALANCE] Circuit breaker detected on fallback Balance endpoint")
+                    # Return empty balance structure rather than failing completely
+                    return {'info': {}, 'free': {}, 'used': {}, 'total': {}}
+                
+                return {}
+            
+            if not result:
+                logger.warning("[KRAKEN_BALANCE] Balance returned empty result")
+                return {}
             
             # Log raw response
             logger.info(f"[KRAKEN_BALANCE] Raw balance response keys: {list(result.keys())}")
@@ -551,12 +607,23 @@ class NativeKrakenExchange:
             if order_type == 'limit' and price:
                 params['price'] = str(price)
             
-            # Check rate limit
-            if not self._check_rate_limit():
-                raise KrakenAPIError("Rate limit exceeded")
+            # Use comprehensive protection for order creation
+            success, result, error = await self.comprehensive_protection.safe_api_call(
+                'AddOrder', self._private_request, 'AddOrder', params
+            )
             
-            # Place order
-            result = await self._private_request('AddOrder', params)
+            if not success:
+                # Handle circuit breaker errors gracefully for order creation
+                if await self._handle_circuit_breaker_error(error, 'AddOrder'):
+                    logger.warning(f"[KRAKEN_ORDER] Circuit breaker detected for {symbol} order - retrying after wait")
+                    # Retry once after circuit breaker wait
+                    success, result, error = await self.comprehensive_protection.safe_api_call(
+                        'AddOrder', self._private_request, 'AddOrder', params
+                    )
+                    if not success:
+                        raise KrakenAPIError(f"Order creation failed after circuit breaker wait: {error}")
+                else:
+                    raise KrakenAPIError(f"Order creation failed: {error}")
             
             if 'txid' in result:
                 order_id = result['txid'][0] if result['txid'] else None
@@ -580,7 +647,26 @@ class NativeKrakenExchange:
     async def cancel_order(self, order_id: str) -> bool:
         """Cancel an order"""
         try:
-            result = await self._private_request('CancelOrder', {'txid': order_id})
+            # Use comprehensive protection for order cancellation
+            success, result, error = await self.comprehensive_protection.safe_api_call(
+                'CancelOrder', self._private_request, 'CancelOrder', {'txid': order_id}
+            )
+            
+            if not success:
+                # Handle circuit breaker errors for cancellation
+                if await self._handle_circuit_breaker_error(error, 'CancelOrder'):
+                    logger.warning(f"[KRAKEN_CANCEL] Circuit breaker detected for order {order_id} - retrying after wait")
+                    # Retry once after circuit breaker wait
+                    success, result, error = await self.comprehensive_protection.safe_api_call(
+                        'CancelOrder', self._private_request, 'CancelOrder', {'txid': order_id}
+                    )
+                    if not success:
+                        logger.error(f"[KRAKEN_CANCEL] Cancel failed after circuit breaker wait: {error}")
+                        return False
+                else:
+                    logger.error(f"[KRAKEN_CANCEL] Cancel failed: {error}")
+                    return False
+            
             return 'count' in result and result['count'] > 0
             
         except Exception as e:
@@ -701,36 +787,42 @@ class NativeKrakenExchange:
                 return symbol
         return kraken_pair
     
-    def _check_rate_limit(self) -> bool:
-        """Check if we're within rate limits"""
+    async def _ensure_minimum_delay(self) -> None:
+        """CRITICAL FIX 2025: Enhanced API delay with counter-based rate limiting"""
         now = time.time()
         
-        # Check if we're in rate limit recovery period
-        if hasattr(self, '_rate_limit_recovery_time') and now < self._rate_limit_recovery_time:
-            remaining = self._rate_limit_recovery_time - now
-            logger.debug(f"[KRAKEN] Still in rate limit recovery, {remaining:.1f}s remaining")
-            return False
+        # Update counter based on decay rate
+        time_elapsed = now - self.last_counter_update
+        if time_elapsed > 0:
+            # Decay counter based on tier specifications
+            decay_amount = time_elapsed * self.rate_config['decay_rate']
+            self.api_counter = max(0, self.api_counter - decay_amount)
+            self.last_counter_update = now
         
-        elapsed = now - self.last_request_time
+        # Check if we're approaching rate limit
+        max_counter = self.rate_config['max_counter']
+        if self.api_counter >= (max_counter * 0.8):  # 80% threshold
+            # Calculate required wait time
+            excess = self.api_counter - (max_counter * 0.7)  # Target 70%
+            wait_time = excess / self.rate_config['decay_rate']
+            wait_time = min(wait_time, 5.0)  # Cap at 5 seconds
+            
+            logger.warning(f"[KRAKEN_2025] Rate limit protection: counter={self.api_counter:.1f}/{max_counter}, waiting {wait_time:.1f}s")
+            await asyncio.sleep(wait_time)
+            
+            # Update counter after wait
+            self.api_counter = max(0, self.api_counter - (wait_time * self.rate_config['decay_rate']))
+            self.last_counter_update = time.time()
         
-        # Apply decay
-        decay_rate = self.rate_limits[self.tier]['decay']
-        self.rate_counter = max(0, self.rate_counter - (decay_rate * elapsed))
+        # Ensure minimum delay between calls
+        time_since_last_call = now - self.last_api_call_time
+        if time_since_last_call < self.min_api_delay:
+            delay_needed = self.min_api_delay - time_since_last_call
+            await asyncio.sleep(delay_needed)
         
-        # Check if under limit
-        max_counter = self.rate_limits[self.tier]['counter']
-        if self.rate_counter >= max_counter:
-            return False
-        
-        # Increment counter
-        self.rate_counter += 1
-        self.last_request_time = now
-        
-        # Reset backoff time on successful check
-        if hasattr(self, '_rate_limit_backoff_time'):
-            self._rate_limit_backoff_time = 60.0  # Reset to initial backoff
-        
-        return True
+        # Increment counter for this call (Balance calls = +1, Ledger calls = +2)
+        self.api_counter += 1
+        self.last_api_call_time = time.time()
     
     async def _public_request_raw(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
         """Raw public API request without retry logic (for use with ResilientRequest)"""
@@ -805,22 +897,45 @@ class NativeKrakenExchange:
                         # For nonce errors, we need to wait and let the caller regenerate a new nonce
                         await asyncio.sleep(0.1)  # Short delay to avoid rapid retries
                     
-                    # Check for rate limit error
-                    elif 'EAPI:Rate limit exceeded' in error_msg:
-                        # Update both rate limiters
-                        self.rate_counter = self.rate_limits[self.tier]['counter']  # Max out counter
+                    # Check for rate limit errors
+                    elif 'EAPI:Rate limit exceeded' in error_msg or 'EGeneral:Temporary lockout' in error_msg:
+                        # CRITICAL FIX 2025: Enhanced rate limit error handling
+                        error_type = "rate_limit" if "Rate limit" in error_msg else "temporary_lockout"
+                        
+                        # Update internal counter to reflect we hit the limit
+                        self.api_counter = self.rate_config['max_counter']
+                        
+                        # Update rate limiter and open circuit breaker
                         self.kraken_rate_limiter.handle_kraken_error(error_msg, endpoint)
+                        self.kraken_rate_limiter.open_circuit_breaker()
                         
-                        logger.warning(f"[KRAKEN] Rate limit exceeded: {error_msg}")
-                        # Implement exponential backoff for rate limit recovery
-                        if not hasattr(self, '_rate_limit_backoff_time'):
-                            self._rate_limit_backoff_time = 60.0  # Start with 60 seconds
+                        logger.warning(f"[KRAKEN_2025] {error_type.title()} detected: {error_msg}")
+                        
+                        # Enhanced exponential backoff based on error type
+                        if not hasattr(self, '_rate_limit_backoff_attempt'):
+                            self._rate_limit_backoff_attempt = 0
+                        
+                        self._rate_limit_backoff_attempt += 1
+                        
+                        if error_type == "temporary_lockout":
+                            # CRITICAL FIX 2025: Temporary lockout requires EXACTLY 15 minutes wait per Kraken docs
+                            lockout_wait_minutes = 15.0
+                            backoff_time = lockout_wait_minutes * 60.0  # Convert to seconds
+                            
+                            # For temporary lockout, use fixed 15-minute wait, not exponential backoff
+                            logger.error(f"[KRAKEN_2025] TEMPORARY LOCKOUT: Waiting exactly {lockout_wait_minutes} minutes as required by Kraken API")
+                            logger.error(f"[KRAKEN_2025] This is attempt {self._rate_limit_backoff_attempt} - lockout time is fixed at 15 minutes")
                         else:
-                            self._rate_limit_backoff_time = min(self._rate_limit_backoff_time * 1.5, 300.0)  # Max 5 minutes
+                            # Regular rate limit uses exponential backoff with Pro tier optimization
+                            base_wait = 2.0 if self.tier == "pro" else 4.0
+                            backoff_time = min(base_wait ** (self._rate_limit_backoff_attempt - 1), 32.0)
                         
-                        logger.warning(f"[KRAKEN] Entering rate limit backoff for {self._rate_limit_backoff_time:.1f} seconds")
-                        self._rate_limit_recovery_time = time.time() + self._rate_limit_backoff_time
-                        await asyncio.sleep(0.1)
+                        logger.warning(f"[KRAKEN_2025] Backoff attempt {self._rate_limit_backoff_attempt}: waiting {backoff_time}s")
+                        await asyncio.sleep(backoff_time)
+                        
+                        # Reset counter after successful wait
+                        self.api_counter = 0
+                        self.last_counter_update = time.time()
                     
                     raise KrakenAPIError(error_msg)
                 
@@ -828,6 +943,13 @@ class NativeKrakenExchange:
                 self.last_successful_request = time.time()
                 self.consecutive_failures = 0
                 self.is_healthy = True
+                
+                # Reset exponential backoff on successful request
+                if hasattr(self, '_rate_limit_backoff_attempt'):
+                    self._rate_limit_backoff_attempt = 0
+                
+                # Update rate limit counter decay
+                self.last_counter_update = time.time()
                 
                 return result.get('result', {})
         except aiohttp.ClientConnectorError as conn_error:
@@ -844,7 +966,10 @@ class NativeKrakenExchange:
         if not self.api_key or not self.api_secret:
             raise KrakenAPIError("API credentials not set")
         
-        # Use KrakenRateLimiter for sophisticated rate limiting
+        # Ensure minimum delay between API calls (100ms minimum)
+        await self._ensure_minimum_delay()
+        
+        # Use ONLY KrakenRateLimiter for sophisticated rate limiting
         operation = self._get_operation_type(endpoint)
         await self.kraken_rate_limiter.wait_if_needed(
             symbol='global',  # Use 'global' for non-pair-specific endpoints
@@ -852,36 +977,16 @@ class NativeKrakenExchange:
             endpoint=endpoint
         )
         
-        # Legacy rate limit check as backup
-        if not self._check_rate_limit():
-            # Instead of failing immediately, wait a bit and try again
-            wait_time = 1.0
-            logger.warning(
-                f"[KRAKEN] Legacy rate limit would be exceeded, waiting {wait_time}s"
-            )
-            await asyncio.sleep(wait_time)
-            
-            # Check again after waiting
-            if not self._check_rate_limit():
-                raise KrakenAPIError("Rate limit would be exceeded")
+        # Check circuit breaker before proceeding
+        if not self.kraken_rate_limiter.check_circuit_breaker():
+            raise KrakenAPIError("Circuit breaker is open - preventing cascade failures")
         
-        # Thread-safe nonce generation - Kraken best practice: milliseconds
-        async with self._nonce_lock:
-            # Ensure nonce always increases
-            current_time_ms = int(time.time() * 1000)
-            
-            # If we're making requests too fast, increment from last nonce
-            if current_time_ms <= self._last_nonce:
-                self._last_nonce += 1
-                nonce = str(self._last_nonce)
-            else:
-                self._last_nonce = current_time_ms
-                nonce = str(current_time_ms)
-            
-            logger.debug(f"[KRAKEN_AUTH] Generated nonce: {nonce} for endpoint: {endpoint}")
-            
-            # Small delay to prevent rapid-fire requests
-            await asyncio.sleep(0.05)  # 50ms minimum between requests
+        # Use unified nonce manager with async support
+        nonce = await self.nonce_manager.get_nonce_async("native_kraken_rest")
+        logger.debug(f"[KRAKEN_AUTH] Generated nonce: {nonce} for endpoint: {endpoint}")
+        
+        # Small delay to prevent rapid-fire requests
+        await asyncio.sleep(0.05)  # 50ms between requests
         
         if params is None:
             params = {}
@@ -953,9 +1058,13 @@ class NativeKrakenExchange:
             "healthy": self.is_healthy,
             "consecutive_failures": self.consecutive_failures,
             "time_since_last_success": time_since_success,
-            "rate_limit_usage": self.rate_counter / self.rate_limits[self.tier]['counter'],
+            "rate_limiter_status": self.kraken_rate_limiter.get_status(),
+            "circuit_breaker_open": self.kraken_rate_limiter.circuit_breaker_open,
             "connection_pool_stats": self.connector.stats if self.connector else None,
-            "resilient_request_metrics": self.resilient_request.get_performance_metrics()
+            "resilient_request_metrics": self.resilient_request.get_performance_metrics(),
+            "min_api_delay": self.min_api_delay,
+            "last_api_call_time": self.last_api_call_time,
+            "comprehensive_protection": self.comprehensive_protection.get_health_status()
         }
     
     async def health_check(self) -> bool:
@@ -986,6 +1095,72 @@ class NativeKrakenExchange:
         else:
             return 'system'
     
+    async def _handle_circuit_breaker_error(self, error_message: str, endpoint: str) -> bool:
+        """
+        Handle circuit breaker errors by parsing wait time and managing delays
+        
+        Args:
+            error_message: Error message from API call
+            endpoint: The endpoint that failed
+            
+        Returns:
+            bool: True if circuit breaker error was handled, False otherwise
+        """
+        import re
+        import asyncio
+        
+        # Check if this is a circuit breaker error
+        if "Circuit breaker open" not in error_message:
+            return False
+        
+        # Parse the remaining time from the error message
+        # Format: "Circuit breaker open, 294s remaining"
+        time_match = re.search(r'(\d+)s remaining', error_message)
+        if not time_match:
+            logger.warning(f"[CIRCUIT_BREAKER] Could not parse wait time from: {error_message}")
+            return False
+        
+        wait_seconds = int(time_match.group(1))
+        logger.warning(f"[CIRCUIT_BREAKER] {endpoint} blocked - circuit breaker open for {wait_seconds}s")
+        
+        # If wait time is reasonable (under 10 minutes), handle it gracefully
+        if wait_seconds <= 600:  # 10 minutes max
+            logger.info(f"[CIRCUIT_BREAKER] Gracefully handling circuit breaker - will wait {wait_seconds}s")
+            
+            # Log every 30 seconds during wait
+            elapsed = 0
+            while elapsed < wait_seconds:
+                sleep_time = min(30, wait_seconds - elapsed)
+                await asyncio.sleep(sleep_time)
+                elapsed += sleep_time
+                
+                if elapsed < wait_seconds:
+                    remaining = wait_seconds - elapsed
+                    logger.info(f"[CIRCUIT_BREAKER] Still waiting for circuit breaker reset - {remaining}s remaining")
+            
+            logger.info(f"[CIRCUIT_BREAKER] Circuit breaker wait complete - resuming API calls")
+            return True
+        else:
+            logger.error(f"[CIRCUIT_BREAKER] Wait time too long ({wait_seconds}s) - will not wait")
+            return False
+
+    def _create_simple_protection(self):
+        """Create a simple protection wrapper for API calls"""
+        class SimpleProtection:
+            async def safe_api_call(self, endpoint, method, *args, **kwargs):
+                """Simple wrapper that just calls the method directly"""
+                try:
+                    result = await method(*args, **kwargs)
+                    return True, result, None
+                except Exception as e:
+                    return False, None, str(e)
+            
+            def get_health_status(self):
+                """Simple health status"""
+                return {"status": "active", "type": "simple_fallback"}
+        
+        return SimpleProtection()
+
     async def create_market_sell_order(self, symbol: str, amount: float) -> Dict[str, Any]:
         """
         Create a market sell order for liquidating assets.

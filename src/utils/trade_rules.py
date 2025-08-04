@@ -30,8 +30,8 @@ class KrakenTradeRules:
             "ATOM/USDT": 0.1
         }
         
-        self.minimum_order_value_usdt = 1.0  # Kraken minimum
-        self.tier_1_limit = 5.0  # Starter tier limit
+        self.minimum_order_value_usdt = 1.0  # Kraken actual minimum for low-priced pairs (CORRECTED)
+        self.tier_1_limit = 1.0  # Low balance account minimum for micro-trading
     
     def get_minimum_order_size(self, symbol: str) -> float:
         """Get minimum order size for symbol"""

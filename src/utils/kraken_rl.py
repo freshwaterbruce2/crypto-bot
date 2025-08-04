@@ -36,27 +36,27 @@ class RateLimitConfig:
     max_api_counter: int  # REST API counter limit
     api_decay_rate: float  # REST API decay rate
 
-    # Tier configurations from Kraken documentation - UPDATED 2025 VALUES
+    # Tier configurations from Kraken documentation - CORRECTED 2025 VALUES
     STARTER = lambda: RateLimitConfig(
-        max_counter=60,  # Trading engine counter
-        decay_rate=1.0,  # Trading engine decay
+        max_counter=15,   # CORRECTED: Starter tier actual API counter limit
+        decay_rate=0.33,  # CORRECTED: 0.33/second decay rate for Starter
         max_open_orders=60,
-        max_api_counter=15,  # REST API counter
-        api_decay_rate=1/3  # 0.33/second REST decay
+        max_api_counter=15,  # REST API counter matches trading counter
+        api_decay_rate=0.33  # CORRECTED: 0.33/second REST decay
     )
     INTERMEDIATE = lambda: RateLimitConfig(
-        max_counter=125,  # Trading engine counter
-        decay_rate=2.34,  # Trading engine decay
+        max_counter=20,   # CORRECTED: Intermediate tier actual API counter limit
+        decay_rate=0.5,   # CORRECTED: 0.5/second decay rate for Intermediate
         max_open_orders=80,
-        max_api_counter=20,  # REST API counter
-        api_decay_rate=0.5  # 0.5/second REST decay
+        max_api_counter=20,  # REST API counter matches trading counter
+        api_decay_rate=0.5  # Correct 0.5/second REST decay
     )
     PRO = lambda: RateLimitConfig(
-        max_counter=180,  # INTEGRATION FIX: Corrected PRO tier trading engine counter
-        decay_rate=3.75,  # Trading engine decay
+        max_counter=20,   # CORRECTED: Pro tier API counter (same as Intermediate)
+        decay_rate=1.0,   # CORRECTED: Pro tier gets 1.0/second decay rate
         max_open_orders=225,
-        max_api_counter=20,  # REST API counter
-        api_decay_rate=0.5  # INTEGRATION FIX: Corrected REST API decay rate
+        max_api_counter=20,  # REST API counter matches trading counter
+        api_decay_rate=1.0  # CORRECTED: Pro tier gets 1.0/second REST decay
     )
 
 
@@ -127,11 +127,11 @@ class KrakenRateLimiter:
         self.ws_rate_counter = 0.0
         self.ws_counter_history = []
         
-        # INTEGRATION FIX: Circuit breaker aligned with main circuit breaker thresholds
+        # Circuit breaker for preventing cascade failures
         self.circuit_breaker_open = False
         self.circuit_breaker_opened_at = 0
-        self.circuit_breaker_duration = 2.0  # INTEGRATION FIX: 2 seconds to align with circuit_breaker.py
-        self.circuit_breaker_threshold = self.config.max_counter * 0.9  # Open at 90% capacity
+        self.circuit_breaker_duration = 10.0  # FIXED: 10 seconds for proper recovery
+        self.circuit_breaker_threshold = self.config.max_counter * 0.8  # FIXED: Open at 80% capacity (more conservative)
 
         # Performance metrics
         self.stats = {
@@ -226,25 +226,35 @@ class KrakenRateLimiter:
             endpoint: API endpoint name
         """
         try:
-            max_wait_time = 30.0  # Maximum wait time in seconds
+            max_wait_time = 60.0  # INCREASED: Maximum wait time to 60 seconds
             wait_start = time.time()
+            backoff_attempt = 0
 
             while not await self.check_rate_limit(
                 symbol, operation, order_age_seconds, endpoint
             ):
-                # Calculate required wait time
+                # Check circuit breaker first
+                if not self.check_circuit_breaker():
+                    logger.warning(f"[KRAKEN_RL] Circuit breaker open - waiting for recovery")
+                    await asyncio.sleep(self.circuit_breaker_duration)
+                    continue
+                
+                # Calculate required wait time with exponential backoff
                 current_counter = self.rate_counters[symbol]
                 operation_cost = self._calculate_operation_cost(
                     operation, order_age_seconds
                 )
                 excess = (current_counter + operation_cost) - self.config.max_counter
 
-                # Calculate wait time needed for decay
-                decay_rate = max(self.config.decay_rate, 0.1)  # Ensure never 0
-                wait_time = min(excess / decay_rate, max_wait_time)
+                # Apply exponential backoff: 1s, 2s, 4s, 8s, 16s
+                base_wait_time = excess / max(self.config.decay_rate, 0.1)
+                exponential_backoff = min(2 ** backoff_attempt, 16.0)  # Cap at 16 seconds
+                wait_time = min(base_wait_time + exponential_backoff, max_wait_time)
+                
+                backoff_attempt += 1
 
                 logger.info(
-                    f"[KRAKEN_RL] Rate limited - waiting {wait_time:.2f}s for {symbol} {operation}"
+                    f"[KRAKEN_RL] Rate limited - waiting {wait_time:.2f}s (attempt {backoff_attempt}) for {symbol} {operation}"
                 )
 
                 await asyncio.sleep(wait_time)
@@ -494,8 +504,8 @@ class KrakenRateLimiter:
         if len(self.ws_counter_history) > 100:
             self.ws_counter_history = self.ws_counter_history[-100:]
         
-        # Check if we should open circuit breaker
-        if counter_value > self.config.max_counter * 0.95:
+        # Check if we should open circuit breaker (more conservative threshold)
+        if counter_value > self.config.max_counter * 0.8:
             logger.warning(
                 f"[KRAKEN_RL] High WebSocket counter: {counter_value} "
                 f"({(counter_value/self.config.max_counter)*100:.1f}% utilization)"

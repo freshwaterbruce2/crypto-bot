@@ -7,8 +7,8 @@ for Kraken WebSocket connections.
 
 import asyncio
 import logging
-from src.utils.kraken_nonce_manager import get_nonce_manager, KrakenNonceManager
-from src.exchange.websocket_nonce_coordinator import get_nonce_coordinator
+from src.utils.unified_kraken_nonce_manager import get_unified_nonce_manager as get_nonce_manager, KrakenNonceManager
+from src.utils.unified_kraken_nonce_manager import get_unified_nonce_manager as get_nonce_coordinator
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -20,7 +20,7 @@ def basic_usage_example():
     print("\n=== Basic Nonce Generation ===")
     
     # Get the global nonce manager
-    nonce_manager = get_nonce_manager()
+    nonce_manager = get_unified_nonce_manager()
     
     # Generate nonces for a connection
     connection_id = "my_websocket_1"
@@ -39,7 +39,7 @@ def batch_nonce_example():
     """Batch nonce generation for multiple requests"""
     print("\n=== Batch Nonce Generation ===")
     
-    nonce_manager = get_nonce_manager()
+    nonce_manager = get_unified_nonce_manager()
     connection_id = "batch_connection"
     
     # Get 10 nonces at once (useful for queuing multiple requests)
@@ -53,7 +53,7 @@ async def websocket_integration_example():
     print("\n=== WebSocket Coordinator Example ===")
     
     # Get the coordinator
-    coordinator = get_nonce_coordinator()
+    coordinator = get_unified_nonce_manager()
     
     # Register a connection
     conn_id = "kraken_ws_main"
@@ -76,7 +76,7 @@ def error_handling_example():
     """Demonstrate error recovery"""
     print("\n=== Error Handling Example ===")
     
-    coordinator = get_nonce_coordinator()
+    coordinator = get_unified_nonce_manager()
     conn_id = "error_test_conn"
     
     # Get a nonce
@@ -98,7 +98,7 @@ def statistics_example():
     """Show nonce manager statistics"""
     print("\n=== Statistics Example ===")
     
-    nonce_manager = get_nonce_manager()
+    nonce_manager = get_unified_nonce_manager()
     
     # Generate some activity
     for i in range(3):
@@ -117,7 +117,7 @@ async def concurrent_usage_example():
     """Demonstrate thread-safe concurrent usage"""
     print("\n=== Concurrent Usage Example ===")
     
-    nonce_manager = get_nonce_manager()
+    nonce_manager = get_unified_nonce_manager()
     connection_id = "concurrent_test"
     
     async def generate_nonces(task_id):
@@ -149,8 +149,8 @@ def practical_websocket_example():
     print("\n=== Practical WebSocket Usage ===")
     
     # Initialize components
-    nonce_manager = KrakenNonceManager()
-    coordinator = get_nonce_coordinator()
+    nonce_manager = KrakenUnifiedUnifiedKrakenNonceManager()
+    coordinator = get_unified_nonce_manager()
     
     # Connection setup
     connection_id = "kraken_main"

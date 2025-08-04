@@ -4,7 +4,7 @@
 
 ### **📋 Development Docs**
 ```
-C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development\
+/mnt/c/dev/tools/crypto-trading-bot-2025/docs/development/
 ├── LESSONS_LEARNED.md      - Critical fixes with exact code solutions
 ├── TODO_TRACKER.md         - Task progress and completion status  
 ├── MISTAKES_TO_AVOID.md    - Quick reference checklist
@@ -12,15 +12,18 @@ C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development\
 ```
 
 ### **🚀 Quick Access Commands**
-```batch
-:: Open docs folder
-explorer "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development"
+```bash
+# Open docs folder (Windows)
+explorer /mnt/c/dev/tools/crypto-trading-bot-2025/docs/development
 
-:: Quick edit TODO tracker
-notepad "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development\TODO_TRACKER.md"
+# Open docs folder (WSL)
+cd /mnt/c/dev/tools/crypto-trading-bot-2025/docs/development
 
-:: Reference mistakes checklist  
-type "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development\MISTAKES_TO_AVOID.md"
+# Quick edit TODO tracker
+nano /mnt/c/dev/tools/crypto-trading-bot-2025/docs/development/TODO_TRACKER.md
+
+# Reference mistakes checklist  
+cat /mnt/c/dev/tools/crypto-trading-bot-2025/docs/development/MISTAKES_TO_AVOID.md
 ```
 
 ## 📝 **DAILY UPDATE WORKFLOW**
@@ -38,27 +41,28 @@ type "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\develo
 ## 💾 **SIMPLE BACKUP STRATEGY**
 
 ### **Automatic Daily Backup Script:**
-```batch
-@echo off
-set SOURCE="C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs"
-set BACKUP="C:\projects050625\backups\trading-bot-docs_%date:~-4,4%-%date:~-10,2%-%date:~-7,2%"
-robocopy %SOURCE% %BACKUP% /E /XO
-echo Docs backed up to %BACKUP%
+```bash
+#!/bin/bash
+SOURCE="/mnt/c/dev/tools/crypto-trading-bot-2025/docs"
+BACKUP="/mnt/c/dev/tools/crypto-trading-bot-2025/backups/docs_$(date +%Y-%m-%d)"
+mkdir -p "$(dirname "$BACKUP")"
+cp -r "$SOURCE" "$BACKUP"
+echo "Docs backed up to $BACKUP"
 ```
 
-Save as: `backup_docs.bat` and run daily.
+Save as: `backup_docs.sh`, make executable with `chmod +x backup_docs.sh`, and run daily.
 
 ## 🔍 **SEARCH YOUR DOCS**
 
 ### **Find specific fixes:**
-```batch
-findstr /S /I "autonomous sell engine" "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\*.md"
-findstr /S /I "fake profit" "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\*.md"
+```bash
+grep -r -i "autonomous sell engine" /mnt/c/dev/tools/crypto-trading-bot-2025/docs/*.md
+grep -r -i "fake profit" /mnt/c/dev/tools/crypto-trading-bot-2025/docs/*.md
 ```
 
 ### **Find incomplete tasks:**
-```batch
-findstr /S /I "PENDING" "C:\projects050625\projects\active\tool-crypto-trading-bot-2025\docs\development\TODO_TRACKER.md"
+```bash
+grep -i "PENDING" /mnt/c/dev/tools/crypto-trading-bot-2025/docs/development/TODO_TRACKER.md
 ```
 
 ---

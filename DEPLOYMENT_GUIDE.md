@@ -7,8 +7,11 @@
 # Terminal 1: Start the bot
 python scripts/live_launch.py
 
-# Terminal 2: Start the monitoring dashboard
-python monitor_live_trading.py
+# Terminal 2: Monitor with dashboard (if available)
+python dashboard/backend/main.py
+
+# Or use built-in monitoring
+python scripts/monitor_bot.py
 ```
 
 ### 2. Verify Systems are Working
@@ -65,9 +68,10 @@ Watch for:
 ## Troubleshooting
 
 ### Bot Not Finding Trades
-1. Check WebSocket data is flowing
+1. Check WebSocket data is flowing: `python websocket_v2_explorer.py`
 2. Lower momentum threshold in config.json (currently 0.001)
-3. Verify trading pairs have sufficient volume
+3. Verify trading pairs have sufficient volume: `python scripts/check_usdt_pairs.py`
+4. Check signal generation: `python scripts/diagnose_signals.py`
 
 ### Balance Not Updating
 1. Check WebSocket balance updates in monitor
@@ -93,8 +97,14 @@ pkill -f "python.*live_launch"
 ### Reset State
 ```bash
 # Clear logs and start fresh
-rm kraken_bot.log
+rm -f *.log
 rm -rf logs/
+rm -rf trading_data/cache/
+
+# Reset circuit breaker
+python scripts/reset_circuit_breaker.py
+
+# Start fresh
 python scripts/live_launch.py
 ```
 

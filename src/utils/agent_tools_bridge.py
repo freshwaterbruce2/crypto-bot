@@ -77,12 +77,13 @@ class AgentToolsBridge:
                         line = f.readline()
                         if not line:
                             break
-                        lines.append(f"{offset + i + 1:5d}→{line.rstrip()}")
+                        line_num = (offset or 0) + i + 1
+                        lines.append(f"{line_num:5d}→{line.rstrip()}")
                     return '\n'.join(lines)
                 else:
                     # Read all lines with line numbers
                     lines = f.readlines()
-                    start_line = offset + 1 if offset else 1
+                    start_line = (offset or 0) + 1
                     numbered_lines = [
                         f"{start_line + i:5d}→{line.rstrip()}" 
                         for i, line in enumerate(lines)

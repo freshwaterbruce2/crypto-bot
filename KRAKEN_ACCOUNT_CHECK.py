@@ -30,7 +30,7 @@ async def check_account_status():
         print("❌ API credentials not found")
         return False
     
-    print(f"✅ API Key: {api_key[:8]}...{api_key[-4:]}")
+    print(f"✓ API Key: [SECURE - {len(api_key)} chars]")
     print(f"✅ Key Length: {len(api_key)} chars")
     print(f"✅ Secret Length: {len(api_secret)} chars")
     

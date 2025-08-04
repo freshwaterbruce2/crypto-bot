@@ -1,17 +1,29 @@
-# Memory Server
+# Core MCP Servers for Trading Bot
+
+# Memory Server - Essential for trade learning
 claude mcp add memory "npx" "@modelcontextprotocol/server-memory"
 
-# PostgreSQL Server (adjust connection string as needed)
-claude mcp add postgres "npx" "@modelcontextprotocol/server-postgres" "postgresql://user:password@localhost:5432/trading_bot"
+# SQLite Database - Primary data storage (using D: drive)
+claude mcp add sqlite "npx" "@modelcontextprotocol/server-sqlite" "D:/trading_data/trading_bot.db"
 
-# Time/Scheduler Server (using cron-style scheduler)
-claude mcp add scheduler "npx" "@modelcontextprotocol/server-cron"
+# Time/Scheduler Server - For scheduled operations
+claude mcp add time "npx" "@modelcontextprotocol/server-time"
 
-# Alternative: SQLite for easier setup than PostgreSQL
-claude mcp add sqlite "npx" "@modelcontextprotocol/server-sqlite" "trading_bot.db"
+# File System Access - For bot code and data access
+claude mcp add filesystem "npx" "@modelcontextprotocol/server-filesystem" "/mnt/c/dev/tools/crypto-trading-bot-2025"
 
-# List all servers
+# Trading Data Access - For D: drive data
+claude mcp add filesystem-data "npx" "@modelcontextprotocol/server-filesystem" "D:/trading_data"
+
+# Custom Trading MCP Server (our extension)
+claude mcp add trading-mcp "python" "extensions/mcp-trader/src/mcp_trader/server.py"
+
+# CCXT MCP Server (for additional exchange support)
+claude mcp add ccxt-mcp "node" "extensions/ccxt-mcp/src/index.ts"
+
+# Verification Commands
 claude mcp list
+claude mcp test
 
-# Start MCP server
+# Start MCP server session
 claude mcp serve

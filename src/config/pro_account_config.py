@@ -59,8 +59,8 @@ class ProAccountOptimizer:
         
         # Trading parameters (fee-free optimized)
         pro_config.update({
-            # Fee-free trading enables smaller positions
-            'min_order_size_usdt': 0.5,        # 50% smaller minimum
+            # CRITICAL: Kraken requires $2 minimum for TIER-1 pairs - this applies to ALL accounts
+            'min_order_size_usdt': 2.0,         # Kraken TIER-1 minimum requirement
             'position_size_usdt': 3.5,          # Optimized for $5 balance
             'tier_1_trade_limit': 50.0,         # Much higher limit
             

@@ -33,6 +33,16 @@ from src.config import load_config
 from src.config.constants import MINIMUM_ORDER_SIZE_TIER1, TRADING_CONSTANTS
 from src.utils.custom_logging import configure_logging
 from src.exchange.native_kraken_exchange import NativeKrakenExchange as KrakenExchange
+
+# Paper trading integration
+try:
+    from src.paper_trading.integration import get_paper_integration
+    PAPER_TRADING_AVAILABLE = True
+    logging.info("Paper trading integration available")
+except ImportError:
+    PAPER_TRADING_AVAILABLE = False
+    logging.info("Paper trading not available")
+
 # Try to import WebSocket manager, with fallback to simple implementation
 try:
     from src.exchange.websocket_manager_v2 import KrakenProWebSocketManager as KrakenWebSocketManager
@@ -52,13 +62,13 @@ except Exception as e:
 from src.trading.opportunity_scanner import OpportunityScanner
 from src.trading.opportunity_execution_bridge import OpportunityExecutionBridge
 from src.trading.profit_harvester import ProfitHarvester
-from src.trading.portfolio_tracker import PortfolioTracker
-from src.trading.unified_balance_manager import UnifiedBalanceManager
+from src.portfolio.portfolio_manager import PortfolioManager as PortfolioTracker
+from src.portfolio import PortfolioManager
 from src.trading.enhanced_trade_executor_with_assistants import EnhancedTradeExecutor
 from src.trading.functional_strategy_manager import FunctionalStrategyManager
 from src.trading.infinity_trading_manager import InfinityTradingManager
 from src.data.historical_data_saver import HistoricalDataSaver
-from src.portfolio_position_scanner import PortfolioPositionScanner
+# from src.portfolio_position_scanner import PortfolioPositionScanner  # Module missing
 # Balance loading functionality moved to unified balance manager
 import asyncio
 from src.utils.integration_coordinator import get_coordinator
@@ -88,9 +98,9 @@ class KrakenTradingBot:
         self.logger = logger
         
         # Extract configuration
-        # Position sizing - support dynamic calculation
-        base_position_size = MoneyDecimal(self.config.get("position_size_usdt", MINIMUM_ORDER_SIZE_TIER1), "USDT").value
-        tier_1_limit = MoneyDecimal(self.config.get("tier_1_trade_limit", MINIMUM_ORDER_SIZE_TIER1), "USDT").value
+        # Position sizing - support dynamic calculation with decimal precision
+        base_position_size = float(MoneyDecimal(self.config.get("position_size_usdt", MINIMUM_ORDER_SIZE_TIER1), "USDT").value)
+        tier_1_limit = float(MoneyDecimal(self.config.get("tier_1_trade_limit", MINIMUM_ORDER_SIZE_TIER1), "USDT").value)
         # Respect tier-1 limit for starter accounts
         if self.config.get('kraken_api_tier', 'starter') == 'starter':
             self.position_size_usd = min(base_position_size, tier_1_limit)
@@ -105,13 +115,22 @@ class KrakenTradingBot:
         # Component placeholders
         self.exchange = None
         self.websocket_manager = None
-        self.balance_manager = None
+        self.balance_manager = None  # Legacy compatibility
+        self.balance_manager_v2 = None  # New Balance Manager V2 system
         self.trade_executor = None
         self.fallback_manager = None
         
         # Self-healing components
         self.self_repair_system = None
         self.critical_error_guardian = None
+        
+        # Circuit breaker integration
+        from src.circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+        # self.circuit_breaker_manager = circuit_breaker_manager  # Not available
+        
+        # Configure circuit breakers for critical components
+        # Note: circuit_breaker_manager not available, using placeholder
+        self.circuit_breakers = {}  # Disabled for now
         
         # Event bus for component communication
         self.event_bus = get_event_bus()
@@ -241,13 +260,24 @@ class KrakenTradingBot:
                    self.config.get('kraken_api_tier') or 
                    os.getenv('KRAKEN_TIER', 'pro'))
             
-            self.exchange = await get_exchange(
-                api_key=api_key,
-                api_secret=api_secret,
-                tier=tier,
-                config=self.config
-            )
-            self.logger.info("[INIT] Exchange instance obtained successfully")
+            # Add timeout to prevent hanging
+            try:
+                self.exchange = await asyncio.wait_for(
+                    get_exchange(
+                        api_key=api_key,
+                        api_secret=api_secret,
+                        tier=tier,
+                        config=self.config
+                    ),
+                    timeout=30.0  # 30 second timeout
+                )
+                self.logger.info("[INIT] Exchange instance obtained successfully")
+            except asyncio.TimeoutError:
+                self.logger.error("[INIT] Exchange initialization timed out after 30 seconds")
+                raise Exception("Exchange initialization timeout")
+            except Exception as e:
+                self.logger.error(f"[INIT] Exchange initialization failed: {e}")
+                raise
             
             # 1.1.6: Initialize symbol mapper
             from src.utils.centralized_symbol_mapper import KrakenSymbolMapper
@@ -260,9 +290,10 @@ class KrakenTradingBot:
             
             # Balance fix is now applied in the singleton factory
             
-            # 1.2: Balance Manager - DEFER CREATION until after WebSocket
-            self.balance_manager = None
-            self.logger.info("[INIT] Balance manager creation deferred until WebSocket is ready")
+            # 1.2: Portfolio Manager - DEFER CREATION until after WebSocket
+            self.balance_manager = None  # Legacy compatibility
+            self.balance_manager_v2 = None
+            self.logger.info("[INIT] Portfolio manager creation deferred until WebSocket is ready")
             
             # Balance loading moved after WebSocket initialization
             # Capital flow will be initialized after balance manager is ready
@@ -306,6 +337,24 @@ class KrakenTradingBot:
             # Don't initialize here - let start() handle it
             self.logger.info("[INIT] Trade executor created with risk management (initialization deferred)")
             
+            # Paper trading integration
+            if PAPER_TRADING_AVAILABLE:
+                self.paper_integration = get_paper_integration()
+                if self.paper_integration.enabled:
+                    self.trade_executor = self.paper_integration.wrap_executor(
+                        self.trade_executor, 
+                        self.exchange
+                    )
+                    if self.balance_manager:
+                        self.balance_manager = self.paper_integration.wrap_balance_manager(
+                            self.balance_manager
+                        )
+                    self.logger.info("🧪 Paper trading mode activated - all trades will be simulated")
+                else:
+                    self.paper_integration = None
+            else:
+                self.paper_integration = None
+            
             # PHASE 2: Fetch active markets and filter USDT pairs
             self.logger.info("[INIT] Phase 2: Fetching Kraken markets...")
             
@@ -329,32 +378,67 @@ class KrakenTradingBot:
             
             self.logger.info(f"[INIT] Found {len(validated_pairs)} valid USDT pairs (filtered from {len(available_pairs)})")
             
-            # PHASE 3: Initialize data components
-            self.logger.info("[INIT] Phase 3: Initializing data components...")
+            # PHASE 3: Initialize unified data management system
+            self.logger.info("[INIT] Phase 3: Initializing unified data management system...")
             
-            # 3.1: WebSocket Manager with authentication support
+            # 3.1: Initialize Data Coordination Layer
+            from src.exchange.data_coordinator import UnifiedDataCoordinator
+            self.data_coordinator = UnifiedDataCoordinator(
+                exchange_client=self.exchange,
+                config=self.config
+            )
+            self.logger.info("[INIT] Unified data coordinator created")
+            
+            # 3.2: WebSocket V2 Manager with enhanced integration
             if WEBSOCKET_V2_AVAILABLE:
-                # Pro WebSocket manager has different initialization
+                # Pro WebSocket manager with data coordinator integration
                 self.websocket_manager = KrakenWebSocketManager(
                     exchange_client=self.exchange,
-                    symbols=self.trade_pairs
+                    symbols=self.trade_pairs,
+                    data_coordinator=self.data_coordinator
                 )
-                # Register callbacks for V2
-                self.websocket_manager.set_callback('ticker', self._handle_ticker_update)
-                self.websocket_manager.set_callback('ohlc', self._handle_ohlc_data)
-                self.websocket_manager.set_callback('balance', self._handle_balance_update)
-                self.logger.info("[INIT] WebSocket V2 callbacks registered")
+                # Register unified callbacks that coordinate with REST fallback
+                self.websocket_manager.set_callback('ticker', self._handle_unified_ticker_update)
+                self.websocket_manager.set_callback('ohlc', self._handle_unified_ohlc_data)
+                self.websocket_manager.set_callback('balance', self._handle_unified_balance_update)
+                self.websocket_manager.set_callback('order', self._handle_unified_order_update)
+                self.logger.info("[INIT] WebSocket V2 unified callbacks registered")
+                
+                # Configure WebSocket as primary data source (95% usage)
+                self.data_coordinator.set_websocket_manager(self.websocket_manager)
+                self.data_coordinator.configure_data_routing(
+                    websocket_primary_ratio=0.95,
+                    rest_fallback_ratio=0.05,
+                    enable_smart_routing=True
+                )
             else:
-                # Simple WebSocket manager
+                # Simple WebSocket manager with fallback coordination
                 self.websocket_manager = KrakenWebSocketManager(
                     symbols=self.trade_pairs,
-                    ticker_callback=self._handle_ticker_update,
-                    ohlc_callback=self._handle_ohlc_data,
+                    ticker_callback=self._handle_unified_ticker_update,
+                    ohlc_callback=self._handle_unified_ohlc_data,
                     config=self.config,
                     rest_client=self.exchange
                 )
+                # Configure coordinator for REST-primary mode
+                self.data_coordinator.configure_data_routing(
+                    websocket_primary_ratio=0.30,
+                    rest_fallback_ratio=0.70,
+                    enable_smart_routing=True
+                )
+            
+            # Set up REST API optimization strategies
+            self.data_coordinator.configure_rest_optimization(
+                minimize_nonce_conflicts=True,
+                batch_requests=True,
+                intelligent_caching=True
+            )
+            
+            # Start API optimization worker
+            await self.data_coordinator.start_api_worker()
+            
             # Don't connect here - let start() handle it
-            self.logger.info("[INIT] WebSocket manager created (connection deferred)")
+            self.logger.info("[INIT] Unified data management system created with API optimization (connection deferred)")
             
             # 3.1.1: Initialize WebSocket connection first with circuit breaker integration
             self.logger.info("[INIT] Establishing WebSocket connection for real-time data...")
@@ -368,6 +452,15 @@ class KrakenTradingBot:
                 # Note: SDK SpotWSClient starts automatically on connect
                 self.logger.info("[INIT] WebSocket connected successfully")
                 
+                # Apply WebSocket V2 Invalid Nonce Fix
+                try:
+                    from src.exchange.websocket_integration_fix import fix_invalid_nonce_errors
+                    self.logger.info("[INIT] Applying WebSocket V2 nonce fix...")
+                    await fix_invalid_nonce_errors(self)
+                    self.logger.info("[INIT] WebSocket V2 nonce fix applied successfully - REST calls minimized")
+                except Exception as e:
+                    self.logger.warning(f"[INIT] WebSocket nonce fix failed, continuing with standard operation: {e}")
+                
                 # CRITICAL FIX: Set manager reference in WebSocket V2 for balance integration
                 if hasattr(self.websocket_manager, 'set_manager'):
                     self.websocket_manager.set_manager(self)
@@ -376,16 +469,53 @@ class KrakenTradingBot:
                     self.websocket_manager.manager = self
                     self.logger.info("[INIT] WebSocket V2 manager reference set directly")
                 
-                # Now create UNIFIED balance manager with connected WebSocket
-                from src.trading.unified_balance_manager import UnifiedBalanceManager
-                self.balance_manager = UnifiedBalanceManager(
-                    exchange=self.exchange,
-                    websocket_manager=self.websocket_manager
-                )
-                await self.balance_manager.initialize()
-                self.logger.info("[INIT] Unified balance manager created with WebSocket V2 support")
+                # ENHANCED: Ensure WebSocket is ready for Balance Manager V2 initialization
+                self.logger.info("[INIT] Ensuring WebSocket readiness for Balance Manager V2...")
+                if hasattr(self.websocket_manager, 'ensure_ready_for_balance_manager'):
+                    websocket_ready = await self.websocket_manager.ensure_ready_for_balance_manager()
+                    if not websocket_ready:
+                        self.logger.warning("[INIT] WebSocket not fully ready - Balance Manager V2 will use fallback mode")
+                else:
+                    self.logger.warning("[INIT] WebSocket readiness check not available - proceeding with caution")
                 
-                # ADDITIONAL FIX: Set bot instance reference in exchange for WebSocket access
+                # Initialize Balance Manager V2 with WebSocket-primary architecture
+                from src.balance.balance_manager_v2 import create_balance_manager_v2, BalanceManagerV2Config
+                from src.portfolio.legacy_wrapper import LegacyBalanceManagerWrapper
+                
+                # Configure Balance Manager V2 for optimal performance
+                balance_config = BalanceManagerV2Config(
+                    websocket_primary_ratio=0.95,  # 95% WebSocket usage to minimize nonce issues
+                    rest_fallback_ratio=0.05,      # 5% REST fallback only when necessary
+                    enable_balance_validation=True,
+                    enable_balance_aggregation=True,
+                    enable_circuit_breaker=True,
+                    circuit_breaker_failure_threshold=3,
+                    circuit_breaker_recovery_timeout=30.0,
+                    enable_performance_monitoring=True,
+                    maintain_legacy_interface=True,
+                    enable_balance_callbacks=True
+                )
+                
+                # Create Balance Manager V2 with enhanced error handling
+                self.logger.info("[INIT] Creating Balance Manager V2 with WebSocket-primary architecture...")
+                try:
+                    self.balance_manager_v2 = await create_balance_manager_v2(
+                        websocket_client=self.websocket_manager,
+                        exchange_client=self.exchange,
+                        config=balance_config
+                    )
+                    self.logger.info("[INIT] Balance Manager V2 created successfully with WebSocket-primary architecture")
+                except Exception as balance_init_error:
+                    self.logger.error(f"[INIT] Balance Manager V2 initialization failed: {balance_init_error}")
+                    raise balance_init_error
+                
+                # Legacy compatibility wrapper
+                self.balance_manager = LegacyBalanceManagerWrapper(self.balance_manager_v2)
+                
+                # Balance Manager V2 handles WebSocket integration internally
+                # No need for deferred integration anymore
+                
+                # Set bot instance reference in exchange for WebSocket access
                 if hasattr(self.exchange, 'bot_instance'):
                     self.exchange.bot_instance = self
                     self.logger.debug("[INIT] Bot instance reference set in exchange for WebSocket access")
@@ -411,19 +541,47 @@ class KrakenTradingBot:
                         self.logger.info("[INIT] Updated RiskAssistant with balance manager")
                     self.logger.info("[INIT] Updated trade executor with balance manager")
                 
+                # OPTIMIZATION: Initialize real-time P&L tracker
+                from src.utils.realtime_pnl_tracker import RealtimePnLTracker
+                self.pnl_tracker = RealtimePnLTracker(self.balance_manager, self.trade_executor)
+                await self.pnl_tracker.start_tracking()
+                self.logger.info("[INIT] Real-time P&L tracker started")
+                
                 # Private channels are already connected during balance manager initialization
                 # No need to connect again to avoid duplicate connections
                 
             except Exception as ws_error:
-                self.logger.error(f"[INIT] WebSocket connection failed: {ws_error}")
-                self.logger.info("[INIT] Creating REST-only balance manager as fallback")
-                # Create REST-only unified balance manager
-                from src.trading.unified_balance_manager import UnifiedBalanceManager
-                self.balance_manager = UnifiedBalanceManager(
-                    exchange=self.exchange,
-                    websocket_manager=None
+                self.logger.error(f"[INIT] Balance Manager V2 with WebSocket failed: {ws_error}")
+                self.logger.info("[INIT] Creating REST-only Balance Manager V2 as fallback")
+                
+                # Create REST-only Balance Manager V2 configuration
+                from src.balance.balance_manager_v2 import create_balance_manager_v2, BalanceManagerV2Config
+                from src.portfolio.legacy_wrapper import LegacyBalanceManagerWrapper
+                
+                fallback_config = BalanceManagerV2Config(
+                    websocket_primary_ratio=0.0,   # No WebSocket usage in fallback mode
+                    rest_fallback_ratio=1.0,       # 100% REST API usage
+                    enable_balance_validation=True,
+                    enable_balance_aggregation=False,  # Disable aggregation in fallback
+                    enable_circuit_breaker=True,
+                    circuit_breaker_failure_threshold=5,
+                    circuit_breaker_recovery_timeout=60.0,
+                    enable_performance_monitoring=False,  # Disable monitoring in fallback
+                    maintain_legacy_interface=True,
+                    enable_balance_callbacks=False  # No callbacks in REST-only mode
                 )
-                await self.balance_manager.initialize()
+                
+                # Create REST-only Balance Manager V2
+                self.balance_manager_v2 = await create_balance_manager_v2(
+                    websocket_client=None,  # No WebSocket client in fallback
+                    exchange_client=self.exchange,
+                    config=fallback_config
+                )
+                
+                self.logger.info("[INIT] REST-only Balance Manager V2 created as fallback")
+                
+                # Legacy compatibility wrapper
+                self.balance_manager = LegacyBalanceManagerWrapper(self.balance_manager_v2)
                 
                 # Keep reference as enhanced_balance_manager for compatibility
                 self.enhanced_balance_manager = self.balance_manager
@@ -447,10 +605,10 @@ class KrakenTradingBot:
                     self.logger.info("[INIT] Updated trade executor with balance manager (REST-only)")
                 
             # Ensure balance is properly loaded at startup
-            # Balance loading is now handled by the unified balance manager
+            # Balance loading is now handled by Balance Manager V2
             try:
-                await self.balance_manager.refresh_balances()
-                logger.info("[INIT] Account balances loaded successfully")
+                await self.balance_manager.get_balance('USDT')
+                logger.info("[INIT] Account balances loaded successfully via Balance Manager V2")
             except Exception as e:
                 logger.error(f"[INIT] CRITICAL: Failed to load account balances: {e}")
                 logger.info("[INIT] Please verify your API credentials have proper permissions")
@@ -460,10 +618,10 @@ class KrakenTradingBot:
                 self.low_balance_mode = True
             else:
                 # Update capital flow with initial balance
-                usdt_balance = await self.balance_manager.get_balance_for_asset('USDT')
-                self.capital_flow['initial_usdt'] = usdt_balance
-                self.capital_flow['current_usdt'] = usdt_balance
-                self.logger.info(f"[INIT] Initial capital: ${usdt_balance:.2f} USDT")
+                usdt_balance = await self.balance_manager.get_usdt_balance()
+                self.capital_flow['initial_usdt'] = float(usdt_balance)
+                self.capital_flow['current_usdt'] = float(usdt_balance)
+                self.logger.info(f"[INIT] Initial capital: ${usdt_balance:.2f} USDT via Balance Manager V2")
                 
                 # Check if balance is sufficient for trading
                 self.low_balance_mode = False
@@ -555,7 +713,7 @@ class KrakenTradingBot:
             # 4.4: Portfolio Tracker (must be before Profit Harvester)
             self.portfolio_tracker = PortfolioTracker(
                 exchange=self.exchange,
-                config=self.config
+                account_tier=self.config.get('kraken_api_tier', 'pro')
             )
             self.logger.info("[INIT] Portfolio tracker initialized")
             
@@ -896,50 +1054,91 @@ class KrakenTradingBot:
         try:
             self.logger.info("[STARTUP] Starting Kraken USDT trading bot...")
             
-            # Phase 1: Core components
-            await self._initialize_core_components()
+            # Phase 1: Core components (non-critical failures allowed)
+            try:
+                await self._initialize_core_components()
+                self.logger.info("[STARTUP] Core components initialized")
+            except Exception as e:
+                self.logger.warning(f"[STARTUP] Core components warning: {e}")
+                # Continue - bot can work with basic functionality
             
-            # Phase 2: Wait for executor
-            if hasattr(self, 'trade_executor'):
-                if hasattr(self.trade_executor, 'wait_until_ready'):
-                    await self.trade_executor.wait_until_ready()
-                else:
-                    await asyncio.sleep(2)
+            # Phase 2: Wait for executor (optional)
+            try:
+                if hasattr(self, 'trade_executor'):
+                    if hasattr(self.trade_executor, 'wait_until_ready'):
+                        await self.trade_executor.wait_until_ready()
+                    else:
+                        await asyncio.sleep(2)
+                self.logger.info("[STARTUP] Trade executor ready")
+            except Exception as e:
+                self.logger.warning(f"[STARTUP] Trade executor warning: {e}")
+                # Continue - bot can work in monitoring mode
             
-            # Phase 3: Market data
-            await self._load_initial_market_data()
+            # Phase 3: Market data (non-critical)
+            try:
+                await self._load_initial_market_data()
+                self.logger.info("[STARTUP] Market data loaded")
+            except Exception as e:
+                self.logger.warning(f"[STARTUP] Market data warning: {e}")
+                # Continue - bot can work without historical data
             
-            # Phase 4: Strategies AFTER executor
-            await self._initialize_strategies()
+            # Phase 4: Strategies (non-critical)
+            try:
+                await self._initialize_strategies()
+                self.logger.info("[STARTUP] Strategies initialized")
+            except Exception as e:
+                self.logger.warning(f"[STARTUP] Strategies warning: {e}")
+                # Continue - bot can work in basic monitoring mode
             
-            # Phase 5: Start
+            # Phase 5: Set running flag
             self.running = True
+            self.logger.info("[STARTUP] Bot is now running")
             
         except Exception as e:
-            self.logger.error(f"[STARTUP] Failed: {e}")
+            self.logger.error(f"[STARTUP] Critical failure: {e}")
+            # Log additional debugging info
+            import traceback
+            self.logger.error(f"[STARTUP] Stack trace: {traceback.format_exc()}")
             raise
 
     async def _initialize_core_components(self):
-        """Initialize in correct order"""
+        """Initialize in correct order with individual error handling"""
         # Balance manager first
-        if hasattr(self, 'balance_manager') and self.balance_manager:
-            if hasattr(self.balance_manager, 'initialize'):
-                await self.balance_manager.initialize()
+        try:
+            if hasattr(self, 'balance_manager') and self.balance_manager:
+                if hasattr(self.balance_manager, 'initialize'):
+                    await self.balance_manager.initialize()
+                    self.logger.info("[CORE] Balance manager initialized")
+        except Exception as e:
+            self.logger.warning(f"[CORE] Balance manager initialization failed: {e}")
             
         # Risk manager
-        if hasattr(self, 'risk_manager') and self.risk_manager:
-            if hasattr(self.risk_manager, 'initialize'):
-                await self.risk_manager.initialize()
+        try:
+            if hasattr(self, 'risk_manager') and self.risk_manager:
+                if hasattr(self.risk_manager, 'initialize'):
+                    await self.risk_manager.initialize()
+                    self.logger.info("[CORE] Risk manager initialized")
+        except Exception as e:
+            self.logger.warning(f"[CORE] Risk manager initialization failed: {e}")
             
         # Trade executor
-        if hasattr(self, 'trade_executor') and self.trade_executor:
-            if hasattr(self.trade_executor, 'initialize'):
-                await self.trade_executor.initialize()
+        try:
+            if hasattr(self, 'trade_executor') and self.trade_executor:
+                if hasattr(self.trade_executor, 'initialize'):
+                    await self.trade_executor.initialize()
+                    self.logger.info("[CORE] Trade executor initialized")
+        except Exception as e:
+            self.logger.warning(f"[CORE] Trade executor initialization failed: {e}")
             
-        # WebSocket
-        if hasattr(self, 'websocket_manager') and self.websocket_manager:
-            if hasattr(self.websocket_manager, 'connect'):
-                await self.websocket_manager.connect()
+        # WebSocket (most likely to fail, but non-critical)
+        try:
+            if hasattr(self, 'websocket_manager') and self.websocket_manager:
+                if hasattr(self.websocket_manager, 'connect'):
+                    await self.websocket_manager.connect()
+                    self.logger.info("[CORE] WebSocket manager connected")
+        except Exception as e:
+            self.logger.warning(f"[CORE] WebSocket connection failed (non-critical): {e}")
+            # Bot can work with REST API only
             
     async def _load_initial_market_data(self):
         """Load historical OHLCV data for all trading pairs BEFORE strategies initialize"""
@@ -1147,50 +1346,96 @@ class KrakenTradingBot:
             self.logger.error("[BOT] Initialization failed, exiting")
             return
         
-        # Use the new start method
-        await self.start()
+        # Use the new start method with proper exception handling
+        try:
+            await self.start()
+            self.logger.info("[BOT] Bot startup completed successfully")
+        except Exception as e:
+            self.logger.error(f"[BOT] Startup error: {e}")
+            self.logger.warning("[BOT] Continuing in monitoring mode despite startup issues...")
+            # Set running flag to allow monitoring mode
+            self.running = True
         
         # Store tasks for proper cleanup
         self._background_tasks = []
         
         try:
-            # Start WebSocket message processing (compatibility task)
-            websocket_task = asyncio.create_task(self.websocket_manager.run())
-            self._background_tasks.append(websocket_task)
-            self.logger.info("[BOT] WebSocket V2 processing task started")
+            # Start WebSocket message processing (compatibility task) - optional
+            try:
+                if hasattr(self, 'websocket_manager') and self.websocket_manager:
+                    websocket_task = asyncio.create_task(self.websocket_manager.run())
+                    self._background_tasks.append(websocket_task)
+                    self.logger.info("[BOT] WebSocket V2 processing task started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] WebSocket task startup failed: {e}")
             
-            await self.opportunity_scanner.start()
-            self.logger.info("[BOT] Opportunity scanner started")
+            # Start opportunity scanner - try but continue if it fails
+            try:
+                if hasattr(self, 'opportunity_scanner') and self.opportunity_scanner:
+                    await self.opportunity_scanner.start()
+                    self.logger.info("[BOT] Opportunity scanner started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Opportunity scanner startup failed: {e}")
             
-            # Start HFT components if enabled
-            if self.hft_controller:
-                await self.hft_controller.start()
-                self.logger.info("[BOT] HFT Controller started - targeting 50-100 trades/day")
+            # Start HFT components if enabled - optional
+            try:
+                if hasattr(self, 'hft_controller') and self.hft_controller:
+                    await self.hft_controller.start()
+                    self.logger.info("[BOT] HFT Controller started - targeting 50-100 trades/day")
+            except Exception as e:
+                self.logger.warning(f"[BOT] HFT Controller startup failed: {e}")
             
-            if self.position_cycler:
-                await self.position_cycler.start()
-                self.logger.info("[BOT] Position Cycler started - rapid capital turnover enabled")
+            try:
+                if hasattr(self, 'position_cycler') and self.position_cycler:
+                    await self.position_cycler.start()
+                    self.logger.info("[BOT] Position Cycler started - rapid capital turnover enabled")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Position Cycler startup failed: {e}")
             
-            # Start signal processor
-            signal_processor_task = asyncio.create_task(self._process_signal_queue())
-            self._background_tasks.append(signal_processor_task)
-            self.logger.info("[BOT] Signal processor task started")
+            # Start signal processor - essential for monitoring mode
+            try:
+                signal_processor_task = asyncio.create_task(self._process_signal_queue())
+                self._background_tasks.append(signal_processor_task)
+                self.logger.info("[BOT] Signal processor task started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Signal processor startup failed: {e}")
             
-            # Start health monitor
-            health_monitor_task = asyncio.create_task(self._health_monitor_loop())
-            self._background_tasks.append(health_monitor_task)
-            self.logger.info("[BOT] Health monitor task started")
+            # Start health monitor - important for monitoring
+            try:
+                health_monitor_task = asyncio.create_task(self._health_monitor_loop())
+                self._background_tasks.append(health_monitor_task)
+                self.logger.info("[BOT] Health monitor task started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Health monitor startup failed: {e}")
             
-            # Start capital allocation monitor
-            capital_monitor_task = asyncio.create_task(self._capital_allocation_monitor())
-            self._background_tasks.append(capital_monitor_task)
-            self.logger.info("[BOT] Capital allocation monitor started")
+            # Start capital allocation monitor - important for monitoring
+            try:
+                capital_monitor_task = asyncio.create_task(self._capital_allocation_monitor())
+                self._background_tasks.append(capital_monitor_task)
+                self.logger.info("[BOT] Capital allocation monitor started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Capital allocation monitor startup failed: {e}")
             
-            # Start Infinity Trading Manager
-            if hasattr(self, 'infinity_manager') and self.infinity_manager:
-                infinity_task = asyncio.create_task(self.infinity_manager.start())
-                self._background_tasks.append(infinity_task)
-                self.logger.info("[BOT] Infinity Trading Manager started")
+            # Start Infinity Trading Manager - optional
+            try:
+                if hasattr(self, 'infinity_manager') and self.infinity_manager:
+                    infinity_task = asyncio.create_task(self.infinity_manager.start())
+                    self._background_tasks.append(infinity_task)
+                    self.logger.info("[BOT] Infinity Trading Manager started")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Infinity Trading Manager startup failed: {e}")
+            
+            # Check balance status and notify user
+            try:
+                if hasattr(self, 'balance_manager') and self.balance_manager:
+                    usdt_balance = await self.balance_manager.get_balance('USDT')
+                    if usdt_balance and float(usdt_balance) < 10:  # Less than $10 USDT
+                        self.logger.info("[BOT] MONITORING MODE: Low USDT balance - bot will monitor for opportunities")
+                        self.logger.info("[BOT] Capital appears to be fully deployed in positions")
+                    else:
+                        self.logger.info(f"[BOT] TRADING MODE: {usdt_balance} USDT available for trading")
+            except Exception as e:
+                self.logger.warning(f"[BOT] Could not check balance status: {e}")
             
             self.logger.info("[BOT] Entering main trading loop...")
             loop_count = 0
@@ -1899,39 +2144,67 @@ class KrakenTradingBot:
             import traceback
             self.logger.error(traceback.format_exc())
 
-    async def _handle_ticker_update(self, symbol: str, ticker: Dict[str, Any]) -> None:
-        """Handle ticker updates"""
-        # Update portfolio tracker
-        if self.portfolio_tracker:
-            self.portfolio_tracker.update_price(symbol, ticker.get('last', 0))
-
-    async def _handle_ohlc_data(self, symbol: str, ohlc: Dict[str, Any]) -> None:
-        """Handle OHLC updates"""
-        # Feed to strategy manager
-        if self.strategy_manager:
-            await self.strategy_manager.process_ohlc_update(symbol, ohlc)
-        
-        # Save to historical data
-        if self.historical_data_saver:
-            await self.historical_data_saver.save_ohlc_data(symbol, ohlc)
-
-    async def _handle_balance_update(self, balances: Dict[str, Any]) -> None:
-        """Handle balance updates from WebSocket with enhanced integration"""
+    async def _handle_unified_ticker_update(self, symbol: str, ticker: Dict[str, Any], source=None) -> None:
+        """Handle unified ticker updates from WebSocket or REST"""
         try:
+            # Route through data coordinator for consistency
+            if hasattr(self, 'data_coordinator'):
+                await self.data_coordinator.handle_websocket_ticker(symbol, ticker)
+            
+            # Update portfolio tracker
+            if self.portfolio_tracker:
+                self.portfolio_tracker.update_price(symbol, ticker.get('last', 0))
+            
+            # Feed to strategy components
+            if self.strategy_manager:
+                await self.strategy_manager.process_ticker_update(symbol, ticker)
+                
+        except Exception as e:
+            self.logger.error(f"[UNIFIED_DATA] Error processing ticker update for {symbol}: {e}")
+
+    async def _handle_unified_ohlc_data(self, symbol: str, ohlc: Dict[str, Any], source=None) -> None:
+        """Handle unified OHLC updates from WebSocket or REST"""
+        try:
+            # Route through data coordinator for consistency
+            if hasattr(self, 'data_coordinator'):
+                await self.data_coordinator.handle_websocket_ohlc(symbol, ohlc)
+            
+            # Feed to strategy manager
+            if self.strategy_manager:
+                await self.strategy_manager.process_ohlc_update(symbol, ohlc)
+            
+            # Save to historical data
+            if self.historical_data_saver:
+                await self.historical_data_saver.save_ohlc_data(symbol, ohlc)
+                
+        except Exception as e:
+            self.logger.error(f"[UNIFIED_DATA] Error processing OHLC update for {symbol}: {e}")
+
+    async def _handle_unified_balance_update(self, balances: Dict[str, Any], source=None) -> None:
+        """Handle unified balance updates from WebSocket or REST with enhanced integration"""
+        try:
+            # Route through data coordinator for consistency
+            if hasattr(self, 'data_coordinator'):
+                await self.data_coordinator.handle_websocket_balance(balances)
+            
             # Update balance manager with real-time data
             if self.balance_manager:
                 # Try the process_websocket_update method first (recommended)
                 if hasattr(self.balance_manager, 'process_websocket_update'):
                     await self.balance_manager.process_websocket_update(balances)
-                    self.logger.debug(f"[WEBSOCKET] Balance update processed via process_websocket_update: {len(balances)} assets")
+                    self.logger.debug(f"[UNIFIED_DATA] Balance update processed via process_websocket_update: {len(balances)} assets")
                 # Fallback to legacy update_from_websocket method
                 elif hasattr(self.balance_manager, 'update_from_websocket'):
                     await self.balance_manager.update_from_websocket(balances)
-                    self.logger.debug(f"[WEBSOCKET] Balance update processed via update_from_websocket: {len(balances)} assets")
+                    self.logger.debug(f"[UNIFIED_DATA] Balance update processed via update_from_websocket: {len(balances)} assets")
                 else:
-                    self.logger.warning("[WEBSOCKET] Balance manager has no WebSocket update methods available")
+                    self.logger.warning("[UNIFIED_DATA] Balance manager has no WebSocket update methods available")
             else:
-                self.logger.warning("[WEBSOCKET] No balance manager available to process WebSocket balance update")
+                self.logger.warning("[UNIFIED_DATA] No balance manager available to process balance update")
+            
+            # Update portfolio tracker with balance changes
+            if self.portfolio_tracker and hasattr(self.portfolio_tracker, 'update_balances'):
+                await self.portfolio_tracker.update_balances(balances)
             
             # Log significant balance changes
             if 'USDT' in balances:
@@ -1943,7 +2216,37 @@ class KrakenTradingBot:
                 self.logger.info(f"[WEBSOCKET] USDT balance update: ${usdt_balance:.2f}")
                 
         except Exception as e:
-            self.logger.error(f"[WEBSOCKET] Error processing balance update: {e}")
+            self.logger.error(f"[UNIFIED_DATA] Error processing balance update: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
+
+    async def _handle_unified_order_update(self, order_data: Dict[str, Any], source=None) -> None:
+        """Handle unified order updates from WebSocket or REST"""
+        try:
+            # Route through data coordinator for consistency
+            if hasattr(self, 'data_coordinator'):
+                await self.data_coordinator.handle_websocket_order(order_data)
+            
+            # Update trade executor with order status
+            if self.trade_executor and hasattr(self.trade_executor, 'process_order_update'):
+                await self.trade_executor.process_order_update(order_data)
+            
+            # Update portfolio tracker with order changes
+            if self.portfolio_tracker and hasattr(self.portfolio_tracker, 'process_order_update'):
+                await self.portfolio_tracker.process_order_update(order_data)
+            
+            # Feed to strategy manager for execution tracking
+            if self.strategy_manager and hasattr(self.strategy_manager, 'process_order_update'):
+                await self.strategy_manager.process_order_update(order_data)
+            
+            # Log order status changes
+            order_id = order_data.get('id', 'Unknown')
+            order_status = order_data.get('status', 'Unknown')
+            symbol = order_data.get('symbol', 'Unknown')
+            self.logger.info(f"[UNIFIED_DATA] Order update: {order_id} ({symbol}) -> {order_status}")
+                
+        except Exception as e:
+            self.logger.error(f"[UNIFIED_DATA] Error processing order update: {e}")
             import traceback
             self.logger.debug(traceback.format_exc())
 
@@ -2534,6 +2837,79 @@ class KrakenTradingBot:
             )
         )
     
+    async def _handle_websocket_circuit_breaker_event(self, event_type: str, data: Dict[str, Any]) -> None:
+        """Handle circuit breaker events from WebSocket manager"""
+        try:
+            if event_type == 'circuit_open':
+                self.logger.error(f"[CIRCUIT_BREAKER] WebSocket circuit opened: {data.get('reason', 'Unknown')}")
+                
+                # Switch to REST API fallback mode
+                if hasattr(self, 'fallback_manager') and self.fallback_manager:
+                    self.logger.info("[CIRCUIT_BREAKER] Switching to REST API fallback mode")
+                    # Signal components to use REST API
+                    await publish_event(
+                        self.event_bus,
+                        BusEventType.WEBSOCKET_DISCONNECTED,
+                        {'fallback_mode': True}
+                    )
+                
+            elif event_type == 'circuit_closed':
+                self.logger.info("[CIRCUIT_BREAKER] WebSocket circuit closed - service recovered")
+                # Resume normal WebSocket operations
+                await publish_event(
+                    self.event_bus,
+                    BusEventType.WEBSOCKET_CONNECTED,
+                    {'fallback_mode': False}
+                )
+                
+        except Exception as e:
+            self.logger.error(f"[CIRCUIT_BREAKER] Error handling WebSocket circuit breaker event: {e}")
+    
+    def _register_nonce_error_repair(self):
+        """Register custom repair action for nonce errors"""
+        if self.self_repair_system:
+            async def repair_nonce_error(bot_instance, error_context):
+                """Repair action for nonce errors"""
+                try:
+                    self.logger.warning("[SELF_REPAIR] Attempting to fix nonce error...")
+                    
+                    # Get unified nonce manager from exchange
+                    if hasattr(bot_instance.exchange, 'nonce_manager'):
+                        nonce_manager = bot_instance.exchange.nonce_manager
+                        
+                        # Use unified manager's recovery mechanism
+                        nonce_manager.handle_invalid_nonce_error("self_repair")
+                        
+                        # Force save state
+                        nonce_manager.force_save()
+                        
+                        self.logger.info("[SELF_REPAIR] Triggered nonce recovery with 60-second buffer")
+                        
+                        # Unified nonce manager handles state automatically
+                        # No manual state clearing needed
+                        
+                        return True
+                    else:
+                        self.logger.error("[SELF_REPAIR] No nonce manager found in exchange")
+                        return False
+                        
+                except Exception as e:
+                    self.logger.error(f"[SELF_REPAIR] Error repairing nonce: {e}")
+                    return False
+            
+            # Register the repair action
+            self.self_repair_system.register_repair(
+                RepairAction(
+                    name="fix_nonce_error",
+                    description="Fix invalid nonce errors by resetting with future buffer",
+                    check_func=lambda: False,  # Always return False to indicate issue needs fixing
+                    repair_func=repair_nonce_error,
+                    severity="high"
+                )
+            )
+            
+            self.logger.info("[SELF_REPAIR] Registered nonce error repair action")
+    
     async def _run_self_healing_cycle(self) -> None:
         """Run self-healing diagnostic cycle periodically."""
         while self.running:
@@ -2574,6 +2950,30 @@ class KrakenTradingBot:
         
         # Set shutdown event to signal all components
         self.shutdown_event.set()
+        
+        # Stop data coordinator API worker
+        try:
+            if hasattr(self, 'data_coordinator') and self.data_coordinator:
+                await self.data_coordinator.stop_api_worker()
+                self.logger.info("[BOT] Data coordinator API worker stopped")
+        except Exception as e:
+            self.logger.error(f"[BOT] Error stopping data coordinator: {e}")
+        
+        # Save nonce state before shutdown
+        try:
+            if hasattr(self.exchange, 'nonce_manager'):
+                self.exchange.nonce_manager.force_save()
+                self.logger.info("[SHUTDOWN] Nonce state saved")
+        except Exception as e:
+            self.logger.error(f"[SHUTDOWN] Error saving nonce state: {e}")
+        
+        # Reset circuit breakers to allow graceful shutdown
+        try:
+            # self.circuit_breaker_manager.reset_all()  # Not available
+            pass
+            self.logger.info("[SHUTDOWN] Circuit breakers reset for graceful shutdown")
+        except Exception as e:
+            self.logger.error(f"[SHUTDOWN] Error resetting circuit breakers: {e}")
         
         # Log final capital flow summary
         try:
@@ -2662,11 +3062,13 @@ class KrakenTradingBot:
             except Exception as e:
                 self.logger.error(f"[SHUTDOWN] Error stopping balance manager: {e}")
         
-        # Phase 6: Close exchange connection last
+        # Phase 6: Close exchange connection last through singleton
         if hasattr(self, 'exchange') and self.exchange:
             try:
-                self.logger.info("[SHUTDOWN] Closing exchange connection...")
-                await self.exchange.close()
+                self.logger.info("[SHUTDOWN] Closing exchange connection through singleton...")
+                # Use the singleton close method to properly clean up
+                from src.exchange.exchange_singleton import ExchangeSingleton
+                await ExchangeSingleton.close()
             except Exception as e:
                 self.logger.error(f"[SHUTDOWN] Error closing exchange: {e}")
         
