@@ -385,14 +385,20 @@ class KrakenTradingBot:
         try:
             from src.balance.hybrid_portfolio_manager import HybridPortfolioManager
             from src.balance.websocket_balance_stream import WebSocketBalanceStream
+            from src.exchange.websocket_manager_v2 import WebSocketManagerV2
 
             # Create WebSocket client first (this might need proper initialization)
             # For now, use a placeholder since WebSocketBalanceStream needs a websocket_client
             try:
-                websocket_client = KrakenWebSocketManager(
+                # Create WebSocket V2 manager with proper initialization
+                websocket_client = WebSocketManagerV2(
                     api_key=api_key,
-                    api_secret=api_secret
+                    api_secret=api_secret,
+                    exchange_client=self.exchange
                 )
+                # Initialize the WebSocket client
+                await websocket_client.initialize()
+                self.logger.info("[INIT] WebSocket V2 client created and initialized")
             except Exception as ws_error:
                 self.logger.warning(f"[INIT] WebSocket client creation failed: {ws_error}")
                 websocket_client = None

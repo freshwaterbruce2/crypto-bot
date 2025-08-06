@@ -37,35 +37,54 @@ class WindowsEnvBridge:
         self._cache_timeout = 300  # 5 minutes
 
     def _find_powershell(self) -> Optional[str]:
-        """Find PowerShell executable in WSL"""
-        possible_paths = [
-            "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
-            "/mnt/c/Windows/System32/PowerShell/pwsh.exe",
-            "/mnt/c/Program Files/PowerShell/7/pwsh.exe",
-            "/mnt/c/Program Files (x86)/PowerShell/7/pwsh.exe"
-        ]
+        """Find PowerShell executable in WSL or Windows"""
+        # Check if running on Windows directly
+        if os.name == 'nt':
+            # Running on Windows, use direct PowerShell command
+            possible_commands = ['powershell', 'pwsh']
+            for cmd in possible_commands:
+                try:
+                    result = subprocess.run(
+                        [cmd, '-Command', 'echo test'],
+                        capture_output=True,
+                        text=True,
+                        timeout=2
+                    )
+                    if result.returncode == 0:
+                        logger.debug(f"Found PowerShell command: {cmd}")
+                        return cmd
+                except Exception:
+                    continue
+        else:
+            # Running on WSL, check mounted paths
+            possible_paths = [
+                "/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe",
+                "/mnt/c/Windows/System32/PowerShell/pwsh.exe",
+                "/mnt/c/Program Files/PowerShell/7/pwsh.exe",
+                "/mnt/c/Program Files (x86)/PowerShell/7/pwsh.exe"
+            ]
 
-        for path in possible_paths:
-            if os.path.exists(path):
-                logger.debug(f"Found PowerShell at: {path}")
-                return path
+            for path in possible_paths:
+                if os.path.exists(path):
+                    logger.debug(f"Found PowerShell at: {path}")
+                    return path
 
-        # Try to find powershell.exe in PATH
-        try:
-            result = subprocess.run(
-                ["which", "powershell.exe"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
-            if result.returncode == 0:
-                path = result.stdout.strip()
-                logger.debug(f"Found PowerShell in PATH: {path}")
-                return path
-        except Exception as e:
-            logger.debug(f"Failed to find PowerShell in PATH: {e}")
+            # Try to find powershell.exe in PATH
+            try:
+                result = subprocess.run(
+                    ["which", "powershell.exe"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                if result.returncode == 0:
+                    path = result.stdout.strip()
+                    logger.debug(f"Found PowerShell in PATH: {path}")
+                    return path
+            except Exception as e:
+                logger.debug(f"Failed to find PowerShell in PATH: {e}")
 
-        logger.warning("PowerShell not found - Windows environment variable access unavailable")
+        logger.debug("PowerShell not found - will use environment variables directly")
         return None
 
     def _sanitize_env_var_name(self, var_name: str) -> bool:

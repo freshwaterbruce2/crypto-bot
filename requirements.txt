@@ -4,7 +4,8 @@
 # Core async and networking
 aiohttp>=3.9.0
 asyncio-throttle>=1.0.2
-websockets>=12.0
+websocket-client>=1.7.0  # Correct WebSocket client library for Kraken
+websockets>=12.0  # Keep for compatibility
 
 # Data handling
 pandas>=2.0.0

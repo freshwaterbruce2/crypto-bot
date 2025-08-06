@@ -130,11 +130,23 @@ class LogRotationManager:
         for log_file in self.log_dir.glob("*.log"):
             if log_file.stat().st_mtime < cutoff_time:
                 try:
-                    log_file.unlink()
-                    deleted_count += 1
-                    logger.info(f"Deleted old log: {log_file.name}")
+                    # On Windows, try to truncate if deletion fails
+                    if os.name == 'nt':
+                        try:
+                            log_file.unlink()
+                            deleted_count += 1
+                            logger.info(f"Deleted old log: {log_file.name}")
+                        except PermissionError:
+                            with open(log_file, 'w') as f:
+                                f.truncate(0)
+                            deleted_count += 1
+                            logger.info(f"Truncated old log: {log_file.name}")
+                    else:
+                        log_file.unlink()
+                        deleted_count += 1
+                        logger.info(f"Deleted old log: {log_file.name}")
                 except Exception as e:
-                    logger.error(f"Failed to delete {log_file}: {e}")
+                    logger.debug(f"Could not clean {log_file}: {e}")
 
         # Delete old compressed logs
         for gz_file in self.log_dir.glob("*.log.gz"):
@@ -168,11 +180,25 @@ class LogRotationManager:
         files_to_delete = len(log_files) // 2
         for log_file in log_files[:files_to_delete]:
             try:
-                log_file.unlink()
-                deleted_count += 1
-                logger.info(f"Emergency deleted: {log_file.name}")
+                # On Windows, try to truncate the file instead of deleting if it's locked
+                if os.name == 'nt':
+                    try:
+                        # Try to delete first
+                        log_file.unlink()
+                        deleted_count += 1
+                        logger.info(f"Emergency deleted: {log_file.name}")
+                    except PermissionError:
+                        # If deletion fails, truncate the file to 0 bytes
+                        with open(log_file, 'w') as f:
+                            f.truncate(0)
+                        deleted_count += 1
+                        logger.info(f"Emergency truncated: {log_file.name}")
+                else:
+                    log_file.unlink()
+                    deleted_count += 1
+                    logger.info(f"Emergency deleted: {log_file.name}")
             except Exception as e:
-                logger.error(f"Failed to delete {log_file}: {e}")
+                logger.debug(f"Could not clean {log_file}: {e}")
 
         return deleted_count
 
