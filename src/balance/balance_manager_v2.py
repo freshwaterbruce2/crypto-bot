@@ -414,62 +414,49 @@ class BalanceManagerV2:
         self.stats['last_request_time'] = time.time()
 
         try:
-            # Special handling for USDT - check multiple USDT variants
+            # Special handling for USDT - use standard Kraken code only
             if asset == 'USDT':
-                usdt_variants = ['USDT', 'ZUSDT', 'USDT.M', 'USDT.S', 'USDT.F', 'USDT.B']
-                total_usdt = 0.0
-                best_balance = None
+                # According to Kraken API docs, USDT uses standard "USDT" code
+                usdt_balance = None
 
-                # Check each USDT variant
-                for variant in usdt_variants:
+                # PRIORITY 1: Check WebSocket V2 Direct first
+                if self.websocket_client and hasattr(self.websocket_client, 'get_balance'):
+                    ws_balance = self.websocket_client.get_balance('USDT')
+                    if ws_balance:
+                        usdt_balance = ws_balance
+                        logger.debug(f"[BALANCE_MANAGER_V2] USDT from WebSocket: {ws_balance.get('free', 0):.8f}")
+
+                # PRIORITY 2: Check hybrid manager
+                if not usdt_balance and self.hybrid_manager:
+                    hybrid_balance = await self.hybrid_manager.get_balance('USDT')
+                    if hybrid_balance:
+                        usdt_balance = hybrid_balance
+                        logger.debug(f"[BALANCE_MANAGER_V2] USDT from hybrid manager: {hybrid_balance.get('free', 0):.8f}")
+
+                # PRIORITY 3: Direct exchange query
+                if not usdt_balance and self.exchange_client:
                     try:
-                        # PRIORITY 1: Check WebSocket V2 Direct first
-                        if self.websocket_client and hasattr(self.websocket_client, 'get_balance'):
-                            ws_balance = self.websocket_client.get_balance(variant)
-                            if ws_balance and ws_balance.get('free', 0) > 0:
-                                variant_amount = ws_balance.get('free', 0)
-                                total_usdt += variant_amount
-
-                                if best_balance is None or variant_amount > best_balance.get('free', 0):
-                                    best_balance = ws_balance
-                                    best_balance['asset'] = variant
-
-                        # Also check hybrid manager
-                        if self.hybrid_manager:
-                            hybrid_balance = await self.hybrid_manager.get_balance(variant)
-                            if hybrid_balance and hybrid_balance.get('free', 0) > 0:
-                                variant_amount = hybrid_balance.get('free', 0)
-                                if variant_amount > total_usdt:
-                                    total_usdt = variant_amount
-                                    best_balance = hybrid_balance
-                                    best_balance['asset'] = variant
-
+                        exchange_balances = await self.exchange_client.fetch_balance()
+                        if exchange_balances and 'USDT' in exchange_balances:
+                            usdt_data = exchange_balances['USDT']
+                            usdt_balance = {
+                                'asset': 'USDT',
+                                'free': usdt_data.get('free', 0.0),
+                                'used': usdt_data.get('used', 0.0),
+                                'total': usdt_data.get('total', 0.0),
+                                'timestamp': time.time()
+                            }
+                            logger.debug(f"[BALANCE_MANAGER_V2] USDT from exchange: {usdt_balance['free']:.8f}")
                     except Exception as e:
-                        logger.debug(f"[BALANCE_MANAGER_V2] Error checking {variant}: {e}")
-                        continue
+                        logger.debug(f"[BALANCE_MANAGER_V2] Error fetching USDT from exchange: {e}")
 
-                if best_balance and total_usdt > 0:
+                if usdt_balance and usdt_balance.get('free', 0) >= 0:
                     self.stats['successful_requests'] += 1
-
-                    # Create combined USDT balance
-                    combined_balance = {
-                        'asset': 'USDT',
-                        'free': total_usdt,
-                        'used': 0.0,
-                        'total': total_usdt,
-                        'variants_checked': usdt_variants,
-                        'primary_variant': best_balance.get('asset', 'USDT'),
-                        'timestamp': time.time()
-                    }
-
-                    await self._update_balance_atomic('USDT', combined_balance, 'usdt_aggregated')
-
-                    logger.info(f"[BALANCE_MANAGER_V2] USDT total balance: ${total_usdt:.8f} "
-                               f"(primary from {best_balance.get('asset', 'USDT')})")
-
-                    return combined_balance
+                    await self._update_balance_atomic('USDT', usdt_balance, 'usdt_standard')
+                    logger.info(f"[BALANCE_MANAGER_V2] USDT balance: ${usdt_balance.get('free', 0):.8f}")
+                    return usdt_balance
                 else:
-                    logger.warning("[BALANCE_MANAGER_V2] Could not retrieve balance for USDT - no variants found")
+                    logger.warning("[BALANCE_MANAGER_V2] Could not retrieve balance for USDT")
                     self.stats['failed_requests'] += 1
                     return None
 

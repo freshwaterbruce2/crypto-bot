@@ -396,9 +396,9 @@ class KrakenTradingBot:
                     api_secret=api_secret,
                     exchange_client=self.exchange
                 )
-                # Initialize the WebSocket client
-                await websocket_client.initialize()
-                self.logger.info("[INIT] WebSocket V2 client created and initialized")
+                # Connect the WebSocket client
+                await websocket_client.connect()
+                self.logger.info("[INIT] WebSocket V2 client created and connected")
             except Exception as ws_error:
                 self.logger.warning(f"[INIT] WebSocket client creation failed: {ws_error}")
                 websocket_client = None
