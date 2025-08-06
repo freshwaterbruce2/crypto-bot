@@ -4,7 +4,7 @@ Handles intelligent learning and adaptation system
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 class LearningConfigManager:
     """Learning configuration manager"""
 
-    def __init__(self, core_config: Dict[str, Any]):
+    def __init__(self, core_config: dict[str, Any]):
         """Initialize learning config manager"""
         self.core_config = core_config
         self.learning_config = self._get_learning_defaults()
 
-    def _get_learning_defaults(self) -> Dict[str, Any]:
+    def _get_learning_defaults(self) -> dict[str, Any]:
         """Get default learning configuration"""
         return {
             # Learning settings
@@ -41,7 +41,7 @@ class LearningConfigManager:
             "confidence_threshold": 0.7
         }
 
-    def get_all_settings(self) -> Dict[str, Any]:
+    def get_all_settings(self) -> dict[str, Any]:
         """Get all learning settings"""
         return self.learning_config
 

@@ -14,7 +14,7 @@ import logging
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class MessageBatcher:
         self.last_batch_time = time.time()
         self.processor_task = None
 
-    async def add_message(self, message: Dict[str, Any], processor: Callable):
+    async def add_message(self, message: dict[str, Any], processor: Callable):
         """Add message to batch for processing"""
         self.batch_queue.append((message, processor, time.time()))
 
@@ -182,7 +182,7 @@ class LatencyMonitor:
                 logger.warning(f"[HFT_LATENCY] High latency detected: {latency*1000:.1f}ms "
                              f"(warning #{self.warning_count})")
 
-    def get_stats(self) -> Dict[str, float]:
+    def get_stats(self) -> dict[str, float]:
         """Get latency statistics"""
         if not self.latencies:
             return {}
@@ -366,7 +366,7 @@ class HFTWebSocketOptimizer:
             logger.error(f"[HFT_WEBSOCKET] Reconnection attempt failed for {symbol}: {e}")
             return False
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics"""
         current_time = time.time()
         uptime = current_time - self.start_time

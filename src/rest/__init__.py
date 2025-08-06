@@ -12,7 +12,7 @@ Components:
 
 Usage:
     from src.rest import StrategicRestClient, RestDataValidator, RestFallbackManager
-    
+
     # Initialize components
     rest_client = StrategicRestClient(api_key, private_key)
     validator = RestDataValidator(rest_client, websocket_manager)

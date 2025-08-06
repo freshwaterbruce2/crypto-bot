@@ -18,7 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,17 +27,17 @@ logger = logging.getLogger(__name__)
 class MemoryEntry:
     """Enhanced memory entry with metadata"""
     entry_id: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     entry_type: str
     timestamp: datetime
     importance_score: float
     access_count: int
     last_accessed: datetime
-    tags: List[str]
+    tags: list[str]
     compression_level: int
     checksum: str
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             'entry_id': self.entry_id,
             'data': self.data,
@@ -52,7 +52,7 @@ class MemoryEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MemoryEntry':
+    def from_dict(cls, data: dict[str, Any]) -> 'MemoryEntry':
         return cls(
             entry_id=data['entry_id'],
             data=data['data'],
@@ -127,11 +127,11 @@ class MemoryIndex:
         if entry_id in self.similarity_index:
             del self.similarity_index[entry_id]
 
-    def search_by_type(self, entry_type: str) -> List[str]:
+    def search_by_type(self, entry_type: str) -> list[str]:
         """Search entries by type"""
         return self.type_index.get(entry_type, [])
 
-    def search_by_tags(self, tags: List[str], match_all: bool = False) -> List[str]:
+    def search_by_tags(self, tags: list[str], match_all: bool = False) -> list[str]:
         """Search entries by tags"""
         if not tags:
             return []
@@ -149,7 +149,7 @@ class MemoryIndex:
                 result_set.update(self.tag_index.get(tag, []))
             return list(result_set)
 
-    def search_by_time_range(self, start_date: datetime, end_date: datetime) -> List[str]:
+    def search_by_time_range(self, start_date: datetime, end_date: datetime) -> list[str]:
         """Search entries by time range"""
         results = []
         current_date = start_date
@@ -161,7 +161,7 @@ class MemoryIndex:
 
         return results
 
-    def search_by_importance(self, min_importance: float, max_importance: float = 1.0) -> List[str]:
+    def search_by_importance(self, min_importance: float, max_importance: float = 1.0) -> list[str]:
         """Search entries by importance score range"""
         results = []
         min_range = int(min_importance * 10)
@@ -172,7 +172,7 @@ class MemoryIndex:
 
         return results
 
-    def find_similar(self, entry_id: str, similarity_threshold: float = 0.7) -> List[str]:
+    def find_similar(self, entry_id: str, similarity_threshold: float = 0.7) -> list[str]:
         """Find similar entries based on feature similarity"""
         if entry_id not in self.similarity_index:
             return []
@@ -190,7 +190,7 @@ class MemoryIndex:
         similar_entries.sort(key=lambda x: x[1], reverse=True)
         return [entry_id for entry_id, _ in similar_entries]
 
-    def _extract_similarity_features(self, entry: MemoryEntry) -> Dict[str, Any]:
+    def _extract_similarity_features(self, entry: MemoryEntry) -> dict[str, Any]:
         """Extract features for similarity comparison"""
         features = {
             'entry_type': entry.entry_type,
@@ -209,7 +209,7 @@ class MemoryIndex:
 
         return features
 
-    def _calculate_similarity(self, features1: Dict[str, Any], features2: Dict[str, Any]) -> float:
+    def _calculate_similarity(self, features1: dict[str, Any], features2: dict[str, Any]) -> float:
         """Calculate similarity between two feature sets"""
         similarity_score = 0.0
         total_weight = 0.0
@@ -267,7 +267,7 @@ class CompressionManager:
             'compression_time': 0.0
         }
 
-    def compress_data(self, data: Any, compression_level: int = 6) -> Tuple[bytes, str]:
+    def compress_data(self, data: Any, compression_level: int = 6) -> tuple[bytes, str]:
         """Compress data with specified compression level"""
         start_time = time.time()
 
@@ -317,7 +317,7 @@ class CompressionManager:
             logger.error(f"[MEMORY_MANAGER] Error decompressing data: {e}")
             return None
 
-    def get_compression_stats(self) -> Dict[str, Any]:
+    def get_compression_stats(self) -> dict[str, Any]:
         """Get compression statistics"""
         return self.compression_stats.copy()
 
@@ -379,8 +379,8 @@ class AdvancedMemoryManager:
         except Exception as e:
             logger.error(f"[ADVANCED_MEMORY] Error initializing manager: {e}")
 
-    async def store_entry(self, data: Dict[str, Any], entry_type: str,
-                         tags: List[str] = None, importance_score: float = 0.5) -> str:
+    async def store_entry(self, data: dict[str, Any], entry_type: str,
+                         tags: list[str] = None, importance_score: float = 0.5) -> str:
         """Store a new memory entry with advanced features"""
         try:
             # Generate unique entry ID
@@ -434,7 +434,7 @@ class AdvancedMemoryManager:
             logger.error(f"[ADVANCED_MEMORY] Error storing entry: {e}")
             return ""
 
-    async def retrieve_entry(self, entry_id: str) -> Optional[Dict[str, Any]]:
+    async def retrieve_entry(self, entry_id: str) -> Optional[dict[str, Any]]:
         """Retrieve memory entry with intelligent caching"""
         try:
             # Check active memory first
@@ -482,7 +482,7 @@ class AdvancedMemoryManager:
             logger.error(f"[ADVANCED_MEMORY] Error retrieving entry {entry_id}: {e}")
             return None
 
-    async def search_entries(self, query: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def search_entries(self, query: dict[str, Any]) -> list[dict[str, Any]]:
         """Advanced search with multiple criteria"""
         try:
             result_sets = []
@@ -559,7 +559,7 @@ class AdvancedMemoryManager:
             logger.error(f"[ADVANCED_MEMORY] Error searching entries: {e}")
             return []
 
-    async def update_entry(self, entry_id: str, updates: Dict[str, Any]) -> bool:
+    async def update_entry(self, entry_id: str, updates: dict[str, Any]) -> bool:
         """Update existing memory entry"""
         try:
             # Find entry
@@ -633,7 +633,7 @@ class AdvancedMemoryManager:
             logger.error(f"[ADVANCED_MEMORY] Error deleting entry {entry_id}: {e}")
             return False
 
-    def get_memory_stats(self) -> Dict[str, Any]:
+    def get_memory_stats(self) -> dict[str, Any]:
         """Get comprehensive memory statistics"""
         compression_stats = self.compression_manager.get_compression_stats()
 
@@ -658,7 +658,7 @@ class AdvancedMemoryManager:
 
     # Helper methods
 
-    def _generate_entry_id(self, data: Dict[str, Any], entry_type: str) -> str:
+    def _generate_entry_id(self, data: dict[str, Any], entry_type: str) -> str:
         """Generate unique entry ID"""
         content_hash = hashlib.md5(
             json.dumps(data, sort_keys=True).encode('utf-8')

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from threading import RLock
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from ..utils.decimal_precision_fix import safe_decimal
@@ -103,7 +103,7 @@ class HybridPortfolioConfig:
 
     # Aggregation settings
     enable_balance_aggregation: bool = True
-    usdt_variants: List[str] = None
+    usdt_variants: list[str] = None
 
     def __post_init__(self):
         if self.usdt_variants is None:
@@ -121,7 +121,7 @@ class HybridPortfolioManager:
                  config: Optional[HybridPortfolioConfig] = None):
         """
         Initialize hybrid portfolio manager
-        
+
         Args:
             websocket_stream: WebSocket balance streaming component
             rest_client: REST API client for fallback
@@ -153,8 +153,8 @@ class HybridPortfolioManager:
         self._running = False
 
         # Cache for balance data
-        self._balance_cache: Dict[str, Dict[str, Any]] = {}
-        self._cache_timestamps: Dict[str, float] = {}
+        self._balance_cache: dict[str, dict[str, Any]] = {}
+        self._cache_timestamps: dict[str, float] = {}
 
         # Background tasks
         self._health_monitor_task: Optional[asyncio.Task] = None
@@ -234,14 +234,14 @@ class HybridPortfolioManager:
 
         logger.info("[HYBRID_PORTFOLIO] Stopped")
 
-    async def get_balance(self, asset: str, force_source: Optional[DataSource] = None) -> Optional[Dict[str, Any]]:
+    async def get_balance(self, asset: str, force_source: Optional[DataSource] = None) -> Optional[dict[str, Any]]:
         """
         Get balance for specific asset using intelligent source selection
-        
+
         Args:
             asset: Asset symbol (e.g., 'USDT', 'BTC')
             force_source: Force specific source (optional)
-            
+
         Returns:
             Balance dictionary or None if not found
         """
@@ -296,13 +296,13 @@ class HybridPortfolioManager:
             logger.error(f"[HYBRID_PORTFOLIO] Error getting balance for {asset}: {e}")
             return None
 
-    async def get_all_balances(self, force_source: Optional[DataSource] = None) -> Dict[str, Dict[str, Any]]:
+    async def get_all_balances(self, force_source: Optional[DataSource] = None) -> dict[str, dict[str, Any]]:
         """
         Get all balances using intelligent source selection
-        
+
         Args:
             force_source: Force specific source (optional)
-            
+
         Returns:
             Dictionary of all balances keyed by asset
         """
@@ -357,7 +357,7 @@ class HybridPortfolioManager:
     async def get_usdt_total(self) -> float:
         """
         Get total USDT across all USDT variants with intelligent aggregation
-        
+
         Returns:
             Total USDT amount
         """
@@ -394,10 +394,10 @@ class HybridPortfolioManager:
     async def _select_optimal_source(self, asset: Optional[str] = None) -> DataSource:
         """
         Select optimal data source based on health, preferences, and data freshness
-        
+
         Args:
             asset: Specific asset to check (optional)
-            
+
         Returns:
             Optimal data source
         """
@@ -457,7 +457,7 @@ class HybridPortfolioManager:
 
         return True
 
-    async def _get_balance_from_websocket(self, asset: str, start_time: float) -> Optional[Dict[str, Any]]:
+    async def _get_balance_from_websocket(self, asset: str, start_time: float) -> Optional[dict[str, Any]]:
         """Get balance from WebSocket stream"""
         try:
             balance_data = self.websocket_stream.get_balance(asset) if self.websocket_stream else None
@@ -475,7 +475,7 @@ class HybridPortfolioManager:
             logger.debug(f"[HYBRID_PORTFOLIO] WebSocket balance request failed: {e}")
             return None
 
-    async def _get_all_balances_from_websocket(self, start_time: float) -> Dict[str, Dict[str, Any]]:
+    async def _get_all_balances_from_websocket(self, start_time: float) -> dict[str, dict[str, Any]]:
         """Get all balances from WebSocket stream"""
         try:
             all_balances = self.websocket_stream.get_all_balances() if self.websocket_stream else {}
@@ -493,7 +493,7 @@ class HybridPortfolioManager:
             logger.debug(f"[HYBRID_PORTFOLIO] WebSocket all balances request failed: {e}")
             return {}
 
-    async def _get_balance_from_rest(self, asset: str, start_time: float) -> Optional[Dict[str, Any]]:
+    async def _get_balance_from_rest(self, asset: str, start_time: float) -> Optional[dict[str, Any]]:
         """Get balance from REST API with circuit breaker protection"""
         try:
             # Check circuit breaker
@@ -547,7 +547,7 @@ class HybridPortfolioManager:
             logger.debug(f"[HYBRID_PORTFOLIO] REST balance request failed: {e}")
             return None
 
-    async def _get_all_balances_from_rest(self, start_time: float) -> Dict[str, Dict[str, Any]]:
+    async def _get_all_balances_from_rest(self, start_time: float) -> dict[str, dict[str, Any]]:
         """Get all balances from REST API with circuit breaker protection"""
         try:
             # Check circuit breaker
@@ -607,7 +607,7 @@ class HybridPortfolioManager:
             logger.debug(f"[HYBRID_PORTFOLIO] REST all balances request failed: {e}")
             return {}
 
-    def _get_balance_from_cache(self, asset: str) -> Optional[Dict[str, Any]]:
+    def _get_balance_from_cache(self, asset: str) -> Optional[dict[str, Any]]:
         """Get balance from cache if fresh enough"""
         with self._lock:
             if asset in self._balance_cache:
@@ -622,7 +622,7 @@ class HybridPortfolioManager:
 
         return None
 
-    def _get_all_balances_from_cache(self) -> Dict[str, Dict[str, Any]]:
+    def _get_all_balances_from_cache(self) -> dict[str, dict[str, Any]]:
         """Get all balances from cache if fresh enough"""
         cached_balances = {}
         current_time = time.time()
@@ -640,13 +640,13 @@ class HybridPortfolioManager:
 
         return cached_balances
 
-    def _update_balance_cache(self, asset: str, balance_data: Dict[str, Any]):
+    def _update_balance_cache(self, asset: str, balance_data: dict[str, Any]):
         """Update balance cache"""
         with self._lock:
             self._balance_cache[asset] = balance_data.copy()
             self._cache_timestamps[asset] = time.time()
 
-    def _merge_with_cache(self, fresh_balances: Dict[str, Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    def _merge_with_cache(self, fresh_balances: dict[str, dict[str, Any]]) -> dict[str, dict[str, Any]]:
         """Merge fresh balances with cache data for complete picture"""
         if not self.config.enable_balance_aggregation:
             return fresh_balances
@@ -661,7 +661,7 @@ class HybridPortfolioManager:
 
         return merged_balances
 
-    def _validate_balance_data(self, asset: str, balance_data: Dict[str, Any]) -> bool:
+    def _validate_balance_data(self, asset: str, balance_data: dict[str, Any]) -> bool:
         """Validate balance data for consistency"""
         try:
             # Basic structure validation
@@ -862,7 +862,7 @@ class HybridPortfolioManager:
 
     # Public status and monitoring methods
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive status information"""
         ws_metrics = self.source_metrics[DataSource.WEBSOCKET_PRIMARY]
         rest_metrics = self.source_metrics[DataSource.REST_FALLBACK]

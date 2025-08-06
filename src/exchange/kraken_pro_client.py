@@ -22,10 +22,10 @@ Usage:
     async with KrakenProClient(api_key, private_key) as client:
         # Test Pro account features
         pro_status = await client.verify_pro_account_status()
-        
+
         # Get real-time data with fallback
         ticker_data = await client.get_real_time_ticker('BTC/USD')
-        
+
         # Execute fee-free trades (Pro accounts)
         order = await client.place_order('BTC/USD', 'buy', 'market', '0.001')
 """
@@ -38,7 +38,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Optional
 
 import websockets
 from aiohttp import ClientSession
@@ -116,7 +116,7 @@ class ProAccountStatus:
     trading_volume_30d: float = 0.0
     maker_fee: float = 0.0026  # Standard maker fee
     taker_fee: float = 0.0026  # Standard taker fee
-    available_features: List[ProAccountFeature] = field(default_factory=list)
+    available_features: list[ProAccountFeature] = field(default_factory=list)
     verification_level: str = "starter"
     websocket_token_available: bool = False
     enhanced_rate_limits: bool = False
@@ -131,13 +131,13 @@ class ConnectionHealth:
     last_successful_request: Optional[float] = None
     consecutive_failures: int = 0
     fallback_mode: bool = False
-    active_connections: List[str] = field(default_factory=list)
+    active_connections: list[str] = field(default_factory=list)
 
 
 class KrakenProClient:
     """
     Enhanced Kraken Pro API client with WebSocket V2 and REST fallback.
-    
+
     Provides comprehensive API access optimized for Kraken Pro accounts with
     fee-free trading capabilities and advanced real-time data streaming.
     """
@@ -157,7 +157,7 @@ class KrakenProClient:
     ):
         """
         Initialize Kraken Pro API client.
-        
+
         Args:
             api_key: Kraken API key (will load from environment if None)
             private_key: Kraken private key (will load from environment if None)
@@ -232,7 +232,7 @@ class KrakenProClient:
             f"ws_v1={enable_websocket_v1}, rest_fallback={enable_rest_fallback}"
         )
 
-    def _load_credentials_from_environment(self) -> Tuple[Optional[str], Optional[str]]:
+    def _load_credentials_from_environment(self) -> tuple[Optional[str], Optional[str]]:
         """Load credentials from environment variables."""
         import os
 
@@ -577,7 +577,7 @@ class KrakenProClient:
     async def verify_pro_account_status(self) -> ProAccountStatus:
         """
         Verify and return Pro account status.
-        
+
         Returns:
             ProAccountStatus with current account information
         """
@@ -586,13 +586,13 @@ class KrakenProClient:
 
         return self._pro_status
 
-    async def get_real_time_ticker(self, pair: str) -> Dict[str, Any]:
+    async def get_real_time_ticker(self, pair: str) -> dict[str, Any]:
         """
         Get real-time ticker data with automatic fallback.
-        
+
         Args:
             pair: Trading pair (e.g., 'BTC/USD')
-            
+
         Returns:
             Real-time ticker data
         """
@@ -614,7 +614,7 @@ class KrakenProClient:
         logger.info(f"Using REST API fallback for ticker data: {pair}")
         return await self.rest_client.get_ticker_information(pair)
 
-    async def _get_ticker_websocket_v2(self, pair: str) -> Dict[str, Any]:
+    async def _get_ticker_websocket_v2(self, pair: str) -> dict[str, Any]:
         """Get ticker data via WebSocket V2."""
         if not self._websocket_v2_connection:
             raise Exception("WebSocket V2 not connected")
@@ -639,7 +639,7 @@ class KrakenProClient:
 
         return json.loads(response)
 
-    async def _get_ticker_websocket_v1(self, pair: str) -> Dict[str, Any]:
+    async def _get_ticker_websocket_v1(self, pair: str) -> dict[str, Any]:
         """Get ticker data via WebSocket V1."""
         if not self._websocket_v1_connection:
             raise Exception("WebSocket V1 not connected")
@@ -669,10 +669,10 @@ class KrakenProClient:
         volume: str,
         price: Optional[str] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Place order with Pro account optimizations.
-        
+
         Args:
             pair: Trading pair
             side: Order side ('buy' or 'sell')
@@ -680,7 +680,7 @@ class KrakenProClient:
             volume: Order volume
             price: Order price (for limit orders)
             **kwargs: Additional order parameters
-            
+
         Returns:
             Order response data
         """
@@ -702,7 +702,7 @@ class KrakenProClient:
             **kwargs
         )
 
-    async def get_account_balance(self) -> Dict[str, Any]:
+    async def get_account_balance(self) -> dict[str, Any]:
         """Get account balance with Pro account enhancements."""
         balance_data = await self.rest_client.get_account_balance()
 
@@ -718,18 +718,18 @@ class KrakenProClient:
 
     async def stream_real_time_data(
         self,
-        channels: List[str],
-        symbols: Optional[List[str]] = None,
+        channels: list[str],
+        symbols: Optional[list[str]] = None,
         callback: Optional[Callable] = None
     ) -> asyncio.Task:
         """
         Start streaming real-time data with automatic connection management.
-        
+
         Args:
             channels: List of channels to subscribe to
             symbols: Optional list of symbols to filter
             callback: Optional callback function for data processing
-            
+
         Returns:
             AsyncIO task for the streaming process
         """
@@ -846,7 +846,7 @@ class KrakenProClient:
 
     # ====== UTILITY METHODS ======
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get comprehensive connection status."""
         return {
             "client_info": {
@@ -872,7 +872,7 @@ class KrakenProClient:
             "rest_client_status": self.rest_client.get_status() if self.rest_client else None
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check."""
         health = {
             "timestamp": time.time(),
@@ -950,12 +950,12 @@ async def create_kraken_pro_client(
 ) -> KrakenProClient:
     """
     Create and optionally start a Kraken Pro client.
-    
+
     Args:
         api_key: API key (will load from environment if None)
         private_key: Private key (will load from environment if None)
         auto_start: Whether to automatically start the client
-        
+
     Returns:
         KrakenProClient instance
     """
@@ -970,14 +970,14 @@ async def create_kraken_pro_client(
 async def test_kraken_pro_connection(
     api_key: Optional[str] = None,
     private_key: Optional[str] = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Test Kraken Pro API connection and return comprehensive status.
-    
+
     Args:
         api_key: API key (will load from environment if None)
         private_key: Private key (will load from environment if None)
-        
+
     Returns:
         Comprehensive connection test results
     """

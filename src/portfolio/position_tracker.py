@@ -22,7 +22,7 @@ from dataclasses import asdict, dataclass
 from decimal import Decimal
 from enum import Enum
 from threading import RLock
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 
@@ -78,13 +78,13 @@ class Position:
 
     # Strategy information
     strategy: Optional[str] = None
-    tags: Optional[List[str]] = None
+    tags: Optional[list[str]] = None
 
     # Trading information
     fees_paid: Decimal = safe_decimal("0")
     trades_count: int = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert position to dictionary"""
         data = asdict(self)
 
@@ -98,7 +98,7 @@ class Position:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'Position':
+    def from_dict(cls, data: dict[str, Any]) -> 'Position':
         """Create position from dictionary"""
         # Convert string values back to enums
         if 'status' in data and isinstance(data['status'], str):
@@ -123,7 +123,7 @@ class Position:
     def update_current_price(self, price: Union[float, Decimal]) -> bool:
         """
         Update current price and recalculate P&L
-        
+
         Returns:
             True if price changed significantly
         """
@@ -172,7 +172,7 @@ class Position:
                      fees: Union[float, Decimal] = 0) -> Decimal:
         """
         Close part of the position
-        
+
         Returns:
             Realized P&L from the partial close
         """
@@ -240,7 +240,7 @@ class PositionTracker:
     def __init__(self, balance_manager=None, data_path: str = "D:/trading_data"):
         """
         Initialize position tracker
-        
+
         Args:
             balance_manager: Balance manager instance for integration
             data_path: Path for data persistence
@@ -249,8 +249,8 @@ class PositionTracker:
         self.data_path = data_path
 
         # Position storage
-        self._positions: Dict[str, Position] = {}
-        self._closed_positions: List[Position] = []
+        self._positions: dict[str, Position] = {}
+        self._closed_positions: list[Position] = []
 
         # Thread safety
         self._lock = RLock()
@@ -274,8 +274,8 @@ class PositionTracker:
         }
 
         # Price update tracking
-        self._price_callbacks: List[callable] = []
-        self._last_price_updates: Dict[str, float] = {}
+        self._price_callbacks: list[callable] = []
+        self._last_price_updates: dict[str, float] = {}
 
         logger.info("[POSITION_TRACKER] Initialized position tracking system")
 
@@ -300,10 +300,10 @@ class PositionTracker:
 
     async def create_position(self, symbol: str, position_type: PositionType,
                             size: Union[float, Decimal], entry_price: Union[float, Decimal],
-                            strategy: str = None, tags: List[str] = None) -> Position:
+                            strategy: str = None, tags: list[str] = None) -> Position:
         """
         Create a new position
-        
+
         Args:
             symbol: Trading pair symbol
             position_type: LONG or SHORT
@@ -311,7 +311,7 @@ class PositionTracker:
             entry_price: Entry price
             strategy: Strategy name
             tags: Optional tags for categorization
-            
+
         Returns:
             Created position
         """
@@ -350,10 +350,10 @@ class PositionTracker:
             logger.info(f"[POSITION_TRACKER] Created {position_type.value} position {position_id} for {symbol}")
             return position
 
-    async def update_position_price(self, symbol: str, price: Union[float, Decimal]) -> List[str]:
+    async def update_position_price(self, symbol: str, price: Union[float, Decimal]) -> list[str]:
         """
         Update price for all positions of a symbol
-        
+
         Returns:
             List of updated position IDs
         """
@@ -436,15 +436,15 @@ class PositionTracker:
         """Get a specific position"""
         return self._positions.get(position_id)
 
-    def get_positions_by_symbol(self, symbol: str) -> List[Position]:
+    def get_positions_by_symbol(self, symbol: str) -> list[Position]:
         """Get all positions for a symbol"""
         return [pos for pos in self._positions.values() if pos.symbol == symbol]
 
-    def get_all_open_positions(self) -> Dict[str, Position]:
+    def get_all_open_positions(self) -> dict[str, Position]:
         """Get all open positions"""
         return dict(self._positions)
 
-    def get_closed_positions(self, symbol: str = None, limit: int = None) -> List[Position]:
+    def get_closed_positions(self, symbol: str = None, limit: int = None) -> list[Position]:
         """Get closed positions with optional filters"""
         positions = self._closed_positions
 
@@ -456,7 +456,7 @@ class PositionTracker:
 
         return positions
 
-    def get_portfolio_summary(self) -> Dict[str, Any]:
+    def get_portfolio_summary(self) -> dict[str, Any]:
         """Get portfolio summary with P&L information"""
         with self._lock:
             total_value = safe_decimal("0")
@@ -518,7 +518,7 @@ class PositionTracker:
                 'statistics': dict(self._stats)
             }
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get detailed statistics"""
         return dict(self._stats)
 

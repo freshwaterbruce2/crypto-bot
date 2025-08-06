@@ -7,7 +7,7 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -168,7 +168,7 @@ class KrakenRateLimitManager:
         # Save state after increment
         self.save_state()
 
-    def can_place_order(self, pair: str) -> Tuple[bool, str]:
+    def can_place_order(self, pair: str) -> tuple[bool, str]:
         """Check if we can place an order on this pair"""
         current_counter = self.get_counter(pair)
 
@@ -183,7 +183,7 @@ class KrakenRateLimitManager:
 
         return True, "OK"
 
-    def can_cancel_order(self, pair: str, order_id: str) -> Tuple[bool, str, int]:
+    def can_cancel_order(self, pair: str, order_id: str) -> tuple[bool, str, int]:
         """Check if we can cancel an order and return the penalty"""
         current_counter = self.get_counter(pair)
 
@@ -248,7 +248,7 @@ class KrakenRateLimitManager:
 
         logger.debug(f"[RATE_LIMIT] Order cancelled on {pair}: penalty={penalty}, counter={self.get_counter(pair):.1f}")
 
-    def get_counter_status(self, pair: str) -> Dict[str, Any]:
+    def get_counter_status(self, pair: str) -> dict[str, Any]:
         """Get detailed status for a pair"""
         current_counter = self.get_counter(pair)
         max_counter = self.config['max_counter']
@@ -275,7 +275,7 @@ class KrakenRateLimitManager:
             'max_orders': self.config['open_orders_limit']
         }
 
-    def get_all_pairs_status(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_pairs_status(self) -> dict[str, dict[str, Any]]:
         """Get status for all pairs with non-zero counters"""
         status = {}
 
@@ -289,7 +289,7 @@ class KrakenRateLimitManager:
 
         return status
 
-    def get_safest_pair(self, pairs: List[str]) -> Optional[str]:
+    def get_safest_pair(self, pairs: list[str]) -> Optional[str]:
         """Find the pair with the lowest counter from a list"""
         if not pairs:
             return None
@@ -312,7 +312,7 @@ class KrakenRateLimitManager:
         # Use IOC when counter is above 60% to avoid cancel penalties
         return status['percentage'] > 60
 
-    def estimate_recovery_time(self, pair: str) -> Dict[str, float]:
+    def estimate_recovery_time(self, pair: str) -> dict[str, float]:
         """Estimate time until counter recovers to various levels"""
         current_counter = self.get_counter(pair)
         decay_rate = self.config['decay_rate']
@@ -328,7 +328,7 @@ class KrakenRateLimitManager:
             'to_zero': round(time_to_zero, 1)
         }
 
-    def get_safe_cancel_orders(self, pair: str, order_ids: List[str], max_penalty: int = None) -> List[str]:
+    def get_safe_cancel_orders(self, pair: str, order_ids: list[str], max_penalty: int = None) -> list[str]:
         """Get list of orders that can be safely cancelled without exceeding limits"""
         if max_penalty is None:
             max_penalty = self.config['max_counter'] - self.get_counter(pair) - 5  # Keep buffer of 5
@@ -357,7 +357,7 @@ class KrakenRateLimitManager:
 
         return safe_orders
 
-    def get_all_counters(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_counters(self) -> dict[str, dict[str, Any]]:
         """Get all counter values (for persistence)"""
         # Apply decay to all counters first
         all_counters = {}
@@ -368,7 +368,7 @@ class KrakenRateLimitManager:
 
         return all_counters
 
-    def restore_counters(self, counters: Dict[str, Dict[str, Any]]):
+    def restore_counters(self, counters: dict[str, dict[str, Any]]):
         """Restore counters from saved state"""
         current_time = time.time()
 
@@ -395,7 +395,7 @@ class RateLimitAwareOrderManager:
         self.logger = logging.getLogger(__name__)
 
     async def place_order_safe(self, exchange, symbol: str, order_type: str, side: str,
-                              amount: float, price: float = None, params: Dict = None) -> Optional[Dict]:
+                              amount: float, price: float = None, params: dict = None) -> Optional[dict]:
         """Place order with rate limit checking"""
 
         # Check if we can place the order
@@ -430,7 +430,7 @@ class RateLimitAwareOrderManager:
             self.logger.error(f"[ORDER] Failed to place order: {e}")
             raise
 
-    async def cancel_order_safe(self, exchange, order_id: str, symbol: str) -> Optional[Dict]:
+    async def cancel_order_safe(self, exchange, order_id: str, symbol: str) -> Optional[dict]:
         """Cancel order with rate limit checking"""
 
         # Check if we can cancel
@@ -468,7 +468,7 @@ class RateLimitAwareOrderManager:
             self.logger.error(f"[ORDER] Failed to cancel order: {e}")
             raise
 
-    async def cleanup_old_orders_safe(self, exchange, symbols: List[str], min_age_seconds: int = 300):
+    async def cleanup_old_orders_safe(self, exchange, symbols: list[str], min_age_seconds: int = 300):
         """Clean up old orders respecting rate limits"""
 
         for symbol in symbols:

@@ -16,7 +16,7 @@ Key Features:
 import asyncio
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 from ..utils.order_safety_system import (
     OrderSafetySystem,
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class StrategySafetyAdapter:
     """
     Safety adapter that wraps trading strategies with comprehensive protection
-    
+
     This ensures all strategies benefit from:
     - P0 critical fixes (atomic balance, fee buffers, minimums)
     - WebSocket V2 optimizations
@@ -40,7 +40,7 @@ class StrategySafetyAdapter:
     - Comprehensive error handling
     """
 
-    def __init__(self, strategy_instance, exchange_wrapper=None, config: Dict[str, Any] = None):
+    def __init__(self, strategy_instance, exchange_wrapper=None, config: dict[str, Any] = None):
         self.strategy = strategy_instance
         self.exchange = exchange_wrapper
         self.config = config or {}
@@ -61,10 +61,10 @@ class StrategySafetyAdapter:
                                    symbol: str,
                                    amount: Union[float, Decimal],
                                    price: Optional[Union[float, Decimal]] = None,
-                                   **kwargs) -> Dict[str, Any]:
+                                   **kwargs) -> dict[str, Any]:
         """
         Safely execute buy order with all P0 protections
-        
+
         This replaces direct exchange.create_order() calls in strategies
         """
         try:
@@ -104,7 +104,7 @@ class StrategySafetyAdapter:
                                     symbol: str,
                                     amount: Union[float, Decimal],
                                     price: Optional[Union[float, Decimal]] = None,
-                                    **kwargs) -> Dict[str, Any]:
+                                    **kwargs) -> dict[str, Any]:
         """
         Safely execute sell order with all P0 protections
         """
@@ -143,10 +143,10 @@ class StrategySafetyAdapter:
     async def validate_strategy_order(self,
                                     symbol: str,
                                     side: str,
-                                    amount: Union[float, Decimal]) -> Dict[str, Any]:
+                                    amount: Union[float, Decimal]) -> dict[str, Any]:
         """
         Validate order feasibility before strategy execution
-        
+
         This allows strategies to check if orders will succeed before committing
         """
         try:
@@ -169,10 +169,10 @@ class StrategySafetyAdapter:
                 'error': str(e)
             }
 
-    def get_websocket_price_data(self, symbol: str) -> Dict[str, Any]:
+    def get_websocket_price_data(self, symbol: str) -> dict[str, Any]:
         """
         Get real-time WebSocket V2 price data instead of REST API calls
-        
+
         This optimizes strategies to use WebSocket V2 data streams
         """
         try:
@@ -203,7 +203,7 @@ class StrategySafetyAdapter:
             logger.error(f"[STRATEGY_SAFETY] Error getting WebSocket price data: {e}")
             return {'price': 0, 'source': 'error'}
 
-    def get_strategy_performance_metrics(self) -> Dict[str, Any]:
+    def get_strategy_performance_metrics(self) -> dict[str, Any]:
         """Get comprehensive strategy performance metrics"""
         success_rate = (self.successful_orders / self.total_orders * 100) if self.total_orders > 0 else 0
 
@@ -220,10 +220,10 @@ class StrategySafetyAdapter:
 
     async def execute_strategy_with_safety(self,
                                          symbol: str,
-                                         timeframe: str = '1m') -> Dict[str, Any]:
+                                         timeframe: str = '1m') -> dict[str, Any]:
         """
         Execute strategy analysis with safety checks and optimizations
-        
+
         This wraps the strategy's analyze() method with additional safety
         """
         try:
@@ -288,14 +288,14 @@ class StrategySafetyAdapter:
 # Convenience function for easy strategy wrapping
 def wrap_strategy_with_safety(strategy_instance,
                             exchange_wrapper=None,
-                            config: Dict[str, Any] = None) -> StrategySafetyAdapter:
+                            config: dict[str, Any] = None) -> StrategySafetyAdapter:
     """
     Wrap any strategy with comprehensive safety protection
-    
+
     Usage:
         original_strategy = QuantumFluctuationScalper(config)
         safe_strategy = wrap_strategy_with_safety(original_strategy, exchange, config)
-        
+
         # Now use safe_strategy instead of original_strategy
         result = await safe_strategy.execute_strategy_with_safety(symbol)
     """
@@ -306,7 +306,7 @@ def wrap_strategy_with_safety(strategy_instance,
 def safety_protected_strategy(exchange_wrapper=None, config=None):
     """
     Decorator to automatically wrap strategy methods with safety protection
-    
+
     Usage:
         @safety_protected_strategy(exchange, config)
         class MyStrategy(BaseStrategy):

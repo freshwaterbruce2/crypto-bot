@@ -55,7 +55,7 @@ async def verify_bot():
                 config = json.load(f)
 
             # Create bot instance
-            bot = TradingBot(config=config)
+            TradingBot(config=config)
             print("   ✅ Bot instance created")
 
             # Check critical configurations

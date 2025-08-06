@@ -13,7 +13,7 @@ import time
 import traceback
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -42,9 +42,9 @@ class TestResult:
     test_name: str
     status: str
     duration: float
-    memory_usage: Dict[str, float]
+    memory_usage: dict[str, float]
     error_message: Optional[str] = None
-    performance_metrics: Optional[Dict[str, Any]] = None
+    performance_metrics: Optional[dict[str, Any]] = None
 
 @dataclass
 class SystemMetrics:
@@ -60,8 +60,8 @@ class ComprehensiveIntegrationTest:
 
     def __init__(self):
         self.logger = ProfessionalLoggingSystem()
-        self.results: List[TestResult] = []
-        self.system_metrics: List[SystemMetrics] = []
+        self.results: list[TestResult] = []
+        self.system_metrics: list[SystemMetrics] = []
         self.performance_maximizer = PerformanceMaximizer2025()
         self.memory_optimizer = MemoryOptimizer()
         self.test_start_time = time.time()
@@ -82,7 +82,7 @@ class ComprehensiveIntegrationTest:
         self.balance_manager = None
         self.database_manager = None
 
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Run complete integration test suite"""
         print("🚀 Starting Comprehensive Integration Test Suite")
         print(f"Test Configuration: {json.dumps(self.test_config, indent=2)}")
@@ -132,7 +132,7 @@ class ComprehensiveIntegrationTest:
 
         try:
             # Test dependency injection initialization
-            dependency_injector = DependencyInjector()
+            DependencyInjector()
 
             # Test orchestrator initialization
             self.orchestrator = SystemOrchestrator()
@@ -387,7 +387,7 @@ class ComprehensiveIntegrationTest:
 
             # Force garbage collection and measure
             gc.collect()
-            memory_after_gc = self._get_memory_usage()
+            self._get_memory_usage()
 
             # Test memory optimizer
             memory_stats_before = self.memory_optimizer.get_memory_stats()
@@ -398,7 +398,7 @@ class ComprehensiveIntegrationTest:
 
             # Test performance maximizer
             print("Testing performance maximizer...")
-            perf_metrics_before = self.performance_maximizer.get_performance_metrics()
+            self.performance_maximizer.get_performance_metrics()
 
             # Simulate workload
             computation_times = []
@@ -406,7 +406,7 @@ class ComprehensiveIntegrationTest:
                 comp_start = time.time()
 
                 # Simulate computational work
-                result = sum(x * x for x in range(1000))
+                sum(x * x for x in range(1000))
 
                 computation_times.append(time.time() - comp_start)
 
@@ -423,7 +423,7 @@ class ComprehensiveIntegrationTest:
                     db_start = time.time()
 
                     # Simulate database query
-                    query_result = await self.database_manager.execute_query(
+                    await self.database_manager.execute_query(
                         "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
                     )
 
@@ -571,7 +571,7 @@ class ComprehensiveIntegrationTest:
             print("Testing concurrent connection handling...")
 
             concurrent_tasks = []
-            for i in range(50):  # 50 concurrent tasks
+            for _i in range(50):  # 50 concurrent tasks
                 task = asyncio.create_task(self._simulate_websocket_activity())
                 concurrent_tasks.append(task)
 
@@ -847,7 +847,7 @@ class ComprehensiveIntegrationTest:
                 await asyncio.sleep(0.001)
 
                 # Simulate some computation
-                result = sum(x for x in range(100))
+                sum(x for x in range(100))
 
             return True
         except Exception as e:
@@ -879,7 +879,7 @@ class ComprehensiveIntegrationTest:
         process = psutil.Process()
         return process.memory_info().rss / 1024 / 1024
 
-    async def _generate_test_report(self) -> Dict[str, Any]:
+    async def _generate_test_report(self) -> dict[str, Any]:
         """Generate comprehensive test report"""
         print("\n📊 Generating Comprehensive Test Report")
 

@@ -11,7 +11,7 @@ Usage:
 
 Modes:
     quick   - Quick performance check (10 minutes)
-    full    - Complete performance analysis (60 minutes)  
+    full    - Complete performance analysis (60 minutes)
     stress  - Extended stress testing (120 minutes)
     custom  - Custom configuration from file
 
@@ -31,7 +31,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 # Add performance modules to path
 sys.path.append(os.path.dirname(__file__))
@@ -70,7 +70,7 @@ class PerformanceTestSuite:
 
         logger.info(f"Performance Test Suite initialized - Mode: {mode}")
 
-    def _load_configuration(self, config_file: str = None) -> Dict[str, Any]:
+    def _load_configuration(self, config_file: str = None) -> dict[str, Any]:
         """Load test configuration"""
         default_config = {
             'quick': {
@@ -143,7 +143,7 @@ class PerformanceTestSuite:
 
         return base_config
 
-    async def run_complete_suite(self) -> Dict[str, Any]:
+    async def run_complete_suite(self) -> dict[str, Any]:
         """Run complete performance testing suite"""
         logger.info("="*80)
         logger.info("🚀 STARTING COMPREHENSIVE PERFORMANCE TESTING SUITE")
@@ -382,7 +382,7 @@ class PerformanceTestSuite:
 
         logger.info(f"Master results saved to: {master_file}")
 
-    def _generate_master_summary(self) -> Dict[str, Any]:
+    def _generate_master_summary(self) -> dict[str, Any]:
         """Generate master summary of all test results"""
         summary = {
             'overall_status': 'PASSED',
@@ -605,7 +605,7 @@ Examples:
         )
 
         # Run complete suite
-        results = await suite.run_complete_suite()
+        await suite.run_complete_suite()
 
         # Determine exit code based on results
         master_summary = suite._generate_master_summary()

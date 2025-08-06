@@ -6,7 +6,7 @@ Integrates with learning system and portfolio intelligence for self-optimization
 import time
 from collections import deque
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class BasicOpportunityGenerator:
@@ -94,15 +94,15 @@ class BasicOpportunityGenerator:
         except Exception as e:
             self.logger.error(f"[SCANNER] Error updating price data for {symbol}: {e}")
 
-    def generate_opportunities(self, real_time_data: Dict[str, List[Dict]],
-                             portfolio_state: Optional[Dict] = None) -> List[Dict[str, Any]]:
+    def generate_opportunities(self, real_time_data: dict[str, list[dict]],
+                             portfolio_state: Optional[dict] = None) -> list[dict[str, Any]]:
         """
         Generate trading opportunities with self-learning optimization
-        
+
         Args:
             real_time_data: Current market data by symbol
             portfolio_state: Current portfolio positions (for sell opportunities)
-            
+
         Returns:
             List of opportunity dictionaries
         """
@@ -159,7 +159,7 @@ class BasicOpportunityGenerator:
         opportunities.sort(key=lambda x: x['confidence'], reverse=True)
         return opportunities[:self.config['max_opportunities_per_scan']]
 
-    def _validate_data(self, candles: List[Dict]) -> bool:
+    def _validate_data(self, candles: list[dict]) -> bool:
         """Validate we have enough data to analyze"""
         if not candles or len(candles) < 5:
             return False
@@ -179,7 +179,7 @@ class BasicOpportunityGenerator:
                 return False
         return True
 
-    def _extract_market_data(self, candles: List[Dict]) -> Optional[Dict]:
+    def _extract_market_data(self, candles: list[dict]) -> Optional[dict]:
         """Extract and calculate market data from candles"""
         try:
             # Get recent prices and volumes
@@ -221,7 +221,7 @@ class BasicOpportunityGenerator:
             self.logger.error(f"[SCANNER] Error extracting market data: {e}")
             return None
 
-    def _evaluate_buy_opportunity(self, symbol: str, market_data: Dict) -> Optional[Dict]:
+    def _evaluate_buy_opportunity(self, symbol: str, market_data: dict) -> Optional[dict]:
         """
         Evaluate if current conditions present a buy opportunity
         Buy low logic with self-learning confidence adjustment
@@ -229,7 +229,7 @@ class BasicOpportunityGenerator:
         try:
             current_price = market_data['current_price']
             avg_price = market_data['avg_price_short']
-            price_position = market_data['price_position']
+            market_data['price_position']
 
             # Check if price is below average (buy low)
             price_deviation = (avg_price - current_price) / avg_price
@@ -272,8 +272,8 @@ class BasicOpportunityGenerator:
             self.logger.error(f"[SCANNER] Error evaluating buy opportunity: {e}")
             return None
 
-    def _evaluate_sell_opportunity(self, symbol: str, market_data: Dict,
-                                 position: Dict) -> Optional[Dict]:
+    def _evaluate_sell_opportunity(self, symbol: str, market_data: dict,
+                                 position: dict) -> Optional[dict]:
         """
         Evaluate if we should sell an existing position (sell high)
         Only generate sell signals for positions we actually hold
@@ -331,7 +331,7 @@ class BasicOpportunityGenerator:
             self.logger.error(f"[SCANNER] Error evaluating sell opportunity: {e}")
             return None
 
-    def _calculate_confidence(self, market_data: Dict, side: str,
+    def _calculate_confidence(self, market_data: dict, side: str,
                             profit_pct: float = 0) -> float:
         """
         Calculate dynamic confidence score based on market conditions
@@ -375,7 +375,7 @@ class BasicOpportunityGenerator:
             self.logger.error(f"[SCANNER] Error calculating confidence: {e}")
             return self.config['confidence_base']
 
-    def _get_learning_adjustment(self, market_data: Dict, side: str) -> float:
+    def _get_learning_adjustment(self, market_data: dict, side: str) -> float:
         """Get confidence adjustment from learning system"""
         try:
             if not self.learning_manager:
@@ -397,7 +397,7 @@ class BasicOpportunityGenerator:
             self.logger.debug(f"[SCANNER] Learning adjustment error: {e}")
             return 1.0
 
-    def _record_opportunities(self, opportunities: List[Dict]):
+    def _record_opportunities(self, opportunities: list[dict]):
         """Record opportunities for learning system"""
         try:
             if not self.learning_manager:
@@ -459,7 +459,7 @@ class BasicOpportunityGenerator:
         except Exception as e:
             self.logger.error(f"[SCANNER] Self-optimization error: {e}")
 
-    def update_opportunity_result(self, opportunity_id: str, result: Dict):
+    def update_opportunity_result(self, opportunity_id: str, result: dict):
         """
         Update the result of an opportunity for learning
         Called by the trading system after execution
@@ -485,7 +485,7 @@ class BasicOpportunityGenerator:
         except Exception as e:
             self.logger.error(f"[SCANNER] Error updating opportunity result: {e}")
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary for monitoring"""
         try:
             success_rate = (self.metrics['successful_opportunities'] /

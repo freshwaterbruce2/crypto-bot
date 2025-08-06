@@ -156,10 +156,6 @@ async def main():
         "Access WebSockets API"
     ]
 
-    trading_permissions = [
-        "Create & Modify Orders",
-        "Cancel/Close Orders"
-    ]
 
     missing_required = [p for p in required_permissions if p in permissions_missing]
 

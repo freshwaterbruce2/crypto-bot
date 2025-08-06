@@ -25,7 +25,7 @@ Key Features:
 import asyncio
 import time
 import traceback
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Import strategy components
 from src.strategies.base_strategy import BaseStrategy
@@ -45,14 +45,14 @@ logger = configure_logging()
 class FunctionalStrategyManager:
     """
     Kraken-compliant strategy manager for quick profit trading.
-    
+
     KRAKEN COMPLIANCE FEATURES:
     - Rate limit awareness and management
     - Order validation against Kraken minimums
     - Proper error handling for Kraken-specific errors
     - Symbol format validation (BTC/USD style)
     - WebSocket v2 API compliance
-    
+
     TRADING OPTIMIZATION:
     - Aggressive 0.5% profit targets for "snowball effect"
     - Lower confidence thresholds for more trading opportunities
@@ -64,7 +64,7 @@ class FunctionalStrategyManager:
     def __init__(self, bot=None, kraken_tier: str = "intermediate"):
         """
         Initialize the Kraken-compliant strategy manager.
-        
+
         Args:
             bot: Reference to the main bot instance
             kraken_tier: Kraken account tier (starter, intermediate, pro)
@@ -106,10 +106,10 @@ class FunctionalStrategyManager:
 
         logger.info(f"[STRATEGY_MANAGER] Initialized Kraken-compliant manager for {kraken_tier} tier")
 
-    def set_historical_data(self, historical_data: Dict[str, List[List]]):
+    def set_historical_data(self, historical_data: dict[str, list[list]]):
         """
         Set historical OHLCV data for strategy warm-up.
-        
+
         Args:
             historical_data: Dict mapping symbol to OHLCV data
         """
@@ -126,10 +126,10 @@ class FunctionalStrategyManager:
         except Exception as e:
             logger.error(f"[STRATEGY_MANAGER] Error setting historical data: {e}")
 
-    async def initialize_strategies(self, symbols: List[str], config: Dict[str, Any]):
+    async def initialize_strategies(self, symbols: list[str], config: dict[str, Any]):
         """
         Initialize Kraken-compliant strategies for the given symbols.
-        
+
         Args:
             symbols: List of trading symbols (must be Kraken v2 format: BTC/USD)
             config: Configuration dictionary
@@ -163,7 +163,7 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY_MANAGER] Error initializing Kraken-compliant strategies: {e}")
             logger.error(traceback.format_exc())
 
-    def _validate_kraken_symbols(self, symbols: List[str]) -> List[str]:
+    def _validate_kraken_symbols(self, symbols: list[str]) -> list[str]:
         """Validate and format symbols for Kraken v2 compliance."""
         validated = []
 
@@ -182,19 +182,19 @@ class FunctionalStrategyManager:
 
         return validated
 
-    async def get_signals(self) -> List[Dict[str, Any]]:
+    async def get_signals(self) -> list[dict[str, Any]]:
         """
         Get trading signals from all active strategies with Kraken compliance.
-        
+
         KRAKEN COMPLIANCE:
         - Rate limit checking before signal generation
         - Order validation against Kraken minimums
         - Proper error handling for Kraken-specific errors
-        
+
         TRADING OPTIMIZATION:
         - Lower confidence thresholds for more trading opportunities
         - Aggressive settings for "snowball effect" profit accumulation
-        
+
         Returns:
             List of Kraken-compliant formatted trading signals
         """
@@ -272,18 +272,18 @@ class FunctionalStrategyManager:
             self.performance_metrics["kraken_errors"] += 1
             return []
 
-    def _format_signal(self, signal: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _format_signal(self, signal: dict[str, Any]) -> Optional[dict[str, Any]]:
         """
         Format signal for Kraken compliance and proper display.
-        
+
         CRITICAL: Ensures confidence is properly formatted as decimal (0.85)
         for calculations and percentage display (85%).
-        
+
         KRAKEN COMPLIANCE: Ensures signal format matches Kraken WebSocket v2 API.
-        
+
         Args:
             signal: Raw signal from strategy
-            
+
         Returns:
             Kraken-compliant formatted signal or None if invalid
         """
@@ -356,7 +356,7 @@ class FunctionalStrategyManager:
             logger.error(f"[SIGNAL_FORMAT] Error formatting signal for Kraken: {e}")
             return None
 
-    async def _validate_signal_for_kraken(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    async def _validate_signal_for_kraken(self, signal: dict[str, Any]) -> dict[str, Any]:
         """Validate signal against Kraken order requirements."""
         try:
             symbol = signal.get('symbol', signal.get('pair', ''))
@@ -421,7 +421,7 @@ class FunctionalStrategyManager:
         """Handle Kraken invalid arguments error."""
         logger.error(f"[KRAKEN_INVALID_ARGS] {symbol}: Invalid order arguments")
 
-    def get_kraken_compliance_metrics(self) -> Dict[str, Any]:
+    def get_kraken_compliance_metrics(self) -> dict[str, Any]:
         """Get Kraken-specific compliance and performance metrics."""
         try:
             # Calculate quick profit statistics
@@ -468,7 +468,7 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY_MANAGER] Error calculating Kraken compliance metrics: {e}")
             return {"error": str(e)}
 
-    def get_active_strategies(self) -> List[str]:
+    def get_active_strategies(self) -> list[str]:
         """Get list of active strategy symbols."""
         return self.active_strategies
 
@@ -476,14 +476,14 @@ class FunctionalStrategyManager:
         """Check if any strategies are active."""
         return len(self.strategies) > 0
 
-    async def _create_buy_strategy(self, symbol: str, config: Dict[str, Any]) -> Optional[BaseStrategy]:
+    async def _create_buy_strategy(self, symbol: str, config: dict[str, Any]) -> Optional[BaseStrategy]:
         """
         Create a Kraken-compliant buy strategy for the given symbol.
-        
+
         Args:
             symbol: Trading symbol (e.g., 'BTC/USDT')
             config: Configuration dictionary
-            
+
         Returns:
             Initialized buy strategy or None if creation failed
         """
@@ -559,10 +559,10 @@ class FunctionalStrategyManager:
     #     # Keeping placeholder for potential future enhancements
     #     pass
 
-    async def update_ohlc_data(self, symbol: str, ohlc_data: Dict[str, Any]):
+    async def update_ohlc_data(self, symbol: str, ohlc_data: dict[str, Any]):
         """
         Update OHLC data for strategies and generate signals.
-        
+
         Args:
             symbol: Trading symbol
             ohlc_data: OHLC candle data
@@ -624,7 +624,7 @@ class FunctionalStrategyManager:
         except Exception as e:
             logger.error(f"[STRATEGY_MANAGER] Error during Kraken-compliant cleanup: {e}")
 
-    def _format_signal_for_kraken(self, signal: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _format_signal_for_kraken(self, signal: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Format signal for Kraken compliance with proper validation."""
         try:
             if not signal:
@@ -686,10 +686,10 @@ class FunctionalStrategyManager:
             logger.error(f"[SIGNAL_FORMAT] Error formatting signal: {e}")
             return None
 
-    async def process_ohlc_update(self, symbol: str, ohlc_data: Dict[str, Any]):
+    async def process_ohlc_update(self, symbol: str, ohlc_data: dict[str, Any]):
         """
         Process incoming OHLC data and generate signals for Kraken trading.
-        
+
         KRAKEN COMPLIANT: Handles WebSocket v2 data format and rate limits.
         """
         try:
@@ -767,17 +767,17 @@ class FunctionalStrategyManager:
             else:
                 logger.error(f"[STRATEGY] [EMOJI] Signal execution failed: {result.get('error')}")
 
-    def get_pending_signals(self) -> List[Dict[str, Any]]:
+    def get_pending_signals(self) -> list[dict[str, Any]]:
         """Get and clear pending signals generated from OHLC updates."""
         signals = self._pending_signals.copy()
         self._pending_signals.clear()
         return signals
 
-    async def check_all_strategies(self) -> List[Dict[str, Any]]:
+    async def check_all_strategies(self) -> list[dict[str, Any]]:
         """
         Check all strategies for trading signals.
         This method is called by the main bot loop.
-        
+
         Returns:
             List of trading signals from all active strategies
         """
@@ -806,11 +806,11 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY] Error checking strategies: {e}")
             return []
 
-    async def check_all_strategies_concurrent(self) -> List[Dict[str, Any]]:
+    async def check_all_strategies_concurrent(self) -> list[dict[str, Any]]:
         """
         Check all strategies concurrently with individual timeouts.
         This provides better performance and partial result handling.
-        
+
         Returns:
             List of trading signals from all active strategies
         """
@@ -867,10 +867,10 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY_MANAGER] Error in concurrent strategy check: {e}")
             return self._partial_results  # Return partial results on error
 
-    async def _get_portfolio_context(self) -> Dict[str, Any]:
+    async def _get_portfolio_context(self) -> dict[str, Any]:
         """
         Get current portfolio context for strategy awareness.
-        
+
         Returns:
             Dict with portfolio state information
         """
@@ -923,16 +923,16 @@ class FunctionalStrategyManager:
                 'is_tier_1': True
             }
 
-    async def _check_strategy_with_timeout(self, symbol: str, strategy: Any, portfolio_context: Dict[str, Any] = None, timeout: float = 3.0) -> Optional[Dict[str, Any]]:
+    async def _check_strategy_with_timeout(self, symbol: str, strategy: Any, portfolio_context: dict[str, Any] = None, timeout: float = 3.0) -> Optional[dict[str, Any]]:
         """
         Check a single strategy with timeout protection and portfolio awareness.
-        
+
         Args:
             symbol: Trading symbol
             strategy: Strategy instance
             portfolio_context: Current portfolio state for context-aware signals
             timeout: Maximum time allowed for strategy check
-            
+
         Returns:
             Trading signal or None
         """
@@ -967,11 +967,11 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY] {symbol}: Error in strategy check: {e}")
             raise
 
-    def get_partial_results(self) -> List[Dict[str, Any]]:
+    def get_partial_results(self) -> list[dict[str, Any]]:
         """Get partial results from incomplete strategy checks"""
         return self._partial_results.copy() if hasattr(self, '_partial_results') else []
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get strategy performance metrics including slow strategy detection"""
         metrics = self.performance_metrics.copy()
 
@@ -981,14 +981,14 @@ class FunctionalStrategyManager:
 
         return metrics
 
-    def _enhance_signal_with_context(self, signal: Dict[str, Any], portfolio_context: Dict[str, Any]) -> Dict[str, Any]:
+    def _enhance_signal_with_context(self, signal: dict[str, Any], portfolio_context: dict[str, Any]) -> dict[str, Any]:
         """
         Enhance trading signal with portfolio context for better decision making.
-        
+
         Args:
             signal: Original trading signal
             portfolio_context: Current portfolio state
-            
+
         Returns:
             Enhanced signal with portfolio awareness
         """
@@ -1041,11 +1041,11 @@ class FunctionalStrategyManager:
             logger.error(f"[STRATEGY] Error enhancing signal with context: {e}")
             return signal  # Return original signal on error
 
-    async def notify_existing_positions(self, positions: List[Dict[str, Any]]) -> None:
+    async def notify_existing_positions(self, positions: list[dict[str, Any]]) -> None:
         """
         Notify strategy manager about existing positions detected at startup.
         Creates autonomous sell engines for each position to enable profit taking.
-        
+
         Args:
             positions: List of position dictionaries from portfolio scanner
         """
@@ -1118,7 +1118,7 @@ class FunctionalStrategyManager:
             import traceback
             logger.error(traceback.format_exc())
 
-    async def process_ohlc_update(self, symbol: str, ohlc_data: Dict[str, Any]):
+    async def process_ohlc_update(self, symbol: str, ohlc_data: dict[str, Any]):
         """
         Process OHLC update for a symbol.
         Alias for update_ohlc_data to match bot expectations.

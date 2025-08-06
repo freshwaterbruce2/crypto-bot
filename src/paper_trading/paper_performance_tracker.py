@@ -6,7 +6,7 @@ Tracks and reports paper trading performance
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from typing import Any
 
 from .paper_config import get_paper_config
 
@@ -47,7 +47,7 @@ class PaperPerformanceTracker:
         except Exception as e:
             logger.warning(f"Could not load existing performance data: {e}")
 
-    def record_trade(self, trade_data: Dict[str, Any]):
+    def record_trade(self, trade_data: dict[str, Any]):
         """Record a completed trade"""
         try:
             # Update trade counts
@@ -112,7 +112,7 @@ class PaperPerformanceTracker:
         except Exception as e:
             logger.error(f"Error saving performance data: {e}")
 
-    def get_current_metrics(self) -> Dict[str, Any]:
+    def get_current_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         total_trades = self.performance_data["total_trades"]
         winning_trades = self.performance_data["winning_trades"]
@@ -149,7 +149,7 @@ class PaperPerformanceTracker:
 
         return metrics
 
-    def generate_report(self, executor=None) -> Dict[str, Any]:
+    def generate_report(self, executor=None) -> dict[str, Any]:
         """Generate comprehensive performance report"""
         current_metrics = self.get_current_metrics()
 
@@ -171,7 +171,7 @@ class PaperPerformanceTracker:
 
         return report
 
-    def _calculate_risk_metrics(self) -> Dict[str, Any]:
+    def _calculate_risk_metrics(self) -> dict[str, Any]:
         """Calculate risk-related metrics"""
         try:
             trade_returns = [t.get("pnl", 0) for t in self.performance_data["trade_history"]]
@@ -208,7 +208,7 @@ class PaperPerformanceTracker:
             logger.error(f"Error calculating risk metrics: {e}")
             return {"error": str(e)}
 
-    def _generate_recommendations(self, performance: Dict[str, Any]) -> List[str]:
+    def _generate_recommendations(self, performance: dict[str, Any]) -> list[str]:
         """Generate trading recommendations based on performance"""
         recommendations = []
 
@@ -226,7 +226,7 @@ class PaperPerformanceTracker:
 
         return recommendations
 
-    def _save_report(self, report: Dict[str, Any]):
+    def _save_report(self, report: dict[str, Any]):
         """Save report to file"""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -240,7 +240,7 @@ class PaperPerformanceTracker:
         except Exception as e:
             logger.error(f"Error saving report: {e}")
 
-    def print_summary(self, performance: Dict[str, Any]):
+    def print_summary(self, performance: dict[str, Any]):
         """Print performance summary to console"""
         print("\n" + "="*80)
         print("🧪 PAPER TRADING PERFORMANCE SUMMARY")

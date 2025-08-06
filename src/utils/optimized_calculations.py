@@ -11,7 +11,7 @@ This provides 15-30% performance improvement over pure Decimal operations.
 import math
 from decimal import ROUND_DOWN, Decimal, getcontext
 from functools import lru_cache
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 # Set precision for critical calculations only
 getcontext().prec = 18
@@ -27,7 +27,7 @@ class FastCalculator:
     @staticmethod
     @lru_cache(maxsize=1024)
     def calculate_profit_fast(buy_price: float, sell_price: float,
-                             quantity: float, fee_rate: float = 0.0) -> Dict[str, float]:
+                             quantity: float, fee_rate: float = 0.0) -> dict[str, float]:
         """Fast profit calculation using floats for non-critical amounts"""
 
         # Use Decimal for micro-profits where precision matters
@@ -56,7 +56,7 @@ class FastCalculator:
 
     @staticmethod
     def _calculate_profit_precise(buy_price: float, sell_price: float,
-                                 quantity: float, fee_rate: float) -> Dict[str, float]:
+                                 quantity: float, fee_rate: float) -> dict[str, float]:
         """Precise calculation for micro-profits using Decimal"""
         buy = Decimal(str(buy_price))
         sell = Decimal(str(sell_price))
@@ -257,7 +257,7 @@ class PerformanceTracker:
         else:
             self.precise_calculations += 1
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         total = self.fast_calculations + self.precise_calculations
         return {
             "total_calculations": total,
@@ -270,7 +270,7 @@ class PerformanceTracker:
 # Global performance tracker
 _performance_tracker = PerformanceTracker()
 
-def get_performance_stats() -> Dict[str, Any]:
+def get_performance_stats() -> dict[str, Any]:
     """Get global performance statistics"""
     return _performance_tracker.get_stats()
 

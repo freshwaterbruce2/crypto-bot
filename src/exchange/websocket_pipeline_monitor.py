@@ -23,7 +23,7 @@ import statistics
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 import psutil
 
@@ -38,10 +38,10 @@ class PerformanceMetrics:
     avg_latency_ms: float
     max_latency_ms: float
     memory_usage_mb: float
-    queue_sizes: Dict[str, int] = field(default_factory=dict)
+    queue_sizes: dict[str, int] = field(default_factory=dict)
     error_rate_percent: float = 0.0
     drop_rate_percent: float = 0.0
-    component_health: Dict[str, bool] = field(default_factory=dict)
+    component_health: dict[str, bool] = field(default_factory=dict)
 
 
 @dataclass
@@ -59,7 +59,7 @@ class AlertConfig:
 class WebSocketPipelineMonitor:
     """
     Advanced monitoring system for WebSocket pipeline performance
-    
+
     Provides comprehensive monitoring, alerting, and diagnostics for the
     unified WebSocket V2 data pipeline.
     """
@@ -67,7 +67,7 @@ class WebSocketPipelineMonitor:
     def __init__(self, pipeline, alert_config: Optional[AlertConfig] = None):
         """
         Initialize the pipeline monitor
-        
+
         Args:
             pipeline: UnifiedWebSocketDataPipeline instance
             alert_config: Alert configuration
@@ -231,7 +231,7 @@ class WebSocketPipelineMonitor:
             component_health=component_health
         )
 
-    def _calculate_throughput(self, pipeline_stats: Dict[str, Any]) -> float:
+    def _calculate_throughput(self, pipeline_stats: dict[str, Any]) -> float:
         """Calculate message throughput"""
         try:
             current_total = sum(pipeline_stats.get('messages_processed', {}).values())
@@ -249,7 +249,7 @@ class WebSocketPipelineMonitor:
             logger.error(f"[MONITOR] Error calculating throughput: {e}")
             return 0.0
 
-    def _calculate_latency(self) -> Tuple[float, float]:
+    def _calculate_latency(self) -> tuple[float, float]:
         """Calculate average and maximum latency"""
         try:
             all_latencies = []
@@ -268,7 +268,7 @@ class WebSocketPipelineMonitor:
             logger.error(f"[MONITOR] Error calculating latency: {e}")
             return 0.0, 0.0
 
-    def _calculate_error_rate(self, pipeline_stats: Dict[str, Any]) -> float:
+    def _calculate_error_rate(self, pipeline_stats: dict[str, Any]) -> float:
         """Calculate error rate percentage"""
         try:
             total_processed = sum(pipeline_stats.get('messages_processed', {}).values())
@@ -283,7 +283,7 @@ class WebSocketPipelineMonitor:
             logger.error(f"[MONITOR] Error calculating error rate: {e}")
             return 0.0
 
-    def _calculate_drop_rate(self, pipeline_stats: Dict[str, Any]) -> float:
+    def _calculate_drop_rate(self, pipeline_stats: dict[str, Any]) -> float:
         """Calculate message drop rate percentage"""
         try:
             total_processed = sum(pipeline_stats.get('messages_processed', {}).values())
@@ -299,7 +299,7 @@ class WebSocketPipelineMonitor:
             logger.error(f"[MONITOR] Error calculating drop rate: {e}")
             return 0.0
 
-    async def _assess_component_health(self) -> Dict[str, bool]:
+    async def _assess_component_health(self) -> dict[str, bool]:
         """Assess health of registered components"""
         try:
             component_health = {}
@@ -480,7 +480,7 @@ class WebSocketPipelineMonitor:
         except Exception as e:
             logger.error(f"[MONITOR] Error logging performance summary: {e}")
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
         if not self.metrics_history:
             return {'status': 'no_data', 'message': 'No performance data available'}

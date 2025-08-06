@@ -11,7 +11,6 @@ import logging
 import signal
 import sys
 from datetime import datetime
-from typing import Dict, List
 
 import websockets
 
@@ -57,7 +56,7 @@ class QuickPublicWebSocket:
             logger.error(f"❌ Connection failed: {e}")
             return False
 
-    async def subscribe_to_tickers(self, symbols: List[str]):
+    async def subscribe_to_tickers(self, symbols: list[str]):
         """Subscribe to ticker updates for specified symbols"""
         if not self.websocket:
             logger.error("WebSocket not connected")
@@ -98,7 +97,7 @@ class QuickPublicWebSocket:
         except Exception as e:
             logger.error(f"Message handling error: {e}")
 
-    async def process_ticker_update(self, data: Dict):
+    async def process_ticker_update(self, data: dict):
         """Process ticker update messages"""
         try:
             ticker_data = data.get("data", [])

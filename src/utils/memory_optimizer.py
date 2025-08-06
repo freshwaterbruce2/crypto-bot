@@ -22,7 +22,7 @@ import threading
 import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import psutil
 
@@ -36,10 +36,10 @@ class MemoryStats:
     used_memory: float
     available_memory: float
     memory_percent: float
-    gc_collections: Dict[int, int]
+    gc_collections: dict[int, int]
     active_objects: int
     leak_suspects: int
-    pool_usage: Dict[str, int]
+    pool_usage: dict[str, int]
     timestamp: float
 
 
@@ -204,7 +204,7 @@ class MemoryPool:
                 # Pool is full, let object be garbage collected
                 self.allocated = max(0, self.allocated - 1)
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics"""
         with self._lock:
             total_requests = self.hits + self.misses
@@ -267,7 +267,7 @@ class GCOptimizer:
         except Exception as e:
             logger.error(f"[MEMORY_OPT] GC restore error: {e}")
 
-    def force_collection(self) -> Dict[int, int]:
+    def force_collection(self) -> dict[int, int]:
         """Force garbage collection and return stats"""
         collections = {}
         try:
@@ -296,7 +296,7 @@ class MemoryOptimizer:
     def __init__(self):
         self.leak_detector = MemoryLeakDetector()
         self.gc_optimizer = GCOptimizer()
-        self.memory_pools: Dict[str, MemoryPool] = {}
+        self.memory_pools: dict[str, MemoryPool] = {}
         self.monitoring = False
         self.stats_callback: Optional[Callable] = None
         self._monitor_task: Optional[asyncio.Task] = None

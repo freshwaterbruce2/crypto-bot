@@ -6,7 +6,7 @@ Advanced quantum-inspired trading strategy using market probability states
 import logging
 import random
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from .base_strategy import BaseStrategy
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class QuantumFluctuationScalper(BaseStrategy):
     """Quantum fluctuation scalping strategy"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize quantum fluctuation scalper"""
         super().__init__("quantum_fluctuation_scalper", config)
 
@@ -41,7 +41,7 @@ class QuantumFluctuationScalper(BaseStrategy):
 
         logger.info(f"[QUANTUM] Quantum fluctuation scalper initialized with {len(self.enabled_pairs)} pairs")
 
-    async def analyze(self, symbol: str, timeframe: str = '1m') -> Dict[str, Any]:
+    async def analyze(self, symbol: str, timeframe: str = '1m') -> dict[str, Any]:
         """Quantum market analysis using probability states"""
         try:
             # Check if symbol is in enabled pairs
@@ -105,7 +105,7 @@ class QuantumFluctuationScalper(BaseStrategy):
             logger.error(f"[QUANTUM] Error in quantum analysis for {symbol}: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Quantum analysis error: {e}'}
 
-    async def should_buy(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_buy(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Quantum buy decision using probability collapse"""
         try:
             if analysis.get('action') != 'BUY':
@@ -142,7 +142,7 @@ class QuantumFluctuationScalper(BaseStrategy):
             logger.error(f"[QUANTUM] Error in quantum buy decision for {symbol}: {e}")
             return False
 
-    async def should_sell(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_sell(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Quantum sell decision using wave function collapse"""
         try:
             if analysis.get('action') != 'SELL':
@@ -193,7 +193,7 @@ class QuantumFluctuationScalper(BaseStrategy):
         self.probability_fields[symbol] = 0.5
         self.observation_history[symbol] = []
 
-    def _update_quantum_observations(self, symbol: str, ticker: Dict[str, Any]):
+    def _update_quantum_observations(self, symbol: str, ticker: dict[str, Any]):
         """Update quantum observations for symbol"""
         try:
             current_price = ticker.get('last', 0)
@@ -248,7 +248,7 @@ class QuantumFluctuationScalper(BaseStrategy):
             positive_probability = sum(1 for change in recent_changes if change > 0) / len(recent_changes)
 
             # Apply quantum wave function
-            wave_phase = self.quantum_states[symbol]['wave_phase']
+            self.quantum_states[symbol]['wave_phase']
             wave_modulation = 0.1 * (1 + (time.time() * 0.001) % 1)  # Slow wave
 
             # Combine probabilities
@@ -357,7 +357,7 @@ class QuantumFluctuationScalper(BaseStrategy):
         except Exception:
             return 1.0
 
-    def _calculate_coherence(self, observations: List[Dict[str, Any]]) -> float:
+    def _calculate_coherence(self, observations: list[dict[str, Any]]) -> float:
         """Calculate quantum coherence"""
         try:
             if len(observations) < 3:
@@ -379,7 +379,7 @@ class QuantumFluctuationScalper(BaseStrategy):
         except Exception:
             return 1.0
 
-    def get_strategy_info(self) -> Dict[str, Any]:
+    def get_strategy_info(self) -> dict[str, Any]:
         """Get quantum strategy information"""
         return {
             'name': 'QuantumFluctuationScalper',

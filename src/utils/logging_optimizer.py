@@ -49,7 +49,7 @@ class RepeatFilter(logging.Filter):
 def configure_optimized_logging(log_dir="logs", max_file_size_mb=50, backup_count=10):
     """
     Configure optimized logging with rotation and filtering
-    
+
     Args:
         log_dir: Directory for log files
         max_file_size_mb: Maximum size per log file in MB
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     )
 
     # Test the repeat filter
-    for i in range(20):
+    for _i in range(20):
         logger.error("Balance refresh failed")  # Will only log first 5 + summaries
 
     logger.info("Logging optimization complete!")

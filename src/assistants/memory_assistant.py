@@ -9,7 +9,7 @@ import logging
 import pickle
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error initializing memory system: {e}")
 
     async def store_trading_decision(self, decision_type: str, symbol: str,
-                                   decision_data: Dict[str, Any], outcome: Optional[Dict[str, Any]] = None):
+                                   decision_data: dict[str, Any], outcome: Optional[dict[str, Any]] = None):
         """Store a trading decision for learning purposes"""
         try:
             memory_entry = {
@@ -100,14 +100,14 @@ class MemoryAssistant:
         except Exception as e:
             self.logger.error(f"[MEMORY] Error storing trading decision: {e}")
 
-    async def retrieve_similar_decisions(self, symbol: str, market_conditions: Dict[str, Any],
-                                       decision_type: str = None, limit: int = 10) -> List[Dict[str, Any]]:
+    async def retrieve_similar_decisions(self, symbol: str, market_conditions: dict[str, Any],
+                                       decision_type: str = None, limit: int = 10) -> list[dict[str, Any]]:
         """Retrieve similar trading decisions for pattern analysis"""
         try:
             similar_decisions = []
 
             # Search through long-term memory
-            for entry_key, memory_entry in self.long_term_memory.items():
+            for _entry_key, memory_entry in self.long_term_memory.items():
                 if symbol and memory_entry['symbol'] != symbol:
                     continue
 
@@ -136,7 +136,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error retrieving similar decisions: {e}")
             return []
 
-    async def get_symbol_performance_history(self, symbol: str, days: int = 30) -> Dict[str, Any]:
+    async def get_symbol_performance_history(self, symbol: str, days: int = 30) -> dict[str, Any]:
         """Get performance history for a specific symbol"""
         try:
             cutoff_date = datetime.now() - timedelta(days=days)
@@ -198,8 +198,8 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error getting symbol performance: {e}")
             return {}
 
-    async def store_trade_outcome(self, symbol: str, entry_data: Dict[str, Any],
-                                exit_data: Dict[str, Any], performance: Dict[str, Any]):
+    async def store_trade_outcome(self, symbol: str, entry_data: dict[str, Any],
+                                exit_data: dict[str, Any], performance: dict[str, Any]):
         """Store complete trade outcome for learning"""
         try:
             trade_record = {
@@ -242,7 +242,7 @@ class MemoryAssistant:
         except Exception as e:
             self.logger.error(f"[MEMORY] Error storing trade outcome: {e}")
 
-    async def get_learning_insights(self, symbol: str = None, decision_type: str = None) -> Dict[str, Any]:
+    async def get_learning_insights(self, symbol: str = None, decision_type: str = None) -> dict[str, Any]:
         """Get learning insights and patterns from memory"""
         try:
             insights = {
@@ -393,7 +393,7 @@ class MemoryAssistant:
             return self.bot.session_id
         return f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    def _is_significant_decision(self, decision_data: Dict[str, Any], outcome: Optional[Dict[str, Any]]) -> bool:
+    def _is_significant_decision(self, decision_data: dict[str, Any], outcome: Optional[dict[str, Any]]) -> bool:
         """Determine if a decision is significant enough for long-term storage"""
         try:
             # High confidence decisions
@@ -417,7 +417,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error determining decision significance: {e}")
             return False
 
-    def _calculate_similarity(self, conditions1: Dict[str, Any], conditions2: Dict[str, Any]) -> float:
+    def _calculate_similarity(self, conditions1: dict[str, Any], conditions2: dict[str, Any]) -> float:
         """Calculate similarity between two sets of market conditions"""
         try:
             similarity_score = 0.0
@@ -454,7 +454,7 @@ class MemoryAssistant:
             return 0.0
 
     async def _extract_patterns(self, decision_type: str, symbol: str,
-                              decision_data: Dict[str, Any], outcome: Optional[Dict[str, Any]]):
+                              decision_data: dict[str, Any], outcome: Optional[dict[str, Any]]):
         """Extract patterns from trading decisions"""
         try:
             # Create pattern key
@@ -510,8 +510,8 @@ class MemoryAssistant:
         else:
             return "low"
 
-    async def _learn_from_successful_trade(self, symbol: str, entry_data: Dict[str, Any],
-                                         exit_data: Dict[str, Any], performance: Dict[str, Any]):
+    async def _learn_from_successful_trade(self, symbol: str, entry_data: dict[str, Any],
+                                         exit_data: dict[str, Any], performance: dict[str, Any]):
         """Learn from successful trades to improve future decisions"""
         try:
             # Extract successful patterns
@@ -545,7 +545,7 @@ class MemoryAssistant:
         except Exception as e:
             self.logger.error(f"[MEMORY] Error learning from successful trade: {e}")
 
-    def _analyze_optimal_conditions(self, symbol: str) -> Dict[str, Any]:
+    def _analyze_optimal_conditions(self, symbol: str) -> dict[str, Any]:
         """Analyze optimal trading conditions for a symbol"""
         try:
             if symbol not in self.performance_memory:
@@ -571,7 +571,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error analyzing optimal conditions: {e}")
             return {}
 
-    def _analyze_range(self, values: List[float]) -> Dict[str, float]:
+    def _analyze_range(self, values: list[float]) -> dict[str, float]:
         """Analyze optimal range for a set of values"""
         try:
             if not values:
@@ -618,7 +618,7 @@ class MemoryAssistant:
             except Exception as e:
                 self.logger.error(f"[MEMORY] Error in cleanup loop: {e}")
 
-    async def store_pattern(self, pattern_type: str, pattern_data: Dict[str, Any]):
+    async def store_pattern(self, pattern_type: str, pattern_data: dict[str, Any]):
         """
         Store a pattern for recognition and learning
         Called by AssistantManager - provides pattern storage capability
@@ -654,7 +654,7 @@ class MemoryAssistant:
         except Exception as e:
             self.logger.error(f"[MEMORY] Error storing pattern {pattern_type}: {e}")
 
-    async def get_patterns(self, pattern_type: str, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_patterns(self, pattern_type: str, symbol: Optional[str] = None) -> list[dict[str, Any]]:
         """
         Retrieve patterns by type and optionally by symbol
         Called by AssistantManager - provides pattern retrieval capability
@@ -701,7 +701,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error retrieving patterns for {pattern_type}: {e}")
             return []
 
-    async def analyze_pattern_trends(self, pattern_type: str, days: int = 7) -> Dict[str, Any]:
+    async def analyze_pattern_trends(self, pattern_type: str, days: int = 7) -> dict[str, Any]:
         """Analyze trends in stored patterns"""
         try:
             cutoff_date = datetime.now() - timedelta(days=days)
@@ -749,7 +749,7 @@ class MemoryAssistant:
             self.logger.error(f"[MEMORY] Error analyzing pattern trends: {e}")
             return {'total_patterns': 0, 'avg_frequency': 0, 'trending_patterns': []}
 
-    def get_memory_statistics(self) -> Dict[str, Any]:
+    def get_memory_statistics(self) -> dict[str, Any]:
         """Get memory usage statistics"""
         return {
             'short_term_entries': len(self.short_term_memory),

@@ -6,7 +6,7 @@ Pydantic schemas for user-related API endpoints.
 """
 
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, EmailStr, validator
 
@@ -20,7 +20,7 @@ class UserCreate(BaseModel):
     company: Optional[str] = None
     phone: Optional[str] = None
     timezone: Optional[str] = "UTC"
-    preferences: Optional[Dict[str, Any]] = None
+    preferences: Optional[dict[str, Any]] = None
 
     @validator("username")
     def validate_username(cls, v):
@@ -51,7 +51,7 @@ class UserUpdate(BaseModel):
     company: Optional[str] = None
     phone: Optional[str] = None
     timezone: Optional[str] = None
-    preferences: Optional[Dict[str, Any]] = None
+    preferences: Optional[dict[str, Any]] = None
 
 
 class UserLogin(BaseModel):
@@ -98,7 +98,7 @@ class NotificationResponse(BaseModel):
     message: str
     type: str
     priority: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     action_url: Optional[str]
     is_read: bool
     is_dismissed: bool

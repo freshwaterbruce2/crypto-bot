@@ -5,7 +5,7 @@ Unified connection handling for all exchange implementations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class BaseExchangeConnector(ABC):
     """Base class for all exchange connectors"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.is_connected = False
         self.connection_attempts = 0
@@ -55,7 +55,7 @@ class BaseExchangeConnector(ABC):
 class KrakenConnector(BaseExchangeConnector):
     """Kraken-specific exchange connector"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.api_key = config.get('api_key')
         self.api_secret = config.get('api_secret')

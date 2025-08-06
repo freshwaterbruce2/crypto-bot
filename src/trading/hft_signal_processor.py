@@ -17,7 +17,7 @@ from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class TradeSignal:
     signal_type: str = "market"
     priority: SignalPriority = SignalPriority.MEDIUM
     source: str = "scanner"
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     processing_latency: float = 0.0
 
     def __post_init__(self):
@@ -50,7 +50,7 @@ class TradeSignal:
         """For priority queue ordering"""
         return self.priority.value < other.priority.value
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for compatibility"""
         return {
             'symbol': self.symbol,
@@ -91,7 +91,7 @@ class SignalFilter:
         self.signal_history = deque(maxlen=1000)
         self.adaptive_thresholds = {}
 
-    async def should_process_signal(self, signal: TradeSignal) -> Tuple[bool, str]:
+    async def should_process_signal(self, signal: TradeSignal) -> tuple[bool, str]:
         """Determine if signal should be processed"""
         symbol = signal.symbol
         current_time = signal.timestamp
@@ -248,7 +248,7 @@ class HFTSignalProcessor:
 
         logger.info("[HFT_SIGNAL_PROCESSOR] Signal processing stopped")
 
-    async def process_signal(self, signal_data: Dict[str, Any]) -> bool:
+    async def process_signal(self, signal_data: dict[str, Any]) -> bool:
         """Process incoming signal with ultra-low latency"""
         start_time = time.time()
 
@@ -404,7 +404,7 @@ class HFTSignalProcessor:
         self.batch_processors[signal_type] = processor
         logger.info(f"[HFT_SIGNAL_PROCESSOR] Registered batch processor for {signal_type}")
 
-    def _create_trade_signal(self, signal_data: Dict[str, Any]) -> TradeSignal:
+    def _create_trade_signal(self, signal_data: dict[str, Any]) -> TradeSignal:
         """Create TradeSignal from dictionary data"""
         # Extract priority
         priority_str = signal_data.get('priority', 'medium').upper()
@@ -452,7 +452,7 @@ class HFTSignalProcessor:
         if self.processing_times:
             self.stats.avg_processing_time = sum(self.processing_times) / len(self.processing_times)
 
-    async def process_signal_batch(self, signals: List[Dict[str, Any]]) -> List[bool]:
+    async def process_signal_batch(self, signals: list[dict[str, Any]]) -> list[bool]:
         """Process multiple signals efficiently"""
         if not signals:
             return []
@@ -472,7 +472,7 @@ class HFTSignalProcessor:
 
         return processed_results
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics"""
         current_time = time.time()
         uptime = current_time - self.stats.last_reset

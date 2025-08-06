@@ -9,7 +9,7 @@ penalty point calculations, and backoff strategies.
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class EndpointConfig:
 
 
 # Kraken API endpoint configurations (2025 specifications)
-ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
+ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
 
     # ===== PUBLIC ENDPOINTS =====
     "ServerTime": EndpointConfig(
@@ -421,16 +421,16 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
 def calculate_age_penalty(endpoint_name: str, order_age_seconds: float) -> int:
     """
     Calculate penalty points based on order age for modification/cancellation.
-    
+
     Based on Kraken 2025 specifications:
     - AmendOrder: +3/+2/+1 penalty for <5s/<10s/<15s
     - EditOrder: +6/+5/+4/+2/+1 penalty for <5s/<10s/<15s/<45s/<90s
     - CancelOrder: +8/+6/+5/+4/+2/+1 penalty for <5s/<10s/<15s/<45s/<90s/<300s
-    
+
     Args:
         endpoint_name: Name of the endpoint
         order_age_seconds: Age of the order in seconds
-        
+
     Returns:
         Additional penalty points based on age
     """
@@ -480,13 +480,13 @@ def calculate_age_penalty(endpoint_name: str, order_age_seconds: float) -> int:
 def get_endpoint_config(endpoint_name: str) -> EndpointConfig:
     """
     Get configuration for a specific endpoint.
-    
+
     Args:
         endpoint_name: Name of the endpoint
-        
+
     Returns:
         EndpointConfig for the endpoint
-        
+
     Raises:
         KeyError: If endpoint is not configured
     """
@@ -507,10 +507,10 @@ def get_endpoint_config(endpoint_name: str) -> EndpointConfig:
 def get_tier_config(tier: Union[AccountTier, str]) -> RateLimitConfig:
     """
     Get rate limit configuration for account tier.
-    
+
     Args:
         tier: Account tier (enum or string)
-        
+
     Returns:
         RateLimitConfig for the tier
     """
@@ -528,13 +528,13 @@ def get_tier_config(tier: Union[AccountTier, str]) -> RateLimitConfig:
 def calculate_backoff_delay(attempt: int, base_delay: float, multiplier: float, max_delay: float) -> float:
     """
     Calculate exponential backoff delay.
-    
+
     Args:
         attempt: Current attempt number (0-based)
         base_delay: Base delay in seconds
         multiplier: Exponential multiplier
         max_delay: Maximum delay in seconds
-        
+
     Returns:
         Delay time in seconds
     """
@@ -542,13 +542,13 @@ def calculate_backoff_delay(attempt: int, base_delay: float, multiplier: float, 
     return min(delay, max_delay)
 
 
-def get_endpoints_by_type(endpoint_type: EndpointType) -> List[str]:
+def get_endpoints_by_type(endpoint_type: EndpointType) -> list[str]:
     """
     Get all endpoint names of a specific type.
-    
+
     Args:
         endpoint_type: Type of endpoint to filter by
-        
+
     Returns:
         List of endpoint names
     """
@@ -561,10 +561,10 @@ def get_endpoints_by_type(endpoint_type: EndpointType) -> List[str]:
 def is_trading_endpoint(endpoint_name: str) -> bool:
     """
     Check if endpoint is a trading endpoint.
-    
+
     Args:
         endpoint_name: Name of the endpoint
-        
+
     Returns:
         True if endpoint is for trading operations
     """
@@ -572,10 +572,10 @@ def is_trading_endpoint(endpoint_name: str) -> bool:
     return config.is_trading_endpoint if config else False
 
 
-def validate_rate_limits() -> Dict[str, List[str]]:
+def validate_rate_limits() -> dict[str, list[str]]:
     """
     Validate rate limit configurations for consistency.
-    
+
     Returns:
         Dictionary with validation results and any warnings
     """

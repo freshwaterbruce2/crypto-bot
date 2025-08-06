@@ -30,7 +30,7 @@ import sys
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Add src directory to path for imports
 current_dir = Path(__file__).parent
@@ -56,7 +56,7 @@ class SecurityTestResult:
     passed: bool
     severity: str  # "CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"
     message: str
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[dict[str, Any]] = None
     remediation: Optional[str] = None
 
 
@@ -73,21 +73,21 @@ class SecurityReport:
     high_issues: int
     medium_issues: int
     low_issues: int
-    test_results: List[SecurityTestResult]
-    compliance_status: Dict[str, bool]
-    recommendations: List[str]
+    test_results: list[SecurityTestResult]
+    compliance_status: dict[str, bool]
+    recommendations: list[str]
 
 
 class SecurityValidator:
     """
     Comprehensive security validation system for the crypto trading bot.
-    
+
     Validates all security implementations against 2025 enterprise standards.
     """
 
     def __init__(self):
         """Initialize security validator"""
-        self.results: List[SecurityTestResult] = []
+        self.results: list[SecurityTestResult] = []
         self.start_time = datetime.utcnow()
 
         # Set up secure logging for validation
@@ -104,7 +104,7 @@ class SecurityValidator:
         passed: bool,
         severity: str,
         message: str,
-        details: Optional[Dict[str, Any]] = None,
+        details: Optional[dict[str, Any]] = None,
         remediation: Optional[str] = None
     ):
         """Add a test result"""
@@ -178,7 +178,7 @@ class SecurityValidator:
             # Validate certificate verification
             cert_verification = (
                 context.verify_mode == ssl.CERT_REQUIRED and
-                context.check_hostname == True
+                context.check_hostname
             )
 
             self.add_result(
@@ -363,7 +363,7 @@ class SecurityValidator:
             for test_name, message, should_sanitize in test_messages:
                 # Create a mock log record
                 import logging
-                record = logging.LogRecord(
+                logging.LogRecord(
                     name="test",
                     level=logging.INFO,
                     pathname="",

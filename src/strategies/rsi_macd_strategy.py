@@ -4,7 +4,7 @@ Technical analysis strategy combining RSI and MACD indicators
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from .base_strategy import BaseStrategy
 
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class RsiMacdStrategy(BaseStrategy):
     """RSI and MACD combined technical analysis strategy"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize RSI MACD strategy"""
         super().__init__("rsi_macd", config)
 
@@ -35,7 +35,7 @@ class RsiMacdStrategy(BaseStrategy):
 
         logger.info("[RSI_MACD] Strategy initialized with RSI/MACD indicators")
 
-    async def analyze(self, symbol: str, timeframe: str = '1m') -> Dict[str, Any]:
+    async def analyze(self, symbol: str, timeframe: str = '1m') -> dict[str, Any]:
         """Analyze symbol using RSI and MACD indicators"""
         try:
             # Get current ticker
@@ -136,7 +136,7 @@ class RsiMacdStrategy(BaseStrategy):
             logger.error(f"[RSI_MACD] Error analyzing {symbol}: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Analysis error: {e}'}
 
-    async def should_buy(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_buy(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Check if should buy based on RSI/MACD signals"""
         try:
             if analysis.get('action') != 'BUY':
@@ -166,7 +166,7 @@ class RsiMacdStrategy(BaseStrategy):
             logger.error(f"[RSI_MACD] Error in buy decision for {symbol}: {e}")
             return False
 
-    async def should_sell(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_sell(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Check if should sell based on RSI/MACD signals"""
         try:
             if analysis.get('action') != 'SELL':
@@ -197,7 +197,7 @@ class RsiMacdStrategy(BaseStrategy):
             logger.error(f"[RSI_MACD] Error in sell decision for {symbol}: {e}")
             return False
 
-    def _calculate_rsi(self, prices: List[float]) -> float:
+    def _calculate_rsi(self, prices: list[float]) -> float:
         """Calculate RSI (Relative Strength Index)"""
         try:
             if len(prices) < self.rsi_period + 1:
@@ -232,7 +232,7 @@ class RsiMacdStrategy(BaseStrategy):
             logger.error(f"[RSI_MACD] Error calculating RSI: {e}")
             return 50.0
 
-    def _calculate_macd(self, prices: List[float]) -> tuple:
+    def _calculate_macd(self, prices: list[float]) -> tuple:
         """Calculate MACD (Moving Average Convergence Divergence)"""
         try:
             if len(prices) < self.macd_slow:
@@ -258,7 +258,7 @@ class RsiMacdStrategy(BaseStrategy):
             logger.error(f"[RSI_MACD] Error calculating MACD: {e}")
             return 0.0, 0.0, 0.0
 
-    def _calculate_ema(self, prices: List[float], period: int) -> float:
+    def _calculate_ema(self, prices: list[float], period: int) -> float:
         """Calculate Exponential Moving Average"""
         try:
             if len(prices) < period:
@@ -291,7 +291,7 @@ class RsiMacdStrategy(BaseStrategy):
         if len(self.price_history[symbol]) > self.max_history:
             self.price_history[symbol] = self.price_history[symbol][-self.max_history:]
 
-    def get_strategy_info(self) -> Dict[str, Any]:
+    def get_strategy_info(self) -> dict[str, Any]:
         """Get strategy information"""
         return {
             'name': 'RsiMacdStrategy',

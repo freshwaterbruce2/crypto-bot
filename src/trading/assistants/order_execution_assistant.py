@@ -6,7 +6,7 @@ import asyncio
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 
 class OrderType(Enum):
@@ -39,7 +39,7 @@ class OrderExecutionAssistant:
             self.config = manager_or_config
         self.logger = logging.getLogger(__name__)
 
-    def prepare_market_order(self, symbol: str, side: str, amount: Decimal) -> Dict[str, Any]:
+    def prepare_market_order(self, symbol: str, side: str, amount: Decimal) -> dict[str, Any]:
         """Prepare market order parameters"""
         try:
             order_params = {
@@ -57,7 +57,7 @@ class OrderExecutionAssistant:
             self.logger.error(f"Market order preparation error: {e}")
             return {}
 
-    def prepare_limit_order(self, symbol: str, side: str, amount: Decimal, price: Decimal) -> Dict[str, Any]:
+    def prepare_limit_order(self, symbol: str, side: str, amount: Decimal, price: Decimal) -> dict[str, Any]:
         """Prepare limit order parameters"""
         try:
             order_params = {
@@ -76,7 +76,7 @@ class OrderExecutionAssistant:
             self.logger.error(f"Limit order preparation error: {e}")
             return {}
 
-    def validate_order_parameters(self, order_params: Dict[str, Any]) -> bool:
+    def validate_order_parameters(self, order_params: dict[str, Any]) -> bool:
         """Validate order parameters before execution"""
         try:
             required_fields = ['symbol', 'side', 'type', 'amount']
@@ -146,7 +146,7 @@ class OrderExecutionAssistant:
             self.logger.error(f"Fee estimation error: {e}")
             return Decimal('0')
 
-    def check_order_status(self, order_id: str) -> Dict[str, Any]:
+    def check_order_status(self, order_id: str) -> dict[str, Any]:
         """Check order status (mock implementation)"""
         try:
             # Mock implementation - in real version would query exchange
@@ -162,7 +162,7 @@ class OrderExecutionAssistant:
             self.logger.error(f"Order status check error: {e}")
             return {}
 
-    def get_open_positions(self) -> List[Dict[str, Any]]:
+    def get_open_positions(self) -> list[dict[str, Any]]:
         """Get all open positions (synchronous version for compatibility)"""
         try:
             # Mock implementation for compatibility
@@ -202,7 +202,7 @@ class OrderExecutionAssistant:
         except Exception as e:
             self.logger.error(f"[EXECUTION_ASSISTANT] Stop error: {e}")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of the execution assistant"""
         try:
             # Check if we have exchange connection
@@ -222,7 +222,7 @@ class OrderExecutionAssistant:
             self.logger.error(f"[EXECUTION_ASSISTANT] Health check error: {e}")
             return {'healthy': False, 'error': str(e)}
 
-    async def execute_buy(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_buy(self, signal: dict[str, Any]) -> dict[str, Any]:
         """Execute a buy order based on signal"""
         try:
             self.logger.info(f"[EXECUTION_ASSISTANT] Executing buy signal for {signal.get('symbol', 'unknown')}")
@@ -321,7 +321,7 @@ class OrderExecutionAssistant:
                 'signal': signal
             }
 
-    async def execute_sell(self, position: Dict[str, Any], sell_decision: Any) -> Dict[str, Any]:
+    async def execute_sell(self, position: dict[str, Any], sell_decision: Any) -> dict[str, Any]:
         """Execute a sell order for a position"""
         try:
             symbol = position.get('symbol')

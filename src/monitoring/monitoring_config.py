@@ -10,7 +10,7 @@ import json
 import logging
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .production_monitor import AlertConfig, MetricThresholds
 
@@ -54,7 +54,7 @@ class MonitoringConfig:
 
     # Emergency controls
     enable_emergency_shutdown: bool = True
-    emergency_conditions: List[str] = None
+    emergency_conditions: list[str] = None
 
     # Integration settings
     non_intrusive_mode: bool = True
@@ -76,7 +76,7 @@ class ConfigurationManager:
         self.config_file = config_file
         self._config_cache = {}
 
-    def load_config(self, config_file: Optional[Path] = None) -> Dict[str, Any]:
+    def load_config(self, config_file: Optional[Path] = None) -> dict[str, Any]:
         """Load configuration from file or return defaults"""
         config_path = config_file or self.config_file
 
@@ -92,7 +92,7 @@ class ConfigurationManager:
 
         return self.get_default_config()
 
-    def save_config(self, config: Dict[str, Any], config_file: Optional[Path] = None):
+    def save_config(self, config: dict[str, Any], config_file: Optional[Path] = None):
         """Save configuration to file"""
         config_path = config_file or self.config_file
 
@@ -112,7 +112,7 @@ class ConfigurationManager:
             logger.error(f"Error saving config to {config_path}: {e}")
             raise
 
-    def get_default_config(self) -> Dict[str, Any]:
+    def get_default_config(self) -> dict[str, Any]:
         """Get default monitoring configuration"""
         return {
             'monitoring': asdict(MonitoringConfig()),
@@ -121,7 +121,7 @@ class ConfigurationManager:
             'dashboard': asdict(DashboardConfig())
         }
 
-    def get_production_config(self) -> Dict[str, Any]:
+    def get_production_config(self) -> dict[str, Any]:
         """Get production-optimized configuration"""
         config = self.get_default_config()
 
@@ -150,7 +150,7 @@ class ConfigurationManager:
 
         return config
 
-    def get_development_config(self) -> Dict[str, Any]:
+    def get_development_config(self) -> dict[str, Any]:
         """Get development-optimized configuration"""
         config = self.get_default_config()
 
@@ -179,7 +179,7 @@ class ConfigurationManager:
 
         return config
 
-    def _validate_and_merge_config(self, user_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _validate_and_merge_config(self, user_config: dict[str, Any]) -> dict[str, Any]:
         """Validate user config and merge with defaults"""
         default_config = self.get_default_config()
 
@@ -191,7 +191,7 @@ class ConfigurationManager:
 
         return merged_config
 
-    def _deep_merge(self, base: Dict, override: Dict) -> Dict:
+    def _deep_merge(self, base: dict, override: dict) -> dict:
         """Deep merge two dictionaries"""
         result = base.copy()
 
@@ -203,7 +203,7 @@ class ConfigurationManager:
 
         return result
 
-    def _validate_config(self, config: Dict[str, Any]):
+    def _validate_config(self, config: dict[str, Any]):
         """Validate configuration values"""
         try:
             # Validate monitoring config
@@ -230,10 +230,10 @@ class ConfigurationManager:
             raise
 
 
-def create_monitoring_config_objects(config_dict: Dict[str, Any]) -> tuple:
+def create_monitoring_config_objects(config_dict: dict[str, Any]) -> tuple:
     """
     Create monitoring object instances from configuration dictionary
-    
+
     Returns:
         tuple: (MonitoringConfig, MetricThresholds, AlertConfig, DashboardConfig)
     """
@@ -246,14 +246,14 @@ def create_monitoring_config_objects(config_dict: Dict[str, Any]) -> tuple:
 
 
 def setup_monitoring_from_config(config_path: Optional[Path] = None,
-                                config_type: str = "default") -> Dict[str, Any]:
+                                config_type: str = "default") -> dict[str, Any]:
     """
     Setup monitoring configuration from file or defaults
-    
+
     Args:
         config_path: Path to configuration file
         config_type: Type of config - "default", "production", "development"
-        
+
     Returns:
         Complete configuration dictionary
     """
@@ -367,7 +367,7 @@ CONFIGS = {
 }
 
 
-def get_config_by_name(config_name: str) -> Dict[str, Any]:
+def get_config_by_name(config_name: str) -> dict[str, Any]:
     """Get predefined configuration by name"""
     if config_name not in CONFIGS:
         raise ValueError(f"Unknown config name: {config_name}. Available: {list(CONFIGS.keys())}")

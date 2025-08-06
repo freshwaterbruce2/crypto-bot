@@ -14,7 +14,7 @@ Components:
 
 Usage:
     from src.api import KrakenRestClient, KrakenAPIError
-    
+
     async with KrakenRestClient(api_key, private_key) as client:
         balance = await client.get_account_balance()
         order = await client.add_order('XBTUSD', 'buy', 'market', volume=0.001)
@@ -83,7 +83,7 @@ def create_client(
 ) -> KrakenRestClient:
     """
     Quick factory function to create a configured Kraken REST client.
-    
+
     Args:
         api_key: Kraken API key
         private_key: Kraken private key (base64 encoded)
@@ -92,7 +92,7 @@ def create_client(
         max_retries: Maximum retry attempts
         enable_rate_limiting: Enable rate limiting protection
         enable_circuit_breaker: Enable circuit breaker protection
-        
+
     Returns:
         Configured KrakenRestClient instance
     """

@@ -17,7 +17,7 @@ Features demonstrated:
 import asyncio
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 from ..data.unified_data_feed import UnifiedDataFeed
 from .data_models import BalanceUpdate, OrderBookUpdate, TickerUpdate
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class WebSocketV2TradingIntegration:
     """
     Example integration class showing how to use WebSocket V2 for trading.
-    
+
     This example demonstrates:
     - Real-time balance monitoring
     - Market data streaming
@@ -42,13 +42,13 @@ class WebSocketV2TradingIntegration:
     def __init__(
         self,
         exchange_client,
-        symbols: List[str],
+        symbols: list[str],
         api_key: str,
         private_key: str
     ):
         """
         Initialize WebSocket V2 trading integration.
-        
+
         Args:
             exchange_client: Existing exchange client
             symbols: Trading symbols to monitor
@@ -74,9 +74,9 @@ class WebSocketV2TradingIntegration:
         self.unified_data_feed: UnifiedDataFeed = None
 
         # Trading state
-        self.current_balances: Dict[str, BalanceUpdate] = {}
-        self.current_tickers: Dict[str, TickerUpdate] = {}
-        self.active_orders: Dict[str, Any] = {}
+        self.current_balances: dict[str, BalanceUpdate] = {}
+        self.current_tickers: dict[str, TickerUpdate] = {}
+        self.active_orders: dict[str, Any] = {}
 
         # Configuration
         self.min_profit_percentage = Decimal('0.5')  # 0.5% minimum profit
@@ -194,7 +194,7 @@ class WebSocketV2TradingIntegration:
             logger.error(f"[WS_V2_INTEGRATION] Error setting up subscriptions: {e}")
 
     # Event handlers
-    async def _handle_balance_updates(self, balance_updates: List[BalanceUpdate]) -> None:
+    async def _handle_balance_updates(self, balance_updates: list[BalanceUpdate]) -> None:
         """Handle real-time balance updates"""
         try:
             for balance_update in balance_updates:
@@ -214,7 +214,7 @@ class WebSocketV2TradingIntegration:
         except Exception as e:
             logger.error(f"[WS_V2_INTEGRATION] Error handling balance updates: {e}")
 
-    async def _handle_ticker_updates(self, ticker_updates: List[TickerUpdate]) -> None:
+    async def _handle_ticker_updates(self, ticker_updates: list[TickerUpdate]) -> None:
         """Handle real-time ticker updates"""
         try:
             for ticker_update in ticker_updates:
@@ -229,7 +229,7 @@ class WebSocketV2TradingIntegration:
         except Exception as e:
             logger.error(f"[WS_V2_INTEGRATION] Error handling ticker updates: {e}")
 
-    async def _handle_orderbook_updates(self, orderbook_updates: List[OrderBookUpdate]) -> None:
+    async def _handle_orderbook_updates(self, orderbook_updates: list[OrderBookUpdate]) -> None:
         """Handle real-time orderbook updates"""
         try:
             for orderbook_update in orderbook_updates:
@@ -280,12 +280,12 @@ class WebSocketV2TradingIntegration:
         except Exception as e:
             logger.error(f"[WS_V2_INTEGRATION] Error handling order update: {e}")
 
-    async def _handle_subscription_success(self, data: Dict[str, Any]) -> None:
+    async def _handle_subscription_success(self, data: dict[str, Any]) -> None:
         """Handle successful subscription"""
         channel = data.get('channel')
         logger.info(f"[WS_V2_INTEGRATION] Successfully subscribed to {channel}")
 
-    async def _handle_subscription_error(self, data: Dict[str, Any]) -> None:
+    async def _handle_subscription_error(self, data: dict[str, Any]) -> None:
         """Handle subscription error"""
         channel = data.get('channel')
         error = data.get('error')
@@ -486,7 +486,7 @@ class WebSocketV2TradingIntegration:
             logger.error(f"[WS_V2_INTEGRATION] Error analyzing price movement: {e}")
 
     # Unified data feed examples
-    async def get_real_time_balance(self, asset: str) -> Dict[str, Any]:
+    async def get_real_time_balance(self, asset: str) -> dict[str, Any]:
         """Get real-time balance using unified data feed"""
         if self.unified_data_feed:
             return await self.unified_data_feed.get_balance(asset)
@@ -495,7 +495,7 @@ class WebSocketV2TradingIntegration:
             balance_update = self.current_balances.get(asset)
             return balance_update.to_dict() if balance_update else None
 
-    async def get_real_time_ticker(self, symbol: str) -> Dict[str, Any]:
+    async def get_real_time_ticker(self, symbol: str) -> dict[str, Any]:
         """Get real-time ticker using unified data feed"""
         if self.unified_data_feed:
             return await self.unified_data_feed.get_ticker(symbol)
@@ -504,7 +504,7 @@ class WebSocketV2TradingIntegration:
             ticker_update = self.current_tickers.get(symbol)
             return ticker_update.to_dict() if ticker_update else None
 
-    async def get_real_time_orderbook(self, symbol: str) -> Dict[str, Any]:
+    async def get_real_time_orderbook(self, symbol: str) -> dict[str, Any]:
         """Get real-time orderbook using unified data feed"""
         if self.unified_data_feed:
             return await self.unified_data_feed.get_orderbook(symbol)
@@ -515,7 +515,7 @@ class WebSocketV2TradingIntegration:
             return orderbook_update.to_dict() if orderbook_update else None
 
     # Status and monitoring
-    def get_integration_status(self) -> Dict[str, Any]:
+    def get_integration_status(self) -> dict[str, Any]:
         """Get comprehensive integration status"""
         status = {
             'websocket_manager': self.websocket_manager.get_status() if self.websocket_manager else None,
@@ -528,7 +528,7 @@ class WebSocketV2TradingIntegration:
 
         return status
 
-    def get_current_positions(self) -> Dict[str, Dict[str, Any]]:
+    def get_current_positions(self) -> dict[str, dict[str, Any]]:
         """Get current positions based on balance data"""
         positions = {}
 
@@ -548,7 +548,7 @@ class WebSocketV2TradingIntegration:
 async def run_websocket_v2_example():
     """
     Example function showing how to use WebSocket V2 integration.
-    
+
     This would typically be called from your main bot initialization.
     """
     try:

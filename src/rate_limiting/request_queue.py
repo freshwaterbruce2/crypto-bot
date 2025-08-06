@@ -13,7 +13,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -112,7 +112,7 @@ class QueuedRequest:
 class RequestQueue:
     """
     Advanced request queue with priority management and rate limit compliance.
-    
+
     Features:
     - Priority-based scheduling
     - Adaptive queue strategies
@@ -130,7 +130,7 @@ class RequestQueue:
     ):
         """
         Initialize request queue.
-        
+
         Args:
             max_size: Maximum queue size
             strategy: Queue processing strategy
@@ -143,13 +143,13 @@ class RequestQueue:
         self.max_age_seconds = max_age_seconds
 
         # Priority queues for each priority level
-        self._queues: Dict[RequestPriority, List[QueuedRequest]] = {
+        self._queues: dict[RequestPriority, list[QueuedRequest]] = {
             priority: [] for priority in RequestPriority
         }
 
         # Request tracking
-        self._requests: Dict[str, QueuedRequest] = {}
-        self._processing: Dict[str, QueuedRequest] = {}
+        self._requests: dict[str, QueuedRequest] = {}
+        self._processing: dict[str, QueuedRequest] = {}
 
         # Queue statistics
         self.stats = {
@@ -173,7 +173,7 @@ class RequestQueue:
         self._cleanup_task: Optional[asyncio.Task] = None
 
         # Weighted fair queuing state
-        self._wfq_credits: Dict[RequestPriority, float] = {
+        self._wfq_credits: dict[RequestPriority, float] = {
             RequestPriority.CRITICAL: 10.0,
             RequestPriority.HIGH: 5.0,
             RequestPriority.NORMAL: 2.0,
@@ -229,7 +229,7 @@ class RequestQueue:
     ) -> QueuedRequest:
         """
         Enqueue a request for processing.
-        
+
         Args:
             request_id: Unique identifier for the request
             endpoint: API endpoint name
@@ -243,10 +243,10 @@ class RequestQueue:
             weight: Request weight for rate limiting
             requires_auth: Whether request requires authentication
             max_retries: Maximum retry attempts
-            
+
         Returns:
             QueuedRequest object
-            
+
         Raises:
             ValueError: If queue is full or request already exists
         """
@@ -304,10 +304,10 @@ class RequestQueue:
     async def dequeue(self, timeout_seconds: Optional[float] = None) -> Optional[QueuedRequest]:
         """
         Dequeue the next request for processing.
-        
+
         Args:
             timeout_seconds: Maximum time to wait for a request
-            
+
         Returns:
             Next request to process, or None if timeout/shutdown
         """
@@ -463,7 +463,7 @@ class RequestQueue:
     async def complete_request(self, request_id: str, success: bool = True):
         """
         Mark a request as completed.
-        
+
         Args:
             request_id: ID of the completed request
             success: Whether the request was successful
@@ -491,11 +491,11 @@ class RequestQueue:
     async def cancel_request(self, request_id: str, reason: str = "Cancelled") -> bool:
         """
         Cancel a queued or processing request.
-        
+
         Args:
             request_id: ID of the request to cancel
             reason: Cancellation reason
-            
+
         Returns:
             True if request was cancelled, False if not found
         """
@@ -534,7 +534,7 @@ class RequestQueue:
         """Remove expired and cancelled requests from queues."""
         async with self._lock:
             removed_count = 0
-            current_time = time.time()
+            time.time()
 
             # Clean up queued requests
             for priority in RequestPriority:
@@ -586,7 +586,7 @@ class RequestQueue:
                     f"{removed_from_tracking} tracked requests"
                 )
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get comprehensive queue statistics."""
         stats = self.stats.copy()
 
@@ -607,10 +607,10 @@ class RequestQueue:
     def get_queue_size(self, priority: Optional[RequestPriority] = None) -> int:
         """
         Get queue size for specific priority or total.
-        
+
         Args:
             priority: Priority level to check, or None for total
-            
+
         Returns:
             Queue size
         """
@@ -630,7 +630,7 @@ class RequestQueue:
     async def request_context(self, request: QueuedRequest):
         """
         Context manager for processing requests.
-        
+
         Args:
             request: Request to process
         """

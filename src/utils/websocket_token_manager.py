@@ -11,7 +11,7 @@ import hashlib
 import hmac
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .dual_api_credentials import get_websocket_credentials
 from .network import RequestConfig, ResilientRequest
@@ -167,7 +167,7 @@ class WebSocketTokenManager:
         return (self.current_token and
                 time.time() < (self.token_expires_at - self.token_refresh_buffer))
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get token manager status"""
         return {
             'has_token': self.current_token is not None,

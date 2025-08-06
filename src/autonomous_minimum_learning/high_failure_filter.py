@@ -10,7 +10,6 @@ due to volume minimum issues, preventing repeated failed attempts.
 import json
 import logging
 from pathlib import Path
-from typing import List, Set
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class HighFailureFilter:
         self.min_learn_count_threshold = 10  # Pairs with 10+ failures
         self.min_volume_threshold = 3.0      # Pairs requiring 3.0+ volume (problematic for $2 trades)
 
-    def get_problematic_pairs(self) -> Set[str]:
+    def get_problematic_pairs(self) -> set[str]:
         """Get list of pairs that should be avoided due to high failure rates"""
         problematic = set()
 
@@ -83,7 +82,7 @@ class HighFailureFilter:
             logger.error(f"[FILTER] Error checking pair {pair}: {e}")
             return True  # On error, allow trading
 
-    def _save_blacklist(self, blacklisted_pairs: List[str]):
+    def _save_blacklist(self, blacklisted_pairs: list[str]):
         """Save blacklisted pairs to file"""
         try:
             blacklist_data = {
@@ -119,6 +118,6 @@ def should_trade_pair(pair: str) -> bool:
     """Quick check if pair should be traded"""
     return get_failure_filter().should_trade_pair(pair)
 
-def get_problematic_pairs() -> Set[str]:
+def get_problematic_pairs() -> set[str]:
     """Get set of problematic pairs to avoid"""
     return get_failure_filter().get_problematic_pairs()

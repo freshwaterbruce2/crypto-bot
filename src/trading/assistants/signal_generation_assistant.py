@@ -5,7 +5,7 @@ Signal Generation Assistant - Trading signal generation helper
 import logging
 import time
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 
 class SignalType(Enum):
@@ -30,7 +30,7 @@ class SignalGenerationAssistant:
             self.config = manager_or_config
         self.logger = logging.getLogger(__name__)
 
-    def generate_momentum_signal(self, price_data: List[float], volume_data: List[float] = None) -> Dict[str, Any]:
+    def generate_momentum_signal(self, price_data: list[float], volume_data: list[float] = None) -> dict[str, Any]:
         """Generate momentum-based trading signal"""
         try:
             if len(price_data) < 3:
@@ -75,7 +75,7 @@ class SignalGenerationAssistant:
                 'reason': 'error'
             }
 
-    def generate_reversal_signal(self, price_data: List[float], rsi: float = 50.0) -> Dict[str, Any]:
+    def generate_reversal_signal(self, price_data: list[float], rsi: float = 50.0) -> dict[str, Any]:
         """Generate mean reversion signal"""
         try:
             if len(price_data) < 5:
@@ -119,7 +119,7 @@ class SignalGenerationAssistant:
                 'reason': 'error'
             }
 
-    def combine_signals(self, signals: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def combine_signals(self, signals: list[dict[str, Any]]) -> dict[str, Any]:
         """Combine multiple signals into a consensus signal"""
         try:
             if not signals:
@@ -173,7 +173,7 @@ class SignalGenerationAssistant:
                 'reason': 'error'
             }
 
-    def generate_buy_signals_sync(self, symbols: List[str] = None) -> List[Dict[str, Any]]:
+    def generate_buy_signals_sync(self, symbols: list[str] = None) -> list[dict[str, Any]]:
         """Generate buy signals for given symbols (synchronous version)"""
         try:
             # Mock implementation for compatibility
@@ -240,7 +240,7 @@ class SignalGenerationAssistant:
         except Exception as e:
             self.logger.error(f"[SIGNAL_ASSISTANT] Stop error: {e}")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of the signal generation assistant"""
         try:
             # Check data connections
@@ -262,7 +262,7 @@ class SignalGenerationAssistant:
             self.logger.error(f"[SIGNAL_ASSISTANT] Health check error: {e}")
             return {'healthy': False, 'error': str(e)}
 
-    async def generate_buy_signals(self, market_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_buy_signals(self, market_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Generate buy signals based on market data (async version)"""
         try:
             self.logger.debug("[SIGNAL_ASSISTANT] Generating buy signals from market data")
@@ -333,7 +333,7 @@ class SignalGenerationAssistant:
             self.logger.error(f"[SIGNAL_ASSISTANT] Error generating buy signals: {e}")
             return []
 
-    async def _analyze_symbol_for_buy(self, symbol: str, price: float, volume: float, ticker_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def _analyze_symbol_for_buy(self, symbol: str, price: float, volume: float, ticker_data: dict[str, Any] = None) -> dict[str, Any]:
         """Analyze a symbol for buy opportunity"""
         try:
             # Basic analysis
@@ -426,7 +426,7 @@ class SignalGenerationAssistant:
         except Exception as e:
             self.logger.error(f"[SIGNAL_ASSISTANT] Error adjusting profit targets: {e}")
 
-    async def set_priority_symbols(self, symbols: List[str]):
+    async def set_priority_symbols(self, symbols: list[str]):
         """Set priority symbols for signal generation"""
         try:
             self.priority_symbols = symbols[:10]  # Limit to 10 priority symbols

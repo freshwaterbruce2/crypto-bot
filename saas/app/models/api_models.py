@@ -71,8 +71,8 @@ class APIKey(Base):
             return True
 
         # Check hourly limit (requires querying recent usage)
-        hour_ago = now - timedelta(hours=1)
-        minute_ago = now - timedelta(minutes=1)
+        now - timedelta(hours=1)
+        now - timedelta(minutes=1)
 
         # This would need to be implemented with a query to usage_logs
         # For now, we'll use a simple check

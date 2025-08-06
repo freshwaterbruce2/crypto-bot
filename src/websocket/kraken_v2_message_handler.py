@@ -31,7 +31,7 @@ import weakref
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from threading import RLock
-from typing import Any, Callable, Dict, List, Set, Tuple
+from typing import Any, Callable
 
 from .data_models import (
     BalanceUpdate,
@@ -49,8 +49,8 @@ logger = logging.getLogger(__name__)
 class MessageStats:
     """Message processing statistics"""
     total_messages: int = 0
-    messages_by_channel: Dict[str, int] = field(default_factory=lambda: defaultdict(int))
-    processing_times: Dict[str, deque] = field(default_factory=lambda: defaultdict(lambda: deque(maxlen=100)))
+    messages_by_channel: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    processing_times: dict[str, deque] = field(default_factory=lambda: defaultdict(lambda: deque(maxlen=100)))
     error_count: int = 0
     duplicate_count: int = 0
     sequence_gaps: int = 0
@@ -95,16 +95,16 @@ class MessageStats:
 @dataclass
 class SequenceTracker:
     """Sequence number tracking for message ordering"""
-    channel_sequences: Dict[str, int] = field(default_factory=dict)
-    expected_sequences: Dict[str, int] = field(default_factory=dict)
-    message_buffer: Dict[str, Dict[int, Dict[str, Any]]] = field(default_factory=lambda: defaultdict(dict))
+    channel_sequences: dict[str, int] = field(default_factory=dict)
+    expected_sequences: dict[str, int] = field(default_factory=dict)
+    message_buffer: dict[str, dict[int, dict[str, Any]]] = field(default_factory=lambda: defaultdict(dict))
     max_buffer_size: int = 100
     sequence_timeout: float = 30.0  # seconds
 
-    def process_sequence(self, channel: str, sequence: int, message: Dict[str, Any]) -> Tuple[bool, List[Dict[str, Any]]]:
+    def process_sequence(self, channel: str, sequence: int, message: dict[str, Any]) -> tuple[bool, list[dict[str, Any]]]:
         """
         Process message sequence number and return (is_duplicate, buffered_messages)
-        
+
         Returns:
             - True if duplicate, False if new
             - List of buffered messages ready for processing (in order)
@@ -138,7 +138,7 @@ class SequenceTracker:
 
             return False, []
 
-    def _release_buffered_messages(self, channel: str) -> List[Dict[str, Any]]:
+    def _release_buffered_messages(self, channel: str) -> list[dict[str, Any]]:
         """Release buffered messages that are now in sequence"""
         ready_messages = []
         channel_buffer = self.message_buffer[channel]
@@ -176,7 +176,7 @@ class SequenceTracker:
             for seq in sorted_seqs[:-self.max_buffer_size]:
                 channel_buffer.pop(seq, None)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get sequence tracking status"""
         return {
             'tracked_channels': list(self.channel_sequences.keys()),
@@ -190,7 +190,7 @@ class SequenceTracker:
 class KrakenV2MessageHandler:
     """
     Production-ready Kraken WebSocket V2 message handler.
-    
+
     Handles all Kraken WebSocket V2 message types with strict 2025 specification compliance.
     Provides sequence tracking, deduplication, validation, and performance monitoring.
     """
@@ -198,7 +198,7 @@ class KrakenV2MessageHandler:
     def __init__(self, enable_sequence_tracking: bool = True, enable_statistics: bool = True):
         """
         Initialize the V2 message handler.
-        
+
         Args:
             enable_sequence_tracking: Enable sequence number tracking and deduplication
             enable_statistics: Enable message processing statistics
@@ -210,8 +210,8 @@ class KrakenV2MessageHandler:
         self._lock = RLock()
 
         # Message callbacks
-        self._callbacks: Dict[str, List[Callable]] = defaultdict(list)
-        self._error_callbacks: List[Callable] = []
+        self._callbacks: dict[str, list[Callable]] = defaultdict(list)
+        self._error_callbacks: list[Callable] = []
 
         # Sequence tracking
         if self.enable_sequence_tracking:
@@ -241,7 +241,7 @@ class KrakenV2MessageHandler:
         self.public_channels = {'ticker', 'book', 'trade', 'ohlc'}
 
         # Weak references to avoid circular references
-        self._managers: Set[weakref.ReferenceType] = set()
+        self._managers: set[weakref.ReferenceType] = set()
 
         logger.info("[KRAKEN_V2_HANDLER] Initialized with sequence_tracking=%s, statistics=%s",
                    enable_sequence_tracking, enable_statistics)
@@ -255,7 +255,7 @@ class KrakenV2MessageHandler:
     def register_callback(self, channel: str, callback: Callable):
         """
         Register a callback for a specific channel.
-        
+
         Args:
             channel: Channel name (balance, ticker, book, trade, ohlc, etc.)
             callback: Async callable to handle messages
@@ -277,13 +277,13 @@ class KrakenV2MessageHandler:
                 self._callbacks[channel].remove(callback)
                 logger.debug("[KRAKEN_V2_HANDLER] Unregistered callback for channel: %s", channel)
 
-    async def process_message(self, raw_message: Dict[str, Any]) -> bool:
+    async def process_message(self, raw_message: dict[str, Any]) -> bool:
         """
         Process a raw WebSocket V2 message.
-        
+
         Args:
             raw_message: Raw message from WebSocket
-            
+
         Returns:
             True if processed successfully, False otherwise
         """
@@ -362,7 +362,7 @@ class KrakenV2MessageHandler:
 
             return False
 
-    async def _process_single_message(self, raw_message: Dict[str, Any]):
+    async def _process_single_message(self, raw_message: dict[str, Any]):
         """Process a single validated message"""
         # Use improved channel/method extraction logic (same as in process_message)
         channel = raw_message.get('channel')
@@ -413,7 +413,7 @@ class KrakenV2MessageHandler:
                          channel, message_type, method)
             await self._handle_unknown_message(raw_message)
 
-    async def _handle_balance_message(self, raw_message: Dict[str, Any]):
+    async def _handle_balance_message(self, raw_message: dict[str, Any]):
         """Handle balance update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -457,7 +457,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling balance message: %s", e)
             raise
 
-    async def _handle_ticker_message(self, raw_message: Dict[str, Any]):
+    async def _handle_ticker_message(self, raw_message: dict[str, Any]):
         """Handle ticker update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -489,7 +489,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling ticker message: %s", e)
             raise
 
-    async def _handle_orderbook_message(self, raw_message: Dict[str, Any]):
+    async def _handle_orderbook_message(self, raw_message: dict[str, Any]):
         """Handle orderbook update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -522,7 +522,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling orderbook message: %s", e)
             raise
 
-    async def _handle_trade_message(self, raw_message: Dict[str, Any]):
+    async def _handle_trade_message(self, raw_message: dict[str, Any]):
         """Handle trade update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -554,7 +554,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling trade message: %s", e)
             raise
 
-    async def _handle_ohlc_message(self, raw_message: Dict[str, Any]):
+    async def _handle_ohlc_message(self, raw_message: dict[str, Any]):
         """Handle OHLC update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -587,7 +587,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling OHLC message: %s", e)
             raise
 
-    async def _handle_execution_message(self, raw_message: Dict[str, Any]):
+    async def _handle_execution_message(self, raw_message: dict[str, Any]):
         """Handle execution update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -607,7 +607,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling execution message: %s", e)
             raise
 
-    async def _handle_open_orders_message(self, raw_message: Dict[str, Any]):
+    async def _handle_open_orders_message(self, raw_message: dict[str, Any]):
         """Handle open orders update messages"""
         try:
             data_array = raw_message.get('data', [])
@@ -627,7 +627,7 @@ class KrakenV2MessageHandler:
             logger.error("[KRAKEN_V2_HANDLER] Error handling open orders message: %s", e)
             raise
 
-    async def _handle_heartbeat_message(self, raw_message: Dict[str, Any]):
+    async def _handle_heartbeat_message(self, raw_message: dict[str, Any]):
         """Handle heartbeat messages"""
         try:
             with self._lock:
@@ -640,7 +640,7 @@ class KrakenV2MessageHandler:
         except Exception as e:
             logger.error("[KRAKEN_V2_HANDLER] Error handling heartbeat: %s", e)
 
-    async def _handle_status_message(self, raw_message: Dict[str, Any]):
+    async def _handle_status_message(self, raw_message: dict[str, Any]):
         """Handle status messages from WebSocket V2"""
         try:
             status_type = raw_message.get('type', 'unknown')
@@ -675,7 +675,7 @@ class KrakenV2MessageHandler:
         except Exception as e:
             logger.error("[KRAKEN_V2_HANDLER] Error handling status message: %s", e)
 
-    async def _handle_pong_message(self, raw_message: Dict[str, Any]):
+    async def _handle_pong_message(self, raw_message: dict[str, Any]):
         """Handle pong messages from WebSocket V2"""
         try:
             with self._lock:
@@ -689,7 +689,7 @@ class KrakenV2MessageHandler:
         except Exception as e:
             logger.error("[KRAKEN_V2_HANDLER] Error handling pong message: %s", e)
 
-    async def _handle_subscription_response(self, raw_message: Dict[str, Any]):
+    async def _handle_subscription_response(self, raw_message: dict[str, Any]):
         """Handle subscription/unsubscription responses"""
         try:
             method = raw_message.get('method', 'unknown')
@@ -719,7 +719,7 @@ class KrakenV2MessageHandler:
         except Exception as e:
             logger.error("[KRAKEN_V2_HANDLER] Error handling subscription response: %s", e)
 
-    async def _handle_unknown_message(self, raw_message: Dict[str, Any]):
+    async def _handle_unknown_message(self, raw_message: dict[str, Any]):
         """Handle unknown message types with appropriate logging"""
         try:
             channel = raw_message.get('channel', 'NO_CHANNEL')
@@ -777,7 +777,7 @@ class KrakenV2MessageHandler:
             except Exception as e:
                 logger.error("[KRAKEN_V2_HANDLER] Error in callback execution: %s", e)
 
-    async def _call_error_callbacks(self, error: Exception, raw_message: Dict[str, Any]):
+    async def _call_error_callbacks(self, error: Exception, raw_message: dict[str, Any]):
         """Call error callbacks"""
         callbacks = []
         with self._lock:
@@ -793,7 +793,7 @@ class KrakenV2MessageHandler:
             except Exception as e:
                 logger.error("[KRAKEN_V2_HANDLER] Error in error callback: %s", e)
 
-    def _validate_raw_message(self, raw_message: Dict[str, Any]) -> bool:
+    def _validate_raw_message(self, raw_message: dict[str, Any]) -> bool:
         """Validate raw message format"""
         if not isinstance(raw_message, dict):
             logger.warning("[KRAKEN_V2_HANDLER] Invalid message format: not a dict")
@@ -806,7 +806,6 @@ class KrakenV2MessageHandler:
 
         # Strict mode validation
         if self.strict_mode:
-            required_fields = []
             channel = raw_message.get('channel')
 
             if channel in self.private_channels:
@@ -821,7 +820,7 @@ class KrakenV2MessageHandler:
 
         return True
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get message processing statistics"""
         if not self.stats:
             return {}
@@ -843,7 +842,7 @@ class KrakenV2MessageHandler:
 
             return stats_dict
 
-    def get_sequence_status(self) -> Dict[str, Any]:
+    def get_sequence_status(self) -> dict[str, Any]:
         """Get sequence tracking status"""
         if not self.sequence_tracker:
             return {'enabled': False}
@@ -853,7 +852,7 @@ class KrakenV2MessageHandler:
             status['enabled'] = True
             return status
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get connection status"""
         with self._lock:
             return self.connection_status.to_dict()
@@ -903,11 +902,11 @@ def create_kraken_v2_handler(enable_sequence_tracking: bool = True,
                            enable_statistics: bool = True) -> KrakenV2MessageHandler:
     """
     Create a configured Kraken V2 message handler.
-    
+
     Args:
         enable_sequence_tracking: Enable sequence number validation
         enable_statistics: Enable performance statistics
-        
+
     Returns:
         Configured KrakenV2MessageHandler instance
     """

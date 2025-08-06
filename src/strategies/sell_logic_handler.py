@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,10 +42,10 @@ class SellSignal:
     reason: SellReason
     urgency: SellUrgency
     confidence: float  # 0.0 to 1.0
-    reasons_detail: List[str]
+    reasons_detail: list[str]
     suggested_percentage: float  # Percentage of position to sell
     limit_price: Optional[float] = None
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
 
 class SellLogicHandler:
@@ -54,7 +54,7 @@ class SellLogicHandler:
     Manages profit taking, stop losses, and strategic exits.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize sell logic handler"""
         self.config = config
 
@@ -95,13 +95,13 @@ class SellLogicHandler:
         logger.info(f"[SELL_HANDLER] Initialized with stop_loss={self.stop_loss_percentage}, "
                    f"take_profit_levels={self.take_profit_levels}")
 
-    async def evaluate_sell_opportunity(self, position_data: Dict[str, Any]) -> SellSignal:
+    async def evaluate_sell_opportunity(self, position_data: dict[str, Any]) -> SellSignal:
         """
         Evaluate whether to sell based on comprehensive analysis
-        
+
         Args:
             position_data: Current position and market data
-            
+
         Returns:
             SellSignal with decision and metadata
         """
@@ -216,7 +216,7 @@ class SellLogicHandler:
             )
 
     def _check_emergency_conditions(self, symbol: str, pnl_percentage: float,
-                                  position_data: Dict[str, Any]) -> Optional[SellSignal]:
+                                  position_data: dict[str, Any]) -> Optional[SellSignal]:
         """Check for emergency sell conditions with dynamic stops"""
         position_value = position_data.get('position_value', 0)
 
@@ -384,7 +384,7 @@ class SellLogicHandler:
 
         return None
 
-    def _check_technical_indicators(self, position_data: Dict[str, Any]) -> Optional[SellSignal]:
+    def _check_technical_indicators(self, position_data: dict[str, Any]) -> Optional[SellSignal]:
         """Check technical indicators for sell signals"""
         indicators = position_data.get('indicators', {})
         symbol = position_data.get('symbol')
@@ -478,7 +478,7 @@ class SellLogicHandler:
 
         return None
 
-    def _check_rebalancing_needs(self, position_data: Dict[str, Any]) -> Optional[SellSignal]:
+    def _check_rebalancing_needs(self, position_data: dict[str, Any]) -> Optional[SellSignal]:
         """Check if position needs rebalancing"""
         portfolio_data = position_data.get('portfolio', {})
         symbol = position_data.get('symbol')
@@ -509,7 +509,7 @@ class SellLogicHandler:
         if symbol in self.position_high_water_marks:
             del self.position_high_water_marks[symbol]
 
-    def _calculate_dynamic_stop_loss(self, position_data: Dict[str, Any]) -> float:
+    def _calculate_dynamic_stop_loss(self, position_data: dict[str, Any]) -> float:
         """Calculate dynamic stop loss based on position characteristics"""
         position_value = position_data.get('position_value', 0)
         hold_time_hours = position_data.get('hold_time_hours', 0)
@@ -537,7 +537,7 @@ class SellLogicHandler:
         else:  # Small profits - tighter trailing stop
             return self.trailing_stop_distance * 0.7
 
-    def _batch_update_market_data(self, symbols: List[str]) -> Dict[str, float]:
+    def _batch_update_market_data(self, symbols: list[str]) -> dict[str, float]:
         """Batch update market data for multiple symbols"""
         prices = {}
         try:
@@ -591,7 +591,7 @@ class SellLogicHandler:
             logger.warning(f"[SELL_HANDLER] Error getting fallback price for {symbol}: {e}")
             return 0.01
 
-    def get_sell_summary(self) -> Dict[str, Any]:
+    def get_sell_summary(self) -> dict[str, Any]:
         """Get enhanced summary of sell handler state"""
         return {
             'active_high_water_marks': len(self.position_high_water_marks),

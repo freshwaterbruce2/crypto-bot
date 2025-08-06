@@ -26,7 +26,7 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
 from re import Pattern
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class FailureSeverity(Enum):
 class FailurePattern:
     """
     Pattern definition for failure detection.
-    
+
     Attributes:
         name: Pattern name
         category: Failure category
@@ -73,10 +73,10 @@ class FailurePattern:
     name: str
     category: FailureCategory
     severity: FailureSeverity
-    regex_patterns: List[str] = field(default_factory=list)
-    keywords: List[str] = field(default_factory=list)
-    http_status_codes: List[int] = field(default_factory=list)
-    exception_types: List[str] = field(default_factory=list)
+    regex_patterns: list[str] = field(default_factory=list)
+    keywords: list[str] = field(default_factory=list)
+    http_status_codes: list[int] = field(default_factory=list)
+    exception_types: list[str] = field(default_factory=list)
     frequency_threshold: int = 3
     time_window: float = 300.0  # 5 minutes
     description: str = ""
@@ -86,7 +86,7 @@ class FailurePattern:
 class FailureEvent:
     """
     Individual failure event information.
-    
+
     Attributes:
         timestamp: When the failure occurred
         service_name: Service that failed
@@ -104,16 +104,16 @@ class FailureEvent:
     exception_type: Optional[str] = None
     http_status_code: Optional[int] = None
     response_time_ms: Optional[float] = None
-    context: Dict[str, Any] = field(default_factory=dict)
+    context: dict[str, Any] = field(default_factory=dict)
     stack_trace: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class FailureAnalysis:
     """
     Analysis result for a set of failures.
-    
+
     Attributes:
         service_name: Service being analyzed
         analysis_timestamp: When analysis was performed
@@ -131,27 +131,27 @@ class FailureAnalysis:
     analysis_timestamp: float
     total_failures: int
     time_window: float
-    detected_patterns: List[str] = field(default_factory=list)
+    detected_patterns: list[str] = field(default_factory=list)
     failure_rate: float = 0.0
     trend: str = "stable"
-    severity_distribution: Dict[str, int] = field(default_factory=dict)
-    category_distribution: Dict[str, int] = field(default_factory=dict)
-    recommendations: List[str] = field(default_factory=list)
+    severity_distribution: dict[str, int] = field(default_factory=dict)
+    category_distribution: dict[str, int] = field(default_factory=dict)
+    recommendations: list[str] = field(default_factory=list)
     confidence_score: float = 0.0
 
 
 class FailureClassifier:
     """
     Classifies failures based on patterns and machine learning.
-    
+
     Uses predefined patterns and statistical analysis to classify
     failures into categories and determine their severity.
     """
 
     def __init__(self):
         """Initialize failure classifier with default patterns."""
-        self.patterns: List[FailurePattern] = []
-        self._compiled_patterns: Dict[str, List[Pattern]] = {}
+        self.patterns: list[FailurePattern] = []
+        self._compiled_patterns: dict[str, list[Pattern]] = {}
         self._initialize_default_patterns()
         self._compile_patterns()
 
@@ -292,13 +292,13 @@ class FailureClassifier:
 
             self._compiled_patterns[pattern.name] = compiled
 
-    def classify_failure(self, failure_event: FailureEvent) -> Tuple[FailureCategory, FailureSeverity, List[str]]:
+    def classify_failure(self, failure_event: FailureEvent) -> tuple[FailureCategory, FailureSeverity, list[str]]:
         """
         Classify a failure event.
-        
+
         Args:
             failure_event: Failure event to classify
-            
+
         Returns:
             Tuple of (category, severity, matched_patterns)
         """
@@ -360,7 +360,7 @@ class FailureClassifier:
     def add_pattern(self, pattern: FailurePattern) -> None:
         """
         Add a custom failure pattern.
-        
+
         Args:
             pattern: Failure pattern to add
         """
@@ -381,10 +381,10 @@ class FailureClassifier:
     def remove_pattern(self, pattern_name: str) -> bool:
         """
         Remove a failure pattern.
-        
+
         Args:
             pattern_name: Name of pattern to remove
-            
+
         Returns:
             True if pattern was removed, False if not found
         """
@@ -397,10 +397,10 @@ class FailureClassifier:
 
         return False
 
-    def get_patterns(self) -> List[FailurePattern]:
+    def get_patterns(self) -> list[FailurePattern]:
         """
         Get all failure patterns.
-        
+
         Returns:
             List of failure patterns
         """
@@ -410,7 +410,7 @@ class FailureClassifier:
 class FailureDetector:
     """
     Main failure detection and analysis system.
-    
+
     Collects failure events, analyzes patterns, and provides insights
     for circuit breaker decision making.
     """
@@ -423,7 +423,7 @@ class FailureDetector:
     ):
         """
         Initialize failure detector.
-        
+
         Args:
             analysis_window: Time window for failure analysis in seconds
             max_events_per_service: Maximum failure events to keep per service
@@ -437,16 +437,16 @@ class FailureDetector:
         self.classifier = FailureClassifier()
 
         # Event storage
-        self.failure_events: Dict[str, deque] = defaultdict(
+        self.failure_events: dict[str, deque] = defaultdict(
             lambda: deque(maxlen=max_events_per_service)
         )
 
         # Analysis cache
-        self.analysis_cache: Dict[str, FailureAnalysis] = {}
+        self.analysis_cache: dict[str, FailureAnalysis] = {}
         self._cache_ttl = 60.0  # 1 minute
 
         # Pattern tracking
-        self.pattern_statistics: Dict[str, Dict[str, int]] = defaultdict(
+        self.pattern_statistics: dict[str, dict[str, int]] = defaultdict(
             lambda: defaultdict(int)
         )
 
@@ -466,13 +466,13 @@ class FailureDetector:
         exception_type: Optional[str] = None,
         http_status_code: Optional[int] = None,
         response_time_ms: Optional[float] = None,
-        context: Optional[Dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
         stack_trace: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[dict[str, Any]] = None
     ) -> FailureEvent:
         """
         Record a failure event.
-        
+
         Args:
             service_name: Name of the service that failed
             error_message: Error message
@@ -482,7 +482,7 @@ class FailureDetector:
             context: Additional context information
             stack_trace: Stack trace if available
             metadata: Additional metadata
-            
+
         Returns:
             Created failure event
         """
@@ -527,11 +527,11 @@ class FailureDetector:
     ) -> FailureAnalysis:
         """
         Analyze failures for a specific service.
-        
+
         Args:
             service_name: Service to analyze
             time_window: Analysis time window (defaults to configured window)
-            
+
         Returns:
             Failure analysis result
         """
@@ -617,16 +617,16 @@ class FailureDetector:
 
     def _analyze_trend(
         self,
-        failures: List[FailureEvent],
+        failures: list[FailureEvent],
         time_window: float
     ) -> str:
         """
         Analyze failure trend over time.
-        
+
         Args:
             failures: List of failure events
             time_window: Analysis time window
-            
+
         Returns:
             Trend description (increasing, decreasing, stable)
         """
@@ -672,20 +672,20 @@ class FailureDetector:
 
     def _generate_recommendations(
         self,
-        failures: List[FailureEvent],
-        category_counts: Dict[str, int],
-        severity_counts: Dict[str, int],
+        failures: list[FailureEvent],
+        category_counts: dict[str, int],
+        severity_counts: dict[str, int],
         failure_rate: float
-    ) -> List[str]:
+    ) -> list[str]:
         """
         Generate recommendations based on failure analysis.
-        
+
         Args:
             failures: List of failure events
             category_counts: Count by category
             severity_counts: Count by severity
             failure_rate: Failure rate per minute
-            
+
         Returns:
             List of recommendations
         """
@@ -727,18 +727,18 @@ class FailureDetector:
 
     def _calculate_confidence(
         self,
-        failures: List[FailureEvent],
+        failures: list[FailureEvent],
         detected_patterns: set,
-        category_counts: Dict[str, int]
+        category_counts: dict[str, int]
     ) -> float:
         """
         Calculate confidence score for the analysis.
-        
+
         Args:
             failures: List of failure events
             detected_patterns: Set of detected patterns
             category_counts: Count by category
-            
+
         Returns:
             Confidence score (0.0 to 1.0)
         """
@@ -769,14 +769,14 @@ class FailureDetector:
         self,
         service_name: Optional[str] = None,
         time_window: Optional[float] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get failure statistics.
-        
+
         Args:
             service_name: Specific service (None for all services)
             time_window: Time window for statistics
-            
+
         Returns:
             Failure statistics
         """
@@ -867,15 +867,15 @@ class FailureDetector:
         service_name: str,
         failure_threshold: int = 5,
         time_window: Optional[float] = None
-    ) -> Tuple[bool, str, FailureAnalysis]:
+    ) -> tuple[bool, str, FailureAnalysis]:
         """
         Determine if circuit breaker should open based on failure analysis.
-        
+
         Args:
             service_name: Service to check
             failure_threshold: Minimum failures to consider opening circuit
             time_window: Analysis time window
-            
+
         Returns:
             Tuple of (should_open, reason, analysis)
         """
@@ -921,7 +921,7 @@ class FailureDetector:
     def clear_failures(self, service_name: Optional[str] = None) -> None:
         """
         Clear failure events.
-        
+
         Args:
             service_name: Service to clear (None for all services)
         """

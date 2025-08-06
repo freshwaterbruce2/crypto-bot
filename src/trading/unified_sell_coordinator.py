@@ -7,7 +7,7 @@ import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class SellOrder:
     executed_at: Optional[datetime] = None
     status: str = "pending"  # pending, executing, completed, failed, cancelled
     error_message: Optional[str] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,7 +76,7 @@ class UnifiedSellCoordinator:
                  retry_delay: int = 5):
         """
         Initialize the unified sell coordinator.
-        
+
         Args:
             max_concurrent_sells: Maximum number of concurrent sell operations
             order_timeout: Timeout for sell orders in seconds
@@ -89,14 +89,14 @@ class UnifiedSellCoordinator:
         self.retry_delay = retry_delay
 
         # Order management
-        self.pending_orders: Dict[str, SellOrder] = {}
-        self.executing_orders: Dict[str, SellOrder] = {}
-        self.completed_orders: Dict[str, SellOrder] = {}
-        self.failed_orders: Dict[str, SellOrder] = {}
+        self.pending_orders: dict[str, SellOrder] = {}
+        self.executing_orders: dict[str, SellOrder] = {}
+        self.completed_orders: dict[str, SellOrder] = {}
+        self.failed_orders: dict[str, SellOrder] = {}
 
         # Priority queues
-        self.priority_queue: List[SellOrder] = []
-        self.emergency_queue: List[SellOrder] = []
+        self.priority_queue: list[SellOrder] = []
+        self.emergency_queue: list[SellOrder] = []
 
         # Execution state
         self.active_sells = 0
@@ -333,7 +333,7 @@ class UnifiedSellCoordinator:
         with self.lock:
             timed_out_orders = []
 
-            for order_id, order in self.executing_orders.items():
+            for _order_id, order in self.executing_orders.items():
                 if current_time - order.created_at > timeout_threshold:
                     timed_out_orders.append(order)
 
@@ -371,10 +371,10 @@ class UnifiedSellCoordinator:
                          order_type: str = "market",
                          reason: SellReason = SellReason.MANUAL,
                          priority: SellPriority = SellPriority.MEDIUM,
-                         metadata: Optional[Dict[str, Any]] = None) -> str:
+                         metadata: Optional[dict[str, Any]] = None) -> str:
         """
         Submit a sell order for execution.
-        
+
         Args:
             symbol: Trading pair symbol
             quantity: Quantity to sell
@@ -383,7 +383,7 @@ class UnifiedSellCoordinator:
             reason: Reason for the sell
             priority: Priority level
             metadata: Additional metadata
-            
+
         Returns:
             Order ID
         """
@@ -425,10 +425,10 @@ class UnifiedSellCoordinator:
     def cancel_sell_order(self, order_id: str) -> bool:
         """
         Cancel a pending sell order.
-        
+
         Args:
             order_id: Order ID to cancel
-            
+
         Returns:
             True if order was cancelled
         """
@@ -448,13 +448,13 @@ class UnifiedSellCoordinator:
                 logger.warning(f"Cannot cancel order {order_id} - not in pending state")
                 return False
 
-    def get_order_status(self, order_id: str) -> Optional[Dict[str, Any]]:
+    def get_order_status(self, order_id: str) -> Optional[dict[str, Any]]:
         """
         Get the status of a sell order.
-        
+
         Args:
             order_id: Order ID
-            
+
         Returns:
             Order status dictionary or None if not found
         """
@@ -480,23 +480,23 @@ class UnifiedSellCoordinator:
 
         return None
 
-    def get_pending_orders(self) -> List[Dict[str, Any]]:
+    def get_pending_orders(self) -> list[dict[str, Any]]:
         """Get all pending sell orders."""
         with self.lock:
             return [self.get_order_status(order_id) for order_id in self.pending_orders.keys()]
 
-    def get_executing_orders(self) -> List[Dict[str, Any]]:
+    def get_executing_orders(self) -> list[dict[str, Any]]:
         """Get all executing sell orders."""
         with self.lock:
             return [self.get_order_status(order_id) for order_id in self.executing_orders.keys()]
 
-    def emergency_sell_all(self, reason: str = "Emergency liquidation") -> List[str]:
+    def emergency_sell_all(self, reason: str = "Emergency liquidation") -> list[str]:
         """
         Emergency sell all positions.
-        
+
         Args:
             reason: Reason for emergency sell
-            
+
         Returns:
             List of order IDs
         """
@@ -512,7 +512,7 @@ class UnifiedSellCoordinator:
 
         return []
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get sell coordinator statistics."""
         with self.lock:
             return {
@@ -539,7 +539,7 @@ class UnifiedSellCoordinator:
                      on_emergency_sell: Optional[Callable] = None) -> None:
         """
         Set callback functions for sell events.
-        
+
         Args:
             on_sell_complete: Called when a sell order completes
             on_sell_failed: Called when a sell order fails
@@ -551,13 +551,13 @@ class UnifiedSellCoordinator:
 
         logger.info("Sell coordinator callbacks set")
 
-    def get_orders_by_symbol(self, symbol: str) -> List[Dict[str, Any]]:
+    def get_orders_by_symbol(self, symbol: str) -> list[dict[str, Any]]:
         """
         Get all orders for a specific symbol.
-        
+
         Args:
             symbol: Trading pair symbol
-            
+
         Returns:
             List of order status dictionaries
         """
@@ -571,13 +571,13 @@ class UnifiedSellCoordinator:
 
         return orders
 
-    def get_orders_by_reason(self, reason: SellReason) -> List[Dict[str, Any]]:
+    def get_orders_by_reason(self, reason: SellReason) -> list[dict[str, Any]]:
         """
         Get all orders for a specific reason.
-        
+
         Args:
             reason: Sell reason
-            
+
         Returns:
             List of order status dictionaries
         """

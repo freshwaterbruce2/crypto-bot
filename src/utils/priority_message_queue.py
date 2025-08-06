@@ -23,7 +23,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class QueuedMessage:
     timestamp: float
     sequence: int
     message_type: str
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     retry_count: int = 0
     max_retries: int = 3
     processing_deadline: Optional[float] = None
@@ -73,7 +73,7 @@ class QueueStats:
     messages_dropped: int = 0
     messages_retried: int = 0
     avg_processing_time: float = 0.0
-    queue_sizes: Dict[MessagePriority, int] = field(default_factory=dict)
+    queue_sizes: dict[MessagePriority, int] = field(default_factory=dict)
     backpressure_events: int = 0
     dead_letter_count: int = 0
     throughput_per_second: float = 0.0
@@ -90,7 +90,7 @@ class PriorityMessageQueue:
                  enable_dead_letter: bool = True):
         """
         Initialize priority message queue
-        
+
         Args:
             max_queue_size: Maximum total messages in queue
             max_processing_rate: Maximum messages processed per second
@@ -103,7 +103,7 @@ class PriorityMessageQueue:
         self.enable_dead_letter = enable_dead_letter
 
         # Priority queues - one heap per priority level for better performance
-        self.priority_queues: Dict[MessagePriority, List[QueuedMessage]] = {
+        self.priority_queues: dict[MessagePriority, list[QueuedMessage]] = {
             priority: [] for priority in MessagePriority
         }
 
@@ -117,8 +117,8 @@ class PriorityMessageQueue:
         self._stop_event = asyncio.Event()
 
         # Message handlers
-        self._handlers: Dict[str, Callable] = {}
-        self._batch_handlers: Dict[str, Callable] = {}
+        self._handlers: dict[str, Callable] = {}
+        self._batch_handlers: dict[str, Callable] = {}
 
         # Performance tracking
         self.stats = QueueStats()
@@ -164,18 +164,18 @@ class PriorityMessageQueue:
 
     async def enqueue(self,
                      message_type: str,
-                     payload: Dict[str, Any],
+                     payload: dict[str, Any],
                      priority: MessagePriority = MessagePriority.NORMAL,
                      processing_deadline: Optional[float] = None) -> bool:
         """
         Enqueue a message for processing
-        
+
         Args:
             message_type: Type of message (used for handler routing)
             payload: Message data
             priority: Message priority level
             processing_deadline: Optional deadline for processing
-            
+
         Returns:
             bool: True if message was enqueued, False if dropped due to backpressure
         """
@@ -402,7 +402,7 @@ class PriorityMessageQueue:
         """Get current queue statistics"""
         return self.stats
 
-    async def get_queue_sizes(self) -> Dict[str, int]:
+    async def get_queue_sizes(self) -> dict[str, int]:
         """Get current queue sizes by priority"""
         async with self._queue_lock:
             return {
@@ -410,7 +410,7 @@ class PriorityMessageQueue:
                 for priority in MessagePriority
             }
 
-    async def clear_dead_letter_queue(self) -> List[QueuedMessage]:
+    async def clear_dead_letter_queue(self) -> list[QueuedMessage]:
         """Clear and return dead letter queue contents"""
         messages = list(self.dead_letter_queue)
         self.dead_letter_queue.clear()

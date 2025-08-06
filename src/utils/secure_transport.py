@@ -27,7 +27,7 @@ import ssl
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiohttp
 import certifi
@@ -62,7 +62,7 @@ class CertificateInfo:
 class SecureTransportConfig:
     """
     Configuration for secure transport layer.
-    
+
     Implements security best practices for 2025:
     - TLS 1.3 mandatory with limited fallback
     - Modern cipher suites only
@@ -125,7 +125,7 @@ class SecureTransportConfig:
 class SecureSSLContextManager:
     """
     Manager for creating and maintaining secure SSL contexts.
-    
+
     Features:
     - TLS 1.3+ enforcement
     - Modern cipher suite selection
@@ -136,14 +136,14 @@ class SecureSSLContextManager:
     def __init__(self, config: Optional[SecureTransportConfig] = None):
         """
         Initialize SSL context manager.
-        
+
         Args:
             config: Security configuration (uses default if None)
         """
         self.config = config or SecureTransportConfig()
         self.metrics = SecurityMetrics()
-        self._contexts: Dict[str, ssl.SSLContext] = {}
-        self._certificate_cache: Dict[str, CertificateInfo] = {}
+        self._contexts: dict[str, ssl.SSLContext] = {}
+        self._certificate_cache: dict[str, CertificateInfo] = {}
 
         logger.info("[SECURE_TLS] Initialized secure SSL context manager")
 
@@ -155,12 +155,12 @@ class SecureSSLContextManager:
     ) -> ssl.SSLContext:
         """
         Create a secure SSL context with enterprise-grade settings.
-        
+
         Args:
             purpose: Context purpose ("client", "server", "websocket")
             enable_fallback: Allow TLS 1.2 fallback for compatibility
             custom_ca_file: Custom CA certificate file path
-            
+
         Returns:
             Configured SSL context
         """
@@ -220,17 +220,17 @@ class SecureSSLContextManager:
     def validate_certificate_chain(
         self,
         hostname: str,
-        cert_chain: List[bytes],
+        cert_chain: list[bytes],
         enable_pinning: bool = True
     ) -> bool:
         """
         Validate certificate chain with optional pinning.
-        
+
         Args:
             hostname: Target hostname
             cert_chain: Certificate chain to validate
             enable_pinning: Enable certificate pinning validation
-            
+
         Returns:
             True if certificate chain is valid
         """
@@ -242,7 +242,7 @@ class SecureSSLContextManager:
 
             # Parse certificate
             cert_der = cert_chain[0]  # Leaf certificate
-            cert = ssl.DER_cert_to_PEM_cert(cert_der)
+            ssl.DER_cert_to_PEM_cert(cert_der)
 
             # Extract certificate information
             cert_info = self._extract_certificate_info(cert_der)
@@ -324,11 +324,11 @@ class SecureSSLContextManager:
     ) -> aiohttp.ClientSession:
         """
         Create secure HTTP session with proper TLS configuration.
-        
+
         Args:
             timeout: Request timeout in seconds
             enable_fallback: Allow TLS 1.2 fallback
-            
+
         Returns:
             Configured aiohttp session
         """
@@ -379,10 +379,10 @@ class SecureSSLContextManager:
             logger.error(f"[SECURE_TLS] Failed to create secure session: {e}")
             raise
 
-    def monitor_security_events(self) -> Dict[str, Any]:
+    def monitor_security_events(self) -> dict[str, Any]:
         """
         Monitor and report security events.
-        
+
         Returns:
             Security monitoring report
         """
@@ -456,14 +456,14 @@ def create_secure_http_session(timeout: Optional[float] = None) -> aiohttp.Clien
     return transport.create_secure_session(timeout=timeout)
 
 
-def validate_tls_connection(hostname: str, port: int = 443) -> Dict[str, Any]:
+def validate_tls_connection(hostname: str, port: int = 443) -> dict[str, Any]:
     """
     Validate TLS connection security for a given hostname and port.
-    
+
     Args:
         hostname: Target hostname
         port: Target port (default 443)
-        
+
     Returns:
         Validation results
     """

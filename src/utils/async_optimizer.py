@@ -25,11 +25,8 @@ from functools import wraps
 from typing import (
     Any,
     Callable,
-    Dict,
     Generic,
-    List,
     Optional,
-    Set,
     TypeVar,
 )
 
@@ -57,7 +54,7 @@ class OptimizedTaskManager:
 
     def __init__(self, max_concurrent_tasks: int = 1000):
         self.max_concurrent_tasks = max_concurrent_tasks
-        self._active_tasks: Set[asyncio.Task] = set()
+        self._active_tasks: set[asyncio.Task] = set()
         self._task_metrics = TaskMetrics()
         self._task_lock = asyncio.Lock()
         self._semaphore = asyncio.Semaphore(max_concurrent_tasks)
@@ -65,8 +62,8 @@ class OptimizedTaskManager:
         self._last_cleanup = time.time()
 
         # Task result cache for frequently executed tasks
-        self._result_cache: Dict[str, Any] = {}
-        self._cache_timestamps: Dict[str, float] = {}
+        self._result_cache: dict[str, Any] = {}
+        self._cache_timestamps: dict[str, float] = {}
         self._cache_ttl = 300.0  # 5 minutes default TTL
 
     async def create_task(self,
@@ -141,7 +138,7 @@ class OptimizedTaskManager:
     async def gather_with_concurrency_limit(self,
                                            *awaitables: Awaitable[T],
                                            limit: int = 50,
-                                           return_exceptions: bool = False) -> List[T]:
+                                           return_exceptions: bool = False) -> list[T]:
         """Optimized gather with concurrency limiting"""
         semaphore = asyncio.Semaphore(limit)
 
@@ -153,9 +150,9 @@ class OptimizedTaskManager:
         return await asyncio.gather(*limited_awaitables, return_exceptions=return_exceptions)
 
     async def batch_execute(self,
-                           tasks: List[Callable[[], Awaitable[T]]],
+                           tasks: list[Callable[[], Awaitable[T]]],
                            batch_size: int = 10,
-                           delay_between_batches: float = 0.1) -> List[T]:
+                           delay_between_batches: float = 0.1) -> list[T]:
         """Execute tasks in batches for better resource management"""
         results = []
 
@@ -246,7 +243,7 @@ class OptimizedAsyncIterator(Generic[T]):
         finally:
             self._exhausted = True
 
-    def get_cached_items(self) -> List[T]:
+    def get_cached_items(self) -> list[T]:
         """Get recently cached items"""
         return list(self._cache)
 
@@ -348,8 +345,8 @@ class OptimizedAsyncCache:
     def __init__(self, max_size: int = 1000, default_ttl: float = 300.0):
         self.max_size = max_size
         self.default_ttl = default_ttl
-        self._cache: Dict[str, Any] = {}
-        self._timestamps: Dict[str, float] = {}
+        self._cache: dict[str, Any] = {}
+        self._timestamps: dict[str, float] = {}
         self._access_order: deque = deque()
         self._lock = asyncio.Lock()
 
@@ -524,10 +521,10 @@ async def get_task_manager() -> OptimizedTaskManager:
 
 # Utility functions for common async patterns
 
-async def async_chunk_processor(items: List[T],
+async def async_chunk_processor(items: list[T],
                                processor: Callable[[T], Awaitable[R]],
                                chunk_size: int = 10,
-                               max_concurrency: int = 5) -> List[R]:
+                               max_concurrency: int = 5) -> list[R]:
     """Process items in chunks with concurrency control"""
     semaphore = asyncio.Semaphore(max_concurrency)
 
@@ -547,8 +544,8 @@ async def async_chunk_processor(items: List[T],
 
 
 async def async_map_with_limit(func: Callable[[T], Awaitable[R]],
-                              items: List[T],
-                              limit: int = 10) -> List[R]:
+                              items: list[T],
+                              limit: int = 10) -> list[R]:
     """Async map with concurrency limit"""
     semaphore = asyncio.Semaphore(limit)
 

@@ -21,7 +21,7 @@ import json
 import logging
 import time
 from dataclasses import asdict, dataclass
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 import websockets
 
@@ -68,7 +68,7 @@ class ConnectionStatus:
     connection_start_time: Optional[float] = None
     last_message_time: Optional[float] = None
     reconnect_count: int = 0
-    active_subscriptions: Set[str] = None
+    active_subscriptions: set[str] = None
 
     def __post_init__(self):
         if self.active_subscriptions is None:
@@ -78,7 +78,7 @@ class ConnectionStatus:
 class WebSocketV2Manager:
     """
     Enhanced WebSocket V2 connection manager for Kraken exchange.
-    
+
     Provides comprehensive WebSocket V2 connectivity with advanced features:
     - Automatic connection management and reconnection
     - Authentication token management
@@ -97,7 +97,7 @@ class WebSocketV2Manager:
     ):
         """
         Initialize WebSocket V2 manager.
-        
+
         Args:
             exchange_client: Exchange client for token requests and fallback
             api_key: Kraken API key for authentication
@@ -125,14 +125,14 @@ class WebSocketV2Manager:
         self._token_refresh_task: Optional[asyncio.Task] = None
 
         # Message handling
-        self._message_handlers: Dict[str, List[Callable]] = {}
+        self._message_handlers: dict[str, list[Callable]] = {}
         self._message_queue: asyncio.Queue = asyncio.Queue(maxsize=self.config.message_queue_size)
         self._processing_task: Optional[asyncio.Task] = None
 
         # Subscription management
-        self._subscriptions: Dict[str, Dict[str, Any]] = {}
+        self._subscriptions: dict[str, dict[str, Any]] = {}
         self._subscription_lock = asyncio.Lock()
-        self._subscription_rate_tracker: List[float] = []
+        self._subscription_rate_tracker: list[float] = []
 
         # Channel processors
         from .websocket_v2_channels import WebSocketV2ChannelProcessor
@@ -158,7 +158,7 @@ class WebSocketV2Manager:
     async def start(self) -> bool:
         """
         Start the WebSocket V2 manager.
-        
+
         Returns:
             True if started successfully
         """
@@ -408,7 +408,7 @@ class WebSocketV2Manager:
 
         logger.info("[WS_V2_MGR] Message processing loop stopped")
 
-    async def _process_message(self, message: Dict[str, Any]) -> None:
+    async def _process_message(self, message: dict[str, Any]) -> None:
         """Process incoming WebSocket message"""
         try:
             message_type = message.get('channel')
@@ -437,7 +437,7 @@ class WebSocketV2Manager:
             logger.error(f"[WS_V2_MGR] Error processing message: {e}")
             logger.debug(f"[WS_V2_MGR] Failed message: {message}")
 
-    async def _handle_subscription_response(self, message: Dict[str, Any]) -> None:
+    async def _handle_subscription_response(self, message: dict[str, Any]) -> None:
         """Handle subscription confirmation/error responses"""
         try:
             success = message.get('success', False)
@@ -470,17 +470,17 @@ class WebSocketV2Manager:
     async def subscribe_channel(
         self,
         channel: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         private: bool = False
     ) -> bool:
         """
         Subscribe to WebSocket channel.
-        
+
         Args:
             channel: Channel name (e.g., 'ticker', 'book', 'balances')
             params: Additional subscription parameters
             private: Whether to use private WebSocket connection
-            
+
         Returns:
             True if subscription request sent successfully
         """
@@ -533,11 +533,11 @@ class WebSocketV2Manager:
     async def unsubscribe_channel(self, channel: str, private: bool = False) -> bool:
         """
         Unsubscribe from WebSocket channel.
-        
+
         Args:
             channel: Channel name
             private: Whether to use private WebSocket connection
-            
+
         Returns:
             True if unsubscription request sent successfully
         """
@@ -790,7 +790,7 @@ class WebSocketV2Manager:
             except Exception as e:
                 logger.error(f"[WS_V2_MGR] Error in {event_type} handler: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive connection status"""
         current_time = time.time()
 

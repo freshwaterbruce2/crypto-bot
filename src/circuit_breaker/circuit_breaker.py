@@ -30,7 +30,7 @@ from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class BreakerTimeoutError(CircuitBreakerError):
 class CircuitBreakerConfig:
     """
     Configuration for circuit breaker behavior.
-    
+
     Attributes:
         failure_threshold: Number of failures before opening circuit
         recovery_timeout: Time in seconds before attempting recovery
@@ -98,7 +98,7 @@ class CircuitBreakerConfig:
 class CircuitBreakerMetrics:
     """
     Metrics tracked by circuit breaker.
-    
+
     Attributes:
         total_requests: Total number of requests processed
         successful_requests: Number of successful requests
@@ -124,7 +124,7 @@ class CircuitBreakerMetrics:
     uptime_percentage: float = 100.0
     last_failure_time: Optional[float] = None
     last_recovery_time: Optional[float] = None
-    state_durations: Dict[str, float] = field(default_factory=lambda: {
+    state_durations: dict[str, float] = field(default_factory=lambda: {
         'CLOSED': 0.0,
         'OPEN': 0.0,
         'HALF_OPEN': 0.0
@@ -134,7 +134,7 @@ class CircuitBreakerMetrics:
 class CircuitBreaker:
     """
     Thread-safe circuit breaker implementation with comprehensive monitoring.
-    
+
     Provides protection against cascading failures by monitoring request success/failure
     rates and temporarily blocking requests when failure thresholds are exceeded.
     """
@@ -147,7 +147,7 @@ class CircuitBreaker:
     ):
         """
         Initialize circuit breaker.
-        
+
         Args:
             name: Unique name for this circuit breaker
             config: Configuration object
@@ -209,7 +209,7 @@ class CircuitBreaker:
     def can_execute(self) -> bool:
         """
         Check if a request can be executed.
-        
+
         Returns:
             True if request can proceed, False if blocked
         """
@@ -232,15 +232,15 @@ class CircuitBreaker:
     def execute(self, func: Callable, *args, **kwargs) -> Any:
         """
         Execute a function with circuit breaker protection.
-        
+
         Args:
             func: Function to execute
             *args: Function arguments
             **kwargs: Function keyword arguments
-            
+
         Returns:
             Function result
-            
+
         Raises:
             BreakerOpenError: If circuit breaker is open
             BreakerTimeoutError: If operation times out
@@ -280,16 +280,16 @@ class CircuitBreaker:
     ) -> Any:
         """
         Execute an async function with circuit breaker protection.
-        
+
         Args:
             func: Async function to execute
             *args: Function arguments
             timeout: Operation timeout (defaults to config timeout)
             **kwargs: Function keyword arguments
-            
+
         Returns:
             Function result
-            
+
         Raises:
             BreakerOpenError: If circuit breaker is open
             BreakerTimeoutError: If operation times out
@@ -339,7 +339,7 @@ class CircuitBreaker:
     async def async_context(self):
         """
         Async context manager for circuit breaker operations.
-        
+
         Usage:
             async with circuit_breaker.async_context() as cb:
                 result = await cb.execute_async(some_async_function)
@@ -353,7 +353,7 @@ class CircuitBreaker:
     def _update_state(self, current_time: float) -> None:
         """
         Update circuit breaker state based on current conditions.
-        
+
         Args:
             current_time: Current timestamp
         """
@@ -375,7 +375,7 @@ class CircuitBreaker:
     def _should_open(self) -> bool:
         """
         Check if circuit breaker should open based on failure threshold.
-        
+
         Returns:
             True if circuit should open
         """
@@ -403,7 +403,7 @@ class CircuitBreaker:
     def _should_reopen(self) -> bool:
         """
         Check if circuit breaker should reopen from half-open state.
-        
+
         Returns:
             True if circuit should reopen
         """
@@ -413,7 +413,7 @@ class CircuitBreaker:
     def _transition_to_open(self, current_time: float) -> None:
         """
         Transition circuit breaker to OPEN state.
-        
+
         Args:
             current_time: Current timestamp
         """
@@ -436,7 +436,7 @@ class CircuitBreaker:
     def _transition_to_half_open(self, current_time: float) -> None:
         """
         Transition circuit breaker to HALF_OPEN state.
-        
+
         Args:
             current_time: Current timestamp
         """
@@ -461,7 +461,7 @@ class CircuitBreaker:
     def _transition_to_closed(self, current_time: float) -> None:
         """
         Transition circuit breaker to CLOSED state.
-        
+
         Args:
             current_time: Current timestamp
         """
@@ -484,7 +484,7 @@ class CircuitBreaker:
     def _calculate_recovery_timeout(self) -> float:
         """
         Calculate recovery timeout with exponential backoff.
-        
+
         Returns:
             Recovery timeout in seconds
         """
@@ -505,7 +505,7 @@ class CircuitBreaker:
     def _record_success(self, execution_time: float) -> None:
         """
         Record a successful request.
-        
+
         Args:
             execution_time: Execution time in milliseconds
         """
@@ -540,7 +540,7 @@ class CircuitBreaker:
     def _record_failure(self, error: Exception, execution_time: float) -> None:
         """
         Record a failed request.
-        
+
         Args:
             error: Exception that occurred
             execution_time: Execution time in milliseconds
@@ -601,7 +601,7 @@ class CircuitBreaker:
     def _update_failure_rate(self, current_time: float) -> None:
         """
         Update the current failure rate.
-        
+
         Args:
             current_time: Current timestamp
         """
@@ -621,7 +621,7 @@ class CircuitBreaker:
     def _update_state_duration(self, old_state: CircuitBreakerState, current_time: float) -> None:
         """
         Update the duration spent in a particular state.
-        
+
         Args:
             old_state: Previous state
             current_time: Current timestamp
@@ -629,10 +629,10 @@ class CircuitBreaker:
         duration = current_time - self._last_state_change
         self.metrics.state_durations[old_state.value] += duration
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """
         Get comprehensive circuit breaker status.
-        
+
         Returns:
             Status dictionary with metrics and configuration
         """
@@ -676,10 +676,10 @@ class CircuitBreaker:
     def _calculate_rps(self, current_time: float) -> float:
         """
         Calculate requests per second over the last minute.
-        
+
         Args:
             current_time: Current timestamp
-            
+
         Returns:
             Requests per second
         """
@@ -693,7 +693,7 @@ class CircuitBreaker:
     def reset(self) -> None:
         """
         Reset circuit breaker to initial state.
-        
+
         This clears all metrics and resets to CLOSED state.
         """
         with self._lock:
@@ -719,7 +719,7 @@ class CircuitBreaker:
     def force_open(self) -> None:
         """
         Force circuit breaker to OPEN state.
-        
+
         Useful for maintenance or emergency situations.
         """
         with self._lock:
@@ -732,7 +732,7 @@ class CircuitBreaker:
     def force_close(self) -> None:
         """
         Force circuit breaker to CLOSED state.
-        
+
         Use with caution - bypasses safety mechanisms.
         """
         with self._lock:
@@ -841,7 +841,7 @@ class CircuitBreaker:
 class CircuitBreakerManager:
     """
     Manager for multiple circuit breakers with centralized monitoring.
-    
+
     Provides factory methods for creating circuit breakers, centralized
     configuration, and aggregate monitoring capabilities.
     """
@@ -853,14 +853,14 @@ class CircuitBreakerManager:
     ):
         """
         Initialize circuit breaker manager.
-        
+
         Args:
             default_config: Default configuration for new circuit breakers
             storage_dir: Directory for persistent storage
         """
         self.default_config = default_config or CircuitBreakerConfig()
         self.storage_dir = Path(storage_dir) if storage_dir else None
-        self._breakers: Dict[str, CircuitBreaker] = {}
+        self._breakers: dict[str, CircuitBreaker] = {}
         self._lock = threading.RLock()
         self._monitoring_active = False
         self._monitoring_task: Optional[asyncio.Task] = None
@@ -874,11 +874,11 @@ class CircuitBreakerManager:
     ) -> CircuitBreaker:
         """
         Create or retrieve a circuit breaker.
-        
+
         Args:
             name: Unique name for the circuit breaker
             config: Optional custom configuration
-            
+
         Returns:
             CircuitBreaker instance
         """
@@ -901,10 +901,10 @@ class CircuitBreakerManager:
     def get_breaker(self, name: str) -> Optional[CircuitBreaker]:
         """
         Get an existing circuit breaker.
-        
+
         Args:
             name: Circuit breaker name
-            
+
         Returns:
             CircuitBreaker instance or None if not found
         """
@@ -914,10 +914,10 @@ class CircuitBreakerManager:
     def remove_breaker(self, name: str) -> bool:
         """
         Remove a circuit breaker.
-        
+
         Args:
             name: Circuit breaker name
-            
+
         Returns:
             True if breaker was removed, False if not found
         """
@@ -930,20 +930,20 @@ class CircuitBreakerManager:
                 return True
             return False
 
-    def get_all_breakers(self) -> Dict[str, CircuitBreaker]:
+    def get_all_breakers(self) -> dict[str, CircuitBreaker]:
         """
         Get all circuit breakers.
-        
+
         Returns:
             Dictionary of circuit breakers
         """
         with self._lock:
             return self._breakers.copy()
 
-    def get_aggregate_status(self) -> Dict[str, Any]:
+    def get_aggregate_status(self) -> dict[str, Any]:
         """
         Get aggregate status of all circuit breakers.
-        
+
         Returns:
             Aggregate status dictionary
         """
@@ -997,7 +997,7 @@ class CircuitBreakerManager:
     async def start_monitoring(self, interval: float = 30.0) -> None:
         """
         Start background monitoring of all circuit breakers.
-        
+
         Args:
             interval: Monitoring interval in seconds
         """
@@ -1027,7 +1027,7 @@ class CircuitBreakerManager:
     async def _monitoring_loop(self, interval: float) -> None:
         """
         Background monitoring loop.
-        
+
         Args:
             interval: Monitoring interval in seconds
         """
@@ -1078,11 +1078,11 @@ class CircuitBreakerManager:
     async def get_breaker_context(self, name: str, config: Optional[CircuitBreakerConfig] = None):
         """
         Async context manager for circuit breaker operations.
-        
+
         Usage:
             async with manager.get_breaker_context('api_calls') as breaker:
                 result = await breaker.execute_async(api_function)
-        
+
         Args:
             name: Circuit breaker name
             config: Optional configuration

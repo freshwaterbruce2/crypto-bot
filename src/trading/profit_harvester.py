@@ -11,7 +11,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from src.utils.decimal_precision_fix import PrecisionTradingCalculator
 
@@ -20,10 +20,10 @@ class ProfitHarvester:
     """Enhanced profit harvester with automatic reinvestment cycle."""
 
     def __init__(self, bot: Any = None, exchange: Any = None, min_profit_pct: float = 1.0,
-                 portfolio_tracker: Any = None, config: Dict = None,
+                 portfolio_tracker: Any = None, config: dict = None,
                  trade_executor: Any = None, bot_ref: Any = None):
         """Initialize the profit harvester with flexible parameter support.
-        
+
         Args:
             bot: Trading bot instance (legacy parameter)
             exchange: Exchange instance (legacy parameter)
@@ -152,7 +152,7 @@ class ProfitHarvester:
                 self.logger.error(f"[HARVESTER] Error in harvest loop: {e}")
                 break
 
-    def get_profit_metrics(self) -> Dict[str, Any]:
+    def get_profit_metrics(self) -> dict[str, Any]:
         """Get profit harvesting metrics."""
         return {
             "total_positions": 0,
@@ -167,16 +167,16 @@ class ProfitHarvester:
         }
 
     async def track_position(self, symbol: str, entry_price: float, amount: float,
-                            trade_id: str = None) -> Dict[str, Any]:
+                            trade_id: str = None) -> dict[str, Any]:
         """
         Track a new position for profit harvesting.
-        
+
         Args:
             symbol: Trading pair symbol
             entry_price: Entry price of the position
             amount: Amount of the position
             trade_id: Optional trade ID for tracking
-            
+
         Returns:
             Dict with tracking status
         """
@@ -249,10 +249,10 @@ class ProfitHarvester:
                 "message": "Failed to track position"
             }
 
-    async def check_positions(self) -> List[Dict[str, Any]]:
+    async def check_positions(self) -> list[dict[str, Any]]:
         """
         Check all positions for profit opportunities with micro-profit optimization.
-        
+
         Returns:
             List of sell signals for profitable positions
         """
@@ -268,7 +268,6 @@ class ProfitHarvester:
                 # First, update current prices for all positions
                 try:
                     if self.exchange or (self.bot and hasattr(self.bot, 'exchange')):
-                        exchange = self.exchange or self.bot.exchange
 
                         # Batch fetch prices for efficiency (micro-profit optimization)
                         symbols_to_update = [
@@ -456,15 +455,15 @@ class ProfitHarvester:
 
         return sell_signals
 
-    async def emergency_rebalance(self, target_usdt_amount: float = 20.0, hours_without_trade: float = 1.0) -> List[Dict[str, Any]]:
+    async def emergency_rebalance(self, target_usdt_amount: float = 20.0, hours_without_trade: float = 1.0) -> list[dict[str, Any]]:
         """
         Emergency rebalancing when positions don't have entry prices.
         This will generate sell signals for positions to free up capital.
-        
+
         Args:
             target_usdt_amount: Target USDT amount to free up
             hours_without_trade: Hours without trades before triggering
-            
+
         Returns:
             List of sell signals
         """
@@ -626,7 +625,7 @@ class ProfitHarvester:
         """
         Check all positions for profit harvesting opportunities.
         This method is called by the main bot loop.
-        
+
         Returns:
             List of sell signals for profitable positions
         """
@@ -663,14 +662,14 @@ class ProfitHarvester:
             self.logger.error(f"[HARVESTER] Error checking positions: {e}")
             return []
 
-    def _check_progressive_profit_levels(self, position: Dict[str, Any], profit_pct: float) -> List[Dict[str, Any]]:
+    def _check_progressive_profit_levels(self, position: dict[str, Any], profit_pct: float) -> list[dict[str, Any]]:
         """
         Check if position has hit any progressive profit levels and generate partial sell signals.
-        
+
         Args:
             position: Position data from portfolio tracker
             profit_pct: Current profit percentage
-            
+
         Returns:
             List of sell signals for triggered profit levels
         """
@@ -763,15 +762,15 @@ class ProfitHarvester:
 
         return sell_signals
 
-    async def handle_successful_sell(self, symbol: str, proceeds_usdt: float, profit_usdt: float) -> Dict[str, Any]:
+    async def handle_successful_sell(self, symbol: str, proceeds_usdt: float, profit_usdt: float) -> dict[str, Any]:
         """
         Handle successful sell order completion and trigger reinvestment cycle.
-        
+
         Args:
             symbol: Symbol that was sold
             proceeds_usdt: Total USDT received from sell
             profit_usdt: Pure profit amount in USDT
-            
+
         Returns:
             Dict with reinvestment status
         """
@@ -831,15 +830,15 @@ class ProfitHarvester:
                 'error': str(e)
             }
 
-    async def _trigger_reinvestment(self, amount_to_reinvest: float, profit_usdt: float, is_tier_1: bool = False) -> Dict[str, Any]:
+    async def _trigger_reinvestment(self, amount_to_reinvest: float, profit_usdt: float, is_tier_1: bool = False) -> dict[str, Any]:
         """
         Trigger automatic reinvestment of profit proceeds into new opportunities.
-        
+
         Args:
             amount_to_reinvest: Amount to reinvest (proceeds for tier-1, profit % for others)
             profit_usdt: Pure profit amount
             is_tier_1: Whether this is a tier-1 account
-            
+
         Returns:
             Dict with reinvestment status
         """
@@ -911,7 +910,7 @@ class ProfitHarvester:
                 'error': str(e)
             }
 
-    async def _get_reinvestment_opportunities(self) -> List[str]:
+    async def _get_reinvestment_opportunities(self) -> list[str]:
         """
         Get suitable symbols for reinvestment based on current market conditions.
         Prioritizes symbols not currently in portfolio to maximize diversification.

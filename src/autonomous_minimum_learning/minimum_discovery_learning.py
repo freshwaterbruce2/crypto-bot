@@ -24,7 +24,7 @@ import logging
 import re
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class MinimumDiscoveryLearning:
 
         logger.info(f"[MINIMUM_LEARNING] Initialized with {len(self.learned_minimums)} learned pairs")
 
-    def _load_learned_minimums(self) -> Dict[str, Dict[str, float]]:
+    def _load_learned_minimums(self) -> dict[str, dict[str, float]]:
         """Load previously learned minimums from persistent storage."""
         if self.learned_minimums_file.exists():
             try:
@@ -85,7 +85,7 @@ class MinimumDiscoveryLearning:
         except Exception as e:
             logger.error(f"[MINIMUM_LEARNING] Error saving learned minimums: {e}")
 
-    def _log_learning_event(self, event: Dict[str, Any]):
+    def _log_learning_event(self, event: dict[str, Any]):
         """Log a learning event for analysis."""
         try:
             events = []
@@ -105,10 +105,10 @@ class MinimumDiscoveryLearning:
         except Exception as e:
             logger.error(f"[MINIMUM_LEARNING] Error logging learning event: {e}")
 
-    def extract_minimum_from_error(self, error_message: str, pair: str) -> Optional[Dict[str, float]]:
+    def extract_minimum_from_error(self, error_message: str, pair: str) -> Optional[dict[str, float]]:
         """
         Extract minimum requirements from Kraken error messages.
-        
+
         Common Kraken error patterns:
         - "EOrder:Order minimum not met (volume too low)"
         - "EOrder:Order minimum not met:BTC/USDT:volume:0.0001"
@@ -149,13 +149,13 @@ class MinimumDiscoveryLearning:
                         attempted_price: float) -> bool:
         """
         Learn minimum requirements from a trading error.
-        
+
         Args:
             error_message: The error message from Kraken
             pair: Trading pair (e.g., "BTC/USDT")
             attempted_volume: The volume that was attempted
             attempted_price: The price used in the attempt
-            
+
         Returns:
             bool: True if learning was successful
         """
@@ -213,10 +213,10 @@ class MinimumDiscoveryLearning:
 
         return False
 
-    def get_learned_minimums(self, pair: str) -> Optional[Dict[str, float]]:
+    def get_learned_minimums(self, pair: str) -> Optional[dict[str, float]]:
         """
         Get learned minimums for a trading pair.
-        
+
         Returns:
             Dict with 'volume' and/or 'cost' minimums, or None if not learned yet
         """
@@ -229,18 +229,18 @@ class MinimumDiscoveryLearning:
         return None
 
     def suggest_trade_volume(self, pair: str, available_balance: float,
-                           current_price: float) -> Tuple[float, str]:
+                           current_price: float) -> tuple[float, str]:
         """
         Suggest optimal trade volume based on learned minimums and available balance.
-        
+
         This is the heart of the DCA strategy - finding the sweet spot between
         minimum requirements and available capital.
-        
+
         Args:
             pair: Trading pair
             available_balance: Available USDT balance
             current_price: Current price of the asset
-            
+
         Returns:
             Tuple of (suggested_volume, reason)
         """
@@ -282,7 +282,7 @@ class MinimumDiscoveryLearning:
         # Fallback
         return max_volume_from_balance, "Using available balance"
 
-    def get_learning_stats(self) -> Dict[str, Any]:
+    def get_learning_stats(self) -> dict[str, Any]:
         """Get learning statistics for monitoring."""
         return {
             **self.learning_stats,
@@ -290,14 +290,14 @@ class MinimumDiscoveryLearning:
             'total_minimums': sum(len(m) - 2 for m in self.learned_minimums.values())  # Exclude metadata
         }
 
-    def bulk_learn_minimums(self, pairs_data: Dict[str, Dict[str, float]]) -> int:
+    def bulk_learn_minimums(self, pairs_data: dict[str, dict[str, float]]) -> int:
         """
         Bulk learn minimums for multiple pairs (useful for initialization).
-        
+
         Args:
             pairs_data: Dict mapping symbols to their minimum requirements
                        e.g., {"SOL/USDT": {"volume": 0.01, "cost": 1.0}}
-        
+
         Returns:
             Number of pairs successfully learned
         """
@@ -329,13 +329,13 @@ class MinimumDiscoveryLearning:
 
         return learned_count
 
-    def get_portfolio_pairs_status(self, portfolio_pairs: List[str]) -> Dict[str, bool]:
+    def get_portfolio_pairs_status(self, portfolio_pairs: list[str]) -> dict[str, bool]:
         """
         Check which portfolio pairs have learned minimums.
-        
+
         Args:
             portfolio_pairs: List of trading pairs to check
-            
+
         Returns:
             Dict mapping pairs to whether they have learned minimums
         """
@@ -358,13 +358,13 @@ def learn_from_kraken_error(error_message: str, pair: str, attempted_volume: flo
     )
 
 
-def get_suggested_volume(pair: str, available_balance: float, current_price: float) -> Tuple[float, str]:
+def get_suggested_volume(pair: str, available_balance: float, current_price: float) -> tuple[float, str]:
     """Get suggested trading volume based on learned minimums."""
     return minimum_discovery_learning.suggest_trade_volume(
         pair, available_balance, current_price
     )
 
 
-def get_learned_minimums(pair: str) -> Optional[Dict[str, float]]:
+def get_learned_minimums(pair: str) -> Optional[dict[str, float]]:
     """Get learned minimums for a pair."""
     return minimum_discovery_learning.get_learned_minimums(pair)

@@ -6,7 +6,7 @@ Resilient request handling for API connections
 import asyncio
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -46,14 +46,14 @@ class ResilientRequest:
         if self.session:
             await self.session.close()
 
-    async def get(self, url: str, headers: Optional[Dict[str, str]] = None,
-                  params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def get(self, url: str, headers: Optional[dict[str, str]] = None,
+                  params: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """Make resilient GET request"""
         return await self._make_request('GET', url, headers=headers, params=params)
 
-    async def post(self, url: str, data: Optional[Dict[str, Any]] = None,
-                   headers: Optional[Dict[str, str]] = None,
-                   json_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    async def post(self, url: str, data: Optional[dict[str, Any]] = None,
+                   headers: Optional[dict[str, str]] = None,
+                   json_data: Optional[dict[str, Any]] = None) -> dict[str, Any]:
         """Make resilient POST request"""
         return await self._make_request('POST', url, data=data, headers=headers, json=json_data)
 
@@ -61,14 +61,14 @@ class ResilientRequest:
         """
         Generic request method that wraps any async function with retry logic.
         This is used by the exchange code to make resilient API calls.
-        
+
         Args:
             func: The async function to call
             *args: Arguments to pass to the function
             retry_exceptions: Tuple of exception types to retry on
             context: Context string for logging
             **kwargs: Keyword arguments to pass to the function
-            
+
         Returns:
             Result of the function call
         """
@@ -99,7 +99,7 @@ class ResilientRequest:
         # If we get here, all retries failed
         raise last_exception or Exception("Request failed after all retries")
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for the resilient request handler"""
         return {
             'max_retries': self.config.max_retries,
@@ -108,7 +108,7 @@ class ResilientRequest:
             'retry_on_status': self.config.retry_on_status
         }
 
-    async def _make_request(self, method: str, url: str, **kwargs) -> Dict[str, Any]:
+    async def _make_request(self, method: str, url: str, **kwargs) -> dict[str, Any]:
         """Make resilient HTTP request with retry logic"""
         last_exception = None
 
@@ -165,18 +165,18 @@ class ResilientRequest:
 
 
 # Convenience function for one-off requests
-async def resilient_get(url: str, headers: Optional[Dict[str, str]] = None,
-                       params: Optional[Dict[str, Any]] = None,
-                       config: Optional[RequestConfig] = None) -> Dict[str, Any]:
+async def resilient_get(url: str, headers: Optional[dict[str, str]] = None,
+                       params: Optional[dict[str, Any]] = None,
+                       config: Optional[RequestConfig] = None) -> dict[str, Any]:
     """Make a resilient GET request"""
     async with ResilientRequest(config) as client:
         return await client.get(url, headers=headers, params=params)
 
 
-async def resilient_post(url: str, data: Optional[Dict[str, Any]] = None,
-                        headers: Optional[Dict[str, str]] = None,
-                        json_data: Optional[Dict[str, Any]] = None,
-                        config: Optional[RequestConfig] = None) -> Dict[str, Any]:
+async def resilient_post(url: str, data: Optional[dict[str, Any]] = None,
+                        headers: Optional[dict[str, str]] = None,
+                        json_data: Optional[dict[str, Any]] = None,
+                        config: Optional[RequestConfig] = None) -> dict[str, Any]:
     """Make a resilient POST request"""
     async with ResilientRequest(config) as client:
         return await client.post(url, data=data, headers=headers, json_data=json_data)

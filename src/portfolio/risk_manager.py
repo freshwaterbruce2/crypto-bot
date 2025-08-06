@@ -23,7 +23,7 @@ from collections import deque
 from dataclasses import asdict, dataclass
 from enum import Enum
 from threading import RLock
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -81,7 +81,7 @@ class RiskLimits:
     max_position_volatility: float = 0.05  # Maximum position volatility (5%)
     volatility_lookback_hours: int = 24  # Volatility calculation lookback
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return asdict(self)
 
@@ -124,7 +124,7 @@ class RiskMetrics:
     overall_risk_level: RiskLevel
     risk_score: float  # 0-100 risk score
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
         data['overall_risk_level'] = self.overall_risk_level.value
@@ -140,7 +140,7 @@ class RiskManager:
                  limits: Optional[RiskLimits] = None, data_path: str = "D:/trading_data"):
         """
         Initialize risk manager
-        
+
         Args:
             position_tracker: Position tracker instance
             balance_manager: Balance manager instance
@@ -164,10 +164,10 @@ class RiskManager:
         # Trade tracking for limits
         self._hourly_trade_count: deque = deque(maxlen=60)  # Last 60 minutes
         self._daily_trade_count: deque = deque(maxlen=24)   # Last 24 hours
-        self._last_trade_times: List[float] = []
+        self._last_trade_times: list[float] = []
 
         # Risk violations
-        self._risk_violations: List[Dict[str, Any]] = []
+        self._risk_violations: list[dict[str, Any]] = []
         self._cooling_off_until: float = 0.0
 
         # Peak tracking for drawdown
@@ -175,8 +175,8 @@ class RiskManager:
         self._peak_timestamp: float = 0.0
 
         # Volatility tracking
-        self._price_history: Dict[str, deque] = {}
-        self._volatility_cache: Dict[str, Tuple[float, float]] = {}  # symbol -> (volatility, timestamp)
+        self._price_history: dict[str, deque] = {}
+        self._volatility_cache: dict[str, tuple[float, float]] = {}  # symbol -> (volatility, timestamp)
 
         # Files
         self.risk_file = f"{data_path}/risk_metrics.json"
@@ -287,10 +287,10 @@ class RiskManager:
                 raise
 
     async def check_position_risk(self, symbol: str, size: float, price: float,
-                                 position_type: str = "long") -> Tuple[RiskAction, str]:
+                                 position_type: str = "long") -> tuple[RiskAction, str]:
         """
         Check if a position meets risk requirements
-        
+
         Returns:
             Tuple of (action, reason)
         """
@@ -351,16 +351,16 @@ class RiskManager:
 
     async def calculate_optimal_position_size(self, symbol: str, price: float,
                                             volatility: float = None,
-                                            confidence: float = 0.95) -> Dict[str, Any]:
+                                            confidence: float = 0.95) -> dict[str, Any]:
         """
         Calculate optimal position size based on risk management principles
-        
+
         Args:
             symbol: Trading symbol
             price: Current price
             volatility: Symbol volatility (calculated if not provided)
             confidence: Confidence level for risk calculation
-            
+
         Returns:
             Dict with position sizing recommendations
         """
@@ -472,7 +472,7 @@ class RiskManager:
         """Get current risk limits"""
         return self.limits
 
-    async def get_risk_report(self) -> Dict[str, Any]:
+    async def get_risk_report(self) -> dict[str, Any]:
         """Get comprehensive risk report"""
         try:
             current_metrics = await self.calculate_risk_metrics()
@@ -529,7 +529,7 @@ class RiskManager:
 
         return max_dd
 
-    def _calculate_var(self, current_value: float) -> Tuple[float, float]:
+    def _calculate_var(self, current_value: float) -> tuple[float, float]:
         """Calculate Value at Risk at 95% and 99% confidence levels"""
         if len(self._portfolio_value_history) < 10:
             return 0.0, 0.0
@@ -802,11 +802,11 @@ class RiskManager:
     async def _get_currency_conversion_rate(self, from_currency: str, to_currency: str) -> float:
         """
         Get currency conversion rate between two currencies
-        
+
         Args:
             from_currency: Source currency (e.g., 'USDT')
             to_currency: Target currency (e.g., 'USD')
-            
+
         Returns:
             Exchange rate (defaults to 1.0 if unavailable)
         """
@@ -843,10 +843,10 @@ class RiskManager:
     async def _get_asset_price_usd(self, asset: str) -> float:
         """
         Get USD price for an asset
-        
+
         Args:
             asset: Asset symbol (e.g., 'BTC', 'ETH', 'SHIB')
-            
+
         Returns:
             Asset price in USD (defaults to 0.0 if unavailable)
         """
@@ -981,12 +981,12 @@ class RiskManager:
     def _safe_divide(self, numerator: float, denominator: float, default: float = 0.0) -> float:
         """
         Safely perform division with zero and error checking
-        
+
         Args:
             numerator: Numerator value
-            denominator: Denominator value  
+            denominator: Denominator value
             default: Value to return if division cannot be performed
-            
+
         Returns:
             Result of division or default value
         """
@@ -1015,7 +1015,7 @@ class RiskManager:
             logger.error(f"[RISK_MANAGER] Error in safe division {numerator} / {denominator}: {e}")
             return default
 
-    def _analyze_concentration_risk(self) -> Dict[str, Any]:
+    def _analyze_concentration_risk(self) -> dict[str, Any]:
         """Analyze portfolio concentration risk"""
         portfolio_summary = self.position_tracker.get_portfolio_summary()
 
@@ -1040,7 +1040,7 @@ class RiskManager:
             'diversification_ratio': 1 / len(symbol_weights) if symbol_weights else 0
         }
 
-    def _generate_risk_recommendations(self, metrics: RiskMetrics) -> List[str]:
+    def _generate_risk_recommendations(self, metrics: RiskMetrics) -> list[str]:
         """Generate risk management recommendations"""
         recommendations = []
 
@@ -1080,7 +1080,7 @@ class RiskManager:
         """Load risk history from file"""
         try:
             with open(self.risk_file) as f:
-                data = json.load(f)
+                json.load(f)
                 # Could restore last metrics if needed
             logger.debug("[RISK_MANAGER] Risk history loaded")
         except FileNotFoundError:

@@ -19,7 +19,7 @@ Features:
 import logging
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..utils.decimal_precision_fix import safe_decimal, safe_float
 from .data_models import (
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 class WebSocketV2ChannelProcessor:
     """
     Channel processor for WebSocket V2 messages.
-    
+
     Handles parsing and processing of different channel types with
     intelligent routing and data validation.
     """
@@ -45,7 +45,7 @@ class WebSocketV2ChannelProcessor:
     def __init__(self, manager):
         """
         Initialize channel processor.
-        
+
         Args:
             manager: WebSocket V2 manager instance
         """
@@ -63,11 +63,11 @@ class WebSocketV2ChannelProcessor:
         }
 
         # Data storage for latest values
-        self._latest_balances: Dict[str, BalanceUpdate] = {}
-        self._latest_tickers: Dict[str, TickerUpdate] = {}
-        self._latest_orderbooks: Dict[str, OrderBookUpdate] = {}
-        self._recent_trades: Dict[str, List[TradeUpdate]] = {}
-        self._recent_ohlc: Dict[str, List[OHLCUpdate]] = {}
+        self._latest_balances: dict[str, BalanceUpdate] = {}
+        self._latest_tickers: dict[str, TickerUpdate] = {}
+        self._latest_orderbooks: dict[str, OrderBookUpdate] = {}
+        self._recent_trades: dict[str, list[TradeUpdate]] = {}
+        self._recent_ohlc: dict[str, list[OHLCUpdate]] = {}
 
         # Performance tracking
         self._processing_stats = {
@@ -84,10 +84,10 @@ class WebSocketV2ChannelProcessor:
 
         logger.info("[WS_V2_CHANNELS] Channel processor initialized")
 
-    async def process_message(self, message: Dict[str, Any]) -> None:
+    async def process_message(self, message: dict[str, Any]) -> None:
         """
         Process incoming WebSocket V2 message.
-        
+
         Args:
             message: Raw WebSocket message
         """
@@ -111,10 +111,10 @@ class WebSocketV2ChannelProcessor:
             logger.debug(f"[WS_V2_CHANNELS] Failed message: {message}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_balance_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_balance_channel(self, message: dict[str, Any]) -> None:
         """
         Process balance channel updates.
-        
+
         Handles real-time balance updates from Kraken WebSocket V2.
         Format: {"channel": "balances", "data": [{"asset": "BTC", "balance": "1.0", "hold_trade": "0.0"}]}
         """
@@ -184,10 +184,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing balance channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _integrate_balance_updates(self, balance_updates: List[BalanceUpdate]) -> None:
+    async def _integrate_balance_updates(self, balance_updates: list[BalanceUpdate]) -> None:
         """
         Integrate balance updates with existing balance management system.
-        
+
         Args:
             balance_updates: List of balance updates to integrate
         """
@@ -259,10 +259,10 @@ class WebSocketV2ChannelProcessor:
         except Exception as e:
             logger.error(f"[WS_V2_CHANNELS] Error integrating balance updates: {e}")
 
-    async def _process_ticker_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_ticker_channel(self, message: dict[str, Any]) -> None:
         """
         Process ticker channel updates.
-        
+
         Handles real-time ticker data from WebSocket V2.
         """
         try:
@@ -313,10 +313,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing ticker channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_orderbook_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_orderbook_channel(self, message: dict[str, Any]) -> None:
         """
         Process orderbook channel updates.
-        
+
         Handles real-time orderbook data from WebSocket V2.
         """
         try:
@@ -398,10 +398,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing orderbook channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_trade_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_trade_channel(self, message: dict[str, Any]) -> None:
         """
         Process trade channel updates.
-        
+
         Handles real-time trade data from WebSocket V2.
         """
         try:
@@ -455,10 +455,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing trade channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_ohlc_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_ohlc_channel(self, message: dict[str, Any]) -> None:
         """
         Process OHLC channel updates.
-        
+
         Handles real-time OHLC (candlestick) data from WebSocket V2.
         """
         try:
@@ -526,10 +526,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing OHLC channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_execution_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_execution_channel(self, message: dict[str, Any]) -> None:
         """
         Process execution channel updates.
-        
+
         Handles real-time order execution notifications from WebSocket V2.
         """
         try:
@@ -581,10 +581,10 @@ class WebSocketV2ChannelProcessor:
             logger.error(f"[WS_V2_CHANNELS] Error processing execution channel: {e}")
             self._processing_stats['processing_errors'] += 1
 
-    async def _process_status_channel(self, message: Dict[str, Any]) -> None:
+    async def _process_status_channel(self, message: dict[str, Any]) -> None:
         """
         Process status channel updates.
-        
+
         Handles connection status and authentication confirmations.
         """
         try:
@@ -614,7 +614,7 @@ class WebSocketV2ChannelProcessor:
         """Get latest balance for asset"""
         return self._latest_balances.get(asset)
 
-    def get_all_balances(self) -> Dict[str, BalanceUpdate]:
+    def get_all_balances(self) -> dict[str, BalanceUpdate]:
         """Get all latest balances"""
         return dict(self._latest_balances)
 
@@ -622,7 +622,7 @@ class WebSocketV2ChannelProcessor:
         """Get latest ticker for symbol"""
         return self._latest_tickers.get(symbol)
 
-    def get_all_tickers(self) -> Dict[str, TickerUpdate]:
+    def get_all_tickers(self) -> dict[str, TickerUpdate]:
         """Get all latest tickers"""
         return dict(self._latest_tickers)
 
@@ -630,17 +630,17 @@ class WebSocketV2ChannelProcessor:
         """Get latest orderbook for symbol"""
         return self._latest_orderbooks.get(symbol)
 
-    def get_recent_trades(self, symbol: str, limit: int = 50) -> List[TradeUpdate]:
+    def get_recent_trades(self, symbol: str, limit: int = 50) -> list[TradeUpdate]:
         """Get recent trades for symbol"""
         trades = self._recent_trades.get(symbol, [])
         return trades[-limit:] if limit > 0 else trades
 
-    def get_recent_ohlc(self, symbol: str, limit: int = 100) -> List[OHLCUpdate]:
+    def get_recent_ohlc(self, symbol: str, limit: int = 100) -> list[OHLCUpdate]:
         """Get recent OHLC data for symbol"""
         ohlc_data = self._recent_ohlc.get(symbol, [])
         return ohlc_data[-limit:] if limit > 0 else ohlc_data
 
-    def get_processing_stats(self) -> Dict[str, Any]:
+    def get_processing_stats(self) -> dict[str, Any]:
         """Get channel processing statistics"""
         return dict(self._processing_stats)
 
@@ -653,11 +653,11 @@ class WebSocketV2ChannelProcessor:
     def has_fresh_data(self, data_type: str, max_age: float = 30.0) -> bool:
         """
         Check if we have fresh data of specified type.
-        
+
         Args:
             data_type: Type of data ('balance', 'ticker', 'orderbook', etc.)
             max_age: Maximum age in seconds
-            
+
         Returns:
             True if fresh data is available
         """

@@ -5,7 +5,7 @@ Validates orders against Kraken minimum requirements based on official documenta
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class KrakenOrderValidator:
     """
     Validates orders against Kraken minimum requirements.
-    
+
     Based on Kraken documentation:
     - Order minimum requirements (ordermin)
     - Cost minimum requirements (costmin)
@@ -40,7 +40,7 @@ class KrakenOrderValidator:
         }
         logger.info("[ORDER_VALIDATOR] Initialized with Kraken minimum requirements")
 
-    def validate_order(self, symbol: str, quantity: float, price: float) -> Dict[str, Any]:
+    def validate_order(self, symbol: str, quantity: float, price: float) -> dict[str, Any]:
         """Validate order against Kraken requirements."""
         try:
             # Get pair minimums

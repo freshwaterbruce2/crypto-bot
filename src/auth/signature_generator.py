@@ -1,5 +1,5 @@
 """
-Kraken API Signature Generator - 2025 Compliance  
+Kraken API Signature Generator - 2025 Compliance
 ================================================
 
 HMAC-SHA512 signature generation for Kraken API authentication.
@@ -27,7 +27,7 @@ import hmac
 import logging
 import urllib.parse
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class SignatureComponents:
 class SignatureGenerator:
     """
     Production-ready HMAC-SHA512 signature generator for Kraken API.
-    
+
     Implements the exact signature algorithm required by Kraken with
     comprehensive error handling and debugging support.
     """
@@ -54,7 +54,7 @@ class SignatureGenerator:
     def __init__(self, private_key: str):
         """
         Initialize signature generator with Kraken private key.
-        
+
         Args:
             private_key: Base64-encoded Kraken API private key
         """
@@ -70,13 +70,13 @@ class SignatureGenerator:
     def _decode_private_key(self, private_key: str) -> bytes:
         """
         Decode Base64 private key with validation.
-        
+
         Args:
             private_key: Base64-encoded private key string
-            
+
         Returns:
             Decoded private key bytes
-            
+
         Raises:
             ValueError: If private key is invalid
         """
@@ -93,13 +93,13 @@ class SignatureGenerator:
             logger.error(f"[SIGNATURE_2025] Invalid private key: {e}")
             raise ValueError(f"Invalid private key format: {e}")
 
-    def _prepare_post_data(self, params: Dict[str, Any]) -> str:
+    def _prepare_post_data(self, params: dict[str, Any]) -> str:
         """
         Prepare POST data string from parameters.
-        
+
         Args:
             params: Dictionary of API parameters
-            
+
         Returns:
             URL-encoded POST data string
         """
@@ -124,25 +124,25 @@ class SignatureGenerator:
         self,
         uri_path: str,
         nonce: str,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[dict[str, Any]] = None
     ) -> str:
         """
         Generate HMAC-SHA512 signature for Kraken API request.
-        
+
         Args:
             uri_path: API endpoint path (e.g., '/0/private/Balance')
             nonce: Unique nonce for the request
             params: Optional dictionary of request parameters
-            
+
         Returns:
             Base64-encoded HMAC-SHA512 signature
-            
+
         Raises:
             ValueError: If signature generation fails
         """
         try:
             # Step 1: Prepare POST data
-            post_data = self._prepare_post_data(params or {})
+            self._prepare_post_data(params or {})
 
             # Step 2: Create API-Post string (CORRECT krakenex format)
             # Format: str(nonce) + postdata (NOT "nonce={nonce}&{postdata}")
@@ -183,16 +183,16 @@ class SignatureGenerator:
         self,
         uri_path: str,
         nonce: str,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[dict[str, Any]] = None
     ) -> SignatureComponents:
         """
         Generate signature with detailed debug information.
-        
+
         Args:
             uri_path: API endpoint path
             nonce: Unique nonce for the request
             params: Optional dictionary of request parameters
-            
+
         Returns:
             SignatureComponents with all intermediate values for debugging
         """
@@ -239,16 +239,16 @@ class SignatureGenerator:
         self,
         uri_path: str,
         nonce: str,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[dict[str, Any]] = None
     ) -> str:
         """
         Async version of generate_signature for asyncio applications.
-        
+
         Args:
             uri_path: API endpoint path
             nonce: Unique nonce for the request
             params: Optional dictionary of request parameters
-            
+
         Returns:
             Base64-encoded HMAC-SHA512 signature
         """
@@ -266,18 +266,18 @@ class SignatureGenerator:
         self,
         uri_path: str,
         nonce: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         expected_signature: Optional[str] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Validate signature components for debugging authentication issues.
-        
+
         Args:
             uri_path: API endpoint path
             nonce: Request nonce
             params: Request parameters
             expected_signature: Expected signature for comparison
-            
+
         Returns:
             Validation results dictionary
         """
@@ -312,10 +312,10 @@ class SignatureGenerator:
                 'nonce': nonce
             }
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """
         Get signature generator statistics.
-        
+
         Returns:
             Dictionary with performance statistics
         """
@@ -325,10 +325,10 @@ class SignatureGenerator:
             'private_key_valid': len(self._private_key_bytes) >= 32
         }
 
-    def test_signature_algorithm(self) -> Dict[str, Any]:
+    def test_signature_algorithm(self) -> dict[str, Any]:
         """
         Test signature algorithm with known values for validation.
-        
+
         Returns:
             Test results dictionary
         """
@@ -362,11 +362,11 @@ class SignatureGenerator:
     def create_from_credentials(api_key: str, private_key: str) -> 'SignatureGenerator':
         """
         Create signature generator from API credentials.
-        
+
         Args:
             api_key: Kraken API key (for logging)
             private_key: Base64-encoded private key
-            
+
         Returns:
             SignatureGenerator instance
         """

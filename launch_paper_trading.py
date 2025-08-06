@@ -200,7 +200,7 @@ class PaperTradingLauncher:
         try:
             # Create performance tracker
             config = get_paper_config()
-            tracker = PaperPerformanceTracker(config)
+            PaperPerformanceTracker(config)
 
             # Initialize monitoring
             monitoring_config = {
@@ -286,12 +286,12 @@ def check_paper_trading_status():
     """Check current paper trading status"""
     print("🧪 PAPER TRADING STATUS CHECK")
     print("=" * 50)
-    
+
     # Check data directory
     data_dir = Path("paper_trading_data")
     if data_dir.exists():
         print(f"✓ Data directory: {data_dir}")
-        
+
         # Check safety verification
         safety_file = data_dir / "safety_verification.json"
         if safety_file.exists():
@@ -299,7 +299,7 @@ def check_paper_trading_status():
                 safety_data = json.load(f)
             print(f"✓ Safety verified: {safety_data['safety_verification_time']}")
             print(f"✓ Paper mode: {safety_data['paper_trading_mode']}")
-        
+
         # Check performance data
         perf_file = data_dir / "paper_performance.json"
         if perf_file.exists():
@@ -308,7 +308,7 @@ def check_paper_trading_status():
             print(f"✓ Performance tracking active")
             print(f"  Total trades: {perf_data.get('total_trades', 0)}")
             print(f"  Current balance: ${perf_data.get('current_balance', 0):.2f}")
-        
+
         # Check recent logs
         log_dir = Path("D:/trading_data/logs/paper_trading")
         if log_dir.exists():
@@ -317,7 +317,7 @@ def check_paper_trading_status():
                 print(f"✓ Active logging: {len(log_files)} log files")
     else:
         print("✗ Data directory not found - bot may not be running")
-    
+
     print("=" * 50)
 
 if __name__ == "__main__":
@@ -472,7 +472,7 @@ def main():
     parser.add_argument("--verbose", action="store_true",
                        help="Enable verbose logging")
 
-    args = parser.parse_args()
+    parser.parse_args()
 
     # Create and run launcher
     launcher = PaperTradingLauncher()

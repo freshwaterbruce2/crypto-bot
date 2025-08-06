@@ -353,7 +353,7 @@ class TradingBotStorageSystem:
 
         # Test portfolio summary performance
         start_time = time.time()
-        summary = await self.get_portfolio_summary()
+        await self.get_portfolio_summary()
         summary_time = (time.time() - start_time) * 1000
 
         results['tests'].append({

@@ -11,7 +11,7 @@ import logging
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 
@@ -34,16 +34,16 @@ class LearningMetrics:
     pattern_recognition_score: float = 0.0
     memory_efficiency: float = 0.0
 
-    def to_dict(self) -> Dict[str, float]:
-        return {k: v for k, v in self.__dict__.items()}
+    def to_dict(self) -> dict[str, float]:
+        return dict(self.__dict__.items())
 
 
 @dataclass
 class LearningState:
     """Current state of the learning system"""
-    active_patterns: List[str] = field(default_factory=list)
+    active_patterns: list[str] = field(default_factory=list)
     recent_performance: deque = field(default_factory=lambda: deque(maxlen=100))
-    adaptation_triggers: List[str] = field(default_factory=list)
+    adaptation_triggers: list[str] = field(default_factory=list)
     learning_phase: str = "exploration"  # exploration, exploitation, adaptation
     confidence_level: float = 0.5
     last_optimization: datetime = field(default_factory=datetime.now)
@@ -58,7 +58,7 @@ class CrossComponentPatternAnalyzer:
         self.success_patterns = defaultdict(list)
         self.failure_patterns = defaultdict(list)
 
-    async def analyze_cross_patterns(self, component_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_cross_patterns(self, component_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze patterns across multiple components"""
         try:
             patterns = {}
@@ -85,7 +85,7 @@ class CrossComponentPatternAnalyzer:
             logger.error(f"[UNIFIED_LEARNING] Error analyzing cross patterns: {e}")
             return {}
 
-    async def _extract_component_patterns(self, component: str, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _extract_component_patterns(self, component: str, data: dict[str, Any]) -> list[dict[str, Any]]:
         """Extract patterns from individual component data"""
         patterns = []
 
@@ -126,7 +126,7 @@ class CrossComponentPatternAnalyzer:
 
         return patterns
 
-    async def _find_correlations(self, patterns: Dict[str, List]) -> Dict[str, float]:
+    async def _find_correlations(self, patterns: dict[str, list]) -> dict[str, float]:
         """Find correlations between component patterns"""
         correlations = {}
 
@@ -147,7 +147,7 @@ class CrossComponentPatternAnalyzer:
 
         return correlations
 
-    async def _identify_successful_combinations(self, patterns: Dict[str, List]) -> List[Dict[str, Any]]:
+    async def _identify_successful_combinations(self, patterns: dict[str, list]) -> list[dict[str, Any]]:
         """Identify successful pattern combinations"""
         combinations = []
 
@@ -171,7 +171,7 @@ class CrossComponentPatternAnalyzer:
         combinations.sort(key=lambda x: x.get('success_score', 0), reverse=True)
         return combinations[:10]  # Top 10 combinations
 
-    async def _generate_optimization_suggestions(self, correlations: Dict[str, float]) -> List[str]:
+    async def _generate_optimization_suggestions(self, correlations: dict[str, float]) -> list[str]:
         """Generate optimization suggestions based on correlations"""
         suggestions = []
 
@@ -197,7 +197,7 @@ class PerformanceCoordinator:
         self.optimization_targets = {}
         self.adaptation_strategies = {}
 
-    async def coordinate_optimization(self, component_metrics: Dict[str, LearningMetrics]) -> Dict[str, Any]:
+    async def coordinate_optimization(self, component_metrics: dict[str, LearningMetrics]) -> dict[str, Any]:
         """Coordinate optimization across all components"""
         try:
             # Calculate overall performance
@@ -225,7 +225,7 @@ class PerformanceCoordinator:
             logger.error(f"[PERFORMANCE_COORDINATOR] Error coordinating optimization: {e}")
             return {}
 
-    async def _calculate_overall_performance(self, component_metrics: Dict[str, LearningMetrics]) -> float:
+    async def _calculate_overall_performance(self, component_metrics: dict[str, LearningMetrics]) -> float:
         """Calculate overall system performance score"""
         if not component_metrics:
             return 0.0
@@ -242,7 +242,7 @@ class PerformanceCoordinator:
         total_score = 0.0
         total_weight = 0.0
 
-        for component, metrics in component_metrics.items():
+        for _component, metrics in component_metrics.items():
             component_score = 0.0
             component_weight = 0.0
 
@@ -258,7 +258,7 @@ class PerformanceCoordinator:
 
         return total_score / max(total_weight, 1.0)
 
-    async def _identify_underperforming_components(self, component_metrics: Dict[str, LearningMetrics]) -> List[str]:
+    async def _identify_underperforming_components(self, component_metrics: dict[str, LearningMetrics]) -> list[str]:
         """Identify components that are underperforming"""
         underperforming = []
 
@@ -285,8 +285,8 @@ class PerformanceCoordinator:
         return underperforming
 
     async def _generate_optimization_strategy(self, overall_performance: float,
-                                            underperforming: List[str],
-                                            component_metrics: Dict[str, LearningMetrics]) -> Dict[str, Any]:
+                                            underperforming: list[str],
+                                            component_metrics: dict[str, LearningMetrics]) -> dict[str, Any]:
         """Generate comprehensive optimization strategy"""
         strategy = {
             'overall_performance': overall_performance,
@@ -449,7 +449,7 @@ class UnifiedLearningSystem:
             self.logger.error(f"[UNIFIED_LEARNING] Error in cross-component learning: {e}")
             return {}
 
-    async def _extract_component_data(self, name: str, component: Any) -> Dict[str, Any]:
+    async def _extract_component_data(self, name: str, component: Any) -> dict[str, Any]:
         """Extract learning data from individual component"""
         data = {}
 
@@ -480,12 +480,12 @@ class UnifiedLearningSystem:
 
         return data
 
-    async def _apply_optimizations(self, optimization_strategy: Dict[str, Any]):
+    async def _apply_optimizations(self, optimization_strategy: dict[str, Any]):
         """Apply optimization strategy to components"""
         for action in optimization_strategy.get('actions', []):
             try:
                 target = action.get('target')
-                action_type = action.get('action')
+                action.get('action')
 
                 if target == 'all_components':
                     # Apply to all components
@@ -499,7 +499,7 @@ class UnifiedLearningSystem:
             except Exception as e:
                 self.logger.error(f"[UNIFIED_LEARNING] Error applying optimization: {e}")
 
-    async def _apply_component_optimization(self, name: str, component: Any, action: Dict[str, Any]):
+    async def _apply_component_optimization(self, name: str, component: Any, action: dict[str, Any]):
         """Apply specific optimization to a component"""
         action_type = action.get('action')
 
@@ -514,7 +514,7 @@ class UnifiedLearningSystem:
             # Enhance pattern recognition capabilities
             if name == 'memory' and hasattr(component, 'pattern_memory'):
                 # Improve pattern memory retention
-                for pattern_key, pattern_data in component.pattern_memory.items():
+                for _pattern_key, pattern_data in component.pattern_memory.items():
                     if pattern_data.get('success_rate', 0) > 0.7:
                         pattern_data['weight'] = pattern_data.get('weight', 1.0) * 1.1
 
@@ -525,8 +525,8 @@ class UnifiedLearningSystem:
 
         self.logger.debug(f"[UNIFIED_LEARNING] Applied {action_type} to {name}")
 
-    async def _update_learning_state(self, pattern_analysis: Dict[str, Any],
-                                   optimization_strategy: Dict[str, Any]):
+    async def _update_learning_state(self, pattern_analysis: dict[str, Any],
+                                   optimization_strategy: dict[str, Any]):
         """Update learning state based on analysis results"""
         # Update learning phase
         overall_performance = optimization_strategy.get('overall_performance', 0.5)
@@ -699,7 +699,7 @@ class UnifiedLearningSystem:
             logger.warning(f"[LEARNING_SYSTEM] Error calculating adaptation speed for {component_name}: {e}")
             return 0.5  # Safe default
 
-    def get_learning_status(self) -> Dict[str, Any]:
+    def get_learning_status(self) -> dict[str, Any]:
         """Get current learning system status"""
         return {
             'learning_phase': self.state.learning_phase,

@@ -4,7 +4,7 @@ Replaces all float operations with high-precision Decimal
 """
 
 from decimal import ROUND_DOWN, ROUND_UP, Decimal, getcontext
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 # Set precision to 18 decimal places for micro-profits
 getcontext().prec = 18
@@ -118,7 +118,7 @@ class PrecisionTradingCalculator:
 
     @staticmethod
     def calculate_profit(buy_price: Union[str, float], sell_price: Union[str, float],
-                        quantity: Union[str, float], fee_rate: Union[str, float] = "0") -> Dict[str, Any]:
+                        quantity: Union[str, float], fee_rate: Union[str, float] = "0") -> dict[str, Any]:
         """Calculate profit with full precision"""
         buy = MoneyDecimal(buy_price)
         sell = MoneyDecimal(sell_price)

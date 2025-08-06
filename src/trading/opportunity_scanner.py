@@ -9,7 +9,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -23,7 +23,7 @@ class OpportunitySignal:
     price: float = 0.0
     volume: float = 0.0
     profit_potential: float = 0.0
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -33,11 +33,11 @@ class OpportunitySignal:
 class OpportunityScanner:
     """Enhanced opportunity scanner for autonomous profit detection."""
 
-    def __init__(self, bot: Any = None, symbols: List[str] = None, config: Dict[str, Any] = None,
+    def __init__(self, bot: Any = None, symbols: list[str] = None, config: dict[str, Any] = None,
                  scan_interval: int = 5, exchange_client: Any = None, symbol_mapper: Any = None,
                  bot_ref: Any = None):
         """Initialize the opportunity scanner with flexible parameter support.
-        
+
         Args:
             bot: Trading bot instance (legacy parameter)
             symbols: List of trading symbols to monitor (legacy parameter)
@@ -151,7 +151,7 @@ class OpportunityScanner:
             self._scan_task.cancel()
         self.logger.info("[SCANNER] Opportunity scanning stopped")
 
-    async def scan_once(self) -> List[Dict[str, Any]]:
+    async def scan_once(self) -> list[dict[str, Any]]:
         """Perform a single scan for opportunities without waiting."""
         try:
             self.logger.info("[SCANNER] Performing single opportunity scan...")
@@ -202,10 +202,10 @@ class OpportunityScanner:
                 self.logger.error(f"[SCANNER] Error in scan loop: {e}")
                 await asyncio.sleep(5)  # Brief pause on error
 
-    async def scan_opportunities(self) -> List[Dict[str, Any]]:
+    async def scan_opportunities(self) -> list[dict[str, Any]]:
         """
         Scan all symbols for trading opportunities.
-        
+
         Returns:
             List of opportunity dictionaries with trading signals
         """
@@ -304,15 +304,15 @@ class OpportunityScanner:
             self.logger.error(f"[SCANNER] Error in scan_opportunities: {e}")
             return []
 
-    async def _analyze_symbol(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _analyze_symbol(self, symbol: str) -> Optional[dict[str, Any]]:
         """
         Analyze a single symbol for trading opportunities.
         PORTFOLIO-AWARE: Checks existing positions and generates SELL signals for held assets,
         BUY signals for new opportunities.
-        
+
         Args:
             symbol: Trading symbol to analyze
-            
+
         Returns:
             Opportunity dictionary if found, None otherwise
         """
@@ -530,10 +530,10 @@ class OpportunityScanner:
             self.logger.debug(f"[SCANNER] Error analyzing {symbol}: {e}")
             return None
 
-    async def _get_all_held_positions(self) -> Dict[str, float]:
+    async def _get_all_held_positions(self) -> dict[str, float]:
         """
         Get all held positions from balance manager and exchange.
-        
+
         Returns:
             Dict[str, float]: Dictionary of asset -> amount
         """
@@ -574,10 +574,10 @@ class OpportunityScanner:
     async def _check_existing_position(self, base_asset: str) -> bool:
         """
         Check if we currently hold a position in the given asset.
-        
+
         Args:
             base_asset: The base currency to check (e.g., 'BTC', 'ETH')
-            
+
         Returns:
             bool: True if we hold a position, False otherwise
         """
@@ -656,7 +656,7 @@ class OpportunityScanner:
             self.logger.error(f"[POSITION_CHECK] Error checking position for {base_asset}: {e}")
             return False
 
-    async def _get_ticker_data(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _get_ticker_data(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get ticker data for a symbol from WebSocket feed."""
         try:
             # First check if we have real-time ticker data from WebSocket
@@ -820,7 +820,7 @@ class OpportunityScanner:
 
     def process_ticker_data(self, symbol: str, data: Any) -> None:
         """Process ticker data for opportunity detection.
-        
+
         Args:
             symbol: Trading symbol
             data: Ticker data
@@ -832,10 +832,10 @@ class OpportunityScanner:
         except Exception as e:
             self.logger.debug(f"[SCANNER] Error processing ticker for {symbol}: {e}")
 
-    async def scan_for_opportunities(self) -> List[Dict[str, Any]]:
+    async def scan_for_opportunities(self) -> list[dict[str, Any]]:
         """
         Scan all symbols for trading opportunities.
-        
+
         Returns:
             List of trading signals with structure:
             {
@@ -856,15 +856,15 @@ class OpportunityScanner:
         # Otherwise, do a direct scan
         return await self.scan_opportunities()
 
-    async def check_liquidation_opportunities(self, target_symbol: str, needed_amount: float) -> List[Dict[str, Any]]:
+    async def check_liquidation_opportunities(self, target_symbol: str, needed_amount: float) -> list[dict[str, Any]]:
         """
         CRITICAL: Identify which positions should be liquidated to enable new opportunities.
         This enables the bot to sell existing positions when a better opportunity arises.
-        
+
         Args:
             target_symbol: The new opportunity we want to trade
             needed_amount: How much quote currency we need
-            
+
         Returns:
             List of liquidation recommendations
         """
@@ -916,10 +916,10 @@ class OpportunityScanner:
             self.logger.error(f"[LIQUIDATION_SCANNER] Error checking liquidation opportunities: {e}")
             return []
 
-    async def _check_capital_deployment(self) -> Dict[str, Any]:
+    async def _check_capital_deployment(self) -> dict[str, Any]:
         """
         Check current capital deployment state and determine if we can trade.
-        
+
         Returns:
             Dict with deployment status:
             - 'fully_deployed': bool - True if capital is fully deployed
@@ -997,7 +997,7 @@ class OpportunityScanner:
                 'total_portfolio_value': 0.0
             }
 
-    async def force_capital_check(self) -> Dict[str, Any]:
+    async def force_capital_check(self) -> dict[str, Any]:
         """
         Force an immediate capital deployment check.
         Useful after trades are executed.

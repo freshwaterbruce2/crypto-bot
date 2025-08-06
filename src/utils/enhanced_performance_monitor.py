@@ -10,7 +10,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 import psutil
@@ -42,8 +42,8 @@ class PerformanceMetric:
     value: float
     timestamp: datetime
     metric_type: MetricType
-    tags: Dict[str, str] = field(default_factory=dict)
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -99,7 +99,7 @@ class EnhancedPerformanceMonitor:
                  enable_alerts: bool = True):
         """
         Initialize the enhanced performance monitor.
-        
+
         Args:
             collection_interval: Interval in seconds for metric collection
             max_history_size: Maximum number of data points to store
@@ -112,19 +112,19 @@ class EnhancedPerformanceMonitor:
         self.enable_alerts = enable_alerts
 
         # Metric storage
-        self.metrics: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_history_size))
+        self.metrics: dict[str, deque] = defaultdict(lambda: deque(maxlen=max_history_size))
         self.system_metrics: deque = deque(maxlen=max_history_size)
         self.trading_metrics: deque = deque(maxlen=max_history_size)
 
         # Alert system
-        self.alerts: List[Alert] = []
-        self.alert_thresholds: Dict[str, Dict[str, float]] = {}
-        self.alert_callbacks: Dict[str, Callable] = {}
+        self.alerts: list[Alert] = []
+        self.alert_thresholds: dict[str, dict[str, float]] = {}
+        self.alert_callbacks: dict[str, Callable] = {}
 
         # Performance tracking
-        self.execution_times: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
-        self.call_counts: Dict[str, int] = defaultdict(int)
-        self.error_counts: Dict[str, int] = defaultdict(int)
+        self.execution_times: dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
+        self.call_counts: dict[str, int] = defaultdict(int)
+        self.error_counts: dict[str, int] = defaultdict(int)
 
         # Threading for continuous monitoring
         self.monitoring_thread: Optional[threading.Thread] = None
@@ -132,11 +132,11 @@ class EnhancedPerformanceMonitor:
         self.lock = threading.Lock()
 
         # Benchmarks and baselines
-        self.benchmarks: Dict[str, float] = {}
-        self.baseline_metrics: Dict[str, float] = {}
+        self.benchmarks: dict[str, float] = {}
+        self.baseline_metrics: dict[str, float] = {}
 
         # Custom metric handlers
-        self.custom_metric_handlers: Dict[str, Callable] = {}
+        self.custom_metric_handlers: dict[str, Callable] = {}
 
         logger.info("EnhancedPerformanceMonitor initialized")
 
@@ -234,10 +234,10 @@ class EnhancedPerformanceMonitor:
                 logger.error(f"Error collecting custom metric {metric_name}: {e}")
 
     def record_metric(self, name: str, value: float, metric_type: MetricType = MetricType.CUSTOM,
-                     tags: Optional[Dict[str, str]] = None, metadata: Optional[Dict[str, Any]] = None) -> None:
+                     tags: Optional[dict[str, str]] = None, metadata: Optional[dict[str, Any]] = None) -> None:
         """
         Record a performance metric.
-        
+
         Args:
             name: Metric name
             value: Metric value
@@ -262,7 +262,7 @@ class EnhancedPerformanceMonitor:
     def time_function(self, func_name: str):
         """
         Decorator to time function execution.
-        
+
         Args:
             func_name: Name of the function for tracking
         """
@@ -287,7 +287,7 @@ class EnhancedPerformanceMonitor:
                           critical_threshold: float, comparison: str = "greater") -> None:
         """
         Set alert thresholds for a metric.
-        
+
         Args:
             metric_name: Name of the metric
             warning_threshold: Warning threshold value
@@ -305,7 +305,7 @@ class EnhancedPerformanceMonitor:
     def add_alert_callback(self, alert_level: AlertLevel, callback: Callable[[Alert], None]) -> None:
         """
         Add callback function for alerts.
-        
+
         Args:
             alert_level: Alert level to trigger callback
             callback: Callback function to execute
@@ -367,14 +367,14 @@ class EnhancedPerformanceMonitor:
 
                 logger.warning(f"Alert triggered: {alert.message}")
 
-    def get_metric_statistics(self, metric_name: str, window_minutes: int = 60) -> Dict[str, float]:
+    def get_metric_statistics(self, metric_name: str, window_minutes: int = 60) -> dict[str, float]:
         """
         Get statistical summary of a metric over a time window.
-        
+
         Args:
             metric_name: Name of the metric
             window_minutes: Time window in minutes
-            
+
         Returns:
             Dictionary with statistical measures
         """
@@ -405,13 +405,13 @@ class EnhancedPerformanceMonitor:
             'current': values[-1] if values else 0.0
         }
 
-    def get_function_performance(self, func_name: str) -> Dict[str, Any]:
+    def get_function_performance(self, func_name: str) -> dict[str, Any]:
         """
         Get performance statistics for a function.
-        
+
         Args:
             func_name: Name of the function
-            
+
         Returns:
             Dictionary with performance statistics
         """
@@ -435,10 +435,10 @@ class EnhancedPerformanceMonitor:
             'total_time': np.sum(times)
         }
 
-    def get_system_health(self) -> Dict[str, Any]:
+    def get_system_health(self) -> dict[str, Any]:
         """
         Get overall system health summary.
-        
+
         Returns:
             Dictionary with system health metrics
         """
@@ -502,13 +502,13 @@ class EnhancedPerformanceMonitor:
             'active_alerts': len([a for a in self.alerts if not a.resolved])
         }
 
-    def get_performance_report(self, hours: int = 24) -> Dict[str, Any]:
+    def get_performance_report(self, hours: int = 24) -> dict[str, Any]:
         """
         Generate comprehensive performance report.
-        
+
         Args:
             hours: Number of hours to include in report
-            
+
         Returns:
             Dictionary with performance report
         """
@@ -552,7 +552,7 @@ class EnhancedPerformanceMonitor:
     def register_custom_metric_handler(self, metric_name: str, handler: Callable[[], float]) -> None:
         """
         Register a custom metric collection handler.
-        
+
         Args:
             metric_name: Name of the metric
             handler: Function that returns the metric value
@@ -563,7 +563,7 @@ class EnhancedPerformanceMonitor:
     def set_benchmark(self, metric_name: str, benchmark_value: float) -> None:
         """
         Set a benchmark value for a metric.
-        
+
         Args:
             metric_name: Name of the metric
             benchmark_value: Benchmark value to compare against
@@ -571,13 +571,13 @@ class EnhancedPerformanceMonitor:
         self.benchmarks[metric_name] = benchmark_value
         logger.info(f"Set benchmark for {metric_name}: {benchmark_value}")
 
-    def get_benchmark_comparison(self, metric_name: str) -> Dict[str, Any]:
+    def get_benchmark_comparison(self, metric_name: str) -> dict[str, Any]:
         """
         Compare current metric performance against benchmark.
-        
+
         Args:
             metric_name: Name of the metric
-            
+
         Returns:
             Dictionary with benchmark comparison
         """
@@ -605,7 +605,7 @@ class EnhancedPerformanceMonitor:
     def export_metrics(self, filepath: str, format: str = "json") -> None:
         """
         Export metrics to file.
-        
+
         Args:
             filepath: Path to export file
             format: Export format ('json', 'csv')

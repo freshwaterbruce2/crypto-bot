@@ -9,7 +9,7 @@ from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiohttp
 import numpy as np
@@ -54,7 +54,7 @@ class AssetConfiguration:
     quality_bonus: float
 
     # Strategy weights (dynamic based on market conditions)
-    strategy_weights: Dict[str, float]
+    strategy_weights: dict[str, float]
 
     # Trading constraints
     max_daily_trades: int
@@ -84,10 +84,10 @@ class EnhancedAssetConfigManager:
         self.enable_dynamic_discovery = enable_dynamic_discovery
 
         # Asset storage
-        self.asset_configs: Dict[str, AssetConfiguration] = {}
-        self.asset_metrics: Dict[str, AssetMetrics] = {}
-        self.price_history: Dict[str, List[float]] = defaultdict(list)
-        self.correlation_matrix: Dict[str, Dict[str, float]] = {}
+        self.asset_configs: dict[str, AssetConfiguration] = {}
+        self.asset_metrics: dict[str, AssetMetrics] = {}
+        self.price_history: dict[str, list[float]] = defaultdict(list)
+        self.correlation_matrix: dict[str, dict[str, float]] = {}
 
         # Dynamic discovery parameters
         self.min_market_cap_rank = 100  # Top 100 cryptocurrencies
@@ -146,7 +146,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Initialization error: {e}")
             return False
 
-    async def discover_new_assets(self) -> List[str]:
+    async def discover_new_assets(self) -> list[str]:
         """Discover new tradeable assets based on market criteria"""
         try:
             if (self.last_discovery and
@@ -194,7 +194,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Asset discovery error: {e}")
             return []
 
-    async def _fetch_market_data(self) -> List[Dict[str, Any]]:
+    async def _fetch_market_data(self) -> list[dict[str, Any]]:
         """Fetch market data from external APIs"""
         try:
             # Check cache first
@@ -249,7 +249,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Error fetching market data: {e}")
             return []
 
-    def _meets_discovery_criteria(self, asset_data: Dict[str, Any]) -> bool:
+    def _meets_discovery_criteria(self, asset_data: dict[str, Any]) -> bool:
         """Check if asset meets discovery criteria"""
         try:
             market_cap_rank = asset_data.get('market_cap_rank', 999)
@@ -277,7 +277,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Error checking discovery criteria: {e}")
             return False
 
-    async def _create_asset_metrics(self, asset_data: Dict[str, Any]) -> AssetMetrics:
+    async def _create_asset_metrics(self, asset_data: dict[str, Any]) -> AssetMetrics:
         """Create asset metrics from market data"""
         try:
             symbol = asset_data['symbol']
@@ -333,7 +333,7 @@ class EnhancedAssetConfigManager:
                 tier='tier3', sector='other', last_updated=datetime.now()
             )
 
-    def _determine_asset_tier(self, asset_data: Dict[str, Any], quality_score: float) -> str:
+    def _determine_asset_tier(self, asset_data: dict[str, Any], quality_score: float) -> str:
         """Determine asset tier based on metrics"""
         market_cap_rank = asset_data.get('market_cap_rank', 999)
         volume_24h = asset_data.get('volume_24h', 0)
@@ -354,7 +354,7 @@ class EnhancedAssetConfigManager:
 
         return 'tier3'
 
-    def _determine_asset_sector(self, asset_data: Dict[str, Any]) -> str:
+    def _determine_asset_sector(self, asset_data: dict[str, Any]) -> str:
         """Determine asset sector based on name and description"""
         name = asset_data.get('name', '').lower()
         symbol = asset_data.get('symbol', '').lower()
@@ -461,7 +461,7 @@ class EnhancedAssetConfigManager:
                 last_updated=datetime.now()
             )
 
-    def _calculate_dynamic_strategy_weights(self, metrics: AssetMetrics) -> Dict[str, float]:
+    def _calculate_dynamic_strategy_weights(self, metrics: AssetMetrics) -> dict[str, float]:
         """Calculate dynamic strategy weights based on asset characteristics"""
         try:
             # Base weights
@@ -507,7 +507,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Error calculating dynamic weights: {e}")
             return {'momentum': 0.25, 'mean_reversion': 0.25, 'quality': 0.25, 'diversification': 0.25}
 
-    async def update_asset_performance(self, symbol: str, trade_result: Dict[str, Any]) -> None:
+    async def update_asset_performance(self, symbol: str, trade_result: dict[str, Any]) -> None:
         """Update asset configuration based on trading performance"""
         try:
             if symbol not in self.asset_configs:
@@ -570,7 +570,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Error updating asset performance: {e}")
 
     async def get_optimal_asset_allocation(self, available_capital: float,
-                                         market_regime: str = 'neutral') -> Dict[str, float]:
+                                         market_regime: str = 'neutral') -> dict[str, float]:
         """Get optimal asset allocation based on current configurations and market regime"""
         try:
             allocations = {}
@@ -771,21 +771,21 @@ class EnhancedAssetConfigManager:
         """Get metrics for specific asset"""
         return self.asset_metrics.get(symbol)
 
-    def get_enabled_assets(self) -> List[str]:
+    def get_enabled_assets(self) -> list[str]:
         """Get list of enabled assets"""
         return [symbol for symbol, config in self.asset_configs.items() if config.enabled]
 
-    def get_assets_by_tier(self, tier: str) -> List[str]:
+    def get_assets_by_tier(self, tier: str) -> list[str]:
         """Get assets by tier"""
         return [symbol for symbol, config in self.asset_configs.items()
                 if config.tier == tier and config.enabled]
 
-    def get_assets_by_sector(self, sector: str) -> List[str]:
+    def get_assets_by_sector(self, sector: str) -> list[str]:
         """Get assets by sector"""
         return [symbol for symbol, config in self.asset_configs.items()
                 if config.sector == sector and config.enabled]
 
-    async def get_diversification_opportunities(self, current_holdings: List[str]) -> List[str]:
+    async def get_diversification_opportunities(self, current_holdings: list[str]) -> list[str]:
         """Get assets that would improve portfolio diversification"""
         try:
             opportunities = []
@@ -817,7 +817,7 @@ class EnhancedAssetConfigManager:
             logger.error(f"[ENHANCED_ASSET_CONFIG] Error finding diversification opportunities: {e}")
             return []
 
-    def get_manager_stats(self) -> Dict[str, Any]:
+    def get_manager_stats(self) -> dict[str, Any]:
         """Get enhanced asset manager statistics"""
         try:
             tier_counts = defaultdict(int)

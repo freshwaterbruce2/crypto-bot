@@ -17,7 +17,7 @@ import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 # Existing system imports
 from ..auth.kraken_auth import KrakenAuth
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 class IntegratedKrakenAPIClient:
     """
     Example Kraken API client with integrated circuit breaker protection.
-    
+
     Demonstrates how to combine authentication, rate limiting, health monitoring,
     and circuit breaker protection for robust API interactions.
     """
@@ -54,7 +54,7 @@ class IntegratedKrakenAPIClient:
     ):
         """
         Initialize integrated API client.
-        
+
         Args:
             api_key: Kraken API key
             private_key: Kraken private key
@@ -246,24 +246,24 @@ class IntegratedKrakenAPIClient:
     async def make_api_call(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         is_private: bool = False,
         priority: RequestPriority = RequestPriority.NORMAL,
         timeout: Optional[float] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Make an API call with full protection.
-        
+
         Args:
             endpoint: API endpoint path
             params: Request parameters
             is_private: Whether this is a private API call
             priority: Request priority for rate limiting
             timeout: Request timeout
-            
+
         Returns:
             API response data
-            
+
         Raises:
             BreakerOpenError: If circuit breaker is open
             KrakenAuthError: If authentication fails
@@ -307,21 +307,21 @@ class IntegratedKrakenAPIClient:
     async def _protected_api_call(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         is_private: bool = False,
         priority: RequestPriority = RequestPriority.NORMAL,
         timeout: Optional[float] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Internal API call with rate limiting and authentication.
-        
+
         Args:
             endpoint: API endpoint path
             params: Request parameters
             is_private: Whether this is a private API call
             priority: Request priority
             timeout: Request timeout
-            
+
         Returns:
             API response data
         """
@@ -406,7 +406,7 @@ class IntegratedKrakenAPIClient:
             if "nonce" in str(e).lower() or "invalid" in str(e).lower():
                 # Attempt auth recovery
                 try:
-                    recovery_headers = self.auth.handle_auth_error(
+                    self.auth.handle_auth_error(
                         str(e), endpoint, params
                     )
                     logger.info(f"Authentication error recovery attempted for {endpoint}")
@@ -423,7 +423,7 @@ class IntegratedKrakenAPIClient:
     ) -> None:
         """
         Record successful API call for monitoring.
-        
+
         Args:
             service_name: Service name
             endpoint: API endpoint
@@ -451,7 +451,7 @@ class IntegratedKrakenAPIClient:
     ) -> None:
         """
         Record API failure for analysis.
-        
+
         Args:
             service_name: Service name
             endpoint: API endpoint
@@ -475,7 +475,7 @@ class IntegratedKrakenAPIClient:
                     http_status_code = int(match.group(1))
 
             # Record failure event
-            failure_event = self.failure_detector.record_failure(
+            self.failure_detector.record_failure(
                 service_name=service_name,
                 error_message=error_message,
                 exception_type=exception_type,
@@ -510,10 +510,10 @@ class IntegratedKrakenAPIClient:
         except Exception as e:
             logger.debug(f"Error recording API failure: {e}")
 
-    async def get_account_balance(self) -> Dict[str, Any]:
+    async def get_account_balance(self) -> dict[str, Any]:
         """
         Example: Get account balance with full protection.
-        
+
         Returns:
             Account balance information
         """
@@ -523,13 +523,13 @@ class IntegratedKrakenAPIClient:
             priority=RequestPriority.NORMAL
         )
 
-    async def get_ticker_info(self, pair: str) -> Dict[str, Any]:
+    async def get_ticker_info(self, pair: str) -> dict[str, Any]:
         """
         Example: Get ticker information with full protection.
-        
+
         Args:
             pair: Trading pair (e.g., "XBTUSD")
-            
+
         Returns:
             Ticker information
         """
@@ -548,10 +548,10 @@ class IntegratedKrakenAPIClient:
         volume: str,
         price: Optional[str] = None,
         **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Example: Place order with full protection.
-        
+
         Args:
             pair: Trading pair
             type_: Order type (buy/sell)
@@ -559,7 +559,7 @@ class IntegratedKrakenAPIClient:
             volume: Order volume
             price: Order price (for limit orders)
             **kwargs: Additional order parameters
-            
+
         Returns:
             Order placement result
         """
@@ -583,10 +583,10 @@ class IntegratedKrakenAPIClient:
             timeout=45.0  # Longer timeout for order placement
         )
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """
         Get comprehensive system status.
-        
+
         Returns:
             System status information
         """

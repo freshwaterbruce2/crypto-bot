@@ -18,7 +18,7 @@ import asyncio
 import logging
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import uvicorn
 from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -39,7 +39,7 @@ class SystemStatusResponse(BaseModel):
     message: str
     last_update: Optional[str]
     uptime_minutes: float
-    metrics_summary: Dict[str, Any]
+    metrics_summary: dict[str, Any]
 
 
 class MetricsResponse(BaseModel):
@@ -81,7 +81,7 @@ class DashboardServer:
         )
 
         # WebSocket connection manager
-        self.websocket_connections: List[WebSocket] = []
+        self.websocket_connections: list[WebSocket] = []
 
         # Setup middleware and routes
         self._setup_middleware()
@@ -340,14 +340,14 @@ class DashboardHTML:
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0f0f23;
             color: #e5e5e5;
             min-height: 100vh;
         }
-        
+
         .header {
             background: #1a1a2e;
             padding: 1rem 2rem;
@@ -356,36 +356,36 @@ class DashboardHTML:
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .title {
             font-size: 1.5rem;
             font-weight: bold;
             color: #4CAF50;
         }
-        
+
         .status-indicator {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .status-dot {
             width: 12px;
             height: 12px;
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
-        
+
         .status-healthy { background: #4CAF50; }
         .status-warning { background: #FF9800; }
         .status-critical { background: #F44336; }
-        
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
-        
+
         .dashboard {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -394,7 +394,7 @@ class DashboardHTML:
             max-width: 1400px;
             margin: 0 auto;
         }
-        
+
         .card {
             background: #1a1a2e;
             border: 1px solid #16213e;
@@ -402,35 +402,35 @@ class DashboardHTML:
             padding: 1.5rem;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
-        
+
         .card-title {
             font-size: 1.1rem;
             font-weight: bold;
             margin-bottom: 1rem;
             color: #4CAF50;
         }
-        
+
         .metric-value {
             font-size: 2rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
         }
-        
+
         .metric-label {
             font-size: 0.9rem;
             color: #888;
         }
-        
+
         .metric-positive { color: #4CAF50; }
         .metric-negative { color: #F44336; }
         .metric-neutral { color: #e5e5e5; }
-        
+
         .alerts-section {
             grid-column: 1 / -1;
             max-height: 300px;
             overflow-y: auto;
         }
-        
+
         .alert {
             background: #2a2a3e;
             border-left: 4px solid;
@@ -438,11 +438,11 @@ class DashboardHTML:
             margin-bottom: 0.5rem;
             border-radius: 4px;
         }
-        
+
         .alert-info { border-color: #2196F3; }
         .alert-warning { border-color: #FF9800; }
         .alert-critical { border-color: #F44336; }
-        
+
         .emergency-controls {
             grid-column: 1 / -1;
             text-align: center;
@@ -450,7 +450,7 @@ class DashboardHTML:
             background: #2a1a1a;
             border: 2px solid #F44336;
         }
-        
+
         .emergency-btn {
             background: #F44336;
             color: white;
@@ -461,11 +461,11 @@ class DashboardHTML:
             cursor: pointer;
             font-weight: bold;
         }
-        
+
         .emergency-btn:hover {
             background: #d32f2f;
         }
-        
+
         .chart-container {
             height: 200px;
             background: #16213e;
@@ -473,7 +473,7 @@ class DashboardHTML:
             padding: 1rem;
             position: relative;
         }
-        
+
         .connection-status {
             position: fixed;
             top: 1rem;
@@ -483,23 +483,23 @@ class DashboardHTML:
             font-size: 0.9rem;
             font-weight: bold;
         }
-        
+
         .connected {
             background: #4CAF50;
             color: white;
         }
-        
+
         .disconnected {
             background: #F44336;
             color: white;
         }
-        
+
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
                 padding: 1rem;
             }
-            
+
             .header {
                 padding: 1rem;
                 flex-direction: column;
@@ -510,7 +510,7 @@ class DashboardHTML:
 </head>
 <body>
     <div class="connection-status" id="connectionStatus">Connecting...</div>
-    
+
     <div class="header">
         <div class="title">Crypto Trading Bot - Production Monitor</div>
         <div class="status-indicator">
@@ -518,7 +518,7 @@ class DashboardHTML:
             <span id="systemStatus">Initializing...</span>
         </div>
     </div>
-    
+
     <div class="dashboard">
         <!-- Trading Metrics -->
         <div class="card">
@@ -528,7 +528,7 @@ class DashboardHTML:
             <div class="metric-value metric-positive" id="successRate">-</div>
             <div class="metric-label">Success Rate</div>
         </div>
-        
+
         <div class="card">
             <div class="card-title">Profit & Loss</div>
             <div class="metric-value" id="totalPnl">-</div>
@@ -536,7 +536,7 @@ class DashboardHTML:
             <div class="metric-value" id="dailyPnl">-</div>
             <div class="metric-label">Daily P&L</div>
         </div>
-        
+
         <div class="card">
             <div class="card-title">System Resources</div>
             <div class="metric-value metric-neutral" id="memoryUsage">-</div>
@@ -544,7 +544,7 @@ class DashboardHTML:
             <div class="metric-value metric-neutral" id="apiErrors">-</div>
             <div class="metric-label">API Errors</div>
         </div>
-        
+
         <!-- Component Health -->
         <div class="card">
             <div class="card-title">WebSocket Status</div>
@@ -553,7 +553,7 @@ class DashboardHTML:
             <div class="metric-value metric-neutral" id="websocketLatency">-</div>
             <div class="metric-label">Latency (ms)</div>
         </div>
-        
+
         <div class="card">
             <div class="card-title">Balance Manager</div>
             <div class="metric-value" id="balanceManagerHealth">-</div>
@@ -561,7 +561,7 @@ class DashboardHTML:
             <div class="metric-value metric-neutral" id="balanceResponseTime">-</div>
             <div class="metric-label">Response Time (ms)</div>
         </div>
-        
+
         <div class="card">
             <div class="card-title">Nonce System</div>
             <div class="metric-value metric-neutral" id="nonceRate">-</div>
@@ -569,7 +569,7 @@ class DashboardHTML:
             <div class="metric-value metric-neutral" id="nonceFailures">-</div>
             <div class="metric-label">Failures</div>
         </div>
-        
+
         <!-- Performance Chart -->
         <div class="card" style="grid-column: 1 / -1;">
             <div class="card-title">Performance Trends</div>
@@ -579,7 +579,7 @@ class DashboardHTML:
                 </div>
             </div>
         </div>
-        
+
         <!-- Alerts Section -->
         <div class="card alerts-section">
             <div class="card-title">Recent Alerts</div>
@@ -589,7 +589,7 @@ class DashboardHTML:
                 </div>
             </div>
         </div>
-        
+
         <!-- Emergency Controls -->
         <div class="emergency-controls">
             <h3 style="margin-bottom: 1rem; color: #F44336;">Emergency Controls</h3>
@@ -601,16 +601,16 @@ class DashboardHTML:
             </p>
         </div>
     </div>
-    
+
     <script>
         let websocket = null;
         let reconnectInterval = null;
-        
+
         // WebSocket connection management
         function connectWebSocket() {
             const wsUrl = `ws://${window.location.host}/ws`;
             websocket = new WebSocket(wsUrl);
-            
+
             websocket.onopen = function() {
                 console.log('WebSocket connected');
                 updateConnectionStatus(true);
@@ -619,24 +619,24 @@ class DashboardHTML:
                     reconnectInterval = null;
                 }
             };
-            
+
             websocket.onmessage = function(event) {
                 const data = JSON.parse(event.data);
                 handleWebSocketMessage(data);
             };
-            
+
             websocket.onclose = function() {
                 console.log('WebSocket disconnected');
                 updateConnectionStatus(false);
                 scheduleReconnect();
             };
-            
+
             websocket.onerror = function(error) {
                 console.error('WebSocket error:', error);
                 updateConnectionStatus(false);
             };
         }
-        
+
         function scheduleReconnect() {
             if (!reconnectInterval) {
                 reconnectInterval = setInterval(() => {
@@ -645,7 +645,7 @@ class DashboardHTML:
                 }, 5000);
             }
         }
-        
+
         function handleWebSocketMessage(data) {
             if (data.type === 'metrics_update' || data.type === 'initial_data') {
                 updateMetrics(data.metrics);
@@ -653,7 +653,7 @@ class DashboardHTML:
                 updateAlerts(data.alerts);
             }
         }
-        
+
         function updateConnectionStatus(connected) {
             const statusEl = document.getElementById('connectionStatus');
             if (connected) {
@@ -664,59 +664,59 @@ class DashboardHTML:
                 statusEl.className = 'connection-status disconnected';
             }
         }
-        
+
         function updateMetrics(metrics) {
             // Trading metrics
             document.getElementById('tradesExecuted').textContent = metrics.trades_executed || 0;
-            
+
             const successRate = metrics.success_rate || 0;
             const successRateEl = document.getElementById('successRate');
             successRateEl.textContent = successRate.toFixed(1) + '%';
             successRateEl.className = 'metric-value ' + (successRate >= 85 ? 'metric-positive' : 'metric-negative');
-            
+
             // P&L metrics
             const totalPnl = metrics.total_pnl || 0;
             const totalPnlEl = document.getElementById('totalPnl');
             totalPnlEl.textContent = '$' + totalPnl.toFixed(2);
             totalPnlEl.className = 'metric-value ' + (totalPnl >= 0 ? 'metric-positive' : 'metric-negative');
-            
+
             const dailyPnl = metrics.daily_pnl || 0;
             const dailyPnlEl = document.getElementById('dailyPnl');
             dailyPnlEl.textContent = '$' + dailyPnl.toFixed(2);
             dailyPnlEl.className = 'metric-value ' + (dailyPnl >= 0 ? 'metric-positive' : 'metric-negative');
-            
+
             // System metrics
             const memoryUsage = metrics.memory_usage_mb || 0;
             const memoryEl = document.getElementById('memoryUsage');
             memoryEl.textContent = memoryUsage.toFixed(1);
             memoryEl.className = 'metric-value ' + (memoryUsage > 500 ? 'metric-negative' : 'metric-neutral');
-            
+
             document.getElementById('apiErrors').textContent = metrics.api_errors || 0;
-            
+
             // Component health
             const wsStatus = metrics.websocket_status || 'unknown';
             const wsStatusEl = document.getElementById('websocketStatus');
             wsStatusEl.textContent = wsStatus;
             wsStatusEl.className = 'metric-value ' + (wsStatus === 'connected' ? 'metric-positive' : 'metric-negative');
-            
+
             document.getElementById('websocketLatency').textContent = (metrics.websocket_latency_ms || 0).toFixed(0);
-            
+
             const bmHealth = metrics.balance_manager_health || 'unknown';
             const bmHealthEl = document.getElementById('balanceManagerHealth');
             bmHealthEl.textContent = bmHealth;
             bmHealthEl.className = 'metric-value ' + (bmHealth === 'healthy' ? 'metric-positive' : 'metric-negative');
-            
+
             document.getElementById('balanceResponseTime').textContent = (metrics.balance_manager_response_time || 0).toFixed(0);
             document.getElementById('nonceRate').textContent = (metrics.nonce_generation_rate || 0).toFixed(0);
             document.getElementById('nonceFailures').textContent = metrics.nonce_failures || 0;
         }
-        
+
         function updateSystemStatus(status) {
             const statusEl = document.getElementById('systemStatus');
             const dotEl = document.getElementById('statusDot');
-            
+
             statusEl.textContent = status.status;
-            
+
             // Update dot color based on status
             dotEl.className = 'status-dot';
             if (status.status === 'healthy') {
@@ -727,15 +727,15 @@ class DashboardHTML:
                 dotEl.classList.add('status-critical');
             }
         }
-        
+
         function updateAlerts(alerts) {
             const alertsList = document.getElementById('alertsList');
-            
+
             if (!alerts || alerts.length === 0) {
                 alertsList.innerHTML = '<div style="text-align: center; color: #888; padding: 2rem;">No alerts</div>';
                 return;
             }
-            
+
             const alertsHtml = alerts.map(alert => {
                 const timestamp = new Date(alert.timestamp * 1000).toLocaleTimeString();
                 return `
@@ -745,16 +745,16 @@ class DashboardHTML:
                     </div>
                 `;
             }).join('');
-            
+
             alertsList.innerHTML = alertsHtml;
         }
-        
+
         function confirmEmergencyStop() {
             if (confirm('Are you sure you want to trigger an emergency stop? This will halt all trading immediately.')) {
                 triggerEmergencyStop();
             }
         }
-        
+
         async function triggerEmergencyStop() {
             try {
                 const response = await fetch('/api/control/emergency-stop', {
@@ -767,7 +767,7 @@ class DashboardHTML:
                         confirm: true
                     })
                 });
-                
+
                 if (response.ok) {
                     alert('Emergency stop initiated successfully');
                 } else {
@@ -778,10 +778,10 @@ class DashboardHTML:
                 alert('Emergency stop request failed');
             }
         }
-        
+
         // Initialize connection
         connectWebSocket();
-        
+
         // Refresh data every 30 seconds as fallback
         setInterval(async () => {
             if (!websocket || websocket.readyState !== WebSocket.OPEN) {

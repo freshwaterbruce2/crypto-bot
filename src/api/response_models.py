@@ -14,11 +14,11 @@ Features:
 
 Usage:
     from src.api.response_models import BalanceResponse, OrderResponse
-    
+
     # Parse balance response
     balance_data = await client.get_account_balance()
     balance = BalanceResponse(**balance_data)
-    
+
     # Access typed data
     btc_balance = balance.result.get('XBT', '0')
 """
@@ -26,7 +26,7 @@ Usage:
 import logging
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from pydantic import BaseModel, Field, validator
 
@@ -70,11 +70,11 @@ class SystemStatus(str, Enum):
 class KrakenResponse(BaseModel):
     """
     Base Kraken API response model.
-    
+
     All Kraken responses follow this structure with error and result fields.
     """
-    error: List[str] = Field(default_factory=list, description="List of error messages")
-    result: Optional[Dict[str, Any]] = Field(None, description="Response result data")
+    error: list[str] = Field(default_factory=list, description="List of error messages")
+    result: Optional[dict[str, Any]] = Field(None, description="Response result data")
 
     @validator('error', pre=True)
     def validate_error(cls, v):
@@ -102,7 +102,7 @@ class KrakenResponse(BaseModel):
 
 class ServerTimeResponse(KrakenResponse):
     """Server time response model."""
-    result: Optional[Dict[str, Union[int, str]]] = None
+    result: Optional[dict[str, Union[int, str]]] = None
 
     @property
     def unixtime(self) -> Optional[int]:
@@ -117,7 +117,7 @@ class ServerTimeResponse(KrakenResponse):
 
 class SystemStatusResponse(KrakenResponse):
     """System status response model."""
-    result: Optional[Dict[str, Union[str, int]]] = None
+    result: Optional[dict[str, Union[str, int]]] = None
 
     @property
     def status(self) -> Optional[str]:
@@ -140,7 +140,7 @@ class AssetInfo(BaseModel):
 
 class AssetInfoResponse(KrakenResponse):
     """Asset info response model."""
-    result: Optional[Dict[str, AssetInfo]] = None
+    result: Optional[dict[str, AssetInfo]] = None
 
     @validator('result', pre=True)
     def parse_assets(cls, v):
@@ -169,10 +169,10 @@ class AssetPairInfo(BaseModel):
     pair_decimals: Optional[int] = Field(None, description="Scaling decimal places for pair")
     lot_decimals: Optional[int] = Field(None, description="Scaling decimal places for volume")
     lot_multiplier: Optional[int] = Field(None, description="Amount to multiply lot volume by to get currency volume")
-    leverage_buy: Optional[List[int]] = Field(None, description="Array of leverage amounts available when buying")
-    leverage_sell: Optional[List[int]] = Field(None, description="Array of leverage amounts available when selling")
-    fees: Optional[List[List[Union[int, float]]]] = Field(None, description="Fee schedule array")
-    fees_maker: Optional[List[List[Union[int, float]]]] = Field(None, description="Maker fee schedule array")
+    leverage_buy: Optional[list[int]] = Field(None, description="Array of leverage amounts available when buying")
+    leverage_sell: Optional[list[int]] = Field(None, description="Array of leverage amounts available when selling")
+    fees: Optional[list[list[Union[int, float]]]] = Field(None, description="Fee schedule array")
+    fees_maker: Optional[list[list[Union[int, float]]]] = Field(None, description="Maker fee schedule array")
     fee_volume_currency: Optional[str] = Field(None, description="Volume discount currency")
     margin_call: Optional[int] = Field(None, description="Margin call level")
     margin_stop: Optional[int] = Field(None, description="Stop-out/liquidation margin level")
@@ -181,7 +181,7 @@ class AssetPairInfo(BaseModel):
 
 class AssetPairResponse(KrakenResponse):
     """Asset pairs response model."""
-    result: Optional[Dict[str, AssetPairInfo]] = None
+    result: Optional[dict[str, AssetPairInfo]] = None
 
     @validator('result', pre=True)
     def parse_pairs(cls, v):
@@ -200,14 +200,14 @@ class AssetPairResponse(KrakenResponse):
 
 class TickerInfo(BaseModel):
     """Ticker information model."""
-    a: Optional[List[str]] = Field(None, description="Ask array (price, whole lot volume, lot volume)")
-    b: Optional[List[str]] = Field(None, description="Bid array (price, whole lot volume, lot volume)")
-    c: Optional[List[str]] = Field(None, description="Last trade closed array (price, lot volume)")
-    v: Optional[List[str]] = Field(None, description="Volume array (today, last 24 hours)")
-    p: Optional[List[str]] = Field(None, description="Volume weighted average price array (today, last 24 hours)")
-    t: Optional[List[int]] = Field(None, description="Number of trades array (today, last 24 hours)")
-    l: Optional[List[str]] = Field(None, description="Low array (today, last 24 hours)")
-    h: Optional[List[str]] = Field(None, description="High array (today, last 24 hours)")
+    a: Optional[list[str]] = Field(None, description="Ask array (price, whole lot volume, lot volume)")
+    b: Optional[list[str]] = Field(None, description="Bid array (price, whole lot volume, lot volume)")
+    c: Optional[list[str]] = Field(None, description="Last trade closed array (price, lot volume)")
+    v: Optional[list[str]] = Field(None, description="Volume array (today, last 24 hours)")
+    p: Optional[list[str]] = Field(None, description="Volume weighted average price array (today, last 24 hours)")
+    t: Optional[list[int]] = Field(None, description="Number of trades array (today, last 24 hours)")
+    l: Optional[list[str]] = Field(None, description="Low array (today, last 24 hours)")
+    h: Optional[list[str]] = Field(None, description="High array (today, last 24 hours)")
     o: Optional[str] = Field(None, description="Today's opening price")
 
     @property
@@ -238,7 +238,7 @@ class TickerInfo(BaseModel):
 
 class TickerResponse(KrakenResponse):
     """Ticker response model."""
-    result: Optional[Dict[str, TickerInfo]] = None
+    result: Optional[dict[str, TickerInfo]] = None
 
     @validator('result', pre=True)
     def parse_tickers(cls, v):
@@ -269,15 +269,15 @@ class OHLCData(BaseModel):
 
 class OHLCResponse(KrakenResponse):
     """OHLC response model."""
-    result: Optional[Dict[str, Union[List[List], int]]] = None
+    result: Optional[dict[str, Union[list[list], int]]] = None
 
-    def get_ohlc_data(self, pair: str) -> List[OHLCData]:
+    def get_ohlc_data(self, pair: str) -> list[OHLCData]:
         """
         Get parsed OHLC data for a specific pair.
-        
+
         Args:
             pair: Asset pair name
-            
+
         Returns:
             List of OHLC data objects
         """
@@ -314,21 +314,21 @@ class OrderBookEntry(BaseModel):
 
 class OrderBookData(BaseModel):
     """Order book data model."""
-    asks: List[OrderBookEntry] = Field(default_factory=list, description="Ask side of book")
-    bids: List[OrderBookEntry] = Field(default_factory=list, description="Bid side of book")
+    asks: list[OrderBookEntry] = Field(default_factory=list, description="Ask side of book")
+    bids: list[OrderBookEntry] = Field(default_factory=list, description="Bid side of book")
 
 
 class OrderBookResponse(KrakenResponse):
     """Order book response model."""
-    result: Optional[Dict[str, Dict[str, List[List]]]] = None
+    result: Optional[dict[str, dict[str, list[list]]]] = None
 
     def get_order_book(self, pair: str) -> Optional[OrderBookData]:
         """
         Get parsed order book data for a specific pair.
-        
+
         Args:
             pair: Asset pair name
-            
+
         Returns:
             OrderBookData object or None
         """
@@ -370,15 +370,15 @@ class TradeInfo(BaseModel):
 
 class RecentTradesResponse(KrakenResponse):
     """Recent trades response model."""
-    result: Optional[Dict[str, Union[List[List], str]]] = None
+    result: Optional[dict[str, Union[list[list], str]]] = None
 
-    def get_trades(self, pair: str) -> List[TradeInfo]:
+    def get_trades(self, pair: str) -> list[TradeInfo]:
         """
         Get parsed trade data for a specific pair.
-        
+
         Args:
             pair: Asset pair name
-            
+
         Returns:
             List of TradeInfo objects
         """
@@ -406,15 +406,15 @@ class RecentTradesResponse(KrakenResponse):
 
 class BalanceResponse(KrakenResponse):
     """Account balance response model."""
-    result: Optional[Dict[str, str]] = None
+    result: Optional[dict[str, str]] = None
 
     def get_balance(self, asset: str) -> str:
         """
         Get balance for specific asset.
-        
+
         Args:
             asset: Asset name
-            
+
         Returns:
             Balance as string, '0' if not found
         """
@@ -422,13 +422,13 @@ class BalanceResponse(KrakenResponse):
             return '0'
         return self.result.get(asset, '0')
 
-    def get_total_balance_usd(self, ticker_data: Optional[Dict[str, TickerInfo]] = None) -> str:
+    def get_total_balance_usd(self, ticker_data: Optional[dict[str, TickerInfo]] = None) -> str:
         """
         Calculate total balance in USD equivalent.
-        
+
         Args:
             ticker_data: Ticker data for price conversion
-            
+
         Returns:
             Total balance in USD as string
         """
@@ -486,7 +486,7 @@ class OrderInfo(BaseModel):
     opentm: Optional[float] = Field(None, description="Unix timestamp of when order was placed")
     starttm: Optional[float] = Field(None, description="Unix timestamp of order start time (if set)")
     expiretm: Optional[float] = Field(None, description="Unix timestamp of order end time (if set)")
-    descr: Optional[Dict[str, str]] = Field(None, description="Order description info")
+    descr: Optional[dict[str, str]] = Field(None, description="Order description info")
     vol: Optional[str] = Field(None, description="Volume of order (base currency unless viqc set in oflags)")
     vol_exec: Optional[str] = Field(None, description="Volume executed (base currency unless viqc set in oflags)")
     cost: Optional[str] = Field(None, description="Total cost (quote currency unless unless viqc set in oflags)")
@@ -496,7 +496,7 @@ class OrderInfo(BaseModel):
     limitprice: Optional[str] = Field(None, description="Triggered limit price (quote currency, when limit based order type triggered)")
     misc: Optional[str] = Field(None, description="Miscellaneous")
     oflags: Optional[str] = Field(None, description="Comma delimited list of order flags")
-    trades: Optional[List[str]] = Field(None, description="Array of trade IDs related to order (if trades info requested and data available)")
+    trades: Optional[list[str]] = Field(None, description="Array of trade IDs related to order (if trades info requested and data available)")
 
     @property
     def order_type(self) -> Optional[str]:
@@ -516,7 +516,7 @@ class OrderInfo(BaseModel):
 
 class OpenOrdersResponse(KrakenResponse):
     """Open orders response model."""
-    result: Optional[Dict[str, Union[Dict[str, OrderInfo], int]]] = None
+    result: Optional[dict[str, Union[dict[str, OrderInfo], int]]] = None
 
     @validator('result', pre=True)
     def parse_orders(cls, v):
@@ -536,7 +536,7 @@ class OpenOrdersResponse(KrakenResponse):
         v['open'] = parsed_orders
         return v
 
-    def get_open_orders(self) -> Dict[str, OrderInfo]:
+    def get_open_orders(self) -> dict[str, OrderInfo]:
         """Get dictionary of open orders."""
         if not self.result or 'open' not in self.result:
             return {}
@@ -545,7 +545,7 @@ class OpenOrdersResponse(KrakenResponse):
 
 class ClosedOrdersResponse(KrakenResponse):
     """Closed orders response model."""
-    result: Optional[Dict[str, Union[Dict[str, OrderInfo], int]]] = None
+    result: Optional[dict[str, Union[dict[str, OrderInfo], int]]] = None
 
     @validator('result', pre=True)
     def parse_orders(cls, v):
@@ -565,7 +565,7 @@ class ClosedOrdersResponse(KrakenResponse):
         v['closed'] = parsed_orders
         return v
 
-    def get_closed_orders(self) -> Dict[str, OrderInfo]:
+    def get_closed_orders(self) -> dict[str, OrderInfo]:
         """Get dictionary of closed orders."""
         if not self.result or 'closed' not in self.result:
             return {}
@@ -574,7 +574,7 @@ class ClosedOrdersResponse(KrakenResponse):
 
 class QueryOrdersResponse(KrakenResponse):
     """Query orders response model."""
-    result: Optional[Dict[str, OrderInfo]] = None
+    result: Optional[dict[str, OrderInfo]] = None
 
     @validator('result', pre=True)
     def parse_orders(cls, v):
@@ -610,7 +610,7 @@ class TradeInfo(BaseModel):
 
 class TradeHistoryResponse(KrakenResponse):
     """Trade history response model."""
-    result: Optional[Dict[str, Union[Dict[str, TradeInfo], int]]] = None
+    result: Optional[dict[str, Union[dict[str, TradeInfo], int]]] = None
 
     @validator('result', pre=True)
     def parse_trades(cls, v):
@@ -630,7 +630,7 @@ class TradeHistoryResponse(KrakenResponse):
         v['trades'] = parsed_trades
         return v
 
-    def get_trades(self) -> Dict[str, TradeInfo]:
+    def get_trades(self) -> dict[str, TradeInfo]:
         """Get dictionary of trades."""
         if not self.result or 'trades' not in self.result:
             return {}
@@ -639,8 +639,8 @@ class TradeHistoryResponse(KrakenResponse):
 
 class AddOrderResult(BaseModel):
     """Add order result model."""
-    descr: Optional[Dict[str, str]] = Field(None, description="Order description info")
-    txid: Optional[List[str]] = Field(None, description="Array of transaction IDs for order")
+    descr: Optional[dict[str, str]] = Field(None, description="Order description info")
+    txid: Optional[list[str]] = Field(None, description="Array of transaction IDs for order")
 
 
 class OrderResponse(KrakenResponse):
@@ -655,7 +655,7 @@ class OrderResponse(KrakenResponse):
         return v
 
     @property
-    def transaction_ids(self) -> List[str]:
+    def transaction_ids(self) -> list[str]:
         """Get transaction IDs."""
         if self.result and self.result.txid:
             return self.result.txid
@@ -716,16 +716,16 @@ class WebSocketTokenResponse(KrakenResponse):
 
 # Helper function to parse any Kraken response
 def parse_kraken_response(
-    response_data: Dict[str, Any],
+    response_data: dict[str, Any],
     response_class: Optional[type] = None
 ) -> KrakenResponse:
     """
     Parse Kraken API response into appropriate model.
-    
+
     Args:
         response_data: Raw response data from Kraken API
         response_class: Specific response class to use (optional)
-        
+
     Returns:
         Parsed response object
     """
@@ -770,10 +770,10 @@ RESPONSE_TYPE_MAPPING = {
 def get_response_model(endpoint_name: str) -> type:
     """
     Get appropriate response model for endpoint.
-    
+
     Args:
         endpoint_name: Name of the API endpoint
-        
+
     Returns:
         Response model class
     """

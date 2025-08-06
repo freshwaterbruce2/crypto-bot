@@ -10,7 +10,7 @@ import hmac
 import os
 import time
 import urllib.parse
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -46,7 +46,7 @@ class SimpleKrakenREST:
 
         return base64.b64encode(mac.digest()).decode('utf-8')
 
-    async def _make_request(self, endpoint: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def _make_request(self, endpoint: str, data: dict[str, Any] = None) -> dict[str, Any]:
         """Make authenticated request to Kraken API"""
 
         if data is None:
@@ -83,15 +83,15 @@ class SimpleKrakenREST:
                 return result.get('result', {})
 
     # Public methods matching KrakenRestClient interface
-    async def get_account_balance(self) -> Dict[str, str]:
+    async def get_account_balance(self) -> dict[str, str]:
         """Get account balance"""
         return await self._make_request('/0/private/Balance')
 
-    async def get_trade_balance(self) -> Dict[str, Any]:
+    async def get_trade_balance(self) -> dict[str, Any]:
         """Get trade balance"""
         return await self._make_request('/0/private/TradeBalance')
 
-    async def add_order(self, pair: str, type: str, ordertype: str, volume: str, **kwargs) -> Dict[str, Any]:
+    async def add_order(self, pair: str, type: str, ordertype: str, volume: str, **kwargs) -> dict[str, Any]:
         """Add order"""
         data = {
             'pair': pair,
@@ -102,16 +102,16 @@ class SimpleKrakenREST:
         }
         return await self._make_request('/0/private/AddOrder', data)
 
-    async def cancel_order(self, txid: str) -> Dict[str, Any]:
+    async def cancel_order(self, txid: str) -> dict[str, Any]:
         """Cancel order"""
         data = {'txid': txid}
         return await self._make_request('/0/private/CancelOrder', data)
 
-    async def get_open_orders(self) -> Dict[str, Any]:
+    async def get_open_orders(self) -> dict[str, Any]:
         """Get open orders"""
         return await self._make_request('/0/private/OpenOrders')
 
-    async def get_closed_orders(self) -> Dict[str, Any]:
+    async def get_closed_orders(self) -> dict[str, Any]:
         """Get closed orders"""
         return await self._make_request('/0/private/ClosedOrders')
 

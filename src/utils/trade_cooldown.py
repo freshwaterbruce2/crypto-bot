@@ -9,7 +9,7 @@ and ensure compliance with Kraken's automated trading guidelines.
 import logging
 import time
 from collections import defaultdict
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,17 +19,17 @@ class TradeCooldownManager:
 
     def __init__(self, same_side_cooldown: int = 300):  # 5 minutes default
         self.same_side_cooldown = same_side_cooldown  # seconds
-        self.last_trades: Dict[str, Dict[str, float]] = defaultdict(dict)
-        self.trade_counts: Dict[str, Dict[str, int]] = defaultdict(dict)
+        self.last_trades: dict[str, dict[str, float]] = defaultdict(dict)
+        self.trade_counts: dict[str, dict[str, int]] = defaultdict(dict)
 
     def can_trade(self, symbol: str, side: str) -> tuple[bool, str]:
         """
         Check if trading is allowed for given symbol and side
-        
+
         Args:
             symbol: Trading pair (e.g., 'SHIB/USDT')
             side: Trade side ('buy' or 'sell')
-            
+
         Returns:
             Tuple of (allowed, reason)
         """
@@ -49,7 +49,7 @@ class TradeCooldownManager:
     def record_trade(self, symbol: str, side: str, amount: float) -> None:
         """
         Record a completed trade
-        
+
         Args:
             symbol: Trading pair
             side: Trade side
@@ -67,7 +67,7 @@ class TradeCooldownManager:
 
         logger.info(f"[COOLDOWN] Recorded {side} trade for {symbol}: ${amount:.2f}")
 
-    def get_cooldown_status(self, symbol: str) -> Dict[str, Any]:
+    def get_cooldown_status(self, symbol: str) -> dict[str, Any]:
         """Get cooldown status for a symbol"""
         current_time = time.time()
         status = {

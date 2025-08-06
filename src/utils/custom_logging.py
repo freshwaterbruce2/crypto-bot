@@ -22,11 +22,11 @@ def setup_logging(level: str = 'INFO', log_file: str = 'kraken_infinity_bot.log'
     """
     Set up logging configuration for the trading bot
     NOW USES PROFESSIONAL SYSTEM with log rotation and compression!
-    
+
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR)
         log_file: Path to log file (now handled by professional system)
-        
+
     Returns:
         Configured logger instance with enterprise features
     """
@@ -169,7 +169,7 @@ def configure_logging():
         log_level = config.get('log_level', 'INFO')
 
         # Setup professional logging system
-        logging_system = setup_professional_logging(
+        setup_professional_logging(
             log_dir="logs",
             max_file_size_mb=10,      # 10MB max per file
             backup_count=5,           # Keep 5 backup files
@@ -261,7 +261,7 @@ def log_trade_opportunity(symbol, side, confidence, price, metrics=None):
     """
     Log a trading opportunity with profit focus.
     Supports our buy-low-sell-high micro-scalping strategy.
-    
+
     Args:
         symbol: Trading pair (e.g., 'BTC/USDT')
         side: 'buy' or 'sell'

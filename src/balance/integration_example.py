@@ -3,7 +3,7 @@ Balance Manager Integration Example
 ==================================
 
 This example demonstrates how to integrate the unified balance manager system
-with the existing crypto trading bot architecture, including WebSocket V2 
+with the existing crypto trading bot architecture, including WebSocket V2
 streaming, REST API fallback, and trading logic integration.
 
 Usage:
@@ -12,7 +12,7 @@ Usage:
 
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from ..api.kraken_rest_client import KrakenRestClient
 from ..config.config import load_config
@@ -125,7 +125,7 @@ class BalanceManagerIntegrationExample:
     def _setup_balance_callbacks(self):
         """Setup callbacks for balance events"""
 
-        async def on_balance_update(balance_data: Dict[str, Any]):
+        async def on_balance_update(balance_data: dict[str, Any]):
             """Handle balance updates"""
             self.balance_updates_received += 1
             asset = balance_data['asset']
@@ -137,7 +137,7 @@ class BalanceManagerIntegrationExample:
             # Example: Make trading decision based on balance
             await self._process_balance_for_trading(balance_data)
 
-        async def on_balance_change(balance_data: Dict[str, Any]):
+        async def on_balance_change(balance_data: dict[str, Any]):
             """Handle significant balance changes"""
             asset = balance_data['asset']
             logger.info(f"Significant balance change detected for {asset}: {balance_data}")
@@ -174,7 +174,7 @@ class BalanceManagerIntegrationExample:
         self.balance_manager.register_callback('validation_failed', on_validation_failed)
         self.balance_manager.register_callback('error', on_error)
 
-    async def _process_balance_for_trading(self, balance_data: Dict[str, Any]):
+    async def _process_balance_for_trading(self, balance_data: dict[str, Any]):
         """Example trading logic based on balance updates"""
         try:
             asset = balance_data['asset']
@@ -231,7 +231,7 @@ class BalanceManagerIntegrationExample:
         # This would integrate with your existing trading strategies
         pass
 
-    async def _log_balance_change(self, balance_data: Dict[str, Any]):
+    async def _log_balance_change(self, balance_data: dict[str, Any]):
         """Log significant balance changes"""
         try:
             # Example: Save to trading journal

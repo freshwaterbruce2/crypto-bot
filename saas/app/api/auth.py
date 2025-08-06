@@ -5,7 +5,7 @@ Authentication API Routes
 Routes for user registration, login, token refresh, and authentication.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import HTTPBearer
@@ -147,7 +147,7 @@ async def login(credentials: UserLogin, request: Request):
     )
 
 
-@router.post("/refresh", response_model=Dict[str, Any])
+@router.post("/refresh", response_model=dict[str, Any])
 async def refresh_token(token_data: RefreshTokenRequest):
     """Refresh access token using refresh token"""
     try:
@@ -220,7 +220,7 @@ async def forgot_password(email: EmailStr):
     user_service = UserService()
 
     # Check if user exists
-    user = await user_service.get_user_by_email(email)
+    await user_service.get_user_by_email(email)
 
     # Always return success to prevent email enumeration
     # In production, would send reset email if user exists

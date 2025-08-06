@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +29,12 @@ class BuySignal:
     action: str  # 'buy' or 'hold'
     strength: BuySignalStrength
     confidence: float  # 0.0 to 1.0
-    reasons: List[str]
+    reasons: list[str]
     suggested_amount: Optional[float] = None
     stop_loss: Optional[float] = None
     take_profit: Optional[float] = None
     time_horizon: Optional[str] = None  # 'scalp', 'short', 'medium', 'long'
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
 
 class BuyLogicHandler:
@@ -43,7 +43,7 @@ class BuyLogicHandler:
     Consolidates signals from multiple sources and strategies.
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize buy logic handler"""
         self.config = config
 
@@ -78,13 +78,13 @@ class BuyLogicHandler:
         logger.info(f"[BUY_HANDLER] Initialized with min_confidence={self.min_confidence}, "
                    f"max_position_size={self.max_position_size}")
 
-    async def evaluate_buy_opportunity(self, data: Dict[str, Any]) -> BuySignal:
+    async def evaluate_buy_opportunity(self, data: dict[str, Any]) -> BuySignal:
         """
         Evaluate whether to buy based on comprehensive analysis
-        
+
         Args:
             data: Market data including price, volume, indicators
-            
+
         Returns:
             BuySignal with decision and metadata
         """
@@ -165,7 +165,7 @@ class BuyLogicHandler:
 
         return datetime.now() < cooldown_end
 
-    def _analyze_technicals(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_technicals(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Analyze technical indicators for buy signals"""
         try:
             indicators = data.get('indicators', {})
@@ -229,7 +229,7 @@ class BuyLogicHandler:
             logger.error(f"[BUY_HANDLER] Technical analysis error: {e}")
             return None
 
-    def _analyze_volume(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_volume(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Analyze volume patterns for buy signals"""
         try:
             volume_data = data.get('volume_data', [])
@@ -259,7 +259,7 @@ class BuyLogicHandler:
             logger.error(f"[BUY_HANDLER] Volume analysis error: {e}")
             return None
 
-    def _analyze_support_resistance(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_support_resistance(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Analyze support and resistance levels"""
         try:
             price_data = data.get('price_data', [])
@@ -294,7 +294,7 @@ class BuyLogicHandler:
             logger.error(f"[BUY_HANDLER] Support/resistance analysis error: {e}")
             return None
 
-    def _analyze_patterns(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_patterns(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Analyze chart patterns for buy signals"""
         try:
             price_data = data.get('price_data', [])
@@ -324,7 +324,7 @@ class BuyLogicHandler:
             logger.error(f"[BUY_HANDLER] Pattern analysis error: {e}")
             return None
 
-    def _detect_double_bottom(self, prices: List[float]) -> bool:
+    def _detect_double_bottom(self, prices: list[float]) -> bool:
         """Detect double bottom pattern"""
         if len(prices) < 30:
             return False
@@ -345,7 +345,7 @@ class BuyLogicHandler:
 
         return False
 
-    def _detect_bullish_flag(self, prices: List[float]) -> bool:
+    def _detect_bullish_flag(self, prices: list[float]) -> bool:
         """Detect bullish flag pattern"""
         if len(prices) < 20:
             return False
@@ -363,7 +363,7 @@ class BuyLogicHandler:
 
         return False
 
-    def _analyze_market_structure(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _analyze_market_structure(self, data: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Analyze overall market structure"""
         try:
             market_data = data.get('market_data', {})
@@ -383,7 +383,7 @@ class BuyLogicHandler:
             logger.error(f"[BUY_HANDLER] Market structure analysis error: {e}")
             return None
 
-    def _aggregate_signals(self, signals: List[Dict[str, Any]], symbol: str,
+    def _aggregate_signals(self, signals: list[dict[str, Any]], symbol: str,
                           current_price: float) -> BuySignal:
         """Aggregate multiple signals into final buy decision"""
         if not signals:
@@ -445,7 +445,7 @@ class BuyLogicHandler:
             }
         )
 
-    def _apply_risk_filters(self, signal: BuySignal, data: Dict[str, Any]) -> BuySignal:
+    def _apply_risk_filters(self, signal: BuySignal, data: dict[str, Any]) -> BuySignal:
         """Apply final risk management filters to buy signal"""
         if signal.action != 'buy':
             return signal
@@ -474,7 +474,7 @@ class BuyLogicHandler:
 
         return signal
 
-    def get_active_cooldowns(self) -> Dict[str, datetime]:
+    def get_active_cooldowns(self) -> dict[str, datetime]:
         """Get symbols currently in cooldown"""
         now = datetime.now()
         active = {}

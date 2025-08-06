@@ -20,7 +20,7 @@ Features:
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class IndexConfig:
     """Index configuration for optimal query performance"""
     name: str
     table: str
-    columns: List[str]
+    columns: list[str]
     unique: bool = False
     partial_condition: Optional[str] = None
     index_type: str = "BTREE"  # BTREE, HASH (SQLite uses BTREE)
@@ -83,7 +83,7 @@ class BalanceHistorySchema:
             validation_status TEXT DEFAULT 'valid',
             metadata TEXT,  -- JSON for additional data
             created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            
+
             -- Constraints
             CHECK (balance >= 0),
             CHECK (hold_trade >= 0),
@@ -93,7 +93,7 @@ class BalanceHistorySchema:
         """
 
     @staticmethod
-    def get_indexes() -> List[IndexConfig]:
+    def get_indexes() -> list[IndexConfig]:
         """Get optimized indexes for balance history queries"""
         return [
             # Primary time-series index for recent balance queries
@@ -140,7 +140,7 @@ class BalanceHistorySchema:
         ]
 
     @staticmethod
-    def get_partitioning_sql() -> List[str]:
+    def get_partitioning_sql() -> list[str]:
         """Get partitioning SQL for historical data management"""
         # SQLite doesn't support native partitioning, but we can create views
         # and separate tables for different time periods
@@ -153,7 +153,7 @@ class BalanceHistorySchema:
 
             f"""
             CREATE VIEW IF NOT EXISTS {BalanceHistorySchema.TABLE_NAME}_daily AS
-            SELECT 
+            SELECT
                 asset,
                 DATE(timestamp_ms/1000, 'unixepoch') as date,
                 MIN(balance) as min_balance,
@@ -182,38 +182,38 @@ class PositionSchema:
             symbol TEXT NOT NULL,
             position_type TEXT NOT NULL CHECK (position_type IN ('LONG', 'SHORT')),
             status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'CLOSED', 'PARTIAL', 'CANCELLED')),
-            
+
             -- Size and pricing
             original_size DECIMAL(20, 8) NOT NULL,
             current_size DECIMAL(20, 8) NOT NULL,
             avg_entry_price DECIMAL(20, 8) NOT NULL,
             current_price DECIMAL(20, 8),
-            
+
             -- P&L tracking
             realized_pnl DECIMAL(20, 8) DEFAULT 0.0,
             unrealized_pnl DECIMAL(20, 8) DEFAULT 0.0,
             total_pnl DECIMAL(20, 8) GENERATED ALWAYS AS (realized_pnl + unrealized_pnl) STORED,
-            
+
             -- Fees and costs
             total_fees DECIMAL(20, 8) DEFAULT 0.0,
             entry_fees DECIMAL(20, 8) DEFAULT 0.0,
             exit_fees DECIMAL(20, 8) DEFAULT 0.0,
-            
+
             -- Timestamps
             created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
             updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
             closed_at INTEGER,
-            
+
             -- Strategy and metadata
             strategy TEXT,
             tags TEXT,  -- JSON array of tags
             metadata TEXT,  -- JSON for additional data
-            
+
             -- Risk metrics
             max_drawdown DECIMAL(20, 8) DEFAULT 0.0,
             max_profit DECIMAL(20, 8) DEFAULT 0.0,
             hold_time_seconds INTEGER DEFAULT 0,
-            
+
             -- Constraints
             CHECK (original_size > 0),
             CHECK (current_size >= 0),
@@ -224,7 +224,7 @@ class PositionSchema:
         """
 
     @staticmethod
-    def get_indexes() -> List[IndexConfig]:
+    def get_indexes() -> list[IndexConfig]:
         """Get optimized indexes for position queries"""
         return [
             # Primary symbol-based queries
@@ -279,16 +279,16 @@ class PositionSchema:
         ]
 
     @staticmethod
-    def get_triggers() -> List[str]:
+    def get_triggers() -> list[str]:
         """Get triggers for automatic position updates"""
         return [
             # Update timestamp trigger
             f"""
-            CREATE TRIGGER IF NOT EXISTS update_position_timestamp 
+            CREATE TRIGGER IF NOT EXISTS update_position_timestamp
             AFTER UPDATE ON {PositionSchema.TABLE_NAME}
             FOR EACH ROW
             BEGIN
-                UPDATE {PositionSchema.TABLE_NAME} 
+                UPDATE {PositionSchema.TABLE_NAME}
                 SET updated_at = strftime('%s', 'now') * 1000
                 WHERE position_id = NEW.position_id;
             END
@@ -302,7 +302,7 @@ class PositionSchema:
             WHEN NEW.current_size = 0 AND OLD.current_size > 0
             BEGIN
                 UPDATE {PositionSchema.TABLE_NAME}
-                SET 
+                SET
                     status = 'CLOSED',
                     closed_at = strftime('%s', 'now') * 1000,
                     hold_time_seconds = (strftime('%s', 'now') * 1000 - created_at) / 1000
@@ -326,47 +326,47 @@ class TradeHistorySchema:
             position_id TEXT,
             order_id TEXT,
             symbol TEXT NOT NULL,
-            
+
             -- Trade details
             trade_type TEXT NOT NULL CHECK (trade_type IN ('BUY', 'SELL')),
             order_type TEXT NOT NULL CHECK (order_type IN ('MARKET', 'LIMIT', 'STOP', 'STOP_LIMIT')),
             size DECIMAL(20, 8) NOT NULL,
             price DECIMAL(20, 8) NOT NULL,
-            
+
             -- Execution details
             executed_size DECIMAL(20, 8) NOT NULL,
             executed_price DECIMAL(20, 8) NOT NULL,
             fees DECIMAL(20, 8) NOT NULL DEFAULT 0.0,
             fee_currency TEXT,
-            
+
             -- Status and timing
             status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'EXECUTED', 'CANCELLED', 'REJECTED', 'PARTIAL')),
             execution_time INTEGER,
             created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now') * 1000),
-            
+
             -- Strategy and metadata
             strategy TEXT,
             execution_venue TEXT DEFAULT 'kraken',
             slippage DECIMAL(10, 6),
             market_impact DECIMAL(10, 6),
-            
+
             -- P&L for this specific trade
             trade_pnl DECIMAL(20, 8),
             cumulative_pnl DECIMAL(20, 8),
-            
+
             -- Market data at execution
             bid_price DECIMAL(20, 8),
             ask_price DECIMAL(20, 8),
             spread DECIMAL(20, 8),
             volume_24h DECIMAL(20, 8),
-            
+
             -- Additional metadata
             metadata TEXT,  -- JSON for additional data
             error_message TEXT,
-            
+
             -- Foreign key relationship
             FOREIGN KEY (position_id) REFERENCES {PositionSchema.TABLE_NAME}(position_id),
-            
+
             -- Constraints
             CHECK (size > 0),
             CHECK (price > 0),
@@ -378,7 +378,7 @@ class TradeHistorySchema:
         """
 
     @staticmethod
-    def get_indexes() -> List[IndexConfig]:
+    def get_indexes() -> list[IndexConfig]:
         """Get optimized indexes for trade history queries"""
         return [
             # Primary symbol-based queries
@@ -447,33 +447,33 @@ class PortfolioMetricsSchema:
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp_ms INTEGER NOT NULL,
             timestamp_readable TEXT NOT NULL,
-            
+
             -- Portfolio value metrics
             total_value DECIMAL(20, 8) NOT NULL,
             cash_balance DECIMAL(20, 8) NOT NULL DEFAULT 0.0,
             position_value DECIMAL(20, 8) NOT NULL DEFAULT 0.0,
             total_pnl DECIMAL(20, 8) NOT NULL DEFAULT 0.0,
-            
+
             -- Performance metrics
             daily_pnl DECIMAL(20, 8) DEFAULT 0.0,
             daily_return_pct DECIMAL(10, 6) DEFAULT 0.0,
             total_return_pct DECIMAL(10, 6) DEFAULT 0.0,
             sharpe_ratio DECIMAL(10, 6),
             max_drawdown_pct DECIMAL(10, 6) DEFAULT 0.0,
-            
+
             -- Risk metrics
             portfolio_beta DECIMAL(10, 6),
             value_at_risk DECIMAL(20, 8),
             expected_shortfall DECIMAL(20, 8),
             volatility DECIMAL(10, 6),
-            
+
             -- Position metrics
             open_positions INTEGER DEFAULT 0,
             long_positions INTEGER DEFAULT 0,
             short_positions INTEGER DEFAULT 0,
             winning_positions INTEGER DEFAULT 0,
             losing_positions INTEGER DEFAULT 0,
-            
+
             -- Asset allocation (top 5 positions)
             allocation_1_symbol TEXT,
             allocation_1_weight DECIMAL(10, 6),
@@ -485,17 +485,17 @@ class PortfolioMetricsSchema:
             allocation_4_weight DECIMAL(10, 6),
             allocation_5_symbol TEXT,
             allocation_5_weight DECIMAL(10, 6),
-            
+
             -- Trading activity
             trades_today INTEGER DEFAULT 0,
             volume_today DECIMAL(20, 8) DEFAULT 0.0,
             fees_today DECIMAL(20, 8) DEFAULT 0.0,
-            
+
             -- Additional metadata
             market_regime TEXT,  -- bull, bear, sideways
             strategy_distribution TEXT,  -- JSON
             metadata TEXT,  -- JSON for additional metrics
-            
+
             -- Constraints
             CHECK (total_value >= 0),
             CHECK (timestamp_ms > 0),
@@ -506,7 +506,7 @@ class PortfolioMetricsSchema:
         """
 
     @staticmethod
-    def get_indexes() -> List[IndexConfig]:
+    def get_indexes() -> list[IndexConfig]:
         """Get optimized indexes for portfolio metrics queries"""
         return [
             # Time-series analysis
@@ -557,30 +557,30 @@ class PerformanceSchema:
             period_type TEXT NOT NULL CHECK (period_type IN ('HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY')),
             period_start INTEGER NOT NULL,
             period_end INTEGER NOT NULL,
-            
+
             -- Basic performance metrics
             start_value DECIMAL(20, 8) NOT NULL,
             end_value DECIMAL(20, 8) NOT NULL,
             total_return DECIMAL(20, 8) NOT NULL,
             total_return_pct DECIMAL(10, 6) NOT NULL,
-            
+
             -- Risk-adjusted returns
             sharpe_ratio DECIMAL(10, 6),
             sortino_ratio DECIMAL(10, 6),
             calmar_ratio DECIMAL(10, 6),
             information_ratio DECIMAL(10, 6),
-            
+
             -- Drawdown analysis
             max_drawdown DECIMAL(20, 8),
             max_drawdown_pct DECIMAL(10, 6),
             max_drawdown_duration INTEGER,
             current_drawdown DECIMAL(20, 8),
-            
+
             -- Volatility metrics
             volatility DECIMAL(10, 6),
             downside_volatility DECIMAL(10, 6),
             upside_volatility DECIMAL(10, 6),
-            
+
             -- Trading statistics
             total_trades INTEGER DEFAULT 0,
             winning_trades INTEGER DEFAULT 0,
@@ -589,24 +589,24 @@ class PerformanceSchema:
             avg_win DECIMAL(20, 8),
             avg_loss DECIMAL(20, 8),
             profit_factor DECIMAL(10, 6),
-            
+
             -- Benchmark comparison
             benchmark_return DECIMAL(20, 8),
             benchmark_return_pct DECIMAL(10, 6),
             alpha DECIMAL(10, 6),
             beta DECIMAL(10, 6),
             tracking_error DECIMAL(10, 6),
-            
+
             -- Additional metrics
             total_fees DECIMAL(20, 8) DEFAULT 0.0,
             total_volume DECIMAL(20, 8) DEFAULT 0.0,
             avg_position_size DECIMAL(20, 8),
             max_position_size DECIMAL(20, 8),
-            
+
             -- Market correlation
             market_correlation DECIMAL(10, 6),
             market_beta DECIMAL(10, 6),
-            
+
             -- Strategy breakdown (top 3 strategies)
             strategy_1_name TEXT,
             strategy_1_return DECIMAL(20, 8),
@@ -614,11 +614,11 @@ class PerformanceSchema:
             strategy_2_return DECIMAL(20, 8),
             strategy_3_name TEXT,
             strategy_3_return DECIMAL(20, 8),
-            
+
             -- Metadata
             metadata TEXT,  -- JSON for additional analytics
             created_at INTEGER DEFAULT (strftime('%s', 'now') * 1000),
-            
+
             -- Constraints
             CHECK (period_start < period_end),
             CHECK (start_value > 0),
@@ -631,7 +631,7 @@ class PerformanceSchema:
         """
 
     @staticmethod
-    def get_indexes() -> List[IndexConfig]:
+    def get_indexes() -> list[IndexConfig]:
         """Get optimized indexes for performance analytics queries"""
         return [
             # Period-based queries
@@ -728,7 +728,7 @@ class SchemaManager:
 
             total_indexes = 0
 
-            for table_type, schema_class in self.schemas.items():
+            for _table_type, schema_class in self.schemas.items():
                 if hasattr(schema_class, 'get_indexes'):
                     indexes = schema_class.get_indexes()
 
@@ -831,7 +831,7 @@ class SchemaManager:
             logger.error(f"[SCHEMA_MANAGER] Error initializing schema: {e}")
             return False
 
-    async def get_schema_info(self) -> Dict[str, Any]:
+    async def get_schema_info(self) -> dict[str, Any]:
         """Get comprehensive schema information"""
         try:
             schema_info = {
@@ -843,7 +843,7 @@ class SchemaManager:
 
             # Get table information
             tables_query = """
-            SELECT name, sql FROM sqlite_master 
+            SELECT name, sql FROM sqlite_master
             WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
             ORDER BY name
             """
@@ -857,7 +857,7 @@ class SchemaManager:
 
             # Get index information
             indexes_query = """
-            SELECT name, tbl_name, sql FROM sqlite_master 
+            SELECT name, tbl_name, sql FROM sqlite_master
             WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
             ORDER BY tbl_name, name
             """
@@ -874,7 +874,7 @@ class SchemaManager:
 
             # Get view information
             views_query = """
-            SELECT name, sql FROM sqlite_master 
+            SELECT name, sql FROM sqlite_master
             WHERE type = 'view'
             ORDER BY name
             """
@@ -885,7 +885,7 @@ class SchemaManager:
 
             # Get trigger information
             triggers_query = """
-            SELECT name, tbl_name, sql FROM sqlite_master 
+            SELECT name, tbl_name, sql FROM sqlite_master
             WHERE type = 'trigger'
             ORDER BY tbl_name, name
             """
@@ -914,7 +914,7 @@ class SchemaManager:
         except Exception:
             return 0
 
-    async def validate_schema(self) -> Dict[str, Any]:
+    async def validate_schema(self) -> dict[str, Any]:
         """Validate database schema integrity"""
         try:
             validation_results = {
@@ -931,7 +931,7 @@ class SchemaManager:
 
                 # Check if table exists
                 check_query = """
-                SELECT name FROM sqlite_master 
+                SELECT name FROM sqlite_master
                 WHERE type = 'table' AND name = ?
                 """
 
@@ -949,7 +949,7 @@ class SchemaManager:
                         expected_indexes = schema_class.get_indexes()
                         for index_config in expected_indexes:
                             index_check_query = """
-                            SELECT name FROM sqlite_master 
+                            SELECT name FROM sqlite_master
                             WHERE type = 'index' AND name = ?
                             """
 
@@ -987,7 +987,7 @@ class SchemaManager:
 
             # Reindex all indexes
             reindex_query = """
-            SELECT name FROM sqlite_master 
+            SELECT name FROM sqlite_master
             WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
             """
 

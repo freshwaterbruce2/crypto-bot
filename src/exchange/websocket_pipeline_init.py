@@ -18,7 +18,7 @@ Features:
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from .unified_websocket_data_pipeline import (
     MessageQueueConfig,
@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class WebSocketPipelineInitializer:
     """
     Complete WebSocket pipeline initialization and management system
-    
+
     Handles setup, configuration, monitoring, and lifecycle management
     of the unified WebSocket V2 data pipeline.
     """
@@ -42,7 +42,7 @@ class WebSocketPipelineInitializer:
     def __init__(self, websocket_manager, bot_instance=None):
         """
         Initialize the pipeline system
-        
+
         Args:
             websocket_manager: WebSocket V2 manager instance
             bot_instance: Bot instance for component discovery
@@ -67,13 +67,13 @@ class WebSocketPipelineInitializer:
                                          enable_monitoring: bool = True) -> bool:
         """
         Initialize the complete WebSocket pipeline system
-        
+
         Args:
             queue_config: Message queue configuration
             performance_config: Performance monitoring configuration
             alert_config: Alert configuration
             enable_monitoring: Whether to enable performance monitoring
-            
+
         Returns:
             True if initialization successful
         """
@@ -135,7 +135,7 @@ class WebSocketPipelineInitializer:
     async def initialize_basic_pipeline(self) -> bool:
         """
         Initialize basic pipeline without monitoring (lightweight setup)
-        
+
         Returns:
             True if initialization successful
         """
@@ -146,7 +146,7 @@ class WebSocketPipelineInitializer:
     async def initialize_high_performance_pipeline(self) -> bool:
         """
         Initialize high-performance pipeline with optimized settings
-        
+
         Returns:
             True if initialization successful
         """
@@ -342,7 +342,7 @@ class WebSocketPipelineInitializer:
         except Exception as e:
             logger.error(f"[INIT] Error during cleanup: {e}")
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get comprehensive system status"""
         status = {
             'initialized': self._initialized,
@@ -418,12 +418,12 @@ async def initialize_websocket_pipeline(websocket_manager, bot_instance,
                                       performance_mode: str = "balanced") -> Optional[WebSocketPipelineInitializer]:
     """
     Convenience function to initialize WebSocket pipeline
-    
+
     Args:
         websocket_manager: WebSocket V2 manager
         bot_instance: Bot instance
         performance_mode: "basic", "balanced", or "high_performance"
-        
+
     Returns:
         WebSocketPipelineInitializer if successful, None otherwise
     """
@@ -449,14 +449,14 @@ async def initialize_websocket_pipeline(websocket_manager, bot_instance,
         return None
 
 
-async def quick_setup_pipeline(websocket_manager, bot_instance) -> Tuple[bool, Optional[WebSocketPipelineInitializer]]:
+async def quick_setup_pipeline(websocket_manager, bot_instance) -> tuple[bool, Optional[WebSocketPipelineInitializer]]:
     """
     Quick setup function with error handling
-    
+
     Args:
         websocket_manager: WebSocket V2 manager
         bot_instance: Bot instance
-        
+
     Returns:
         Tuple of (success, initializer)
     """

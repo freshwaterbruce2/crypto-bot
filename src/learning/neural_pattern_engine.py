@@ -11,7 +11,7 @@ import logging
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 import numpy as np
 
@@ -21,12 +21,12 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PatternFeatures:
     """Features extracted from trading patterns"""
-    technical_indicators: Dict[str, float]
-    market_conditions: Dict[str, Any]
-    volume_profile: Dict[str, float]
-    price_action: Dict[str, float]
-    time_features: Dict[str, float]
-    sentiment_indicators: Dict[str, float]
+    technical_indicators: dict[str, float]
+    market_conditions: dict[str, Any]
+    volume_profile: dict[str, float]
+    price_action: dict[str, float]
+    time_features: dict[str, float]
+    sentiment_indicators: dict[str, float]
 
     def to_vector(self) -> np.ndarray:
         """Convert features to numerical vector for ML processing"""
@@ -66,7 +66,7 @@ class PatternFeatures:
 class SimpleNeuralNetwork:
     """Simplified neural network for pattern recognition"""
 
-    def __init__(self, input_size: int, hidden_sizes: List[int], output_size: int):
+    def __init__(self, input_size: int, hidden_sizes: list[int], output_size: int):
         """Initialize neural network with specified architecture"""
         self.input_size = input_size
         self.hidden_sizes = hidden_sizes
@@ -109,7 +109,7 @@ class SimpleNeuralNetwork:
         """Sigmoid activation function"""
         return 1 / (1 + np.exp(-np.clip(x, -500, 500)))
 
-    def forward(self, x: np.ndarray) -> Tuple[np.ndarray, List[np.ndarray]]:
+    def forward(self, x: np.ndarray) -> tuple[np.ndarray, list[np.ndarray]]:
         """Forward pass through the network"""
         activations = [x]
 
@@ -125,7 +125,7 @@ class SimpleNeuralNetwork:
 
         return activations[-1], activations
 
-    def backward(self, x: np.ndarray, y: np.ndarray, activations: List[np.ndarray]) -> float:
+    def backward(self, x: np.ndarray, y: np.ndarray, activations: list[np.ndarray]) -> float:
         """Backward pass and weight updates"""
         m = x.shape[0]
 
@@ -151,7 +151,7 @@ class SimpleNeuralNetwork:
 
         return loss
 
-    def train(self, X: np.ndarray, y: np.ndarray, epochs: int = 100) -> List[float]:
+    def train(self, X: np.ndarray, y: np.ndarray, epochs: int = 100) -> list[float]:
         """Train the neural network"""
         losses = []
 
@@ -201,8 +201,8 @@ class PatternRecognitionEngine:
 
         logger.info("[NEURAL_ENGINE] Pattern recognition engine initialized")
 
-    async def extract_features(self, market_data: Dict[str, Any],
-                             trading_context: Dict[str, Any]) -> PatternFeatures:
+    async def extract_features(self, market_data: dict[str, Any],
+                             trading_context: dict[str, Any]) -> PatternFeatures:
         """Extract comprehensive features from market data"""
         try:
             # Technical indicators
@@ -269,14 +269,14 @@ class PatternRecognitionEngine:
             logger.error(f"[NEURAL_ENGINE] Error extracting features: {e}")
             return PatternFeatures({}, {}, {}, {}, {}, {})
 
-    def _calculate_support_distance(self, price: float, market_data: Dict[str, Any]) -> float:
+    def _calculate_support_distance(self, price: float, market_data: dict[str, Any]) -> float:
         """Calculate distance to support level"""
         support_level = market_data.get('support_level', price * 0.98)
         if support_level > 0:
             return (price - support_level) / support_level
         return 0.0
 
-    def _calculate_resistance_distance(self, price: float, market_data: Dict[str, Any]) -> float:
+    def _calculate_resistance_distance(self, price: float, market_data: dict[str, Any]) -> float:
         """Calculate distance to resistance level"""
         resistance_level = market_data.get('resistance_level', price * 1.02)
         if resistance_level > 0:
@@ -291,7 +291,7 @@ class PatternRecognitionEngine:
         return (now - midnight).total_seconds() / 3600.0
 
     async def recognize_entry_pattern(self, features: PatternFeatures,
-                                    historical_outcomes: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                    historical_outcomes: list[dict[str, Any]]) -> dict[str, Any]:
         """Recognize entry patterns using neural network"""
         try:
             pattern_type = 'entry_patterns'
@@ -340,7 +340,7 @@ class PatternRecognitionEngine:
             }
 
     async def recognize_exit_pattern(self, features: PatternFeatures,
-                                   position_data: Dict[str, Any]) -> Dict[str, Any]:
+                                   position_data: dict[str, Any]) -> dict[str, Any]:
         """Recognize exit patterns using neural network"""
         try:
             pattern_type = 'exit_patterns'
@@ -391,7 +391,7 @@ class PatternRecognitionEngine:
             }
 
     async def detect_market_regime(self, features: PatternFeatures,
-                                 historical_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                 historical_data: list[dict[str, Any]]) -> dict[str, Any]:
         """Detect current market regime using neural patterns"""
         try:
             pattern_type = 'market_regime_patterns'
@@ -440,8 +440,8 @@ class PatternRecognitionEngine:
                 'error': str(e)
             }
 
-    async def train_on_outcomes(self, pattern_type: str, features_list: List[PatternFeatures],
-                              outcomes: List[float]) -> Dict[str, Any]:
+    async def train_on_outcomes(self, pattern_type: str, features_list: list[PatternFeatures],
+                              outcomes: list[float]) -> dict[str, Any]:
         """Train neural network on historical outcomes"""
         try:
             if pattern_type not in self.networks:
@@ -485,7 +485,7 @@ class PatternRecognitionEngine:
             return {'success': False, 'error': str(e)}
 
     async def _enhance_features_with_position(self, features: PatternFeatures,
-                                            position_data: Dict[str, Any]) -> PatternFeatures:
+                                            position_data: dict[str, Any]) -> PatternFeatures:
         """Enhance features with position-specific data"""
         # Add position-specific features
         enhanced_features = PatternFeatures(
@@ -509,7 +509,7 @@ class PatternRecognitionEngine:
         return enhanced_features
 
     async def _calculate_neural_exit_amount(self, confidence: float,
-                                          position_data: Dict[str, Any],
+                                          position_data: dict[str, Any],
                                           features: PatternFeatures) -> float:
         """Calculate exit amount using neural network insights"""
         position_size = position_data.get('amount', 0)
@@ -534,7 +534,7 @@ class PatternRecognitionEngine:
         return position_size * exit_pct
 
     async def _analyze_pattern_components(self, features: PatternFeatures,
-                                        pattern_type: str) -> Dict[str, Any]:
+                                        pattern_type: str) -> dict[str, Any]:
         """Analyze individual pattern components"""
         analysis = {}
 
@@ -563,7 +563,7 @@ class PatternRecognitionEngine:
         return analysis
 
     async def _prepare_regime_features(self, features: PatternFeatures,
-                                     historical_data: List[Dict[str, Any]]) -> PatternFeatures:
+                                     historical_data: list[dict[str, Any]]) -> PatternFeatures:
         """Prepare features specifically for regime detection"""
         # Add historical context features
         regime_features = PatternFeatures(
@@ -591,7 +591,7 @@ class PatternRecognitionEngine:
         return regime_features
 
     async def _calculate_feature_importance(self, features: PatternFeatures,
-                                          network: SimpleNeuralNetwork) -> Dict[str, float]:
+                                          network: SimpleNeuralNetwork) -> dict[str, float]:
         """Calculate feature importance using simple sensitivity analysis"""
         importance = {}
 
@@ -652,7 +652,7 @@ class PatternRecognitionEngine:
         strength = (volatility * 10 + volume_momentum + trend_persistence) / 3
         return min(strength, 1.0)
 
-    async def _calculate_transition_probability(self, historical_data: List[Dict[str, Any]]) -> float:
+    async def _calculate_transition_probability(self, historical_data: list[dict[str, Any]]) -> float:
         """Calculate probability of regime transition"""
         if len(historical_data) < 10:
             return 0.3  # Default moderate probability
@@ -712,7 +712,7 @@ class PatternRecognitionEngine:
         except Exception as e:
             logger.error(f"[NEURAL_ENGINE] Error loading networks: {e}")
 
-    def get_network_status(self) -> Dict[str, Any]:
+    def get_network_status(self) -> dict[str, Any]:
         """Get status of all neural networks"""
         status = {}
 

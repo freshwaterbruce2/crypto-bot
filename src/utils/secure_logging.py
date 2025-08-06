@@ -23,7 +23,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -39,7 +39,7 @@ class SensitivePattern:
 class SecureLogFormatter(logging.Formatter):
     """
     Secure log formatter that sanitizes sensitive data before logging.
-    
+
     Automatically detects and masks:
     - API keys and secrets
     - Authentication tokens
@@ -179,7 +179,7 @@ class SecureLogFormatter(logging.Formatter):
         super().__init__(*args, **kwargs)
 
         # Compile patterns for performance
-        self._compiled_patterns: List[tuple] = []
+        self._compiled_patterns: list[tuple] = []
         for pattern in self.SENSITIVE_PATTERNS:
             if pattern.enabled:
                 try:
@@ -222,13 +222,13 @@ class SecureLogFormatter(logging.Formatter):
             return f"[LOG_SANITIZATION_ERROR] {record.levelname}: {record.name} - Error processing log message"
 
     @lru_cache(maxsize=1000)  # Cache sanitized messages for performance
-    def _sanitize_message(self, message: str) -> tuple[str, List[str]]:
+    def _sanitize_message(self, message: str) -> tuple[str, list[str]]:
         """
         Sanitize message by detecting and masking sensitive data.
-        
+
         Args:
             message: Original log message
-            
+
         Returns:
             Tuple of (sanitized_message, detected_pattern_names)
         """
@@ -258,7 +258,7 @@ class SecureLogFormatter(logging.Formatter):
 
         return sanitized, detected_patterns
 
-    def get_sanitization_stats(self) -> Dict[str, Any]:
+    def get_sanitization_stats(self) -> dict[str, Any]:
         """Get sanitization statistics"""
         stats = dict(self._sanitization_stats)
         stats['sanitization_rate'] = (
@@ -288,7 +288,7 @@ class SecureLogHandler(logging.Handler):
     def __init__(self, base_handler: logging.Handler):
         """
         Initialize secure handler wrapping a base handler.
-        
+
         Args:
             base_handler: The underlying handler to wrap
         """
@@ -347,11 +347,11 @@ class SecureLogHandler(logging.Handler):
         if len(self._security_events) > 1000:
             self._security_events = self._security_events[-1000:]
 
-    def get_security_events(self) -> List[Dict[str, Any]]:
+    def get_security_events(self) -> list[dict[str, Any]]:
         """Get recent security events"""
         return list(self._security_events)
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         metrics = dict(self._performance_metrics)
         if metrics['total_logs'] > 0:
@@ -370,14 +370,14 @@ def setup_secure_logging(
 ) -> logging.Logger:
     """
     Set up secure logging with credential sanitization.
-    
+
     Args:
         logger_name: Name of logger (None for root logger)
         level: Logging level
         enable_console: Enable console logging
         enable_file: Enable file logging
         log_file: Path to log file
-        
+
     Returns:
         Configured secure logger
     """
@@ -423,12 +423,12 @@ def setup_secure_logging(
 def mask_credential(credential: str, mask_char: str = '*', visible_chars: int = 4) -> str:
     """
     Mask credential for safe display.
-    
+
     Args:
         credential: The credential to mask
         mask_char: Character to use for masking
         visible_chars: Number of characters to show at start/end
-        
+
     Returns:
         Masked credential string
     """
@@ -445,14 +445,14 @@ def mask_credential(credential: str, mask_char: str = '*', visible_chars: int = 
     return f"{start}{mask_char * min(middle_length, 8)}{end}"
 
 
-def sanitize_dict(data: Dict[str, Any], sensitive_keys: Optional[List[str]] = None) -> Dict[str, Any]:
+def sanitize_dict(data: dict[str, Any], sensitive_keys: Optional[list[str]] = None) -> dict[str, Any]:
     """
     Sanitize dictionary by masking sensitive keys.
-    
+
     Args:
         data: Dictionary to sanitize
         sensitive_keys: List of keys to mask (default uses common patterns)
-        
+
     Returns:
         Sanitized dictionary
     """

@@ -6,7 +6,7 @@ import logging
 import time
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any
 
 
 class RiskLevel(Enum):
@@ -33,7 +33,7 @@ class RiskManagementAssistant:
         self.max_position_size = self.config.get('max_position_size', 0.1)  # 10% of portfolio
         self.max_risk_per_trade = self.config.get('max_risk_per_trade', 0.02)  # 2% risk per trade
 
-    def assess_position_risk(self, position_size: Decimal, portfolio_value: Decimal) -> Dict[str, Any]:
+    def assess_position_risk(self, position_size: Decimal, portfolio_value: Decimal) -> dict[str, Any]:
         """Assess risk level of a position"""
         try:
             if portfolio_value <= 0:
@@ -84,7 +84,7 @@ class RiskManagementAssistant:
             return Decimal('0')
 
     def validate_trade_risk(self, trade_amount: Decimal, stop_loss_distance: Decimal,
-                          account_balance: Decimal) -> Dict[str, Any]:
+                          account_balance: Decimal) -> dict[str, Any]:
         """Validate if trade meets risk management criteria"""
         try:
             risk_amount = trade_amount * stop_loss_distance
@@ -125,7 +125,7 @@ class RiskManagementAssistant:
             self.logger.error(f"Stop loss calculation error: {e}")
             return Decimal('0')
 
-    def assess_market_risk(self, volatility: float, liquidity: float = 1.0) -> Dict[str, Any]:
+    def assess_market_risk(self, volatility: float, liquidity: float = 1.0) -> dict[str, Any]:
         """Assess overall market risk conditions"""
         try:
             # Simple market risk assessment
@@ -204,7 +204,7 @@ class RiskManagementAssistant:
         except Exception as e:
             self.logger.error(f"[RISK_ASSISTANT] Stop error: {e}")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of the risk management assistant"""
         try:
             # Check if daily loss limits are breached
@@ -231,7 +231,7 @@ class RiskManagementAssistant:
             self.logger.error(f"[RISK_ASSISTANT] Health check error: {e}")
             return {'healthy': False, 'error': str(e)}
 
-    async def validate_signals(self, signals: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def validate_signals(self, signals: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Validate trading signals against risk criteria"""
         try:
             self.logger.debug(f"[RISK_ASSISTANT] Validating {len(signals)} signals")
@@ -270,12 +270,12 @@ class RiskManagementAssistant:
             self.logger.error(f"[RISK_ASSISTANT] Signal validation error: {e}")
             return []
 
-    def _validate_signal_structure(self, signal: Dict[str, Any]) -> bool:
+    def _validate_signal_structure(self, signal: dict[str, Any]) -> bool:
         """Validate signal has required structure"""
         required_fields = ['symbol', 'confidence', 'position_size_usd']
         return all(field in signal for field in required_fields)
 
-    async def _assess_signal_risk(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    async def _assess_signal_risk(self, signal: dict[str, Any]) -> dict[str, Any]:
         """Assess risk of individual signal"""
         try:
             # Check confidence against threshold
@@ -330,7 +330,7 @@ class RiskManagementAssistant:
                 'reason': f'Risk assessment error: {str(e)}'
             }
 
-    def _adjust_signal_for_risk(self, signal: Dict[str, Any], risk_check: Dict[str, Any]) -> Dict[str, Any]:
+    def _adjust_signal_for_risk(self, signal: dict[str, Any], risk_check: dict[str, Any]) -> dict[str, Any]:
         """Adjust signal parameters based on risk assessment"""
         adjusted_signal = signal.copy()
 

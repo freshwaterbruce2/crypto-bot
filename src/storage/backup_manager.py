@@ -31,7 +31,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ class BackupMetadata:
     error_message: Optional[str] = None
     verification_result: Optional[bool] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         data = asdict(self)
         data['backup_type'] = self.backup_type.value
@@ -136,7 +136,7 @@ class BackupMetadata:
         return data
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BackupMetadata':
+    def from_dict(cls, data: dict[str, Any]) -> 'BackupMetadata':
         """Create from dictionary"""
         data['backup_type'] = BackupType(data['backup_type'])
         data['status'] = BackupStatus(data['status'])
@@ -154,9 +154,9 @@ class BackupManager:
         self.config = config or BackupConfig()
 
         # State management
-        self._backup_queue: List[BackupMetadata] = []
-        self._active_backups: Dict[str, BackupMetadata] = {}
-        self._backup_history: List[BackupMetadata] = []
+        self._backup_queue: list[BackupMetadata] = []
+        self._active_backups: dict[str, BackupMetadata] = {}
+        self._backup_history: list[BackupMetadata] = []
         self._lock = asyncio.Lock()
 
         # Background tasks
@@ -813,7 +813,7 @@ class BackupManager:
 
     # Public interface methods
 
-    def get_backup_status(self) -> Dict[str, Any]:
+    def get_backup_status(self) -> dict[str, Any]:
         """Get comprehensive backup system status"""
         return {
             'backup_system': {
@@ -837,7 +837,7 @@ class BackupManager:
             }
         }
 
-    def get_backup_list(self, backup_type: BackupType = None, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_backup_list(self, backup_type: BackupType = None, limit: int = 50) -> list[dict[str, Any]]:
         """Get list of available backups"""
         filtered_backups = self._backup_history
 
@@ -1021,7 +1021,7 @@ class RecoveryManager:
             logger.error(f"[RECOVERY_MANAGER] Database verification failed: {e}")
             return False
 
-    def list_recovery_points(self) -> List[Dict[str, Any]]:
+    def list_recovery_points(self) -> list[dict[str, Any]]:
         """List available recovery points"""
         recovery_points = []
 

@@ -173,7 +173,7 @@ class TimeServer:
     async def market_hours(self, args: dict) -> CallToolResult:
         """Check market hours and status"""
         market = args.get("market", "crypto")
-        timezone_str = args.get("timezone", "UTC")
+        args.get("timezone", "UTC")
 
         try:
             now = datetime.now(pytz.UTC)
@@ -235,7 +235,7 @@ class TimeServer:
     async def candle_time_info(self, args: dict) -> CallToolResult:
         """Get candle timing information"""
         timeframe = args.get("timeframe", "15m")
-        timezone_str = args.get("timezone", "UTC")
+        args.get("timezone", "UTC")
 
         try:
             now = datetime.now(pytz.UTC)
@@ -289,7 +289,7 @@ class TimeServer:
 
     async def trading_session_info(self, args: dict) -> CallToolResult:
         """Get trading session information"""
-        timezone_str = args.get("timezone", "UTC")
+        args.get("timezone", "UTC")
 
         try:
             now = datetime.now(pytz.UTC)
@@ -303,7 +303,6 @@ class TimeServer:
             }
 
             active_sessions = []
-            upcoming_sessions = []
 
             for session_name, info in sessions.items():
                 start_hour = info["start"]
@@ -347,7 +346,7 @@ class TimeServer:
     async def time_until(self, args: dict) -> CallToolResult:
         """Calculate time until target"""
         target_time_str = args.get("target_time")
-        timezone_str = args.get("timezone", "UTC")
+        args.get("timezone", "UTC")
 
         try:
             now = datetime.now(pytz.UTC)

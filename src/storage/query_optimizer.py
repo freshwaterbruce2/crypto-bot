@@ -22,7 +22,7 @@ import time
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class BalanceQueries:
         # Pre-compiled query templates
         self.queries = {
             'get_latest_balance': """
-                SELECT 
+                SELECT
                     asset,
                     balance,
                     hold_trade,
@@ -64,14 +64,14 @@ class BalanceQueries:
                     source,
                     timestamp_ms,
                     timestamp_readable
-                FROM balance_history 
-                WHERE asset = ? 
-                ORDER BY timestamp_ms DESC 
+                FROM balance_history
+                WHERE asset = ?
+                ORDER BY timestamp_ms DESC
                 LIMIT 1
             """,
 
             'get_all_latest_balances': """
-                SELECT 
+                SELECT
                     bh1.asset,
                     bh1.balance,
                     bh1.hold_trade,
@@ -90,7 +90,7 @@ class BalanceQueries:
             """,
 
             'get_balance_history': """
-                SELECT 
+                SELECT
                     asset,
                     balance,
                     hold_trade,
@@ -101,16 +101,16 @@ class BalanceQueries:
                     change_reason,
                     timestamp_ms,
                     timestamp_readable
-                FROM balance_history 
-                WHERE asset = ? 
-                    AND timestamp_ms >= ? 
+                FROM balance_history
+                WHERE asset = ?
+                    AND timestamp_ms >= ?
                     AND timestamp_ms <= ?
                 ORDER BY timestamp_ms DESC
                 LIMIT ?
             """,
 
             'get_balance_changes': """
-                SELECT 
+                SELECT
                     asset,
                     balance,
                     balance_change,
@@ -119,8 +119,8 @@ class BalanceQueries:
                     change_reason,
                     timestamp_ms,
                     timestamp_readable
-                FROM balance_history 
-                WHERE asset = ? 
+                FROM balance_history
+                WHERE asset = ?
                     AND ABS(balance_change) >= ?
                     AND timestamp_ms >= ?
                 ORDER BY timestamp_ms DESC
@@ -144,7 +144,7 @@ class BalanceQueries:
             """,
 
             'get_balance_analytics': """
-                SELECT 
+                SELECT
                     asset,
                     COUNT(*) as update_count,
                     MIN(balance) as min_balance,
@@ -153,14 +153,14 @@ class BalanceQueries:
                     SUM(ABS(balance_change)) as total_change_volume,
                     MIN(timestamp_ms) as first_update,
                     MAX(timestamp_ms) as last_update
-                FROM balance_history 
-                WHERE asset = ? 
+                FROM balance_history
+                WHERE asset = ?
                     AND timestamp_ms >= ?
                 GROUP BY asset
             """,
 
             'get_top_balance_changes': """
-                SELECT 
+                SELECT
                     asset,
                     balance_change,
                     percentage_change,
@@ -168,7 +168,7 @@ class BalanceQueries:
                     source,
                     timestamp_ms,
                     timestamp_readable
-                FROM balance_history 
+                FROM balance_history
                 WHERE timestamp_ms >= ?
                     AND ABS(balance_change) >= ?
                 ORDER BY ABS(balance_change) DESC
@@ -176,7 +176,7 @@ class BalanceQueries:
             """
         }
 
-    async def get_latest_balance(self, asset: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
+    async def get_latest_balance(self, asset: str, use_cache: bool = True) -> Optional[dict[str, Any]]:
         """Get latest balance for specific asset with microsecond precision"""
         try:
             start_time = time.time()
@@ -199,7 +199,7 @@ class BalanceQueries:
             logger.error(f"[BALANCE_QUERIES] Error getting latest balance for {asset}: {e}")
             return None
 
-    async def get_all_latest_balances(self, use_cache: bool = True) -> List[Dict[str, Any]]:
+    async def get_all_latest_balances(self, use_cache: bool = True) -> list[dict[str, Any]]:
         """Get all latest balances with optimized JOIN query"""
         try:
             start_time = time.time()
@@ -223,7 +223,7 @@ class BalanceQueries:
             return []
 
     async def get_balance_history(self, asset: str, start_time: int, end_time: int,
-                                limit: int = 1000, use_cache: bool = True) -> List[Dict[str, Any]]:
+                                limit: int = 1000, use_cache: bool = True) -> list[dict[str, Any]]:
         """Get balance history for time range analysis"""
         try:
             results = await self.db.execute_query(
@@ -266,7 +266,7 @@ class BalanceQueries:
             logger.error(f"[BALANCE_QUERIES] Error inserting balance entry for {asset}: {e}")
             return False
 
-    async def batch_insert_balances(self, balance_entries: List[Tuple]) -> int:
+    async def batch_insert_balances(self, balance_entries: list[tuple]) -> int:
         """Batch insert balance entries for high-throughput operations"""
         try:
             return await self.db.execute_batch(
@@ -287,7 +287,7 @@ class PositionQueries:
 
         self.queries = {
             'get_position': """
-                SELECT 
+                SELECT
                     position_id,
                     symbol,
                     position_type,
@@ -307,12 +307,12 @@ class PositionQueries:
                     max_drawdown,
                     max_profit,
                     hold_time_seconds
-                FROM positions 
+                FROM positions
                 WHERE position_id = ?
             """,
 
             'get_open_positions': """
-                SELECT 
+                SELECT
                     position_id,
                     symbol,
                     position_type,
@@ -326,13 +326,13 @@ class PositionQueries:
                     strategy,
                     max_drawdown,
                     max_profit
-                FROM positions 
+                FROM positions
                 WHERE status = 'OPEN'
                 ORDER BY created_at DESC
             """,
 
             'get_positions_by_symbol': """
-                SELECT 
+                SELECT
                     position_id,
                     symbol,
                     position_type,
@@ -344,20 +344,20 @@ class PositionQueries:
                     total_pnl,
                     created_at,
                     updated_at
-                FROM positions 
-                WHERE symbol = ? 
+                FROM positions
+                WHERE symbol = ?
                     AND status IN ('OPEN', 'PARTIAL')
                 ORDER BY created_at DESC
             """,
 
             'update_position_price': """
-                UPDATE positions 
-                SET 
+                UPDATE positions
+                SET
                     current_price = ?,
-                    unrealized_pnl = CASE 
-                        WHEN position_type = 'LONG' THEN 
+                    unrealized_pnl = CASE
+                        WHEN position_type = 'LONG' THEN
                             (? - avg_entry_price) * current_size - total_fees
-                        WHEN position_type = 'SHORT' THEN 
+                        WHEN position_type = 'SHORT' THEN
                             (avg_entry_price - ?) * current_size - total_fees
                         ELSE unrealized_pnl
                     END,
@@ -380,12 +380,12 @@ class PositionQueries:
             """,
 
             'close_position_partial': """
-                UPDATE positions 
-                SET 
+                UPDATE positions
+                SET
                     current_size = current_size - ?,
                     realized_pnl = realized_pnl + ?,
                     total_fees = total_fees + ?,
-                    status = CASE 
+                    status = CASE
                         WHEN current_size - ? <= 0 THEN 'CLOSED'
                         ELSE 'PARTIAL'
                     END,
@@ -394,7 +394,7 @@ class PositionQueries:
                         ELSE closed_at
                     END,
                     hold_time_seconds = CASE
-                        WHEN current_size - ? <= 0 THEN 
+                        WHEN current_size - ? <= 0 THEN
                             (strftime('%s', 'now') * 1000 - created_at) / 1000
                         ELSE hold_time_seconds
                     END,
@@ -411,7 +411,7 @@ class PositionQueries:
             """,
 
             'get_portfolio_summary': """
-                SELECT 
+                SELECT
                     COUNT(*) as total_positions,
                     SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) as open_positions,
                     SUM(CASE WHEN position_type = 'LONG' AND status = 'OPEN' THEN 1 ELSE 0 END) as long_positions,
@@ -425,7 +425,7 @@ class PositionQueries:
             """,
 
             'get_position_analytics': """
-                SELECT 
+                SELECT
                     symbol,
                     COUNT(*) as position_count,
                     SUM(realized_pnl) as total_pnl,
@@ -436,14 +436,14 @@ class PositionQueries:
                     MIN(realized_pnl) as worst_trade,
                     AVG(hold_time_seconds) as avg_hold_time,
                     SUM(total_fees) as total_fees
-                FROM positions 
+                FROM positions
                 WHERE status = 'CLOSED'
                 GROUP BY symbol
                 ORDER BY total_pnl DESC
             """
         }
 
-    async def get_position(self, position_id: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
+    async def get_position(self, position_id: str, use_cache: bool = True) -> Optional[dict[str, Any]]:
         """Get position details with real-time P&L"""
         try:
             results = await self.db.execute_query(
@@ -459,7 +459,7 @@ class PositionQueries:
             logger.error(f"[POSITION_QUERIES] Error getting position {position_id}: {e}")
             return None
 
-    async def get_open_positions(self, use_cache: bool = True) -> List[Dict[str, Any]]:
+    async def get_open_positions(self, use_cache: bool = True) -> list[dict[str, Any]]:
         """Get all open positions with optimized query"""
         try:
             start_time = time.time()
@@ -520,7 +520,7 @@ class PositionQueries:
             logger.error(f"[POSITION_QUERIES] Error creating position {position_id}: {e}")
             return False
 
-    async def get_portfolio_summary(self, use_cache: bool = True) -> Dict[str, Any]:
+    async def get_portfolio_summary(self, use_cache: bool = True) -> dict[str, Any]:
         """Get comprehensive portfolio summary with single query"""
         try:
             results = await self.db.execute_query(
@@ -556,20 +556,20 @@ class PortfolioQueries:
             """,
 
             'get_latest_portfolio_metrics': """
-                SELECT * FROM portfolio_metrics 
-                ORDER BY timestamp_ms DESC 
+                SELECT * FROM portfolio_metrics
+                ORDER BY timestamp_ms DESC
                 LIMIT 1
             """,
 
             'get_portfolio_metrics_range': """
-                SELECT * FROM portfolio_metrics 
+                SELECT * FROM portfolio_metrics
                 WHERE timestamp_ms >= ? AND timestamp_ms <= ?
                 ORDER BY timestamp_ms DESC
                 LIMIT ?
             """,
 
             'get_portfolio_performance': """
-                SELECT 
+                SELECT
                     DATE(timestamp_ms/1000, 'unixepoch') as date,
                     MIN(total_value) as day_low,
                     MAX(total_value) as day_high,
@@ -579,7 +579,7 @@ class PortfolioQueries:
                     SUM(trades_today) as day_trades,
                     SUM(volume_today) as day_volume,
                     SUM(fees_today) as day_fees
-                FROM portfolio_metrics 
+                FROM portfolio_metrics
                 WHERE timestamp_ms >= ?
                 GROUP BY DATE(timestamp_ms/1000, 'unixepoch')
                 ORDER BY date DESC
@@ -588,17 +588,17 @@ class PortfolioQueries:
 
             'calculate_drawdown': """
                 WITH portfolio_peaks AS (
-                    SELECT 
+                    SELECT
                         timestamp_ms,
                         total_value,
                         MAX(total_value) OVER (
-                            ORDER BY timestamp_ms 
+                            ORDER BY timestamp_ms
                             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
                         ) as peak_value
-                    FROM portfolio_metrics 
+                    FROM portfolio_metrics
                     WHERE timestamp_ms >= ?
                 )
-                SELECT 
+                SELECT
                     timestamp_ms,
                     total_value,
                     peak_value,
@@ -611,7 +611,7 @@ class PortfolioQueries:
             """,
 
             'get_risk_metrics': """
-                SELECT 
+                SELECT
                     COUNT(*) as data_points,
                     AVG(daily_return_pct) as avg_return,
                     STDEV(daily_return_pct) as volatility,
@@ -622,12 +622,12 @@ class PortfolioQueries:
                     AVG(total_value) as avg_portfolio_value,
                     MAX(total_value) as peak_value,
                     MIN(total_value) as trough_value
-                FROM portfolio_metrics 
+                FROM portfolio_metrics
                 WHERE timestamp_ms >= ?
             """
         }
 
-    async def insert_portfolio_metrics(self, metrics_data: Dict[str, Any]) -> bool:
+    async def insert_portfolio_metrics(self, metrics_data: dict[str, Any]) -> bool:
         """Insert portfolio metrics with optimized performance"""
         try:
             timestamp_ms = int(time.time() * 1000)
@@ -666,7 +666,7 @@ class PortfolioQueries:
             logger.error(f"[PORTFOLIO_QUERIES] Error inserting portfolio metrics: {e}")
             return False
 
-    async def get_latest_portfolio_metrics(self, use_cache: bool = True) -> Optional[Dict[str, Any]]:
+    async def get_latest_portfolio_metrics(self, use_cache: bool = True) -> Optional[dict[str, Any]]:
         """Get latest portfolio metrics"""
         try:
             results = await self.db.execute_query(
@@ -692,26 +692,26 @@ class AnalyticsQueries:
         self.queries = {
             'calculate_sharpe_ratio': """
                 WITH daily_returns AS (
-                    SELECT 
+                    SELECT
                         daily_return_pct,
                         COUNT(*) OVER() as total_days
-                    FROM portfolio_metrics 
-                    WHERE timestamp_ms >= ? 
+                    FROM portfolio_metrics
+                    WHERE timestamp_ms >= ?
                         AND daily_return_pct IS NOT NULL
                 )
-                SELECT 
+                SELECT
                     AVG(daily_return_pct) as avg_return,
                     STDEV(daily_return_pct) as volatility,
-                    CASE 
-                        WHEN STDEV(daily_return_pct) > 0 THEN 
+                    CASE
+                        WHEN STDEV(daily_return_pct) > 0 THEN
                             AVG(daily_return_pct) / STDEV(daily_return_pct) * SQRT(365)
-                        ELSE 0 
+                        ELSE 0
                     END as sharpe_ratio
                 FROM daily_returns
             """,
 
             'strategy_performance': """
-                SELECT 
+                SELECT
                     strategy,
                     COUNT(*) as trade_count,
                     SUM(realized_pnl) as total_pnl,
@@ -721,8 +721,8 @@ class AnalyticsQueries:
                     MAX(realized_pnl) as best_trade,
                     MIN(realized_pnl) as worst_trade,
                     SUM(total_fees) as total_fees
-                FROM positions 
-                WHERE status = 'CLOSED' 
+                FROM positions
+                WHERE status = 'CLOSED'
                     AND strategy IS NOT NULL
                     AND created_at >= ?
                 GROUP BY strategy
@@ -731,22 +731,22 @@ class AnalyticsQueries:
 
             'market_correlation': """
                 WITH portfolio_returns AS (
-                    SELECT 
+                    SELECT
                         DATE(timestamp_ms/1000, 'unixepoch') as date,
                         daily_return_pct as portfolio_return
-                    FROM portfolio_metrics 
+                    FROM portfolio_metrics
                     WHERE timestamp_ms >= ?
                         AND daily_return_pct IS NOT NULL
                 ),
                 market_data AS (
                     -- This would join with market data if available
-                    SELECT 
+                    SELECT
                         date,
                         portfolio_return,
                         0.0 as market_return  -- Placeholder
                     FROM portfolio_returns
                 )
-                SELECT 
+                SELECT
                     COUNT(*) as data_points,
                     AVG(portfolio_return) as avg_portfolio_return,
                     AVG(market_return) as avg_market_return,
@@ -756,7 +756,7 @@ class AnalyticsQueries:
             """
         }
 
-    async def calculate_sharpe_ratio(self, days_back: int = 30) -> Optional[Dict[str, Any]]:
+    async def calculate_sharpe_ratio(self, days_back: int = 30) -> Optional[dict[str, Any]]:
         """Calculate Sharpe ratio for specified period"""
         try:
             start_time = int((time.time() - days_back * 86400) * 1000)
@@ -802,7 +802,7 @@ class QueryOptimizer:
 
         logger.info("[QUERY_OPTIMIZER] Initialized with optimized query system")
 
-    async def explain_query(self, query: str, parameters: Tuple = ()) -> List[Dict[str, Any]]:
+    async def explain_query(self, query: str, parameters: tuple = ()) -> list[dict[str, Any]]:
         """Analyze query execution plan for optimization"""
         if not self.config.enable_explain:
             return []
@@ -816,7 +816,7 @@ class QueryOptimizer:
             logger.error(f"[QUERY_OPTIMIZER] Error explaining query: {e}")
             return []
 
-    def get_optimization_stats(self) -> Dict[str, Any]:
+    def get_optimization_stats(self) -> dict[str, Any]:
         """Get query optimization statistics"""
         return {
             'query_stats': dict(self._query_stats),

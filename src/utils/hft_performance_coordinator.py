@@ -16,7 +16,7 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 # Import HFT optimization modules
 from src.circuit_breaker.circuit_breaker import CircuitBreakerConfig
@@ -174,7 +174,7 @@ class HFTPerformanceCoordinator:
 
         # Initialize circuit breakers with HFT config
         if self.config.circuit_breaker_enabled:
-            cb_config = CircuitBreakerConfig(
+            CircuitBreakerConfig(
                 adaptive_threshold=self.config.adaptive_thresholds,
                 burst_mode_enabled=self.config.burst_mode_enabled,
                 performance_mode=True
@@ -527,7 +527,7 @@ class HFTPerformanceCoordinator:
         self.performance_callbacks.append(callback)
         logger.info("[HFT_COORDINATOR] Performance callback registered")
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
         uptime = time.time() - self.start_time
 

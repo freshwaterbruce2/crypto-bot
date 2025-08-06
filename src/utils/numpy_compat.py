@@ -7,7 +7,7 @@ ensuring the trading bot can function with or without numpy installed.
 
 import logging
 import statistics
-from typing import List, Tuple, Union
+from typing import Union
 
 logger = logging.getLogger(__name__)
 
@@ -25,21 +25,21 @@ class NumpyCompat:
     """Provides numpy-compatible operations with pure Python fallbacks"""
 
     @staticmethod
-    def array(data: List[Union[int, float]]) -> Union['np.ndarray', List[float]]:
+    def array(data: list[Union[int, float]]) -> Union['np.ndarray', list[float]]:
         """Create array from data"""
         if HAS_NUMPY:
             return np.array(data)
         return [float(x) for x in data]
 
     @staticmethod
-    def mean(data: Union[List[float], 'np.ndarray']) -> float:
+    def mean(data: Union[list[float], 'np.ndarray']) -> float:
         """Calculate mean of data"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.mean(data))
         return statistics.mean(data) if data else 0.0
 
     @staticmethod
-    def std(data: Union[List[float], 'np.ndarray'], ddof: int = 0) -> float:
+    def std(data: Union[list[float], 'np.ndarray'], ddof: int = 0) -> float:
         """Calculate standard deviation"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.std(data, ddof=ddof))
@@ -52,21 +52,21 @@ class NumpyCompat:
             return statistics.stdev(data)   # Sample std dev
 
     @staticmethod
-    def max(data: Union[List[float], 'np.ndarray']) -> float:
+    def max(data: Union[list[float], 'np.ndarray']) -> float:
         """Find maximum value"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.max(data))
         return max(data) if data else 0.0
 
     @staticmethod
-    def min(data: Union[List[float], 'np.ndarray']) -> float:
+    def min(data: Union[list[float], 'np.ndarray']) -> float:
         """Find minimum value"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.min(data))
         return min(data) if data else 0.0
 
     @staticmethod
-    def diff(data: Union[List[float], 'np.ndarray']) -> List[float]:
+    def diff(data: Union[list[float], 'np.ndarray']) -> list[float]:
         """Calculate differences between consecutive elements"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return np.diff(data).tolist()
@@ -75,7 +75,7 @@ class NumpyCompat:
         return [data[i+1] - data[i] for i in range(len(data)-1)]
 
     @staticmethod
-    def abs(data: Union[float, List[float], 'np.ndarray']) -> Union[float, List[float]]:
+    def abs(data: Union[float, list[float], 'np.ndarray']) -> Union[float, list[float]]:
         """Calculate absolute values"""
         if isinstance(data, (int, float)):
             return abs(data)
@@ -84,7 +84,7 @@ class NumpyCompat:
         return [abs(x) for x in data]
 
     @staticmethod
-    def zeros(shape: Union[int, Tuple[int, ...]]) -> Union['np.ndarray', List]:
+    def zeros(shape: Union[int, tuple[int, ...]]) -> Union['np.ndarray', list]:
         """Create array of zeros"""
         if HAS_NUMPY:
             return np.zeros(shape)
@@ -95,7 +95,7 @@ class NumpyCompat:
         return [0.0] * size
 
     @staticmethod
-    def linspace(start: float, stop: float, num: int) -> List[float]:
+    def linspace(start: float, stop: float, num: int) -> list[float]:
         """Create evenly spaced values"""
         if HAS_NUMPY:
             return np.linspace(start, stop, num).tolist()
@@ -110,7 +110,7 @@ numpy_compat = NumpyCompat()
 
 
 # Export commonly used functions at module level
-def safe_mean(data: List[float]) -> float:
+def safe_mean(data: list[float]) -> float:
     """Calculate mean with error handling"""
     try:
         return numpy_compat.mean(data)
@@ -119,7 +119,7 @@ def safe_mean(data: List[float]) -> float:
         return 0.0
 
 
-def safe_std(data: List[float], ddof: int = 0) -> float:
+def safe_std(data: list[float], ddof: int = 0) -> float:
     """Calculate standard deviation with error handling"""
     try:
         return numpy_compat.std(data, ddof=ddof)
@@ -128,7 +128,7 @@ def safe_std(data: List[float], ddof: int = 0) -> float:
         return 0.0
 
 
-def safe_array(data: List[Union[int, float]]) -> Union['np.ndarray', List[float]]:
+def safe_array(data: list[Union[int, float]]) -> Union['np.ndarray', list[float]]:
     """Create array with error handling"""
     try:
         return numpy_compat.array(data)

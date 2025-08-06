@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -58,7 +58,7 @@ class FailureScenario:
     name: str
     description: str
     failure_type: FailureType
-    affected_components: List[str]
+    affected_components: list[str]
     expected_recovery: RecoveryMethod
     recovery_time_limit: float  # seconds
     critical: bool = False
@@ -74,10 +74,10 @@ class RecoveryTestResult:
     recovery_time: float
     degradation_acceptable: bool
     data_consistency_maintained: bool
-    errors_logged: List[str]
-    warnings: List[str]
-    recovery_steps: List[str]
-    details: Dict[str, Any]
+    errors_logged: list[str]
+    warnings: list[str]
+    recovery_steps: list[str]
+    details: dict[str, Any]
 
 
 class ErrorRecoveryTester:
@@ -86,7 +86,7 @@ class ErrorRecoveryTester:
     def __init__(self):
         self.config = TradingConfig()
         self.logger = self._setup_logging()
-        self.results: List[RecoveryTestResult] = []
+        self.results: list[RecoveryTestResult] = []
 
         # System components
         self.auth: Optional[KrakenAuth] = None
@@ -118,7 +118,7 @@ class ErrorRecoveryTester:
 
         return logger
 
-    def _define_failure_scenarios(self) -> List[FailureScenario]:
+    def _define_failure_scenarios(self) -> list[FailureScenario]:
         """Define failure scenarios to test"""
         return [
             FailureScenario(
@@ -223,7 +223,7 @@ class ErrorRecoveryTester:
             )
         ]
 
-    async def run_recovery_tests(self) -> List[RecoveryTestResult]:
+    async def run_recovery_tests(self) -> list[RecoveryTestResult]:
         """Run all error recovery tests"""
         self.logger.info("Starting error recovery and resilience testing")
 
@@ -242,7 +242,6 @@ class ErrorRecoveryTester:
                     if result.recovery_successful:
                         self.logger.info(f"✅ {scenario.name} RECOVERED SUCCESSFULLY")
                     else:
-                        level = "ERROR" if scenario.critical else "WARNING"
                         self.logger.log(
                             logging.ERROR if scenario.critical else logging.WARNING,
                             f"❌ {scenario.name} RECOVERY FAILED"
@@ -298,7 +297,7 @@ class ErrorRecoveryTester:
             self.logger.error(f"Failed to initialize system: {e}")
             raise
 
-    async def _capture_system_state(self) -> Dict[str, Any]:
+    async def _capture_system_state(self) -> dict[str, Any]:
         """Capture current system state"""
         state = {
             "timestamp": datetime.now().isoformat(),
@@ -476,8 +475,8 @@ class ErrorRecoveryTester:
             self.logger.error(f"Failed to inject failure: {e}")
             return False
 
-    async def _verify_data_consistency(self, initial_state: Dict[str, Any],
-                                     final_state: Dict[str, Any]) -> bool:
+    async def _verify_data_consistency(self, initial_state: dict[str, Any],
+                                     final_state: dict[str, Any]) -> bool:
         """Verify data consistency after recovery"""
         try:
             # Check that critical data remains consistent
@@ -510,7 +509,7 @@ class ErrorRecoveryTester:
 
                 if self.balance_manager:
                     # Balance manager should still function (maybe with cached data)
-                    balance = await self.balance_manager.get_balance()
+                    await self.balance_manager.get_balance()
                     # Balance can be None in test environment
 
                 return True
@@ -548,7 +547,7 @@ class ErrorRecoveryTester:
 
             if self.balance_manager:
                 # Test that balance manager can recover from timeout
-                balance = await self.balance_manager.get_balance()
+                await self.balance_manager.get_balance()
                 # Balance retrieval might fail due to timeout, but should recover
 
             # Wait for potential retry
@@ -556,7 +555,7 @@ class ErrorRecoveryTester:
 
             # Test recovery
             if self.balance_manager:
-                balance = await self.balance_manager.get_balance()
+                await self.balance_manager.get_balance()
                 # Should work after recovery
 
             return True
@@ -683,12 +682,12 @@ class ErrorRecoveryTester:
 
             if self.balance_manager:
                 # Balance manager should still work even if WebSocket is down
-                balance = await self.balance_manager.get_balance()
+                await self.balance_manager.get_balance()
                 # Balance can be None in test environment, that's OK
 
             if self.portfolio_manager:
                 # Portfolio manager should still function
-                positions = await self.portfolio_manager.get_current_positions()
+                await self.portfolio_manager.get_current_positions()
                 # Positions can be empty in test environment, that's OK
 
             return True
@@ -703,7 +702,7 @@ class ErrorRecoveryTester:
             # Test that system handles configuration errors gracefully
 
             # Test with valid configuration
-            config = TradingConfig()
+            TradingConfig()
 
             # In real scenario, would test with invalid configuration
             # and verify that system handles it gracefully
@@ -775,7 +774,7 @@ class ErrorRecoveryTester:
             self.logger.error(f"Data consistency preservation test failed: {e}")
             return False
 
-    def generate_recovery_report(self) -> Dict[str, Any]:
+    def generate_recovery_report(self) -> dict[str, Any]:
         """Generate comprehensive recovery test report"""
         total_tests = len(self.results)
         successful_recoveries = sum(1 for r in self.results if r.recovery_successful)

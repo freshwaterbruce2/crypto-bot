@@ -5,7 +5,7 @@ Data Analysis Assistant - Market data analysis helper
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -24,7 +24,7 @@ class DataAnalysisAssistant:
             self.config = manager_or_config
         self.logger = logging.getLogger(__name__)
 
-    def analyze_price_trend(self, price_data: List[float], window: int = 10) -> Dict[str, Any]:
+    def analyze_price_trend(self, price_data: list[float], window: int = 10) -> dict[str, Any]:
         """Analyze price trend from price data"""
         try:
             if len(price_data) < window:
@@ -59,7 +59,7 @@ class DataAnalysisAssistant:
             self.logger.error(f"Price trend analysis error: {e}")
             return {'trend': 'error', 'strength': 0.0}
 
-    def calculate_volatility(self, price_data: List[float], window: int = 20) -> float:
+    def calculate_volatility(self, price_data: list[float], window: int = 20) -> float:
         """Calculate price volatility"""
         try:
             if len(price_data) < window:
@@ -75,7 +75,7 @@ class DataAnalysisAssistant:
             self.logger.error(f"Volatility calculation error: {e}")
             return 0.0
 
-    def detect_support_resistance(self, price_data: List[float], window: int = 10) -> Dict[str, float]:
+    def detect_support_resistance(self, price_data: list[float], window: int = 10) -> dict[str, float]:
         """Detect support and resistance levels"""
         try:
             if len(price_data) < window * 2:
@@ -96,7 +96,7 @@ class DataAnalysisAssistant:
             self.logger.error(f"Support/resistance detection error: {e}")
             return {'support': 0.0, 'resistance': 0.0}
 
-    def calculate_rsi(self, price_data: List[float], window: int = 14) -> float:
+    def calculate_rsi(self, price_data: list[float], window: int = 14) -> float:
         """Calculate Relative Strength Index"""
         try:
             if len(price_data) < window + 1:
@@ -128,7 +128,7 @@ class DataAnalysisAssistant:
             self.logger.error(f"RSI calculation error: {e}")
             return 50.0  # Neutral RSI
 
-    async def collect_market_data(self) -> Dict[str, Any]:
+    async def collect_market_data(self) -> dict[str, Any]:
         """Collect current market data for analysis"""
         try:
             # Return basic market data structure
@@ -213,7 +213,7 @@ class DataAnalysisAssistant:
         except Exception as e:
             self.logger.error(f"[DATA_ASSISTANT] Stop error: {e}")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of the data analysis assistant"""
         try:
             # Check data freshness
@@ -253,7 +253,7 @@ class DataAnalysisAssistant:
         except Exception as e:
             self.logger.error(f"[DATA_ASSISTANT] Reconnect error: {e}")
 
-    async def analyze_market_conditions(self) -> Dict[str, Any]:
+    async def analyze_market_conditions(self) -> dict[str, Any]:
         """Analyze overall market conditions"""
         try:
             self.logger.debug("[DATA_ASSISTANT] Analyzing market conditions...")

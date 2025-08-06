@@ -4,7 +4,7 @@ Ensures all orders meet Kraken's precision and minimum requirements
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..config.kraken_precision_config import (
     format_price,
@@ -28,17 +28,17 @@ class KrakenOrderValidator:
         amount: float,
         price: Optional[float] = None,
         order_type: str = 'market'
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Validate and format order parameters for Kraken
-        
+
         Args:
             symbol: Trading pair (e.g., 'SHIB/USDT')
             side: 'buy' or 'sell'
             amount: Order amount in base currency
             price: Order price (for limit orders)
             order_type: 'market' or 'limit'
-            
+
         Returns:
             Dict with validation results and formatted parameters
         """
@@ -113,7 +113,7 @@ class KrakenOrderValidator:
                 'amount': amount
             }
 
-    def get_minimum_order_info(self, symbol: str) -> Dict[str, Any]:
+    def get_minimum_order_info(self, symbol: str) -> dict[str, Any]:
         """Get minimum order requirements for a symbol"""
         config = get_precision_config(symbol)
 
@@ -126,7 +126,7 @@ class KrakenOrderValidator:
             'example_min_order': f"{config['min_volume']} {symbol.split('/')[0]}"
         }
 
-    def format_for_kraken_api(self, validated_order: Dict[str, Any]) -> Dict[str, Any]:
+    def format_for_kraken_api(self, validated_order: dict[str, Any]) -> dict[str, Any]:
         """Convert validated order to Kraken API format"""
         if not validated_order.get('valid'):
             raise ValueError(f"Cannot format invalid order: {validated_order.get('error')}")
@@ -146,24 +146,24 @@ class KrakenOrderValidator:
 # Global validator instance
 kraken_validator = KrakenOrderValidator()
 
-def validate_kraken_order(symbol: str, side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
+def validate_kraken_order(symbol: str, side: str, amount: float, price: Optional[float] = None) -> dict[str, Any]:
     """Quick function to validate a Kraken order"""
     return kraken_validator.validate_and_format_order(symbol, side, amount, price)
 
-def get_kraken_minimums(symbol: str) -> Dict[str, Any]:
+def get_kraken_minimums(symbol: str) -> dict[str, Any]:
     """Quick function to get minimum requirements"""
     return kraken_validator.get_minimum_order_info(symbol)
 
 # Convenience functions for your main trading pairs
-def validate_shib_order(side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
+def validate_shib_order(side: str, amount: float, price: Optional[float] = None) -> dict[str, Any]:
     """Validate SHIB/USDT order with proper 160,000 minimum"""
     return validate_kraken_order('SHIB/USDT', side, amount, price)
 
-def validate_ai16z_order(side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
+def validate_ai16z_order(side: str, amount: float, price: Optional[float] = None) -> dict[str, Any]:
     """Validate AI16Z/USDT order with proper 5 minimum"""
     return validate_kraken_order('AI16Z/USDT', side, amount, price)
 
-def validate_bera_order(side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
+def validate_bera_order(side: str, amount: float, price: Optional[float] = None) -> dict[str, Any]:
     """Validate BERA/USDT order with proper 0.5 minimum"""
     return validate_kraken_order('BERA/USDT', side, amount, price)
 

@@ -6,7 +6,7 @@ Centralized configuration management for the SaaS platform.
 """
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import BaseSettings, Field, validator
 
@@ -34,11 +34,11 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = Field(default=7, env="REFRESH_TOKEN_EXPIRE_DAYS")
 
     # CORS
-    ALLOWED_ORIGINS: List[str] = Field(
+    ALLOWED_ORIGINS: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:8000"],
         env="ALLOWED_ORIGINS"
     )
-    ALLOWED_HOSTS: List[str] = Field(
+    ALLOWED_HOSTS: list[str] = Field(
         default=["localhost", "127.0.0.1"],
         env="ALLOWED_HOSTS"
     )

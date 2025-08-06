@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set, Type, Union
+from typing import Any, Callable, Optional, Union
 from weakref import WeakValueDictionary
 
 logger = logging.getLogger(__name__)
@@ -37,14 +37,14 @@ class ServiceState(Enum):
 @dataclass
 class ServiceDescriptor:
     """Describes a service registration"""
-    service_type: Type
-    implementation: Union[Type, Callable, Any]
+    service_type: type
+    implementation: Union[type, Callable, Any]
     lifetime: ServiceLifetime
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     init_method: Optional[str] = None
     dispose_method: Optional[str] = None
     factory: Optional[Callable] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -63,10 +63,10 @@ class ServiceScope:
     def __init__(self, scope_id: str, parent: 'DependencyInjector'):
         self.scope_id = scope_id
         self.parent = parent
-        self.instances: Dict[str, ServiceInstance] = {}
+        self.instances: dict[str, ServiceInstance] = {}
         self._lock = asyncio.Lock()
 
-    async def resolve(self, service_type: Union[str, Type]) -> Any:
+    async def resolve(self, service_type: Union[str, type]) -> Any:
         """Resolve service within scope"""
         service_name = self._get_service_name(service_type)
 
@@ -92,7 +92,7 @@ class ServiceScope:
             await self.parent._dispose_instance(instance)
         self.instances.clear()
 
-    def _get_service_name(self, service_type: Union[str, Type]) -> str:
+    def _get_service_name(self, service_type: Union[str, type]) -> str:
         """Get service name from type"""
         if isinstance(service_type, str):
             return service_type
@@ -103,17 +103,17 @@ class DependencyInjector:
     """Dependency injection container with lifecycle management"""
 
     def __init__(self):
-        self.services: Dict[str, ServiceDescriptor] = {}
-        self.instances: Dict[str, ServiceInstance] = {}
+        self.services: dict[str, ServiceDescriptor] = {}
+        self.instances: dict[str, ServiceInstance] = {}
         self.scopes: WeakValueDictionary = WeakValueDictionary()
         self._lock = asyncio.Lock()
-        self._initialization_order: List[str] = []
-        self._dependency_graph: Dict[str, Set[str]] = {}
+        self._initialization_order: list[str] = []
+        self._dependency_graph: dict[str, set[str]] = {}
 
     def register(
         self,
-        service_type: Type,
-        implementation: Union[Type, Callable, Any] = None,
+        service_type: type,
+        implementation: Union[type, Callable, Any] = None,
         lifetime: ServiceLifetime = ServiceLifetime.SINGLETON,
         init_method: str = None,
         dispose_method: str = None,
@@ -150,19 +150,19 @@ class DependencyInjector:
 
         logger.info(f"Registered service: {service_name} (lifetime: {lifetime.value})")
 
-    def register_singleton(self, service_type: Type, implementation: Union[Type, Any] = None, **kwargs):
+    def register_singleton(self, service_type: type, implementation: Union[type, Any] = None, **kwargs):
         """Register a singleton service"""
         self.register(service_type, implementation, ServiceLifetime.SINGLETON, **kwargs)
 
-    def register_transient(self, service_type: Type, implementation: Type = None, **kwargs):
+    def register_transient(self, service_type: type, implementation: type = None, **kwargs):
         """Register a transient service"""
         self.register(service_type, implementation, ServiceLifetime.TRANSIENT, **kwargs)
 
-    def register_scoped(self, service_type: Type, implementation: Type = None, **kwargs):
+    def register_scoped(self, service_type: type, implementation: type = None, **kwargs):
         """Register a scoped service"""
         self.register(service_type, implementation, ServiceLifetime.SCOPED, **kwargs)
 
-    def register_instance(self, service_type: Type, instance: Any):
+    def register_instance(self, service_type: type, instance: Any):
         """Register an existing instance as singleton"""
         service_name = service_type.__name__
 
@@ -181,7 +181,7 @@ class DependencyInjector:
 
         logger.info(f"Registered instance: {service_name}")
 
-    async def resolve(self, service_type: Union[str, Type]) -> Any:
+    async def resolve(self, service_type: Union[str, type]) -> Any:
         """Resolve a service instance"""
         service_name = self._get_service_name(service_type)
 
@@ -285,7 +285,7 @@ class DependencyInjector:
 
         logger.info("All services initialized")
 
-    def _topological_sort(self) -> List[str]:
+    def _topological_sort(self) -> list[str]:
         """Topological sort of dependency graph"""
         in_degree = dict.fromkeys(self._dependency_graph, 0)
 
@@ -343,13 +343,13 @@ class DependencyInjector:
         except Exception as e:
             logger.error(f"Error disposing service: {e}")
 
-    def _get_service_name(self, service_type: Union[str, Type]) -> str:
+    def _get_service_name(self, service_type: Union[str, type]) -> str:
         """Get service name from type"""
         if isinstance(service_type, str):
             return service_type
         return service_type.__name__
 
-    def get_service_info(self, service_type: Union[str, Type]) -> Optional[Dict[str, Any]]:
+    def get_service_info(self, service_type: Union[str, type]) -> Optional[dict[str, Any]]:
         """Get information about a registered service"""
         service_name = self._get_service_name(service_type)
 
@@ -372,14 +372,14 @@ class DependencyInjector:
             'created_at': instance_info.created_at.isoformat() if instance_info else None
         }
 
-    def get_all_services(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_services(self) -> dict[str, dict[str, Any]]:
         """Get information about all registered services"""
         return {
             name: self.get_service_info(name)
             for name in self.services
         }
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get dependency injection diagnostics"""
         return {
             'registered_services': len(self.services),

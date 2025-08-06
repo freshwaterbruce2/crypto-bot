@@ -6,7 +6,7 @@ Provides intelligent buy signal analysis and entry point optimization
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -68,22 +68,22 @@ class BuyLogicAssistant:
 
         self.logger.info("[BUY_LOGIC] Assistant initialized")
 
-    async def analyze_buy_opportunity(self, symbol: str, market_data: Dict[str, Any],
-                                    portfolio_state: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_buy_opportunity(self, symbol: str, market_data: dict[str, Any],
+                                    portfolio_state: dict[str, Any]) -> dict[str, Any]:
         """
         Enhanced analysis with market regime awareness and adaptive thresholds
-        
+
         Args:
             symbol: Trading symbol
             market_data: Current market data with price, volume, indicators
             portfolio_state: Current portfolio allocation and risk
-            
+
         Returns:
             Dict with recommendation, confidence, entry_price, position_size, reasoning
         """
         try:
             current_price = Decimal(str(market_data.get('price', 0)))
-            volume = market_data.get('volume', 0)
+            market_data.get('volume', 0)
             volume_ratio = market_data.get('volume_ratio', 1.0)
             volatility = market_data.get('volatility', 0.02)
 
@@ -242,7 +242,7 @@ class BuyLogicAssistant:
                 'position_size': 0
             }
 
-    async def _analyze_technical_indicators(self, market_data: Dict[str, Any]) -> float:
+    async def _analyze_technical_indicators(self, market_data: dict[str, Any]) -> float:
         """Analyze technical indicators for buy signals"""
         try:
             score = 0.0
@@ -284,7 +284,7 @@ class BuyLogicAssistant:
 
             # Bollinger Bands
             bb_lower = market_data.get('bb_lower', 0)
-            bb_upper = market_data.get('bb_upper', 0)
+            market_data.get('bb_upper', 0)
             if bb_lower > 0 and price <= bb_lower * 1.01:  # Near lower band
                 score += 0.5
                 factors += 1
@@ -323,14 +323,14 @@ class BuyLogicAssistant:
             return 0.0
 
     async def _analyze_market_structure(self, symbol: str, current_price: Decimal,
-                                      market_data: Dict[str, Any]) -> float:
+                                      market_data: dict[str, Any]) -> float:
         """Analyze market structure for optimal entry"""
         try:
             score = 0.5  # Neutral starting point
 
             # Support/Resistance Analysis
             support_level = market_data.get('support_level', 0)
-            resistance_level = market_data.get('resistance_level', 0)
+            market_data.get('resistance_level', 0)
 
             if support_level > 0:
                 distance_from_support = abs(float(current_price) - support_level) / support_level
@@ -359,7 +359,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Error in market structure analysis: {e}")
             return 0.5
 
-    def _assess_entry_risk(self, portfolio_state: Dict[str, Any], symbol: str,
+    def _assess_entry_risk(self, portfolio_state: dict[str, Any], symbol: str,
                           current_price: Decimal) -> float:
         """Assess risk factors for entry"""
         try:
@@ -392,7 +392,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Error in risk assessment: {e}")
             return 0.5
 
-    def _analyze_price_momentum(self, market_data: Dict[str, Any]) -> float:
+    def _analyze_price_momentum(self, market_data: dict[str, Any]) -> float:
         """Analyze price momentum indicators"""
         try:
             score = 0.0
@@ -426,7 +426,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Error in momentum analysis: {e}")
             return 0.0
 
-    async def _optimize_entry_price(self, current_price: Decimal, market_data: Dict[str, Any]) -> float:
+    async def _optimize_entry_price(self, current_price: Decimal, market_data: dict[str, Any]) -> float:
         """Optimize entry price based on market microstructure"""
         try:
             # Start with current price
@@ -454,7 +454,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Error optimizing entry price: {e}")
             return float(current_price)
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary of buy recommendations"""
         if self.success_metrics['total_recommendations'] > 0:
             accuracy = self.success_metrics['successful_entries'] / self.success_metrics['total_recommendations']
@@ -486,7 +486,7 @@ class BuyLogicAssistant:
         except Exception as e:
             self.logger.error(f"[BUY_LOGIC] Error updating success metrics: {e}")
 
-    async def _detect_market_regime(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _detect_market_regime(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Detect current market regime (bullish, bearish, neutral)"""
         try:
             # Simple regime detection based on multiple factors
@@ -543,7 +543,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Market regime detection error: {e}")
             return {'trend': 'neutral', 'strength': 0.5, 'confidence': 0.1}
 
-    async def _calculate_adaptive_threshold(self, market_regime: Dict[str, Any], volatility: float) -> float:
+    async def _calculate_adaptive_threshold(self, market_regime: dict[str, Any], volatility: float) -> float:
         """Calculate adaptive confidence threshold based on market conditions"""
         try:
             base_threshold = self.base_confidence_threshold
@@ -587,7 +587,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Adaptive threshold calculation error: {e}")
             return self.base_confidence_threshold
 
-    async def _analyze_technical_indicators_enhanced(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_technical_indicators_enhanced(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Enhanced technical analysis with multiple confirmations"""
         try:
             score = 0.0
@@ -614,7 +614,7 @@ class BuyLogicAssistant:
             ma_5 = market_data.get('ma_5', price)
             ma_10 = market_data.get('ma_10', price)
             ma_20 = market_data.get('ma_20', price)
-            ma_50 = market_data.get('ma_50', price)
+            market_data.get('ma_50', price)
 
             # MA alignment and momentum
             if ma_5 > ma_10 > ma_20 and price > ma_5:
@@ -642,7 +642,7 @@ class BuyLogicAssistant:
 
             # Bollinger Bands Analysis
             bb_lower = market_data.get('bb_lower', 0)
-            bb_upper = market_data.get('bb_upper', 0)
+            market_data.get('bb_upper', 0)
             bb_middle = market_data.get('bb_middle', price)
 
             if bb_lower > 0 and price <= bb_lower * 1.005:  # Near lower band
@@ -679,7 +679,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Enhanced technical analysis error: {e}")
             return {'score': 0.0, 'factors': [], 'signal_count': 0}
 
-    async def _analyze_volume_flow_enhanced(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_volume_flow_enhanced(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Enhanced volume flow analysis with institutional detection"""
         try:
             score = 0.0
@@ -732,7 +732,7 @@ class BuyLogicAssistant:
             return {'score': 0.0, 'factors': []}
 
     async def _analyze_market_structure_enhanced(self, symbol: str, current_price: Decimal,
-                                               market_data: Dict[str, Any], market_regime: Dict[str, Any]) -> Dict[str, Any]:
+                                               market_data: dict[str, Any], market_regime: dict[str, Any]) -> dict[str, Any]:
         """Enhanced market structure analysis with regime awareness"""
         try:
             score = 0.5  # Neutral starting point
@@ -748,7 +748,7 @@ class BuyLogicAssistant:
 
             # Support/Resistance Analysis
             support_level = market_data.get('support_level', 0)
-            resistance_level = market_data.get('resistance_level', 0)
+            market_data.get('resistance_level', 0)
 
             if support_level > 0:
                 distance_from_support = abs(float(current_price) - support_level) / support_level
@@ -792,8 +792,8 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Enhanced market structure analysis error: {e}")
             return {'score': 0.5, 'factors': []}
 
-    async def _assess_entry_risk_enhanced(self, portfolio_state: Dict[str, Any], symbol: str,
-                                        current_price: Decimal, market_regime: Dict[str, Any]) -> Dict[str, Any]:
+    async def _assess_entry_risk_enhanced(self, portfolio_state: dict[str, Any], symbol: str,
+                                        current_price: Decimal, market_regime: dict[str, Any]) -> dict[str, Any]:
         """Enhanced risk assessment with regime awareness"""
         try:
             score = 0.5  # Neutral risk
@@ -854,7 +854,7 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Enhanced risk assessment error: {e}")
             return {'score': 0.5, 'factors': []}
 
-    async def _analyze_momentum_confluence(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _analyze_momentum_confluence(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze momentum confluence across multiple timeframes"""
         try:
             score = 0.0
@@ -926,8 +926,8 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Momentum confluence analysis error: {e}")
             return {'score': 0.0, 'factors': []}
 
-    async def _calculate_optimal_position_size(self, confidence: float, market_regime: Dict[str, Any],
-                                             volatility: float, portfolio_state: Dict[str, Any]) -> Dict[str, Any]:
+    async def _calculate_optimal_position_size(self, confidence: float, market_regime: dict[str, Any],
+                                             volatility: float, portfolio_state: dict[str, Any]) -> dict[str, Any]:
         """Calculate optimal position size based on multiple factors"""
         try:
             available_capital = portfolio_state.get('available_usdt', 0)
@@ -982,8 +982,8 @@ class BuyLogicAssistant:
             self.logger.error(f"[BUY_LOGIC] Position size calculation error: {e}")
             return {'size': 0, 'reason': f'Calculation error: {str(e)}'}
 
-    async def _optimize_entry_price_enhanced(self, current_price: Decimal, market_data: Dict[str, Any],
-                                           market_regime: Dict[str, Any]) -> Dict[str, Any]:
+    async def _optimize_entry_price_enhanced(self, current_price: Decimal, market_data: dict[str, Any],
+                                           market_regime: dict[str, Any]) -> dict[str, Any]:
         """Enhanced entry price optimization with market microstructure analysis"""
         try:
             optimized_price = float(current_price)
@@ -1036,7 +1036,7 @@ class BuyLogicAssistant:
                 'original_price': float(current_price)
             }
 
-    async def _record_recommendation(self, record: Dict[str, Any]) -> None:
+    async def _record_recommendation(self, record: dict[str, Any]) -> None:
         """Record recommendation for performance tracking and learning"""
         try:
             self.buy_recommendations.append(record)

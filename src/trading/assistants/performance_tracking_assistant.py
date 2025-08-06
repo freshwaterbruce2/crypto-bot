@@ -6,7 +6,7 @@ import logging
 import time
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 
 class PerformanceTrackingAssistant:
@@ -23,7 +23,7 @@ class PerformanceTrackingAssistant:
         self.logger = logging.getLogger(__name__)
         self.performance_history = []
 
-    def track_trade_performance(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
+    def track_trade_performance(self, trade_data: dict[str, Any]) -> dict[str, Any]:
         """Track individual trade performance"""
         try:
             performance_metrics = {
@@ -62,7 +62,7 @@ class PerformanceTrackingAssistant:
             self.logger.error(f"Trade performance tracking error: {e}")
             return {}
 
-    def calculate_portfolio_performance(self, portfolio_data: Dict[str, Any]) -> Dict[str, Any]:
+    def calculate_portfolio_performance(self, portfolio_data: dict[str, Any]) -> dict[str, Any]:
         """Calculate overall portfolio performance"""
         try:
             current_value = Decimal(str(portfolio_data.get('current_value', 0)))
@@ -90,7 +90,7 @@ class PerformanceTrackingAssistant:
             self.logger.error(f"Portfolio performance calculation error: {e}")
             return {}
 
-    def calculate_win_rate(self, trades: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def calculate_win_rate(self, trades: list[dict[str, Any]]) -> dict[str, Any]:
         """Calculate win rate from trade history"""
         try:
             if not trades:
@@ -118,7 +118,7 @@ class PerformanceTrackingAssistant:
             self.logger.error(f"Win rate calculation error: {e}")
             return {}
 
-    def calculate_sharpe_ratio(self, returns: List[float], risk_free_rate: float = 0.02) -> float:
+    def calculate_sharpe_ratio(self, returns: list[float], risk_free_rate: float = 0.02) -> float:
         """Calculate Sharpe ratio for risk-adjusted returns"""
         try:
             if len(returns) < 2:
@@ -140,7 +140,7 @@ class PerformanceTrackingAssistant:
             self.logger.error(f"Sharpe ratio calculation error: {e}")
             return 0.0
 
-    def calculate_max_drawdown(self, equity_curve: List[float]) -> Dict[str, Any]:
+    def calculate_max_drawdown(self, equity_curve: list[float]) -> dict[str, Any]:
         """Calculate maximum drawdown from equity curve"""
         try:
             if len(equity_curve) < 2:
@@ -173,7 +173,7 @@ class PerformanceTrackingAssistant:
             self.logger.error(f"Max drawdown calculation error: {e}")
             return {}
 
-    def generate_performance_report(self) -> Dict[str, Any]:
+    def generate_performance_report(self) -> dict[str, Any]:
         """Generate comprehensive performance report"""
         try:
             if not self.performance_history:
@@ -253,7 +253,7 @@ class PerformanceTrackingAssistant:
         except Exception as e:
             self.logger.error(f"[PERFORMANCE_ASSISTANT] Stop error: {e}")
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check health of the performance tracking assistant"""
         try:
             # Check if we're tracking data properly
@@ -304,7 +304,7 @@ class PerformanceTrackingAssistant:
         except Exception as e:
             self.logger.error(f"[PERFORMANCE_ASSISTANT] Error updating metrics: {e}")
 
-    async def generate_final_report(self) -> Dict[str, Any]:
+    async def generate_final_report(self) -> dict[str, Any]:
         """Generate final performance report"""
         try:
             self.logger.info("[PERFORMANCE_ASSISTANT] Generating final performance report...")
@@ -350,7 +350,7 @@ class PerformanceTrackingAssistant:
                 'timestamp': datetime.now().isoformat()
             }
 
-    async def get_performance_summary(self) -> Dict[str, Any]:
+    async def get_performance_summary(self) -> dict[str, Any]:
         """Get current performance summary"""
         try:
             # Real-time performance summary
@@ -416,7 +416,7 @@ class PerformanceTrackingAssistant:
                 'error': str(e)
             }
 
-    async def track_trade_async(self, trade_data: Dict[str, Any]):
+    async def track_trade_async(self, trade_data: dict[str, Any]):
         """Async version of trade tracking"""
         try:
             # Use the existing sync method

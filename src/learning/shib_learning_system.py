@@ -15,7 +15,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class SHIBTradingPattern:
     confidence: float = 0.0
     success_rate: float = 0.0
     sample_size: int = 0
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=time.time)
     last_updated: float = field(default_factory=time.time)
 
@@ -55,7 +55,7 @@ class MicroProfitMetrics:
 class SHIBLearningSystem:
     """
     Specialized learning system for SHIB/USDT micro-profit trading
-    
+
     Key Features:
     - Learns optimal entry/exit patterns for SHIB price movements
     - Adapts to micro-profit targets (0.1% - 0.5%)
@@ -64,7 +64,7 @@ class SHIBLearningSystem:
     - Real-time strategy parameter adjustment
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         self.config = config or {}
         self.logger = logger
 
@@ -77,26 +77,26 @@ class SHIBLearningSystem:
         self.bot_instance = None
 
         # SHIB-specific learning data
-        self.price_patterns: Dict[str, SHIBTradingPattern] = {}
+        self.price_patterns: dict[str, SHIBTradingPattern] = {}
         self.trade_history: deque = deque(maxlen=1000)
-        self.performance_metrics: Dict[str, MicroProfitMetrics] = {}
+        self.performance_metrics: dict[str, MicroProfitMetrics] = {}
 
         # Pattern analysis data
-        self.market_conditions: Dict[str, Any] = {}
-        self.timing_patterns: Dict[str, Dict[str, Any]] = {}
-        self.failure_patterns: Dict[str, Dict[str, Any]] = {}
+        self.market_conditions: dict[str, Any] = {}
+        self.timing_patterns: dict[str, dict[str, Any]] = {}
+        self.failure_patterns: dict[str, dict[str, Any]] = {}
 
         # Strategy optimization
-        self.current_strategy_params: Dict[str, Dict[str, Any]] = {}
-        self.optimization_history: List[Dict[str, Any]] = []
+        self.current_strategy_params: dict[str, dict[str, Any]] = {}
+        self.optimization_history: list[dict[str, Any]] = []
 
         # Safety system integration
         self.safety_system: Optional[OrderSafetySystem] = None
-        self.safety_constraints: Dict[str, Any] = {}
+        self.safety_constraints: dict[str, Any] = {}
 
         # Real-time adaptation
-        self.adaptation_triggers: Dict[str, float] = {}
-        self.last_adaptation: Dict[str, float] = {}
+        self.adaptation_triggers: dict[str, float] = {}
+        self.last_adaptation: dict[str, float] = {}
 
         # Configuration
         self.primary_symbol = self.config.get('single_pair_focus', {}).get('primary_pair', 'SHIB/USDT')
@@ -169,7 +169,7 @@ class SHIBLearningSystem:
             self.market_conditions['current_volatility'] = np.std(prices) / np.mean(prices) if prices else 0
             self.market_conditions['price_trend'] = self._calculate_trend(prices)
 
-    def _calculate_trend(self, prices: List[float]) -> str:
+    def _calculate_trend(self, prices: list[float]) -> str:
         """Calculate price trend from recent prices"""
         if len(prices) < 3:
             return 'sideways'
@@ -186,7 +186,7 @@ class SHIBLearningSystem:
         else:
             return 'sideways'
 
-    async def get_price_patterns(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_price_patterns(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get learned price patterns for symbol"""
         if symbol != self.primary_symbol:
             return None
@@ -226,7 +226,7 @@ class SHIBLearningSystem:
             'pattern_confidence': min(len(price_data) / 100.0, 1.0)  # Higher confidence with more data
         }
 
-    async def record_trade_result(self, trade: Dict[str, Any]):
+    async def record_trade_result(self, trade: dict[str, Any]):
         """Record trade result for learning"""
         symbol = trade.get('symbol', self.primary_symbol)
         if symbol != self.primary_symbol:
@@ -270,7 +270,7 @@ class SHIBLearningSystem:
             except Exception as e:
                 self.logger.debug(f"[SHIB_LEARNING] Universal learning record error: {e}")
 
-    async def get_optimal_trade_sizes(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_optimal_trade_sizes(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get optimal trade sizes based on learned patterns"""
         if symbol != self.primary_symbol:
             return None
@@ -335,7 +335,7 @@ class SHIBLearningSystem:
 
         return best_target
 
-    async def get_timing_patterns(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_timing_patterns(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get optimal timing patterns"""
         if symbol != self.primary_symbol or symbol not in self.timing_patterns:
             return None
@@ -369,7 +369,7 @@ class SHIBLearningSystem:
             'avg_execution_time_ms': statistics.mean(execution_times) if execution_times else 250
         }
 
-    async def record_entry_condition_result(self, symbol: str, condition: Dict[str, Any], success_rate: float):
+    async def record_entry_condition_result(self, symbol: str, condition: dict[str, Any], success_rate: float):
         """Record entry condition performance"""
         if symbol != self.primary_symbol:
             return
@@ -385,7 +385,7 @@ class SHIBLearningSystem:
             'last_updated': time.time()
         }
 
-    async def get_optimal_entry_conditions(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_optimal_entry_conditions(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get optimal entry conditions"""
         if symbol != self.primary_symbol or 'entry_conditions' not in self.market_conditions:
             return None
@@ -403,7 +403,7 @@ class SHIBLearningSystem:
             'expected_success_rate': best_condition.get('success_rate', 0.5)
         }
 
-    async def record_risk_scenario_result(self, symbol: str, scenario: Dict[str, Any], drawdown: float):
+    async def record_risk_scenario_result(self, symbol: str, scenario: dict[str, Any], drawdown: float):
         """Record risk management scenario results"""
         if symbol != self.primary_symbol:
             return
@@ -419,7 +419,7 @@ class SHIBLearningSystem:
             'last_updated': time.time()
         }
 
-    async def get_optimal_risk_parameters(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_optimal_risk_parameters(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get optimal risk management parameters"""
         if symbol != self.primary_symbol or 'risk_scenarios' not in self.market_conditions:
             return None
@@ -437,7 +437,7 @@ class SHIBLearningSystem:
             'expected_drawdown': best_scenario.get('observed_drawdown', 0.02)
         }
 
-    async def record_market_condition_performance(self, symbol: str, condition: Dict[str, Any]):
+    async def record_market_condition_performance(self, symbol: str, condition: dict[str, Any]):
         """Record performance under different market conditions"""
         if symbol != self.primary_symbol:
             return
@@ -452,7 +452,7 @@ class SHIBLearningSystem:
             'last_updated': time.time()
         }
 
-    async def get_strategy_for_market_condition(self, symbol: str, current_condition: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def get_strategy_for_market_condition(self, symbol: str, current_condition: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Get recommended strategy for current market condition"""
         if symbol != self.primary_symbol:
             return None
@@ -480,7 +480,7 @@ class SHIBLearningSystem:
                 'recommended_position_size': 0.1
             }
 
-    async def get_performance_metrics(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_performance_metrics(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get comprehensive performance metrics"""
         if symbol != self.primary_symbol:
             return None
@@ -516,7 +516,7 @@ class SHIBLearningSystem:
             'actual_profit_pct': metrics.actual_profit_pct
         }
 
-    async def get_execution_analysis(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_execution_analysis(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get trade execution analysis"""
         if symbol != self.primary_symbol:
             return None
@@ -545,7 +545,7 @@ class SHIBLearningSystem:
             'slowest_execution_ms': max(execution_times)
         }
 
-    async def get_learning_progress(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_learning_progress(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get learning progress and effectiveness metrics"""
         if symbol != self.primary_symbol:
             return None
@@ -576,7 +576,7 @@ class SHIBLearningSystem:
             'improvement': improvement
         }
 
-    async def get_failure_patterns(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def get_failure_patterns(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get identified failure patterns"""
         if symbol != self.primary_symbol:
             return None
@@ -604,7 +604,7 @@ class SHIBLearningSystem:
 
         return patterns
 
-    def _extract_common_conditions(self, trades: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _extract_common_conditions(self, trades: list[dict[str, Any]]) -> dict[str, Any]:
         """Extract common conditions from failed trades"""
         conditions = {}
 
@@ -622,7 +622,7 @@ class SHIBLearningSystem:
 
         return conditions
 
-    async def get_failure_adjusted_conditions(self, symbol: str) -> Dict[str, Any]:
+    async def get_failure_adjusted_conditions(self, symbol: str) -> dict[str, Any]:
         """Get entry conditions adjusted to avoid failure patterns"""
         failure_patterns = await self.get_failure_patterns(symbol)
 
@@ -638,7 +638,7 @@ class SHIBLearningSystem:
             return adjusted_conditions
 
         # Adjust based on failure patterns
-        for pattern_name, pattern_data in failure_patterns.items():
+        for _pattern_name, pattern_data in failure_patterns.items():
             common_conditions = pattern_data.get('common_conditions', {})
 
             if 'avg_rsi' in common_conditions:
@@ -659,7 +659,7 @@ class SHIBLearningSystem:
 
     # Safety system integration methods
 
-    async def record_safety_system_performance(self, performance_data: Dict[str, Any]):
+    async def record_safety_system_performance(self, performance_data: dict[str, Any]):
         """Record safety system performance for learning"""
         if 'safety_performance' not in self.market_conditions:
             self.market_conditions['safety_performance'] = []
@@ -675,7 +675,7 @@ class SHIBLearningSystem:
         if len(self.market_conditions['safety_performance']) > 100:
             self.market_conditions['safety_performance'] = self.market_conditions['safety_performance'][-100:]
 
-    async def get_safety_system_recommendations(self) -> Dict[str, Any]:
+    async def get_safety_system_recommendations(self) -> dict[str, Any]:
         """Get recommendations for safety system optimization"""
         safety_data = self.market_conditions.get('safety_performance', [])
 
@@ -699,7 +699,7 @@ class SHIBLearningSystem:
 
         return recommendations
 
-    async def record_balance_aware_trade(self, scenario: Dict[str, Any]):
+    async def record_balance_aware_trade(self, scenario: dict[str, Any]):
         """Record balance-aware trading scenario"""
         if 'balance_scenarios' not in self.market_conditions:
             self.market_conditions['balance_scenarios'] = []
@@ -711,7 +711,7 @@ class SHIBLearningSystem:
         if len(self.market_conditions['balance_scenarios']) > 100:
             self.market_conditions['balance_scenarios'] = self.market_conditions['balance_scenarios'][-100:]
 
-    async def get_balance_optimization_strategy(self) -> Dict[str, Any]:
+    async def get_balance_optimization_strategy(self) -> dict[str, Any]:
         """Get balance utilization optimization strategy"""
         scenarios = self.market_conditions.get('balance_scenarios', [])
 
@@ -745,7 +745,7 @@ class SHIBLearningSystem:
             'max_single_trade_pct': min(0.15, optimal_utilization * 1.5)
         }
 
-    async def resolve_safety_conflict(self, learning_rec: Dict[str, Any], safety_req: Dict[str, Any]) -> Dict[str, Any]:
+    async def resolve_safety_conflict(self, learning_rec: dict[str, Any], safety_req: dict[str, Any]) -> dict[str, Any]:
         """Resolve conflicts between learning recommendations and safety requirements"""
         resolution = {}
 
@@ -772,7 +772,7 @@ class SHIBLearningSystem:
             'conflicts_resolved': len([k for k in learning_rec.keys() if k in safety_req])
         }
 
-    async def validate_learned_parameters(self, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def validate_learned_parameters(self, params: dict[str, Any]) -> dict[str, Any]:
         """Validate learned parameters against safety requirements"""
         violations = []
         corrected_params = params.copy()
@@ -800,7 +800,7 @@ class SHIBLearningSystem:
 
     # Real-time adaptation methods
 
-    async def process_real_time_update(self, update: Dict[str, Any]):
+    async def process_real_time_update(self, update: dict[str, Any]):
         """Process real-time market update"""
         symbol = update.get('symbol')
         if symbol != self.primary_symbol:
@@ -821,7 +821,7 @@ class SHIBLearningSystem:
                 last_updated=time.time()
             )
 
-    async def get_current_patterns(self, symbol: str) -> Dict[str, Any]:
+    async def get_current_patterns(self, symbol: str) -> dict[str, Any]:
         """Get current trading patterns"""
         if symbol != self.primary_symbol:
             return {}
@@ -842,7 +842,7 @@ class SHIBLearningSystem:
 
         return current_patterns
 
-    async def set_strategy_parameters(self, symbol: str, params: Dict[str, Any]):
+    async def set_strategy_parameters(self, symbol: str, params: dict[str, Any]):
         """Set strategy parameters for symbol"""
         if symbol != self.primary_symbol:
             return
@@ -850,11 +850,11 @@ class SHIBLearningSystem:
         params['last_updated'] = time.time()
         self.current_strategy_params[symbol] = params
 
-    async def get_strategy_parameters(self, symbol: str) -> Dict[str, Any]:
+    async def get_strategy_parameters(self, symbol: str) -> dict[str, Any]:
         """Get current strategy parameters"""
         return self.current_strategy_params.get(symbol, {})
 
-    async def record_performance_feedback(self, symbol: str, feedback: Dict[str, Any]):
+    async def record_performance_feedback(self, symbol: str, feedback: dict[str, Any]):
         """Record performance feedback for adaptation"""
         if symbol != self.primary_symbol:
             return
@@ -933,7 +933,7 @@ class SHIBLearningSystem:
 
         self.logger.info(f"[SHIB_LEARNING] Completed comprehensive pattern analysis for {symbol}")
 
-    async def optimize_strategy_parameters(self, symbol: str) -> Dict[str, Any]:
+    async def optimize_strategy_parameters(self, symbol: str) -> dict[str, Any]:
         """Optimize strategy parameters based on learned patterns"""
         if symbol != self.primary_symbol:
             return {'success': False, 'error': 'Unsupported symbol'}
@@ -989,7 +989,7 @@ class SHIBLearningSystem:
             self.logger.error(f"[SHIB_LEARNING] Strategy optimization error: {e}")
             return {'success': False, 'error': str(e)}
 
-    async def validate_optimized_strategy(self, symbol: str) -> Dict[str, Any]:
+    async def validate_optimized_strategy(self, symbol: str) -> dict[str, Any]:
         """Validate optimized strategy against safety systems"""
         if symbol != self.primary_symbol:
             return {'safety_compliant': True}
@@ -1011,7 +1011,7 @@ class SHIBLearningSystem:
             'validation_timestamp': time.time()
         }
 
-    async def apply_learned_improvements(self, symbol: str) -> Dict[str, Any]:
+    async def apply_learned_improvements(self, symbol: str) -> dict[str, Any]:
         """Apply learned improvements to strategy"""
         if symbol != self.primary_symbol:
             return {'improvements_applied': 0}
@@ -1051,7 +1051,7 @@ class SHIBLearningSystem:
                 'application_timestamp': time.time()
             }
 
-    async def get_comprehensive_performance_report(self, symbol: str) -> Dict[str, Any]:
+    async def get_comprehensive_performance_report(self, symbol: str) -> dict[str, Any]:
         """Get comprehensive performance and learning effectiveness report"""
         if symbol != self.primary_symbol:
             return {}
@@ -1109,7 +1109,7 @@ class SHIBLearningSystem:
             'report_timestamp': time.time()
         }
 
-    def _identify_strengths(self) -> List[str]:
+    def _identify_strengths(self) -> list[str]:
         """Identify system strengths based on performance"""
         strengths = []
 
@@ -1129,7 +1129,7 @@ class SHIBLearningSystem:
 
         return strengths or ["Learning system operational"]
 
-    def _identify_improvement_areas(self) -> List[str]:
+    def _identify_improvement_areas(self) -> list[str]:
         """Identify areas needing improvement"""
         improvement_areas = []
 
@@ -1150,7 +1150,7 @@ class SHIBLearningSystem:
 
         return improvement_areas or ["Continue current learning approach"]
 
-    def _get_learning_priorities(self) -> List[str]:
+    def _get_learning_priorities(self) -> list[str]:
         """Get next learning priorities"""
         priorities = []
 
@@ -1170,7 +1170,7 @@ class SHIBLearningSystem:
 
 
 # Utility functions for easy integration
-async def create_shib_learning_system(config: Dict[str, Any] = None) -> SHIBLearningSystem:
+async def create_shib_learning_system(config: dict[str, Any] = None) -> SHIBLearningSystem:
     """Create and initialize SHIB learning system"""
     system = SHIBLearningSystem(config)
     await system.initialize()
@@ -1178,7 +1178,7 @@ async def create_shib_learning_system(config: Dict[str, Any] = None) -> SHIBLear
 
 
 async def optimize_for_shib_trading(learning_system: SHIBLearningSystem,
-                                   trade_history: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                   trade_history: list[dict[str, Any]]) -> dict[str, Any]:
     """Optimize system for SHIB trading using historical data"""
     symbol = 'SHIB/USDT'
 

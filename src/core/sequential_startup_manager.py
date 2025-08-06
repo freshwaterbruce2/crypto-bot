@@ -19,7 +19,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class StartupStep:
     function: Callable
     timeout: float = 30.0
     critical: bool = True
-    dependencies: List[str] = None
+    dependencies: list[str] = None
 
     def __post_init__(self):
         if self.dependencies is None:
@@ -52,7 +52,7 @@ class StartupStep:
 class SequentialStartupManager:
     """
     Manages sequential bot startup to prevent nonce collisions
-    
+
     Ensures WebSocket authentication happens first, then initializes
     components one by one to avoid concurrent REST API calls.
     """
@@ -64,10 +64,10 @@ class SequentialStartupManager:
 
         # State tracking
         self.current_phase: Optional[StartupPhase] = None
-        self.completed_steps: List[str] = []
-        self.failed_steps: List[str] = []
+        self.completed_steps: list[str] = []
+        self.failed_steps: list[str] = []
         self.startup_start_time = 0
-        self.phase_times: Dict[StartupPhase, float] = {}
+        self.phase_times: dict[StartupPhase, float] = {}
 
         # REST API lockout during WebSocket authentication
         self.rest_api_locked = False
@@ -82,7 +82,7 @@ class SequentialStartupManager:
 
         self.logger.info("[STARTUP_MGR] Sequential startup manager initialized")
 
-    def _define_startup_sequence(self) -> List[StartupStep]:
+    def _define_startup_sequence(self) -> list[StartupStep]:
         """Define the complete startup sequence"""
         return [
             # Phase 1: Prerequisites (no REST calls allowed)
@@ -210,7 +210,7 @@ class SequentialStartupManager:
     async def execute_sequential_startup(self) -> bool:
         """
         Execute the complete sequential startup process
-        
+
         Returns:
             bool: True if startup successful, False otherwise
         """
@@ -337,7 +337,7 @@ class SequentialStartupManager:
         api_secret = os.getenv('KRAKEN_REST_API_SECRET') or os.getenv('KRAKEN_API_SECRET', '')
 
         # Initialize enhanced nonce manager
-        nonce_manager = initialize_enhanced_nonce_manager(api_key, api_secret)
+        initialize_enhanced_nonce_manager(api_key, api_secret)
 
         self.logger.info("[STARTUP] Nonce manager initialized with enhanced features")
 
@@ -621,7 +621,7 @@ class SequentialStartupManager:
             self.logger.error(f"[STARTUP] Health check failed: {e}")
             raise
 
-    def get_startup_status(self) -> Dict[str, Any]:
+    def get_startup_status(self) -> dict[str, Any]:
         """Get current startup status"""
         return {
             'current_phase': self.current_phase.value if self.current_phase else None,

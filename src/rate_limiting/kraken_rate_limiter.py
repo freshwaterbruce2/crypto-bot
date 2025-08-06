@@ -7,7 +7,7 @@ system, circuit breaker patterns, and comprehensive monitoring.
 
 Key Features:
 - Private endpoints: 15 requests per minute compliance
-- Public endpoints: 20 requests per minute compliance  
+- Public endpoints: 20 requests per minute compliance
 - Token bucket algorithm with refill rates
 - Sliding window for accurate rate tracking
 - Per-API-key rate limit tracking
@@ -23,7 +23,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 from .rate_limit_config import (
     AccountTier,
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 class TokenBucket:
     """
     Token bucket for rate limiting with precise timing.
-    
+
     Implements the token bucket algorithm with configurable capacity,
     refill rate, and burst handling.
     """
@@ -68,10 +68,10 @@ class TokenBucket:
     def consume(self, tokens: int = 1) -> bool:
         """
         Try to consume tokens from bucket.
-        
+
         Args:
             tokens: Number of tokens to consume
-            
+
         Returns:
             True if tokens were consumed, False if insufficient
         """
@@ -90,10 +90,10 @@ class TokenBucket:
     def time_until_available(self, tokens: int = 1) -> float:
         """
         Calculate time until specified tokens are available.
-        
+
         Args:
             tokens: Tokens needed
-            
+
         Returns:
             Time in seconds until tokens available
         """
@@ -110,7 +110,7 @@ class TokenBucket:
 class SlidingWindow:
     """
     Sliding window for accurate rate limit tracking.
-    
+
     Maintains a time-based sliding window of requests to provide
     precise rate limiting over specific time periods.
     """
@@ -121,7 +121,7 @@ class SlidingWindow:
     def add_request(self, timestamp: Optional[float] = None):
         """
         Add a request to the sliding window.
-        
+
         Args:
             timestamp: Request timestamp (defaults to current time)
         """
@@ -134,10 +134,10 @@ class SlidingWindow:
     def can_make_request(self, timestamp: Optional[float] = None) -> bool:
         """
         Check if a request can be made without exceeding rate limit.
-        
+
         Args:
             timestamp: Check timestamp (defaults to current time)
-            
+
         Returns:
             True if request can be made
         """
@@ -150,10 +150,10 @@ class SlidingWindow:
     def get_request_count(self, timestamp: Optional[float] = None) -> int:
         """
         Get current request count in the window.
-        
+
         Args:
             timestamp: Reference timestamp (defaults to current time)
-            
+
         Returns:
             Number of requests in window
         """
@@ -166,10 +166,10 @@ class SlidingWindow:
     def time_until_available(self, timestamp: Optional[float] = None) -> float:
         """
         Calculate time until next request can be made.
-        
+
         Args:
             timestamp: Reference timestamp (defaults to current time)
-            
+
         Returns:
             Time in seconds until next request available
         """
@@ -197,7 +197,7 @@ class SlidingWindow:
 class PenaltyTracker:
     """
     Tracks penalty points with decay over time.
-    
+
     Implements Kraken's penalty point system with tier-based
     maximum limits and decay rates.
     """
@@ -209,7 +209,7 @@ class PenaltyTracker:
     def add_penalty(self, points: int):
         """
         Add penalty points.
-        
+
         Args:
             points: Penalty points to add
         """
@@ -235,10 +235,10 @@ class PenaltyTracker:
     def can_add_points(self, points: int) -> bool:
         """
         Check if penalty points can be added without exceeding limit.
-        
+
         Args:
             points: Points to add
-            
+
         Returns:
             True if points can be added
         """
@@ -248,10 +248,10 @@ class PenaltyTracker:
     def time_until_available(self, points: int) -> float:
         """
         Calculate time until points can be added.
-        
+
         Args:
             points: Points needed
-            
+
         Returns:
             Time in seconds until points available
         """
@@ -267,7 +267,7 @@ class PenaltyTracker:
 class CircuitBreaker:
     """
     Circuit breaker for rate limit protection.
-    
+
     Implements the circuit breaker pattern to prevent cascade failures
     when rate limits are consistently exceeded.
     """
@@ -280,7 +280,7 @@ class CircuitBreaker:
     ):
         """
         Initialize circuit breaker.
-        
+
         Args:
             failure_threshold: Failures before opening circuit
             recovery_timeout: Time before attempting recovery
@@ -300,7 +300,7 @@ class CircuitBreaker:
     def can_proceed(self) -> bool:
         """
         Check if requests can proceed through circuit breaker.
-        
+
         Returns:
             True if requests can proceed
         """
@@ -341,7 +341,7 @@ class CircuitBreaker:
             self.state = "OPEN"
             logger.warning("Circuit breaker returned to OPEN during recovery")
 
-    def get_state(self) -> Dict[str, Any]:
+    def get_state(self) -> dict[str, Any]:
         """Get circuit breaker state information."""
         return {
             "state": self.state,
@@ -355,11 +355,11 @@ class CircuitBreaker:
 class KrakenRateLimiter2025:
     """
     Advanced Kraken Rate Limiter for 2025 API Specifications.
-    
+
     Comprehensive rate limiting system that enforces Kraken's 2025 API limits
     using token bucket algorithms, sliding windows, penalty point tracking,
     and circuit breaker patterns.
-    
+
     Features:
     - Private endpoints: 15 requests per minute
     - Public endpoints: 20 requests per minute
@@ -381,7 +381,7 @@ class KrakenRateLimiter2025:
     ):
         """
         Initialize Kraken rate limiter.
-        
+
         Args:
             account_tier: Kraken account tier
             api_key: API key for tracking (optional)
@@ -419,7 +419,7 @@ class KrakenRateLimiter2025:
             )
 
         # Order tracking for age-based penalties
-        self.order_times: Dict[str, float] = {}
+        self.order_times: dict[str, float] = {}
 
         # Statistics and monitoring
         self.stats = {
@@ -441,7 +441,7 @@ class KrakenRateLimiter2025:
         self.persistence_path = Path(persistence_path) if persistence_path else None
 
         # Background tasks
-        self._background_tasks: List[asyncio.Task] = []
+        self._background_tasks: list[asyncio.Task] = []
         self._shutdown = False
 
         logger.info(
@@ -495,7 +495,7 @@ class KrakenRateLimiter2025:
         )
 
         # Per-endpoint penalty tracking
-        self.endpoint_penalties: Dict[str, PenaltyTracker] = {}
+        self.endpoint_penalties: dict[str, PenaltyTracker] = {}
 
     async def start(self):
         """Start the rate limiter and background tasks."""
@@ -540,16 +540,16 @@ class KrakenRateLimiter2025:
         weight: Optional[int] = None,
         order_age_seconds: Optional[float] = None,
         priority: RequestPriority = RequestPriority.NORMAL
-    ) -> Tuple[bool, str, float]:
+    ) -> tuple[bool, str, float]:
         """
         Check if request can proceed within rate limits.
-        
+
         Args:
             endpoint: API endpoint name
             weight: Request weight (defaults to endpoint config)
             order_age_seconds: Age of order for penalty calculation
             priority: Request priority for queuing
-            
+
         Returns:
             Tuple of (can_proceed, reason, wait_time_seconds)
         """
@@ -630,14 +630,14 @@ class KrakenRateLimiter2025:
     ) -> bool:
         """
         Wait until request can proceed within rate limits.
-        
+
         Args:
             endpoint: API endpoint name
             weight: Request weight
             order_age_seconds: Age of order for penalty calculation
             priority: Request priority
             timeout_seconds: Maximum time to wait
-            
+
         Returns:
             True if request can proceed, False if timeout/shutdown
         """
@@ -694,7 +694,7 @@ class KrakenRateLimiter2025:
     ) -> Any:
         """
         Execute function with automatic rate limit handling.
-        
+
         Args:
             endpoint: API endpoint name
             func: Function to execute
@@ -704,10 +704,10 @@ class KrakenRateLimiter2025:
             priority: Request priority
             timeout_seconds: Maximum time to wait
             **kwargs: Function keyword arguments
-            
+
         Returns:
             Function result
-            
+
         Raises:
             Exception: If function fails or rate limit timeout
         """
@@ -747,7 +747,7 @@ class KrakenRateLimiter2025:
     def record_order_time(self, order_id: str, timestamp: Optional[float] = None):
         """
         Record order creation time for age-based penalty calculation.
-        
+
         Args:
             order_id: Order identifier
             timestamp: Order creation time (defaults to current time)
@@ -761,10 +761,10 @@ class KrakenRateLimiter2025:
     def get_order_age(self, order_id: str) -> Optional[float]:
         """
         Get order age in seconds.
-        
+
         Args:
             order_id: Order identifier
-            
+
         Returns:
             Order age in seconds, or None if not found
         """
@@ -777,14 +777,14 @@ class KrakenRateLimiter2025:
     def remove_order_time(self, order_id: str):
         """
         Remove order time tracking.
-        
+
         Args:
             order_id: Order identifier
         """
         self.order_times.pop(order_id, None)
         logger.debug(f"Removed order time tracking for {order_id}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive rate limiter status."""
         status = {
             'account_tier': self.account_tier.value,
@@ -834,13 +834,13 @@ class KrakenRateLimiter2025:
 
         return status
 
-    def get_endpoint_stats(self, endpoint: Optional[str] = None) -> Dict[str, Any]:
+    def get_endpoint_stats(self, endpoint: Optional[str] = None) -> dict[str, Any]:
         """
         Get statistics for specific endpoint or all endpoints.
-        
+
         Args:
             endpoint: Endpoint name (None for all)
-            
+
         Returns:
             Endpoint statistics
         """

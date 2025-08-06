@@ -16,7 +16,7 @@ This example demonstrates:
 
 import asyncio
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .analytics import MetricPeriod
 from .portfolio_manager import PortfolioConfig, PortfolioManager, PortfolioStrategy
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class MockTradeExecutor:
     """Mock trade executor for testing"""
 
-    async def execute_buy(self, symbol: str, size_usd: float, reason: str = None) -> Dict[str, Any]:
+    async def execute_buy(self, symbol: str, size_usd: float, reason: str = None) -> dict[str, Any]:
         """Mock buy execution"""
         return {
             'success': True,
@@ -42,7 +42,7 @@ class MockTradeExecutor:
             'order_id': f"mock_buy_{symbol}_{int(asyncio.get_event_loop().time())}"
         }
 
-    async def execute_sell(self, symbol: str, size_usd: float, reason: str = None) -> Dict[str, Any]:
+    async def execute_sell(self, symbol: str, size_usd: float, reason: str = None) -> dict[str, Any]:
         """Mock sell execution"""
         return {
             'success': True,
@@ -163,7 +163,7 @@ async def portfolio_integration_example():
         logger.info("💼 Creating example positions...")
 
         # Create BTC position
-        btc_position = await portfolio_manager.create_position(
+        await portfolio_manager.create_position(
             symbol="BTC/USDT",
             position_type=PositionType.LONG,
             size=0.01,  # 0.01 BTC
@@ -173,7 +173,7 @@ async def portfolio_integration_example():
         )
 
         # Create ETH position
-        eth_position = await portfolio_manager.create_position(
+        await portfolio_manager.create_position(
             symbol="ETH/USDT",
             position_type=PositionType.LONG,
             size=0.5,  # 0.5 ETH
@@ -289,7 +289,7 @@ async def portfolio_integration_example():
 
         # Step 17: Display events received
         logger.info(f"📢 Total events received: {len(event_handler.events_received)}")
-        for i, (event_type, data) in enumerate(event_handler.events_received[-5:], 1):
+        for i, (event_type, _data) in enumerate(event_handler.events_received[-5:], 1):
             logger.info(f"  {i}. {event_type}")
 
         # Allow system to process final events

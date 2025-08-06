@@ -4,7 +4,7 @@ Handles Kraken API compliance and rate limiting
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 class KrakenConfigManager:
     """Kraken configuration manager"""
 
-    def __init__(self, core_config: Dict[str, Any]):
+    def __init__(self, core_config: dict[str, Any]):
         """Initialize Kraken config manager"""
         self.core_config = core_config
         self.kraken_config = self._get_kraken_defaults()
 
-    def _get_kraken_defaults(self) -> Dict[str, Any]:
+    def _get_kraken_defaults(self) -> dict[str, Any]:
         """Get default Kraken configuration with Pro account optimizations"""
         api_tier = self.core_config.get("kraken_api_tier", "starter")
         is_pro_account = api_tier == "pro"
@@ -82,7 +82,7 @@ class KrakenConfigManager:
 
         return config
 
-    def get_all_settings(self) -> Dict[str, Any]:
+    def get_all_settings(self) -> dict[str, Any]:
         """Get all Kraken settings"""
         return self.kraken_config
 

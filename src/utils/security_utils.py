@@ -10,7 +10,7 @@ import hashlib
 import logging
 import re
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,10 @@ class SecurityValidator:
     def contains_sensitive_data(cls, text: str) -> bool:
         """
         Check if text contains potentially sensitive information
-        
+
         Args:
             text: Text to check
-            
+
         Returns:
             True if sensitive data is detected
         """
@@ -79,10 +79,10 @@ class SecurityValidator:
     def sanitize_for_logging(cls, text: str) -> str:
         """
         Sanitize text for safe logging by masking sensitive information
-        
+
         Args:
             text: Text to sanitize
-            
+
         Returns:
             Sanitized text safe for logging
         """
@@ -106,11 +106,11 @@ class SecurityValidator:
     def validate_input_safe(cls, user_input: str, max_length: int = 1000) -> bool:
         """
         Validate user input for basic safety
-        
+
         Args:
             user_input: Input to validate
             max_length: Maximum allowed length
-            
+
         Returns:
             True if input appears safe
         """
@@ -148,7 +148,7 @@ class SecureErrorHandler:
     def __init__(self, log_sensitive_details: bool = False):
         """
         Initialize secure error handler
-        
+
         Args:
             log_sensitive_details: Whether to log sensitive details (dev only)
         """
@@ -157,16 +157,16 @@ class SecureErrorHandler:
     def safe_error_message(self, error: Exception, context: str = "") -> str:
         """
         Generate safe error message that doesn't leak sensitive information
-        
+
         Args:
             error: Exception to process
             context: Context information (will be sanitized)
-            
+
         Returns:
             Safe error message for user-facing display
         """
         # Create a generic error message
-        error_type = type(error).__name__
+        type(error).__name__
         safe_message = f"An error occurred during {context}" if context else "An error occurred"
 
         # Create error hash for tracking
@@ -178,16 +178,16 @@ class SecureErrorHandler:
         self,
         error: Exception,
         context: str = "",
-        additional_info: Optional[Dict[str, Any]] = None
+        additional_info: Optional[dict[str, Any]] = None
     ) -> str:
         """
         Log error information securely
-        
+
         Args:
             error: Exception to log
             context: Context information
             additional_info: Additional information to log
-            
+
         Returns:
             Error ID for tracking
         """
@@ -225,13 +225,13 @@ class SecureErrorHandler:
 
         return error_id
 
-    def handle_authentication_error(self, error: Exception) -> Dict[str, Any]:
+    def handle_authentication_error(self, error: Exception) -> dict[str, Any]:
         """
         Handle authentication errors securely
-        
+
         Args:
             error: Authentication error
-            
+
         Returns:
             Safe error response
         """
@@ -245,14 +245,14 @@ class SecureErrorHandler:
             'error_type': 'authentication_error'
         }
 
-    def handle_api_error(self, error: Exception, api_endpoint: str) -> Dict[str, Any]:
+    def handle_api_error(self, error: Exception, api_endpoint: str) -> dict[str, Any]:
         """
         Handle API errors securely
-        
+
         Args:
             error: API error
             api_endpoint: API endpoint (will be sanitized)
-            
+
         Returns:
             Safe error response
         """
@@ -274,11 +274,11 @@ class SecureConfig:
     def validate_config_value(key: str, value: Any) -> bool:
         """
         Validate configuration values for security
-        
+
         Args:
             key: Configuration key
             value: Configuration value
-            
+
         Returns:
             True if configuration appears safe
         """
@@ -308,13 +308,13 @@ class SecureConfig:
         return True
 
     @staticmethod
-    def mask_sensitive_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    def mask_sensitive_config(config: dict[str, Any]) -> dict[str, Any]:
         """
         Mask sensitive values in configuration for logging
-        
+
         Args:
             config: Configuration dictionary
-            
+
         Returns:
             Configuration with sensitive values masked
         """
@@ -368,7 +368,7 @@ def secure_log_error(error: Exception, context: str = "") -> str:
     return handler.log_error_securely(error, context)
 
 
-def safe_error_response(error: Exception, context: str = "") -> Dict[str, Any]:
+def safe_error_response(error: Exception, context: str = "") -> dict[str, Any]:
     """Convenience function for safe error responses"""
     handler = get_secure_error_handler()
     error_id = handler.log_error_securely(error, context)

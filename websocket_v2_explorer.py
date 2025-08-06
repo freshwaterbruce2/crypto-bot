@@ -8,7 +8,6 @@ import json
 import time
 from collections import deque
 from datetime import datetime
-from typing import Dict
 
 import websockets
 
@@ -108,7 +107,7 @@ class WebSocketDataExplorer:
 
         print("-"*70)
 
-    def _process_ticker(self, data: Dict):
+    def _process_ticker(self, data: dict):
         """Process ticker updates"""
         if "data" in data:
             ticker = data["data"][0]
@@ -124,7 +123,7 @@ class WebSocketDataExplorer:
                 "change_pct": float(ticker.get("change_pct", 0))
             }
 
-    def _process_trade(self, data: Dict):
+    def _process_trade(self, data: dict):
         """Process trade feed"""
         if "data" in data:
             for trade in data["data"]:
@@ -144,7 +143,7 @@ class WebSocketDataExplorer:
                 else:
                     self.sell_volume += trade_info["volume"]
 
-    def _process_book(self, data: Dict):
+    def _process_book(self, data: dict):
         """Process order book"""
         if "data" in data:
             book = data["data"][0]

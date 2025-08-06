@@ -13,7 +13,7 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -37,9 +37,9 @@ class ValidationResult:
     test_name: str
     passed: bool
     duration: float
-    details: Dict[str, Any]
-    errors: List[str]
-    warnings: List[str]
+    details: dict[str, Any]
+    errors: list[str]
+    warnings: list[str]
 
 
 @dataclass
@@ -50,9 +50,9 @@ class IntegrationTestReport:
     passed_tests: int
     failed_tests: int
     total_duration: float
-    results: List[ValidationResult]
-    system_health: Dict[str, Any]
-    recommendations: List[str]
+    results: list[ValidationResult]
+    system_health: dict[str, Any]
+    recommendations: list[str]
 
 
 class IntegrationValidator:
@@ -61,7 +61,7 @@ class IntegrationValidator:
     def __init__(self):
         self.config = TradingConfig()
         self.logger = self._setup_logging()
-        self.results: List[ValidationResult] = []
+        self.results: list[ValidationResult] = []
         self.start_time = None
         self.performance_tracker = PerformanceManager()
 
@@ -448,7 +448,7 @@ class IntegrationValidator:
                 return False
 
             # Test balance retrieval (authenticated call)
-            balance = await self.balance_manager.get_balance()
+            await self.balance_manager.get_balance()
 
             # Balance can be None in test environment, that's OK
             return True
@@ -467,7 +467,7 @@ class IntegrationValidator:
             start_time = time.time()
 
             # Make multiple authenticated requests
-            for i in range(3):
+            for _i in range(3):
                 await self.rate_limiter.acquire('private')
                 # Simulate authenticated API call
                 await asyncio.sleep(0.1)
@@ -541,7 +541,7 @@ class IntegrationValidator:
 
             # Try to make requests faster than allowed
             tasks = []
-            for i in range(5):
+            for _i in range(5):
                 task = asyncio.create_task(self.rate_limiter.acquire('private'))
                 tasks.append(task)
 
@@ -567,7 +567,7 @@ class IntegrationValidator:
                 return False
 
             # Simulate rate limit exhaustion and recovery
-            for i in range(3):
+            for _i in range(3):
                 await self.rate_limiter.acquire('private')
 
             # Wait for recovery
@@ -647,7 +647,7 @@ class IntegrationValidator:
                 return False
 
             # Test that circuit breaker opens on failures
-            for i in range(5):
+            for _i in range(5):
                 await self.circuit_breaker.record_failure()
 
             # Circuit should be open now
@@ -852,7 +852,7 @@ class IntegrationValidator:
                 return False
 
             # Test balance retrieval method exists and is callable
-            balance = await self.balance_manager.get_balance()
+            await self.balance_manager.get_balance()
             # Balance can be None in test environment
 
             return True
@@ -891,7 +891,7 @@ class IntegrationValidator:
             await self.balance_manager._update_cached_balance(test_balance)
 
             # Portfolio manager should be able to get updated balance
-            portfolio_balance = await self.portfolio_manager.get_total_balance()
+            await self.portfolio_manager.get_total_balance()
 
             return True
 
@@ -973,7 +973,7 @@ class IntegrationValidator:
                 return False
 
             # Test portfolio value calculation
-            total_value = await self.portfolio_manager.get_total_balance()
+            await self.portfolio_manager.get_total_balance()
 
             # Value can be None in test environment
             return True
@@ -989,7 +989,7 @@ class IntegrationValidator:
                 return False
 
             # Test position retrieval
-            positions = await self.portfolio_manager.get_current_positions()
+            await self.portfolio_manager.get_current_positions()
 
             # Positions can be empty in test environment
             return True
@@ -1277,7 +1277,7 @@ class IntegrationValidator:
         try:
             # Test system can handle multiple concurrent operations
             tasks = []
-            for i in range(5):
+            for _i in range(5):
                 if self.balance_manager:
                     task = asyncio.create_task(self.balance_manager.get_balance())
                     tasks.append(task)
@@ -1405,8 +1405,8 @@ class IntegrationValidator:
             self.logger.error(f"Cleanup error: {e}")
 
     def _add_result(self, component: str, test_name: str, passed: bool,
-                   duration: float, details: Dict[str, Any],
-                   errors: List[str], warnings: List[str]):
+                   duration: float, details: dict[str, Any],
+                   errors: list[str], warnings: list[str]):
         """Add validation result"""
         result = ValidationResult(
             component=component,
@@ -1443,7 +1443,7 @@ class IntegrationValidator:
             recommendations=recommendations
         )
 
-    def _assess_system_health(self) -> Dict[str, Any]:
+    def _assess_system_health(self) -> dict[str, Any]:
         """Assess overall system health"""
         health = {
             "overall_status": "healthy",
@@ -1489,7 +1489,7 @@ class IntegrationValidator:
 
         return health
 
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate system improvement recommendations"""
         recommendations = []
 

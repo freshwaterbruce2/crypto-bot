@@ -24,7 +24,7 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..utils.consolidated_nonce_manager import ConsolidatedNonceManager
 from .signature_generator import SignatureGenerator
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 class AuthRequest:
     """Authentication request data structure"""
     uri_path: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     nonce: str
     signature: str
     timestamp: float
@@ -72,7 +72,7 @@ class SignatureError(KrakenAuthError):
 class KrakenAuth:
     """
     Production-ready Kraken API authentication handler.
-    
+
     Provides complete authentication workflow with automatic nonce management,
     signature generation, error handling, and performance monitoring.
     """
@@ -86,7 +86,7 @@ class KrakenAuth:
     ):
         """
         Initialize Kraken authentication handler.
-        
+
         Args:
             api_key: Kraken API key
             private_key: Base64-encoded Kraken private key
@@ -162,18 +162,18 @@ class KrakenAuth:
     def get_auth_headers(
         self,
         uri_path: str,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, str]:
+        params: Optional[dict[str, Any]] = None
+    ) -> dict[str, str]:
         """
         Generate authentication headers for Kraken API request.
-        
+
         Args:
             uri_path: API endpoint path (e.g., '/0/private/Balance')
             params: Optional request parameters (nonce will be added)
-            
+
         Returns:
             Dictionary with authentication headers
-            
+
         Raises:
             KrakenAuthError: If authentication fails
         """
@@ -219,15 +219,15 @@ class KrakenAuth:
     async def get_auth_headers_async(
         self,
         uri_path: str,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, str]:
+        params: Optional[dict[str, Any]] = None
+    ) -> dict[str, str]:
         """
         Async version of get_auth_headers.
-        
+
         Args:
             uri_path: API endpoint path
             params: Optional request parameters (nonce will be added)
-            
+
         Returns:
             Dictionary with authentication headers
         """
@@ -270,19 +270,19 @@ class KrakenAuth:
         self,
         error_message: str,
         uri_path: str,
-        params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, str]:
+        params: Optional[dict[str, Any]] = None
+    ) -> dict[str, str]:
         """
         Handle authentication error with automatic recovery.
-        
+
         Args:
             error_message: Error message from Kraken API
             uri_path: Original request URI path
             params: Original request parameters
-            
+
         Returns:
             New authentication headers after recovery
-            
+
         Raises:
             KrakenAuthError: If recovery fails
         """
@@ -299,9 +299,9 @@ class KrakenAuth:
     def _handle_nonce_error(
         self,
         uri_path: str,
-        params: Optional[Dict[str, Any]],
+        params: Optional[dict[str, Any]],
         error_message: str
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Handle nonce-related authentication errors"""
         self.stats.nonce_errors += 1
         self.stats.recovery_attempts += 1
@@ -333,9 +333,9 @@ class KrakenAuth:
     def _handle_signature_error(
         self,
         uri_path: str,
-        params: Optional[Dict[str, Any]],
+        params: Optional[dict[str, Any]],
         error_message: str
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Handle signature-related authentication errors"""
         self.stats.signature_errors += 1
         self.stats.recovery_attempts += 1
@@ -389,10 +389,10 @@ class KrakenAuth:
         if self._last_auth_times:
             self.stats.avg_auth_time_ms = sum(self._last_auth_times) / len(self._last_auth_times)
 
-    def get_comprehensive_status(self) -> Dict[str, Any]:
+    def get_comprehensive_status(self) -> dict[str, Any]:
         """
         Get comprehensive authentication system status.
-        
+
         Returns:
             Dictionary with detailed status information
         """
@@ -419,10 +419,10 @@ class KrakenAuth:
             }
         }
 
-    def run_comprehensive_test(self) -> Dict[str, Any]:
+    def run_comprehensive_test(self) -> dict[str, Any]:
         """
         Run comprehensive test of authentication system.
-        
+
         Returns:
             Test results dictionary
         """
@@ -485,7 +485,7 @@ class KrakenAuth:
 
         return test_results
 
-    def export_configuration(self) -> Dict[str, Any]:
+    def export_configuration(self) -> dict[str, Any]:
         """Export authentication configuration (excluding sensitive data)"""
         return {
             'api_key_hash': self.api_key[:8] + '...',
@@ -526,13 +526,13 @@ class KrakenAuth:
             logger.error(f"[KRAKEN_AUTH_2025] Error during cleanup: {e}")
 
     @classmethod
-    def create_from_config(cls, config: Dict[str, Any]) -> 'KrakenAuth':
+    def create_from_config(cls, config: dict[str, Any]) -> 'KrakenAuth':
         """
         Create KrakenAuth instance from configuration dictionary.
-        
+
         Args:
             config: Configuration dictionary with api_key, private_key, etc.
-            
+
         Returns:
             KrakenAuth instance
         """

@@ -12,7 +12,7 @@ import time
 from collections import OrderedDict
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Generic, Optional, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class BoundedCache(Generic[K, V]):
         """Remove expired entries"""
         with self._lock:
             expired_keys = []
-            current_time = time.time()
+            time.time()
 
             for key, entry in self._cache.items():
                 if entry.is_expired(self.ttl):
@@ -261,7 +261,7 @@ class BoundedCache(Generic[K, V]):
         finally:
             self._start_cleanup_timer()
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         with self._lock:
             total_requests = self.hits + self.misses
@@ -323,14 +323,14 @@ class TradingDataCache:
             max_memory_mb=10.0
         )
 
-        self.balance_cache = BoundedCache[str, Dict[str, Any]](
+        self.balance_cache = BoundedCache[str, dict[str, Any]](
             max_size=100,
             ttl=60.0,  # 1 minute for balance data
             eviction_policy=EvictionPolicy.LRU,
             max_memory_mb=5.0
         )
 
-        self.signal_cache = BoundedCache[str, Dict[str, Any]](
+        self.signal_cache = BoundedCache[str, dict[str, Any]](
             max_size=500,
             ttl=300.0,  # 5 minutes for signals
             eviction_policy=EvictionPolicy.LFU,
@@ -352,19 +352,19 @@ class TradingDataCache:
         """Cache price data"""
         self.price_cache.put(symbol, price)
 
-    def get_balance(self, asset: str) -> Optional[Dict[str, Any]]:
+    def get_balance(self, asset: str) -> Optional[dict[str, Any]]:
         """Get cached balance"""
         return self.balance_cache.get(asset)
 
-    def cache_balance(self, asset: str, balance_data: Dict[str, Any]):
+    def cache_balance(self, asset: str, balance_data: dict[str, Any]):
         """Cache balance data"""
         self.balance_cache.put(asset, balance_data)
 
-    def get_signal(self, signal_key: str) -> Optional[Dict[str, Any]]:
+    def get_signal(self, signal_key: str) -> Optional[dict[str, Any]]:
         """Get cached signal"""
         return self.signal_cache.get(signal_key)
 
-    def cache_signal(self, signal_key: str, signal_data: Dict[str, Any]):
+    def cache_signal(self, signal_key: str, signal_data: dict[str, Any]):
         """Cache signal data"""
         self.signal_cache.put(signal_key, signal_data)
 
@@ -376,7 +376,7 @@ class TradingDataCache:
         """Cache calculation result"""
         self.calculation_cache.put(calc_key, result)
 
-    def get_all_stats(self) -> Dict[str, Any]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all caches"""
         return {
             "price_cache": self.price_cache.get_stats(),

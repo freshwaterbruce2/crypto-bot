@@ -8,7 +8,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..config.constants import MINIMUM_ORDER_SIZE_TIER1
 from ..utils.kraken_order_validator import kraken_validator
@@ -28,7 +28,7 @@ class TradeRequest:
     symbol: str
     side: str
     amount: float
-    signal: Dict[str, Any]
+    signal: dict[str, Any]
     order_type: OrderType = OrderType.MARKET
     price: Optional[float] = None
 
@@ -53,7 +53,7 @@ class TradeAssistant:
 class ComplianceAssistant(TradeAssistant):
     """Ensures Kraken compliance"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__("compliance")
         # Kraken minimum for crypto-to-crypto is 1 USDT
         self.min_order_value = max(1.0, config.get('min_order_size_usdt', 1.0))
@@ -87,7 +87,7 @@ class ComplianceAssistant(TradeAssistant):
 class RiskAssistant(TradeAssistant):
     """Manages risk parameters with portfolio intelligence and claude-flow agent integration"""
 
-    def __init__(self, config: Dict[str, Any], balance_manager, portfolio_intelligence=None):
+    def __init__(self, config: dict[str, Any], balance_manager, portfolio_intelligence=None):
         super().__init__("risk")
         self.balance_manager = balance_manager
         self.portfolio_intelligence = portfolio_intelligence
@@ -303,7 +303,7 @@ class ExecutionAssistant(TradeAssistant):
             logger.error(f"[EXECUTION] Error getting real-time price for {symbol}: {e}")
             return None
 
-    async def execute(self, request: TradeRequest) -> Dict[str, Any]:
+    async def execute(self, request: TradeRequest) -> dict[str, Any]:
         """Execute the trade with intelligent fund management and compliance checks"""
         try:
             # COMPLIANCE CHECK: Same-side trade cooling period
@@ -941,7 +941,7 @@ class ExecutionAssistant(TradeAssistant):
         logger.error(f"[EXECUTION] Balance verification failed after {max_retries} attempts. Last balance: ${last_balance:.2f}")
         return last_balance
 
-    async def _handle_reallocation(self, request: TradeRequest) -> Dict[str, Any]:
+    async def _handle_reallocation(self, request: TradeRequest) -> dict[str, Any]:
         """Handle intelligent reallocation when funds are deployed using claude-flow agents"""
         try:
             if not self.balance_manager:
@@ -974,7 +974,7 @@ class ExecutionAssistant(TradeAssistant):
             }
 
             # Get portfolio analysis from agents
-            portfolio_analysis = await analyze_portfolio_state(portfolio_data)
+            await analyze_portfolio_state(portfolio_data)
 
             # Get reallocation strategy
             target_trade = {
@@ -1054,7 +1054,7 @@ class ExecutionAssistant(TradeAssistant):
                     quote_currency, needed_amount, request.symbol
                 )
 
-    async def _handle_sell_completion(self, request: TradeRequest, order: Dict[str, Any]) -> None:
+    async def _handle_sell_completion(self, request: TradeRequest, order: dict[str, Any]) -> None:
         """Handle sell order completion and trigger profit harvester callback."""
         try:
             # Wait a moment for order to settle
@@ -1104,7 +1104,7 @@ class ExecutionAssistant(TradeAssistant):
         except Exception as e:
             logger.error(f"[EXECUTION] Error handling sell completion: {e}")
 
-    async def _handle_buy_completion(self, request: TradeRequest, order: Dict[str, Any]) -> None:
+    async def _handle_buy_completion(self, request: TradeRequest, order: dict[str, Any]) -> None:
         """Handle buy order completion and track position in portfolio tracker."""
         try:
             # Wait a moment for order to settle
@@ -1152,7 +1152,7 @@ class ExecutionAssistant(TradeAssistant):
 class EnhancedTradeExecutor:
     """Enhanced trade executor with unified pipeline"""
 
-    def __init__(self, exchange_client, symbol_mapper, config: Dict[str, Any],
+    def __init__(self, exchange_client, symbol_mapper, config: dict[str, Any],
                  bot_reference, balance_manager, risk_manager=None, stop_loss_manager=None):
         self.exchange = exchange_client
         self.config = config
@@ -1249,7 +1249,7 @@ class EnhancedTradeExecutor:
             logger.error(f"[EXECUTOR] Error getting real-time price for {symbol}: {e}")
             return None
 
-    async def execute_trade(self, trade_params: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_trade(self, trade_params: dict[str, Any]) -> dict[str, Any]:
         """Main execution method - unified pipeline with fast-path optimization"""
         self.metrics['total_requests'] += 1
         execution_start = time.time()
@@ -1449,7 +1449,7 @@ class EnhancedTradeExecutor:
             logger.error(f"[EXECUTOR] Error canceling order {order_id}: {e}")
             return False
 
-    async def get_order_status(self, order_id: str) -> Dict[str, Any]:
+    async def get_order_status(self, order_id: str) -> dict[str, Any]:
         """Get order status"""
         try:
             return await self.exchange.fetch_order(order_id)
@@ -1508,7 +1508,7 @@ class EnhancedTradeExecutor:
             stats['hourly_compound_rate'] = (1 + avg_profit) ** trades_per_hour - 1
             stats['last_update'] = time.time()
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get executor metrics"""
         metrics = {
             'executor': self.metrics.copy(),
@@ -1572,7 +1572,7 @@ class EnhancedTradeExecutor:
             logger.warning(f"[EXECUTOR] Error estimating value for {asset}: {e}")
             return amount * 1.0  # Fallback to $1 per unit
 
-    async def _log_trade_event(self, event_type: str, trade_data: Dict[str, Any]) -> None:
+    async def _log_trade_event(self, event_type: str, trade_data: dict[str, Any]) -> None:
         """Log trade event through assistant manager if available"""
         try:
             if self.assistant_manager:

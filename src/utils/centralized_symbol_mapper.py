@@ -16,7 +16,7 @@ The mapper ensures consistent symbol handling across all components.
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,21 +24,21 @@ logger = logging.getLogger(__name__)
 class KrakenSymbolMapper:
     """
     Centralized symbol mapper for Kraken exchange.
-    
+
     This class handles the conversion between different symbol formats:
     - WebSocket v2 format: "BTC/USD", "BTC/USDT" (with forward slash)
     - REST API format: "XBTUSD", "XBTUSDT" (no slash, uses XBT for BTC)
     - CCXT format: May vary depending on the market
-    
+
     The mapper auto-learns from the exchange's market data.
     """
 
     def __init__(self):
         """Initialize the symbol mapper."""
-        self.ws_to_rest: Dict[str, str] = {}
-        self.rest_to_ws: Dict[str, str] = {}
-        self.ccxt_to_ws: Dict[str, str] = {}
-        self.ws_to_ccxt: Dict[str, str] = {}
+        self.ws_to_rest: dict[str, str] = {}
+        self.rest_to_ws: dict[str, str] = {}
+        self.ccxt_to_ws: dict[str, str] = {}
+        self.ws_to_ccxt: dict[str, str] = {}
 
         # Cache for discovered mappings
         self.cache_file = Path("D:/trading_data/symbol_mappings.json")
@@ -119,10 +119,10 @@ class KrakenSymbolMapper:
         except Exception as e:
             logger.error(f"[SYMBOL_MAPPER] Could not save cache: {e}")
 
-    async def learn_from_markets(self, markets: Dict[str, Dict]):
+    async def learn_from_markets(self, markets: dict[str, dict]):
         """
         Learn symbol mappings from exchange market data.
-        
+
         Args:
             markets: Market data from exchange.load_markets()
         """
@@ -177,10 +177,10 @@ class KrakenSymbolMapper:
     def websocket_to_rest(self, ws_symbol: str) -> str:
         """
         Convert WebSocket v2 symbol to REST API format.
-        
+
         Args:
             ws_symbol: Symbol in WebSocket format (e.g., 'BTC/USDT')
-            
+
         Returns:
             REST API compatible symbol
         """
@@ -207,10 +207,10 @@ class KrakenSymbolMapper:
     def rest_to_websocket(self, rest_symbol: str) -> str:
         """
         Convert REST API symbol to WebSocket v2 format.
-        
+
         Args:
             rest_symbol: Symbol in REST format (e.g., 'XBTUSDT')
-            
+
         Returns:
             WebSocket v2 compatible symbol
         """
@@ -243,10 +243,10 @@ class KrakenSymbolMapper:
     def websocket_to_ccxt(self, ws_symbol: str) -> str:
         """
         Convert WebSocket symbol to CCXT format.
-        
+
         Args:
             ws_symbol: Symbol in WebSocket format
-            
+
         Returns:
             CCXT compatible symbol
         """
@@ -260,10 +260,10 @@ class KrakenSymbolMapper:
     def ccxt_to_websocket(self, ccxt_symbol: str) -> str:
         """
         Convert CCXT symbol to WebSocket format.
-        
+
         Args:
             ccxt_symbol: Symbol in CCXT format
-            
+
         Returns:
             WebSocket compatible symbol
         """
@@ -278,22 +278,22 @@ class KrakenSymbolMapper:
         """
         Convert WebSocket v2 symbol to REST API format.
         This is the MISSING METHOD that was causing errors.
-        
+
         Args:
             ws_symbol: Symbol in WebSocket v2 format (e.g., 'BTC/USDT')
-            
+
         Returns:
             REST API compatible symbol or None if not found
         """
         return self.websocket_to_rest(ws_symbol)
 
-    def get_all_formats(self, symbol: str) -> Dict[str, str]:
+    def get_all_formats(self, symbol: str) -> dict[str, str]:
         """
         Get all known formats for a symbol.
-        
+
         Args:
             symbol: Symbol in any format
-            
+
         Returns:
             Dict with all known formats
         """
@@ -330,7 +330,7 @@ class KrakenSymbolMapper:
 
         return ws_symbol.endswith('/USDT')
 
-    def filter_usdt_pairs(self, symbols: List[str]) -> List[str]:
+    def filter_usdt_pairs(self, symbols: list[str]) -> list[str]:
         """Filter a list of symbols to only include USDT pairs."""
         usdt_pairs = []
         for symbol in symbols:
@@ -345,10 +345,10 @@ class KrakenSymbolMapper:
         """
         Validate that a symbol is a USDT pair only.
         Rejects USD, EUR, and other non-USDT pairs.
-        
+
         Args:
             symbol: Symbol in any format
-            
+
         Returns:
             True if valid USDT pair, False otherwise
         """

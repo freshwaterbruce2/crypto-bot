@@ -6,7 +6,7 @@ Provides intelligent selling decisions based on market conditions and profit tar
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,14 +46,14 @@ class AdaptiveSellingAssistant:
         """Initialize the assistant"""
         self.logger.info("[ADAPTIVE_SELLING] Assistant ready for adaptive selling decisions")
 
-    async def should_sell_position(self, position: Dict[str, Any], market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def should_sell_position(self, position: dict[str, Any], market_data: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze if a position should be sold
-        
+
         Args:
             position: Position data with symbol, amount, entry_price, entry_time
             market_data: Current market conditions
-            
+
         Returns:
             Dict with sell_decision, reason, confidence, suggested_amount
         """
@@ -178,7 +178,7 @@ class AdaptiveSellingAssistant:
                 'suggested_amount': 0
             }
 
-    async def get_trailing_stop_price(self, position: Dict[str, Any], current_price: float) -> Optional[float]:
+    async def get_trailing_stop_price(self, position: dict[str, Any], current_price: float) -> Optional[float]:
         """Calculate trailing stop price for a position"""
         try:
             entry_price = float(position.get('entry_price', 0))
@@ -201,7 +201,7 @@ class AdaptiveSellingAssistant:
             self.logger.error(f"[ADAPTIVE_SELLING] Error calculating trailing stop: {e}")
             return None
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary of selling decisions"""
         if self.performance_metrics['total_sells'] > 0:
             success_rate = self.performance_metrics['profitable_sells'] / self.performance_metrics['total_sells']
@@ -215,7 +215,7 @@ class AdaptiveSellingAssistant:
             'recent_decisions': self.sell_decisions[-10:] if self.sell_decisions else []
         }
 
-    async def evaluate_position(self, symbol: str, position: Dict[str, Any], market_data: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def evaluate_position(self, symbol: str, position: dict[str, Any], market_data: dict[str, Any] = None) -> dict[str, Any]:
         """
         Evaluate position for selling (alias for should_sell_position)
         Called by AssistantManager - provides compatibility with existing code

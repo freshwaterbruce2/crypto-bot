@@ -5,7 +5,7 @@ Optimized for circuit breaker recovery and rate limit compliance
 
 import json
 import logging
-from typing import Any, Dict
+from typing import Any
 
 # Configure logging for circuit breaker monitoring
 logging.basicConfig(
@@ -167,7 +167,7 @@ SAFE_LAUNCH_SEQUENCE = [
 ]
 
 
-def create_safe_config() -> Dict[str, Any]:
+def create_safe_config() -> dict[str, Any]:
     """Create safe configuration for SHIB/USDT trading with circuit breaker protection"""
     return {
         "trading_config": SHIB_USDT_TRADING_CONFIG,

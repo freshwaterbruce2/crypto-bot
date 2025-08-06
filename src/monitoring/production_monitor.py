@@ -28,7 +28,7 @@ from collections import deque
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import aiofiles
 import psutil
@@ -102,7 +102,7 @@ class AlertConfig:
     # Notification endpoints
     webhook_url: Optional[str] = None
     email_smtp_server: Optional[str] = None
-    email_recipients: List[str] = None
+    email_recipients: list[str] = None
 
 
 class MetricCollector:
@@ -123,7 +123,7 @@ class MetricCollector:
         self.exchange_client = None
         self.nonce_manager = None
 
-    async def collect_trading_metrics(self) -> Dict[str, Any]:
+    async def collect_trading_metrics(self) -> dict[str, Any]:
         """Collect trading performance metrics"""
         metrics = {
             'trades_executed': 0,
@@ -163,7 +163,7 @@ class MetricCollector:
 
         return metrics
 
-    async def collect_system_metrics(self) -> Dict[str, Any]:
+    async def collect_system_metrics(self) -> dict[str, Any]:
         """Collect system health and resource metrics"""
         metrics = {
             'memory_usage_mb': 0.0,
@@ -212,7 +212,7 @@ class MetricCollector:
 
         return metrics
 
-    async def collect_component_health(self) -> Dict[str, Any]:
+    async def collect_component_health(self) -> dict[str, Any]:
         """Collect health status of critical components"""
         health = {
             'balance_manager_health': 'unknown',
@@ -248,7 +248,7 @@ class MetricCollector:
 
         return health
 
-    async def _parse_trades_from_log(self, log_file: Path) -> List[Dict]:
+    async def _parse_trades_from_log(self, log_file: Path) -> list[dict]:
         """Parse trading data from log files"""
         trades = []
         try:
@@ -302,7 +302,7 @@ class AlertManager:
         self.alert_history = deque(maxlen=1000)
         self.alert_cooldowns = {}  # Prevent spam alerts
 
-    async def check_thresholds(self, metrics: ProductionMetrics) -> List[Dict[str, Any]]:
+    async def check_thresholds(self, metrics: ProductionMetrics) -> list[dict[str, Any]]:
         """Check all metrics against thresholds and generate alerts"""
         alerts = []
 
@@ -408,7 +408,7 @@ class AlertManager:
 
         return filtered_alerts
 
-    def _create_alert(self, metric: str, message: str, severity: str, value: float) -> Dict[str, Any]:
+    def _create_alert(self, metric: str, message: str, severity: str, value: float) -> dict[str, Any]:
         """Create standardized alert object"""
         return {
             'id': f"{metric}_{int(time.time())}",
@@ -420,7 +420,7 @@ class AlertManager:
             'resolved': False
         }
 
-    def _should_send_alert(self, alert: Dict[str, Any]) -> bool:
+    def _should_send_alert(self, alert: dict[str, Any]) -> bool:
         """Check if alert should be sent (cooldown logic)"""
         metric = alert['metric']
         now = time.time()
@@ -441,7 +441,7 @@ class AlertManager:
         self.alert_cooldowns[metric] = now
         return True
 
-    async def _send_alert(self, alert: Dict[str, Any]):
+    async def _send_alert(self, alert: dict[str, Any]):
         """Send alert through configured channels"""
         try:
             # Console alerts
@@ -477,7 +477,7 @@ class AlertManager:
 class ProductionMonitor:
     """
     Main production monitoring system for crypto trading bot
-    
+
     Provides comprehensive real-time monitoring with:
     - Automated health checks every 5 minutes
     - Configurable alert thresholds
@@ -492,7 +492,7 @@ class ProductionMonitor:
                  alert_config: Optional[AlertConfig] = None):
         """
         Initialize production monitor
-        
+
         Args:
             project_root: Root directory of trading bot project
             thresholds: Alert threshold configuration
@@ -516,7 +516,7 @@ class ProductionMonitor:
         self.metric_history: deque = deque(maxlen=1440)  # 24 hours at 1-minute intervals
 
         # Dashboard integration
-        self.dashboard_callbacks: List[Callable] = []
+        self.dashboard_callbacks: list[Callable] = []
 
         # Emergency controls
         self.emergency_shutdown_callback: Optional[Callable] = None
@@ -685,7 +685,7 @@ class ProductionMonitor:
         """Get current metrics snapshot"""
         return self.current_metrics
 
-    def get_metric_history(self, minutes: int = 60) -> List[ProductionMetrics]:
+    def get_metric_history(self, minutes: int = 60) -> list[ProductionMetrics]:
         """Get metric history for specified time period"""
         if not self.metric_history:
             return []
@@ -693,7 +693,7 @@ class ProductionMonitor:
         cutoff_time = time.time() - (minutes * 60)
         return [m for m in self.metric_history if m.timestamp >= cutoff_time]
 
-    def get_alert_history(self, minutes: int = 60) -> List[Dict[str, Any]]:
+    def get_alert_history(self, minutes: int = 60) -> list[dict[str, Any]]:
         """Get recent alerts"""
         if not self.alert_manager.alert_history:
             return []
@@ -701,7 +701,7 @@ class ProductionMonitor:
         cutoff_time = time.time() - (minutes * 60)
         return [a for a in self.alert_manager.alert_history if a['timestamp'] >= cutoff_time]
 
-    def get_system_status(self) -> Dict[str, Any]:
+    def get_system_status(self) -> dict[str, Any]:
         """Get overall system status summary"""
         if not self.current_metrics:
             return {
@@ -760,7 +760,7 @@ class ProductionMonitor:
         else:
             logger.warning("No emergency shutdown callback configured")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert current state to dictionary for API/dashboard"""
         return {
             'running': self.running,

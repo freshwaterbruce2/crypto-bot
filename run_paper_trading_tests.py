@@ -11,7 +11,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 
 class PaperTradingTestRunner:
@@ -94,7 +94,7 @@ class PaperTradingTestRunner:
 
         return paper_env
 
-    async def run_startup_test(self) -> Dict[str, Any]:
+    async def run_startup_test(self) -> dict[str, Any]:
         """Run paper trading startup test"""
         self.logger.info("Running paper trading startup test...")
 
@@ -118,7 +118,7 @@ class PaperTradingTestRunner:
             self.logger.error(f"Startup test failed: {e}")
             return {'overall_status': 'FAIL', 'error': str(e)}
 
-    async def run_validation_suite(self) -> Dict[str, Any]:
+    async def run_validation_suite(self) -> dict[str, Any]:
         """Run comprehensive validation suite"""
         self.logger.info("Running paper trading validation suite...")
 
@@ -142,7 +142,7 @@ class PaperTradingTestRunner:
             self.logger.error(f"Validation suite failed: {e}")
             return {'overall_status': 'FAIL', 'error': str(e)}
 
-    async def run_integration_tests(self) -> Dict[str, Any]:
+    async def run_integration_tests(self) -> dict[str, Any]:
         """Run existing integration tests in paper mode"""
         self.logger.info("Running integration tests in paper mode...")
 
@@ -180,7 +180,7 @@ class PaperTradingTestRunner:
         self.test_results['integration_tests'] = aggregate_result
         return aggregate_result
 
-    async def _run_test_subprocess(self, test_file: str) -> Dict[str, Any]:
+    async def _run_test_subprocess(self, test_file: str) -> dict[str, Any]:
         """Run test as subprocess"""
         try:
             self.logger.debug(f"Running {test_file} as subprocess...")
@@ -230,7 +230,7 @@ class PaperTradingTestRunner:
                 'error': str(e)
             }
 
-    def check_prerequisites(self) -> Dict[str, Any]:
+    def check_prerequisites(self) -> dict[str, Any]:
         """Check prerequisites for paper trading tests"""
         self.logger.info("Checking prerequisites...")
 
@@ -314,7 +314,7 @@ class PaperTradingTestRunner:
 
         return checks
 
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Run all paper trading tests"""
         self.logger.info("Starting comprehensive paper trading test run...")
 
@@ -374,7 +374,7 @@ class PaperTradingTestRunner:
         self.logger.info(f"Comprehensive test run complete: {final_report['overall_status']}")
         return final_report
 
-    def _generate_final_report(self, env_config: Dict[str, str], prerequisites: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_final_report(self, env_config: dict[str, str], prerequisites: dict[str, Any]) -> dict[str, Any]:
         """Generate comprehensive final report"""
         # Calculate overall statistics
         total_test_suites = len(self.test_results)
@@ -438,7 +438,7 @@ class PaperTradingTestRunner:
             return ("All test suites failed. Critical issues must be resolved "
                    "before attempting paper trading.")
 
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate recommendations based on test results"""
         recommendations = []
 
@@ -466,7 +466,7 @@ class PaperTradingTestRunner:
 
         return recommendations
 
-    def _generate_next_steps(self) -> List[str]:
+    def _generate_next_steps(self) -> list[str]:
         """Generate next steps based on results"""
         next_steps = []
 

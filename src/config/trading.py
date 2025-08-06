@@ -4,7 +4,7 @@ Handles trading-specific parameters and optimization with API protection
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +28,12 @@ class TradingConfig:
 class TradingConfigManager:
     """Trading configuration manager"""
 
-    def __init__(self, core_config: Dict[str, Any]):
+    def __init__(self, core_config: dict[str, Any]):
         """Initialize trading config manager"""
         self.core_config = core_config
         self.trading_config = self._get_trading_defaults()
 
-    def _get_trading_defaults(self) -> Dict[str, Any]:
+    def _get_trading_defaults(self) -> dict[str, Any]:
         """Get default trading configuration"""
         # Detect Pro account tier from core config
         api_tier = self.core_config.get("kraken_api_tier", "starter")
@@ -100,11 +100,11 @@ class TradingConfigManager:
 
         return base_config
 
-    def get_all_settings(self) -> Dict[str, Any]:
+    def get_all_settings(self) -> dict[str, Any]:
         """Get all trading settings"""
         return self.trading_config
 
-    def get_trading_pairs(self) -> List[str]:
+    def get_trading_pairs(self) -> list[str]:
         """Get trading pairs"""
         return self.trading_config["trading_pairs"]
 

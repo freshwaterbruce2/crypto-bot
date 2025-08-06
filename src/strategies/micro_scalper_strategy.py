@@ -5,7 +5,7 @@ Ultra-fast micro-profit scalping strategy for small, frequent gains
 
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from .base_strategy import BaseStrategy
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class MicroScalperStrategy(BaseStrategy):
     """Micro scalping strategy for small, frequent profits"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize micro scalper strategy"""
         super().__init__("micro_scalper", config)
 
@@ -38,7 +38,7 @@ class MicroScalperStrategy(BaseStrategy):
 
         logger.info("[MICRO_SCALP] Ultra-fast micro scalping strategy initialized")
 
-    async def analyze(self, symbol: str, timeframe: str = '1m') -> Dict[str, Any]:
+    async def analyze(self, symbol: str, timeframe: str = '1m') -> dict[str, Any]:
         """Ultra-fast micro scalping analysis"""
         start_time = time.time()
 
@@ -134,7 +134,7 @@ class MicroScalperStrategy(BaseStrategy):
             logger.error(f"[MICRO_SCALP] Error analyzing {symbol}: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Analysis error: {e}'}
 
-    async def should_buy(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_buy(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Ultra-fast buy decision for micro scalping"""
         try:
             if analysis.get('action') != 'BUY':
@@ -171,7 +171,7 @@ class MicroScalperStrategy(BaseStrategy):
             logger.error(f"[MICRO_SCALP] Error in buy decision for {symbol}: {e}")
             return False
 
-    async def should_sell(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_sell(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Ultra-fast sell decision for micro scalping"""
         try:
             # Check if we have a position
@@ -225,7 +225,7 @@ class MicroScalperStrategy(BaseStrategy):
         if len(self.tick_history[symbol]) > self.max_ticks:
             self.tick_history[symbol] = self.tick_history[symbol][-self.max_ticks:]
 
-    def _calculate_tick_volatility(self, ticks: List[float]) -> float:
+    def _calculate_tick_volatility(self, ticks: list[float]) -> float:
         """Calculate micro tick volatility"""
         try:
             if len(ticks) < 2:
@@ -267,7 +267,7 @@ class MicroScalperStrategy(BaseStrategy):
         if symbol in self.entry_prices:
             del self.entry_prices[symbol]
 
-    def get_strategy_info(self) -> Dict[str, Any]:
+    def get_strategy_info(self) -> dict[str, Any]:
         """Get strategy information"""
         return {
             'name': 'MicroScalperStrategy',

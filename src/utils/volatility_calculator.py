@@ -9,7 +9,7 @@ import statistics
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ class VolatilityReading:
 class VolatilityCalculator:
     """Advanced volatility calculator for trading optimization"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] = None):
         """Initialize volatility calculator"""
         self.config = config or {}
 
@@ -72,7 +72,7 @@ class VolatilityCalculator:
 
         logger.info("[VOLATILITY] Volatility calculator initialized")
 
-    async def calculate_volatility(self, symbol: str, prices: List[float],
+    async def calculate_volatility(self, symbol: str, prices: list[float],
                                  period: VolatilityPeriod = VolatilityPeriod.SHORT) -> Optional[VolatilityReading]:
         """Calculate volatility for given price data"""
         try:
@@ -217,7 +217,7 @@ class VolatilityCalculator:
         except Exception:
             return base_stop_loss
 
-    def _calculate_standard_deviation(self, returns: List[float]) -> float:
+    def _calculate_standard_deviation(self, returns: list[float]) -> float:
         """Calculate standard deviation of returns"""
         try:
             if len(returns) < 2:
@@ -252,7 +252,7 @@ class VolatilityCalculator:
         except Exception:
             return 0.5
 
-    def _get_recent_prices(self, symbol: str, exchange=None) -> List[float]:
+    def _get_recent_prices(self, symbol: str, exchange=None) -> list[float]:
         """Get recent prices for volatility calculation"""
         try:
             # Try to get from internal history first
@@ -278,7 +278,7 @@ class VolatilityCalculator:
             logger.error(f"[VOLATILITY] Error getting recent prices for {symbol}: {e}")
             return []
 
-    def get_volatility_stats(self) -> Dict[str, Any]:
+    def get_volatility_stats(self) -> dict[str, Any]:
         """Get volatility calculator statistics"""
         return {
             'symbols_tracked': len(self.price_history),
@@ -335,7 +335,7 @@ def get_volatility_calculator() -> VolatilityCalculator:
     return _global_volatility_calculator
 
 
-async def calculate_symbol_volatility(symbol: str, prices: List[float]) -> Optional[float]:
+async def calculate_symbol_volatility(symbol: str, prices: list[float]) -> Optional[float]:
     """Global function to calculate symbol volatility"""
     calculator = get_volatility_calculator()
     reading = await calculator.calculate_volatility(symbol, prices)

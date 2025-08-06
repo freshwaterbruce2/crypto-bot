@@ -7,14 +7,14 @@ for small trading accounts with low balance optimization features.
 
 Key Features:
 - Small account position sizing with $1.00 minimums
-- SHIB/USDT token amount calculations  
+- SHIB/USDT token amount calculations
 - Dynamic sizing based on account balance
 - Risk management for micro-accounts
 - Compound growth optimization
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..config.constants import MINIMUM_ORDER_SIZE_TIER1, calculate_minimum_cost
 from ..config.kraken_precision_config import (
@@ -29,12 +29,12 @@ def calculate_position_size_for_small_account(
     symbol: str,
     risk_percentage: float = 0.95,
     min_order_size_usd: float = None,
-    config: Optional[Dict[str, Any]] = None,
+    config: Optional[dict[str, Any]] = None,
     current_price: float = None
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Calculate optimal position size for small accounts with Kraken compliance
-    
+
     Args:
         account_balance: Total account balance in USD
         symbol: Trading pair symbol (e.g., 'SHIB/USDT')
@@ -42,7 +42,7 @@ def calculate_position_size_for_small_account(
         min_order_size_usd: Minimum order size in USD (auto-calculated if None)
         config: Configuration dictionary with additional settings
         current_price: Current asset price for minimum calculation
-        
+
     Returns:
         Dict with position sizing information
     """
@@ -103,8 +103,8 @@ def calculate_position_size_for_small_account(
 def _calculate_shib_position_size(
     deployable_amount: float,
     account_balance: float,
-    config: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: dict[str, Any]
+) -> dict[str, Any]:
     """Calculate SHIB-specific position sizes with Kraken precision requirements"""
 
     # Get Kraken precision config for SHIB/USDT
@@ -160,8 +160,8 @@ def _calculate_general_position_size(
     deployable_amount: float,
     account_balance: float,
     symbol: str,
-    config: Dict[str, Any]
-) -> Dict[str, Any]:
+    config: dict[str, Any]
+) -> dict[str, Any]:
     """Calculate position sizes for non-SHIB pairs"""
 
     # Extract base and quote assets
@@ -236,7 +236,7 @@ def _calculate_shib_position_tiers(deployable_amount: float, max_tokens: float) 
     return tiers
 
 
-def _calculate_compound_potential(initial_amount: float) -> Dict[str, Any]:
+def _calculate_compound_potential(initial_amount: float) -> dict[str, Any]:
     """Calculate compound growth potential for micro-profit trading"""
 
     # Micro-profit parameters
@@ -249,7 +249,7 @@ def _calculate_compound_potential(initial_amount: float) -> Dict[str, Any]:
 
     for day in range(7):  # One week projection
         daily_trades = trades_per_day
-        for trade in range(daily_trades):
+        for _trade in range(daily_trades):
             profit = current_balance * profit_rate
             current_balance += profit
 
@@ -277,14 +277,14 @@ def _calculate_compound_potential(initial_amount: float) -> Dict[str, Any]:
     }
 
 
-def calculate_shib_token_amount(usd_amount: float, shib_price: float = 0.00001) -> Dict[str, Any]:
+def calculate_shib_token_amount(usd_amount: float, shib_price: float = 0.00001) -> dict[str, Any]:
     """
     Calculate SHIB token amounts for USD values
-    
+
     Args:
         usd_amount: USD amount to convert
         shib_price: Current SHIB price in USD
-        
+
     Returns:
         Dict with token calculations
     """
@@ -328,17 +328,17 @@ def validate_position_size_constraints(
     position_size: float,
     symbol: str,
     account_balance: float,
-    config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    config: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
     """
     Validate position size against all constraints
-    
+
     Args:
         position_size: Proposed position size in USD
         symbol: Trading pair symbol
         account_balance: Total account balance
         config: Configuration with limits and constraints
-        
+
     Returns:
         Dict with validation results
     """
@@ -396,7 +396,7 @@ def validate_position_size_constraints(
     return validation_results
 
 
-def _validate_shib_constraints(position_size: float, config: Dict[str, Any]) -> Dict[str, Any]:
+def _validate_shib_constraints(position_size: float, config: dict[str, Any]) -> dict[str, Any]:
     """Validate SHIB-specific constraints"""
 
     single_pair_config = config.get('single_pair_focus', {})
@@ -436,11 +436,11 @@ def calculate_position_size(
     symbol: str,
     risk_percentage: float = 0.95,
     min_order_size_usd: float = 1.0,
-    config: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    config: Optional[dict[str, Any]] = None
+) -> dict[str, Any]:
     """
     Backward compatibility wrapper for calculate_position_size_for_small_account
-    
+
     This function maintains compatibility with existing strategy imports
     while delegating to the main position sizing function.
     """

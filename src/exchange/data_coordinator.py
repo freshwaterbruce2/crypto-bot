@@ -19,7 +19,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class UnifiedDataCoordinator:
     Optimizes for performance while minimizing API conflicts
     """
 
-    def __init__(self, exchange_client, config: Dict[str, Any]):
+    def __init__(self, exchange_client, config: dict[str, Any]):
         """Initialize the unified data coordinator"""
         self.exchange = exchange_client
         self.config = config
@@ -135,14 +135,14 @@ class UnifiedDataCoordinator:
                    f"nonce_minimize={minimize_nonce_conflicts}, "
                    f"batching={batch_requests}, caching={intelligent_caching}")
 
-    async def get_ticker_data(self, symbol: str, force_source: Optional[DataSource] = None) -> Dict[str, Any]:
+    async def get_ticker_data(self, symbol: str, force_source: Optional[DataSource] = None) -> dict[str, Any]:
         """
         Get ticker data with intelligent source routing
-        
+
         Args:
             symbol: Trading pair symbol
             force_source: Force specific data source (optional)
-            
+
         Returns:
             Ticker data dictionary
         """
@@ -180,13 +180,13 @@ class UnifiedDataCoordinator:
                 return await self._get_rest_ticker(symbol)
             raise
 
-    async def get_balance_data(self, force_refresh: bool = False) -> Dict[str, Any]:
+    async def get_balance_data(self, force_refresh: bool = False) -> dict[str, Any]:
         """
         Get balance data with intelligent source routing
-        
+
         Args:
             force_refresh: Force refresh from primary source
-            
+
         Returns:
             Balance data dictionary
         """
@@ -212,15 +212,15 @@ class UnifiedDataCoordinator:
             self._record_error('balance', source)
             raise
 
-    async def get_ohlc_data(self, symbol: str, timeframe: str = '1m', limit: int = 100) -> List[Dict[str, Any]]:
+    async def get_ohlc_data(self, symbol: str, timeframe: str = '1m', limit: int = 100) -> list[dict[str, Any]]:
         """
         Get OHLC data with intelligent source routing
-        
+
         Args:
             symbol: Trading pair symbol
             timeframe: Timeframe (1m, 5m, 1h, etc.)
             limit: Number of candles to retrieve
-            
+
         Returns:
             List of OHLC data
         """
@@ -272,7 +272,7 @@ class UnifiedDataCoordinator:
 
         return DataSource.REST
 
-    async def _get_websocket_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _get_websocket_ticker(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get ticker data from WebSocket"""
         if not self.websocket_manager or not self.websocket_manager.is_connected:
             return None
@@ -281,7 +281,7 @@ class UnifiedDataCoordinator:
         # Return cached WebSocket data if available
         return self._get_cached_data('ws_ticker', symbol)
 
-    async def _get_rest_ticker(self, symbol: str) -> Dict[str, Any]:
+    async def _get_rest_ticker(self, symbol: str) -> dict[str, Any]:
         """Get ticker data from REST API"""
         start_time = time.time()
 
@@ -302,7 +302,7 @@ class UnifiedDataCoordinator:
             self._record_error('ticker', DataSource.REST)
             raise
 
-    async def _get_rest_balance(self) -> Dict[str, Any]:
+    async def _get_rest_balance(self) -> dict[str, Any]:
         """Get balance data from REST API with optimization"""
         start_time = time.time()
 
@@ -327,7 +327,7 @@ class UnifiedDataCoordinator:
             self._record_error('balance', DataSource.REST)
             raise
 
-    async def _get_rest_ohlc(self, symbol: str, timeframe: str, limit: int) -> List[Dict[str, Any]]:
+    async def _get_rest_ohlc(self, symbol: str, timeframe: str, limit: int) -> list[dict[str, Any]]:
         """Get OHLC data from REST API"""
         start_time = time.time()
 
@@ -394,7 +394,7 @@ class UnifiedDataCoordinator:
             if key in self.cache_timestamps:
                 del self.cache_timestamps[key]
 
-    async def _add_to_batch(self, request_type: str, params: Dict[str, Any]) -> Any:
+    async def _add_to_batch(self, request_type: str, params: dict[str, Any]) -> Any:
         """Add request to batch for processing with nonce optimization"""
         if self.rest_config.minimize_nonce_conflicts:
             return await self._execute_with_nonce_spacing(request_type, params)
@@ -402,7 +402,7 @@ class UnifiedDataCoordinator:
             # Direct execution without spacing
             return await getattr(self.exchange, f'fetch_{request_type}')(**params)
 
-    async def _execute_with_nonce_spacing(self, request_type: str, params: Dict[str, Any]) -> Any:
+    async def _execute_with_nonce_spacing(self, request_type: str, params: dict[str, Any]) -> Any:
         """Execute REST call with proper nonce spacing to prevent conflicts"""
         async with self.nonce_spacing_lock:
             # Calculate required delay
@@ -620,7 +620,7 @@ class UnifiedDataCoordinator:
             self._record_error('connectivity', DataSource.WEBSOCKET)
             return False
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get performance statistics"""
         stats = {
             'request_counts': dict(self.request_stats),
@@ -639,7 +639,7 @@ class UnifiedDataCoordinator:
         return stats
 
     # WebSocket callback methods for unified data handling
-    async def handle_websocket_ticker(self, symbol: str, ticker_data: Dict[str, Any]):
+    async def handle_websocket_ticker(self, symbol: str, ticker_data: dict[str, Any]):
         """Handle WebSocket ticker updates"""
         # Cache WebSocket data
         self._cache_data('ws_ticker', symbol, ticker_data)
@@ -651,7 +651,7 @@ class UnifiedDataCoordinator:
             except Exception as e:
                 logger.error(f"[DATA_COORDINATOR] Ticker callback error: {e}")
 
-    async def handle_websocket_balance(self, balance_data: Dict[str, Any]):
+    async def handle_websocket_balance(self, balance_data: dict[str, Any]):
         """Handle WebSocket balance updates"""
         # Cache WebSocket balance data
         self._cache_data('ws_balance', 'all', balance_data)
@@ -663,7 +663,7 @@ class UnifiedDataCoordinator:
             except Exception as e:
                 logger.error(f"[DATA_COORDINATOR] Balance callback error: {e}")
 
-    async def handle_websocket_ohlc(self, symbol: str, ohlc_data: Dict[str, Any]):
+    async def handle_websocket_ohlc(self, symbol: str, ohlc_data: dict[str, Any]):
         """Handle WebSocket OHLC updates"""
         # Cache WebSocket OHLC data
         self._cache_data('ws_ohlc', symbol, ohlc_data)
@@ -675,7 +675,7 @@ class UnifiedDataCoordinator:
             except Exception as e:
                 logger.error(f"[DATA_COORDINATOR] OHLC callback error: {e}")
 
-    async def handle_websocket_order(self, order_data: Dict[str, Any]):
+    async def handle_websocket_order(self, order_data: dict[str, Any]):
         """Handle WebSocket order updates"""
         # Notify registered callbacks
         for callback in self.data_callbacks['order']:

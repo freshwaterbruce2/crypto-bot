@@ -7,7 +7,7 @@ Measures latency, throughput, and resource usage under realistic trading conditi
 
 Target Performance Requirements:
 - Authentication signature generation: <1ms
-- Rate limiting accuracy: 99.9%  
+- Rate limiting accuracy: 99.9%
 - Circuit breaker reaction: <10ms
 - REST API call latency: <50ms end-to-end
 - WebSocket message processing: <5ms per message
@@ -31,7 +31,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -124,7 +124,7 @@ class HFTBenchmarkSuite:
 
     def __init__(self, config_path: Optional[str] = None):
         """Initialize benchmark suite"""
-        self.results: List[BenchmarkResult] = []
+        self.results: list[BenchmarkResult] = []
         self.process = psutil.Process()
         self.config = self._load_config(config_path)
 
@@ -142,7 +142,7 @@ class HFTBenchmarkSuite:
 
         logger.info("HFT Benchmark Suite initialized with performance targets")
 
-    def _load_config(self, config_path: Optional[str]) -> Dict[str, Any]:
+    def _load_config(self, config_path: Optional[str]) -> dict[str, Any]:
         """Load benchmark configuration"""
         default_config = {
             'iterations': {
@@ -173,7 +173,7 @@ class HFTBenchmarkSuite:
 
         return default_config
 
-    async def run_all_benchmarks(self) -> Dict[str, Any]:
+    async def run_all_benchmarks(self) -> dict[str, Any]:
         """Run complete benchmark suite"""
         logger.info("Starting comprehensive HFT performance benchmark suite")
         start_time = time.time()
@@ -319,7 +319,7 @@ class HFTBenchmarkSuite:
         self.results.append(result)
         logger.info(f"Auth signature benchmark: {avg_latency:.3f}ms avg, {throughput:.0f} ops/sec")
 
-    def _measure_signature_generation(self, sig_gen: SignatureGenerator, data: Dict) -> float:
+    def _measure_signature_generation(self, sig_gen: SignatureGenerator, data: dict) -> float:
         """Measure single signature generation"""
         start = time.perf_counter()
         sig_gen.generate_signature('/0/private/AddOrder', data)
@@ -493,13 +493,13 @@ class HFTBenchmarkSuite:
         # Setup for failure detection
         reaction_times = []
 
-        for i in range(iterations):
+        for _i in range(iterations):
             # Reset circuit breaker
             circuit_breaker._state = 'closed'
             circuit_breaker._failure_count = 0
 
             # Inject failures to trigger circuit breaker
-            for j in range(config.failure_threshold):
+            for _j in range(config.failure_threshold):
                 circuit_breaker.record_failure()
 
             # Measure reaction time on next call
@@ -603,21 +603,21 @@ class HFTBenchmarkSuite:
                 if message.get('channel') == 'ticker':
                     # Process ticker data
                     data = message.get('data', [{}])[0]
-                    symbol = data.get('symbol', 'BTC/USD')
+                    data.get('symbol', 'BTC/USD')
                     price = float(data.get('last', 50000))
                     volume = float(data.get('volume', 100))
 
                     # Simulate calculations
-                    spread = price * 0.001
-                    market_cap = price * volume
+                    price * 0.001
+                    price * volume
 
                 elif message.get('channel') == 'balances':
                     # Process balance data
                     balances = message.get('data', [])
                     for balance in balances:
-                        asset = balance.get('asset', 'BTC')
+                        balance.get('asset', 'BTC')
                         amount = float(balance.get('free', 0))
-                        total_value = amount * 50000  # Mock price
+                        amount * 50000  # Mock price
 
                 processing_time = (time.perf_counter() - start) * 1000
                 self.processing_times.append(processing_time)
@@ -693,7 +693,7 @@ class HFTBenchmarkSuite:
         # Simulate reconnection scenarios
         reconnection_times = []
 
-        for i in range(10):  # Test 10 reconnections
+        for _i in range(10):  # Test 10 reconnections
             reconnect_start = time.perf_counter()
 
             # Simulate disconnect and reconnect process
@@ -737,7 +737,7 @@ class HFTBenchmarkSuite:
                 self.balances = {}
                 self.update_times = []
 
-            async def update_balance(self, asset: str, balance_data: Dict):
+            async def update_balance(self, asset: str, balance_data: dict):
                 start = time.perf_counter()
 
                 # Simulate balance processing
@@ -817,7 +817,7 @@ class HFTBenchmarkSuite:
             def __init__(self):
                 self.validation_times = []
 
-            def validate_balance(self, asset: str, balance_data: Dict) -> bool:
+            def validate_balance(self, asset: str, balance_data: dict) -> bool:
                 start = time.perf_counter()
 
                 # Simulate validation logic
@@ -934,7 +934,7 @@ class HFTBenchmarkSuite:
             read_start = time.perf_counter()
 
             asset = assets[i % len(assets)]
-            balance = cache.get(asset)
+            cache.get(asset)
 
             read_times.append((time.perf_counter() - read_start) * 1000)
 
@@ -977,7 +977,7 @@ class HFTBenchmarkSuite:
                 self.positions = {}
                 self.prices = {}
 
-            def calculate_portfolio_value(self, balances: Dict, prices: Dict) -> Dict:
+            def calculate_portfolio_value(self, balances: dict, prices: dict) -> dict:
                 start = time.perf_counter()
 
                 total_value = Decimal('0')
@@ -1309,7 +1309,7 @@ class HFTBenchmarkSuite:
                 self.trades = []
                 self.balances = []
 
-            def insert_trade(self, trade_data: Dict):
+            def insert_trade(self, trade_data: dict):
                 start = time.perf_counter()
 
                 # Simulate trade insertion with validation
@@ -1329,7 +1329,7 @@ class HFTBenchmarkSuite:
                 write_time = (time.perf_counter() - start) * 1000
                 self.write_times.append(write_time)
 
-            def insert_balance_update(self, balance_data: Dict):
+            def insert_balance_update(self, balance_data: dict):
                 start = time.perf_counter()
 
                 # Simulate balance update insertion
@@ -1346,7 +1346,7 @@ class HFTBenchmarkSuite:
                 write_time = (time.perf_counter() - start) * 1000
                 self.write_times.append(write_time)
 
-            def batch_insert_trades(self, trades: List[Dict]):
+            def batch_insert_trades(self, trades: list[dict]):
                 start = time.perf_counter()
 
                 # Simulate batch insertion
@@ -1535,18 +1535,18 @@ class HFTBenchmarkSuite:
         gc_times = []
 
         # Create objects that will need garbage collection
-        for cycle in range(10):
+        for _cycle in range(10):
             # Create circular references
             objects = []
             for i in range(1000):
-                obj = {'id': i, 'data': [j for j in range(100)]}
+                obj = {'id': i, 'data': list(range(100))}
                 if i > 0:
                     obj['ref'] = objects[i-1]
                 objects.append(obj)
 
             # Force garbage collection
             gc_start = time.perf_counter()
-            collected = gc.collect()
+            gc.collect()
             gc_time = (time.perf_counter() - gc_start) * 1000
             gc_times.append(gc_time)
 
@@ -1576,7 +1576,7 @@ class HFTBenchmarkSuite:
         self.results.append(result)
         logger.info(f"GC performance: {avg_gc_time:.1f}ms avg")
 
-    def _generate_performance_report(self, total_time: float) -> Dict[str, Any]:
+    def _generate_performance_report(self, total_time: float) -> dict[str, Any]:
         """Generate comprehensive performance report"""
 
         # Calculate summary statistics
@@ -1678,7 +1678,7 @@ class HFTBenchmarkSuite:
 
         return report
 
-    def save_report(self, report: Dict[str, Any], filename: str = None):
+    def save_report(self, report: dict[str, Any], filename: str = None):
         """Save performance report to file"""
         if filename is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -1693,7 +1693,7 @@ class HFTBenchmarkSuite:
         except Exception as e:
             logger.error(f"Failed to save report: {e}")
 
-    def print_summary(self, report: Dict[str, Any]):
+    def print_summary(self, report: dict[str, Any]):
         """Print performance summary to console"""
         print("\n" + "="*80)
         print("🚀 HIGH-FREQUENCY TRADING PERFORMANCE BENCHMARK RESULTS")

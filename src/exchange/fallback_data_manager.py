@@ -16,7 +16,7 @@ Fallback Priority:
 import logging
 import time
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class FallbackDataManager:
         logger.critical("[FALLBACK] No fallback sources available!")
         self.current_source = DataSource.CACHED
 
-    async def fetch_balance(self) -> Optional[Dict[str, Any]]:
+    async def fetch_balance(self) -> Optional[dict[str, Any]]:
         """Fetch balance using best available source"""
         if self.current_source == DataSource.WEBSOCKET_V2 and self._websocket_manager:
             return await self._fetch_balance_websocket()
@@ -163,7 +163,7 @@ class FallbackDataManager:
         else:
             return self._fetch_balance_cached()
 
-    async def _fetch_balance_websocket(self) -> Optional[Dict[str, Any]]:
+    async def _fetch_balance_websocket(self) -> Optional[dict[str, Any]]:
         """Fetch balance via WebSocket"""
         try:
             # WebSocket balance is updated via callbacks, get latest
@@ -176,7 +176,7 @@ class FallbackDataManager:
             self._mark_source_failed(DataSource.WEBSOCKET_V2)
         return None
 
-    async def _fetch_balance_native(self) -> Optional[Dict[str, Any]]:
+    async def _fetch_balance_native(self) -> Optional[dict[str, Any]]:
         """Fetch balance via native REST API"""
         try:
             balance = await self._native_exchange.fetch_balance()
@@ -188,7 +188,7 @@ class FallbackDataManager:
             self._mark_source_failed(DataSource.NATIVE_REST)
         return None
 
-    async def _fetch_balance_ccxt(self) -> Optional[Dict[str, Any]]:
+    async def _fetch_balance_ccxt(self) -> Optional[dict[str, Any]]:
         """Fetch balance via CCXT"""
         try:
             balance = await self._ccxt_exchange.fetch_balance()
@@ -202,7 +202,7 @@ class FallbackDataManager:
             self._mark_source_failed(DataSource.CCXT)
         return None
 
-    def _fetch_balance_cached(self) -> Optional[Dict[str, Any]]:
+    def _fetch_balance_cached(self) -> Optional[dict[str, Any]]:
         """Return cached balance data"""
         cache = self.data_cache['balance']
         if cache['data'] and (time.time() - cache['timestamp']) < cache['ttl']:
@@ -210,7 +210,7 @@ class FallbackDataManager:
             return cache['data']
         return None
 
-    async def fetch_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def fetch_ticker(self, symbol: str) -> Optional[dict[str, Any]]:
         """Fetch ticker using best available source"""
         if self.current_source == DataSource.WEBSOCKET_V2 and self._websocket_manager:
             return await self._fetch_ticker_websocket(symbol)
@@ -221,7 +221,7 @@ class FallbackDataManager:
         else:
             return self._fetch_ticker_cached(symbol)
 
-    async def _fetch_ticker_websocket(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_ticker_websocket(self, symbol: str) -> Optional[dict[str, Any]]:
         """Fetch ticker via WebSocket"""
         try:
             ticker = self._websocket_manager.get_cached_ticker(symbol)
@@ -232,7 +232,7 @@ class FallbackDataManager:
             logger.error(f"[FALLBACK] WebSocket ticker fetch failed: {e}")
         return None
 
-    async def _fetch_ticker_native(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_ticker_native(self, symbol: str) -> Optional[dict[str, Any]]:
         """Fetch ticker via native REST API"""
         try:
             ticker = await self._native_exchange.fetch_ticker(symbol)
@@ -243,7 +243,7 @@ class FallbackDataManager:
             logger.error(f"[FALLBACK] Native REST ticker fetch failed: {e}")
         return None
 
-    async def _fetch_ticker_ccxt(self, symbol: str) -> Optional[Dict[str, Any]]:
+    async def _fetch_ticker_ccxt(self, symbol: str) -> Optional[dict[str, Any]]:
         """Fetch ticker via CCXT"""
         try:
             ticker = await self._ccxt_exchange.fetch_ticker(symbol)
@@ -254,7 +254,7 @@ class FallbackDataManager:
             logger.error(f"[FALLBACK] CCXT ticker fetch failed: {e}")
         return None
 
-    def _fetch_ticker_cached(self, symbol: str) -> Optional[Dict[str, Any]]:
+    def _fetch_ticker_cached(self, symbol: str) -> Optional[dict[str, Any]]:
         """Return cached ticker data"""
         cache = self.data_cache['ticker']
         if symbol in cache['data']:
@@ -269,7 +269,7 @@ class FallbackDataManager:
         self.data_cache[data_type]['data'] = data
         self.data_cache[data_type]['timestamp'] = time.time()
 
-    def _update_ticker_cache(self, symbol: str, ticker: Dict[str, Any]):
+    def _update_ticker_cache(self, symbol: str, ticker: dict[str, Any]):
         """Update ticker cache"""
         if 'data' not in self.data_cache['ticker']:
             self.data_cache['ticker']['data'] = {}
@@ -285,7 +285,7 @@ class FallbackDataManager:
         if self.current_source == source:
             self._activate_fallback()
 
-    def _format_ccxt_balance(self, ccxt_balance: Dict[str, Any]) -> Dict[str, Any]:
+    def _format_ccxt_balance(self, ccxt_balance: dict[str, Any]) -> dict[str, Any]:
         """Convert CCXT balance format to our internal format"""
         result = {}
         for currency, balance_info in ccxt_balance.items():
@@ -300,7 +300,7 @@ class FallbackDataManager:
         """Get currently active data source"""
         return self.current_source
 
-    def get_source_status(self) -> Dict[str, bool]:
+    def get_source_status(self) -> dict[str, bool]:
         """Get status of all data sources"""
         return {source.value: status for source, status in self.source_status.items()}
 

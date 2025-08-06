@@ -10,7 +10,7 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class ComponentInfo:
     """Information about a component"""
     name: str
     state: ComponentState = ComponentState.NOT_INITIALIZED
-    dependencies: List[str] = field(default_factory=list)
+    dependencies: list[str] = field(default_factory=list)
     error: Optional[str] = None
     instance: Optional[Any] = None
 
@@ -36,14 +36,14 @@ class ComponentInfo:
 class IntegrationCoordinator:
     """
     Coordinates component initialization and integration.
-    
+
     Ensures components are initialized in the correct order based on
     their dependencies and that all integrations are properly established.
     """
 
     def __init__(self):
-        self.components: Dict[str, ComponentInfo] = {}
-        self._initialization_order: List[str] = []
+        self.components: dict[str, ComponentInfo] = {}
+        self._initialization_order: list[str] = []
         self._initialized = False
 
         # Define component dependencies
@@ -71,7 +71,7 @@ class IntegrationCoordinator:
         for name, deps in dependencies.items():
             self.register_component(name, deps)
 
-    def register_component(self, name: str, dependencies: List[str] = None):
+    def register_component(self, name: str, dependencies: list[str] = None):
         """Register a component with its dependencies"""
         if name not in self.components:
             self.components[name] = ComponentInfo(
@@ -80,10 +80,10 @@ class IntegrationCoordinator:
             )
             logger.debug(f"[INTEGRATION] Registered component: {name}")
 
-    def get_initialization_order(self) -> List[str]:
+    def get_initialization_order(self) -> list[str]:
         """
         Get the order in which components should be initialized.
-        
+
         Uses topological sort to ensure dependencies are initialized first.
         """
         if self._initialization_order:
@@ -119,11 +119,11 @@ class IntegrationCoordinator:
     async def initialize_component(self, name: str, initializer_func: Any) -> bool:
         """
         Initialize a component using the provided initializer function.
-        
+
         Args:
             name: Component name
             initializer_func: Async function that initializes the component
-            
+
         Returns:
             bool: True if successful, False otherwise
         """
@@ -178,7 +178,7 @@ class IntegrationCoordinator:
             return self.components[name].state == ComponentState.INITIALIZED
         return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get the status of all components"""
         status = {}
         for name, component in self.components.items():
@@ -190,14 +190,14 @@ class IntegrationCoordinator:
             }
         return status
 
-    async def wait_for_components(self, component_names: List[str], timeout: float = 30) -> bool:
+    async def wait_for_components(self, component_names: list[str], timeout: float = 30) -> bool:
         """
         Wait for specific components to be initialized.
-        
+
         Args:
             component_names: List of component names to wait for
             timeout: Maximum time to wait in seconds
-            
+
         Returns:
             bool: True if all components are ready, False if timeout
         """
@@ -220,10 +220,10 @@ class IntegrationCoordinator:
 
             await asyncio.sleep(0.5)
 
-    def validate_integrations(self) -> List[str]:
+    def validate_integrations(self) -> list[str]:
         """
         Validate that all components are properly integrated.
-        
+
         Returns:
             List of integration issues found
         """

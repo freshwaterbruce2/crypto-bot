@@ -16,16 +16,16 @@ Features:
 
 Usage:
     from src.circuit_breaker import CircuitBreakerManager, CircuitBreakerConfig
-    
+
     config = CircuitBreakerConfig(
         failure_threshold=5,
         recovery_timeout=30.0,
         health_check_interval=10.0
     )
-    
+
     cb_manager = CircuitBreakerManager(config)
     await cb_manager.start()
-    
+
     # Use circuit breaker for API calls
     async with cb_manager.get_breaker('kraken_api') as breaker:
         result = await breaker.execute(api_call, *args, **kwargs)

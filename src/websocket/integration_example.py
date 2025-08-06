@@ -8,7 +8,7 @@ Shows how to set up real-time balance streaming, market data, and event handling
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from .data_models import BalanceUpdate, OrderBookUpdate, TickerUpdate
 from .kraken_websocket_v2 import KrakenWebSocketConfig, KrakenWebSocketV2
@@ -47,9 +47,9 @@ class WebSocketIntegrationExample:
         ]
 
         # Data storage for processing
-        self.current_balances: Dict[str, Dict[str, Any]] = {}
-        self.current_tickers: Dict[str, Dict[str, Any]] = {}
-        self.current_orderbooks: Dict[str, Dict[str, Any]] = {}
+        self.current_balances: dict[str, dict[str, Any]] = {}
+        self.current_tickers: dict[str, dict[str, Any]] = {}
+        self.current_orderbooks: dict[str, dict[str, Any]] = {}
 
         # Integration with existing bot systems
         self.balance_manager = None  # Will be set from main bot
@@ -147,7 +147,7 @@ class WebSocketIntegrationExample:
 
     # Event Handlers
 
-    async def _handle_balance_updates(self, balance_updates: List[BalanceUpdate]):
+    async def _handle_balance_updates(self, balance_updates: list[BalanceUpdate]):
         """Handle real-time balance updates"""
         try:
             logger.info(f"[WS_INTEGRATION] Received {len(balance_updates)} balance updates")
@@ -173,7 +173,7 @@ class WebSocketIntegrationExample:
         except Exception as e:
             logger.error(f"[WS_INTEGRATION] Error handling balance updates: {e}")
 
-    async def _handle_ticker_updates(self, ticker_updates: List[TickerUpdate]):
+    async def _handle_ticker_updates(self, ticker_updates: list[TickerUpdate]):
         """Handle real-time ticker updates"""
         try:
             for ticker_update in ticker_updates:
@@ -194,7 +194,7 @@ class WebSocketIntegrationExample:
         except Exception as e:
             logger.error(f"[WS_INTEGRATION] Error handling ticker updates: {e}")
 
-    async def _handle_orderbook_updates(self, orderbook_updates: List[OrderBookUpdate]):
+    async def _handle_orderbook_updates(self, orderbook_updates: list[OrderBookUpdate]):
         """Handle real-time orderbook updates"""
         try:
             for orderbook_update in orderbook_updates:
@@ -263,7 +263,7 @@ class WebSocketIntegrationExample:
 
     # Integration Methods
 
-    async def _integrate_balance_update(self, asset: str, balance_dict: Dict[str, Any]):
+    async def _integrate_balance_update(self, asset: str, balance_dict: dict[str, Any]):
         """Integrate balance update with existing balance manager"""
         try:
             if hasattr(self.balance_manager, 'balances'):
@@ -284,7 +284,7 @@ class WebSocketIntegrationExample:
         except Exception as e:
             logger.error(f"[WS_INTEGRATION] Error integrating balance update: {e}")
 
-    async def _integrate_ticker_update(self, symbol: str, ticker_dict: Dict[str, Any]):
+    async def _integrate_ticker_update(self, symbol: str, ticker_dict: dict[str, Any]):
         """Integrate ticker update with trading engine"""
         try:
             if hasattr(self.trading_engine, 'update_market_data'):
@@ -297,7 +297,7 @@ class WebSocketIntegrationExample:
         except Exception as e:
             logger.error(f"[WS_INTEGRATION] Error integrating ticker update: {e}")
 
-    async def _integrate_orderbook_update(self, symbol: str, orderbook_dict: Dict[str, Any]):
+    async def _integrate_orderbook_update(self, symbol: str, orderbook_dict: dict[str, Any]):
         """Integrate orderbook update with trading engine"""
         try:
             if hasattr(self.trading_engine, 'update_market_data'):
@@ -376,15 +376,15 @@ class WebSocketIntegrationExample:
 
     # Public API Methods
 
-    def get_current_balance(self, asset: str) -> Dict[str, Any]:
+    def get_current_balance(self, asset: str) -> dict[str, Any]:
         """Get current balance for asset from WebSocket data"""
         return self.current_balances.get(asset, {})
 
-    def get_current_ticker(self, symbol: str) -> Dict[str, Any]:
+    def get_current_ticker(self, symbol: str) -> dict[str, Any]:
         """Get current ticker for symbol from WebSocket data"""
         return self.current_tickers.get(symbol, {})
 
-    def get_current_orderbook(self, symbol: str) -> Dict[str, Any]:
+    def get_current_orderbook(self, symbol: str) -> dict[str, Any]:
         """Get current orderbook for symbol from WebSocket data"""
         return self.current_orderbooks.get(symbol, {})
 
@@ -392,7 +392,7 @@ class WebSocketIntegrationExample:
         """Check if WebSocket connection is healthy"""
         return self.ws_client.is_connected() and self.ws_client.is_authenticated()
 
-    def get_websocket_status(self) -> Dict[str, Any]:
+    def get_websocket_status(self) -> dict[str, Any]:
         """Get detailed WebSocket status"""
         return self.ws_client.get_connection_status()
 

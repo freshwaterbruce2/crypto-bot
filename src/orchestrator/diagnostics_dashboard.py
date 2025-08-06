@@ -277,7 +277,7 @@ class DiagnosticsDashboard:
         self.running = True
         layout = self.create_layout()
 
-        with Live(layout, refresh_per_second=1, screen=True) as live:
+        with Live(layout, refresh_per_second=1, screen=True):
             while self.running:
                 try:
                     await self.update_display(layout)

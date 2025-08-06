@@ -15,7 +15,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from ..utils.decimal_precision_fix import safe_decimal
 from .connection_manager import ConnectionConfig, ConnectionManager
@@ -68,7 +68,7 @@ class KrakenWebSocketV2:
                  config: Optional[KrakenWebSocketConfig] = None):
         """
         Initialize Kraken WebSocket V2 client
-        
+
         Args:
             api_key: Kraken API key for authentication
             api_secret: Kraken API secret for authentication
@@ -94,18 +94,18 @@ class KrakenWebSocketV2:
         self.exchange_client: Optional[Any] = None  # Reference to exchange client for token refresh
 
         # Subscription tracking
-        self.active_subscriptions: Dict[str, Dict[str, Any]] = {}
+        self.active_subscriptions: dict[str, dict[str, Any]] = {}
         self.subscription_lock = asyncio.Lock()
 
         # Data storage
-        self.balance_data: Dict[str, BalanceUpdate] = {}
-        self.ticker_data: Dict[str, TickerUpdate] = {}
-        self.orderbook_data: Dict[str, OrderBookUpdate] = {}
-        self.trade_data: Dict[str, List[TradeUpdate]] = {}
-        self.ohlc_data: Dict[str, List[OHLCUpdate]] = {}
+        self.balance_data: dict[str, BalanceUpdate] = {}
+        self.ticker_data: dict[str, TickerUpdate] = {}
+        self.orderbook_data: dict[str, OrderBookUpdate] = {}
+        self.trade_data: dict[str, list[TradeUpdate]] = {}
+        self.ohlc_data: dict[str, list[OHLCUpdate]] = {}
 
         # Callbacks
-        self.callbacks: Dict[str, List[Callable]] = {
+        self.callbacks: dict[str, list[Callable]] = {
             'balance': [],
             'ticker': [],
             'orderbook': [],
@@ -123,7 +123,7 @@ class KrakenWebSocketV2:
         self.connection_start_time = 0
 
         # Rate limiting for subscriptions
-        self.subscription_timestamps: List[float] = []
+        self.subscription_timestamps: list[float] = []
 
         logger.info("[KRAKEN_WS_V2] Initialized WebSocket V2 client")
 
@@ -135,10 +135,10 @@ class KrakenWebSocketV2:
     async def connect(self, private_channels: bool = True) -> bool:
         """
         Connect to Kraken WebSocket V2
-        
+
         Args:
             private_channels: Whether to connect to private channels
-            
+
         Returns:
             bool: True if connection successful
         """
@@ -340,7 +340,7 @@ class KrakenWebSocketV2:
                 # Get new token
                 if await self._get_auth_token():
                     logger.info("[KRAKEN_WS_V2] Token refreshed successfully")
-                    
+
                     # Re-subscribe to maintain active subscriptions
                     if 'balances' in self.active_subscriptions:
                         logger.info("[KRAKEN_WS_V2] Re-subscribing to balance updates")
@@ -365,12 +365,12 @@ class KrakenWebSocketV2:
         self.message_handler.register_callback('ohlc', self._handle_ohlc_updates)
         self.message_handler.register_callback('subscription', self._handle_subscription_response)
 
-    async def _handle_public_message(self, message: Dict[str, Any]):
+    async def _handle_public_message(self, message: dict[str, Any]):
         """Handle public channel messages"""
         self.last_message_time = time.time()
         await self.message_handler.process_message(message)
 
-    async def _handle_private_message(self, message: Dict[str, Any]):
+    async def _handle_private_message(self, message: dict[str, Any]):
         """Handle private channel messages"""
         self.last_message_time = time.time()
         await self.message_handler.process_message(message)
@@ -385,7 +385,7 @@ class KrakenWebSocketV2:
         logger.error(f"[KRAKEN_WS_V2] Connection error: {error}")
         await self._call_callbacks('error', error)
 
-    async def _handle_balance_updates(self, balance_updates: List[BalanceUpdate]):
+    async def _handle_balance_updates(self, balance_updates: list[BalanceUpdate]):
         """Handle balance update messages"""
         try:
             logger.info(f"[KRAKEN_WS_V2] Processing {len(balance_updates)} balance updates")
@@ -401,7 +401,7 @@ class KrakenWebSocketV2:
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling balance updates: {e}")
 
-    async def _handle_ticker_updates(self, ticker_updates: List[TickerUpdate]):
+    async def _handle_ticker_updates(self, ticker_updates: list[TickerUpdate]):
         """Handle ticker update messages"""
         try:
             # Update local ticker data
@@ -415,7 +415,7 @@ class KrakenWebSocketV2:
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling ticker updates: {e}")
 
-    async def _handle_orderbook_updates(self, orderbook_updates: List[OrderBookUpdate]):
+    async def _handle_orderbook_updates(self, orderbook_updates: list[OrderBookUpdate]):
         """Handle orderbook update messages"""
         try:
             # Update local orderbook data
@@ -429,7 +429,7 @@ class KrakenWebSocketV2:
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling orderbook updates: {e}")
 
-    async def _handle_trade_updates(self, trade_updates: List[TradeUpdate]):
+    async def _handle_trade_updates(self, trade_updates: list[TradeUpdate]):
         """Handle trade update messages"""
         try:
             # Update local trade data
@@ -451,7 +451,7 @@ class KrakenWebSocketV2:
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling trade updates: {e}")
 
-    async def _handle_ohlc_updates(self, ohlc_updates: List[OHLCUpdate]):
+    async def _handle_ohlc_updates(self, ohlc_updates: list[OHLCUpdate]):
         """Handle OHLC update messages"""
         try:
             # Update local OHLC data
@@ -498,7 +498,7 @@ class KrakenWebSocketV2:
     def register_callback(self, event_type: str, callback: Callable):
         """
         Register callback for WebSocket events
-        
+
         Args:
             event_type: Type of event ('balance', 'ticker', 'orderbook', 'trade', 'ohlc', 'connected', 'disconnected', 'error', 'authenticated')
             callback: Async callback function
@@ -530,10 +530,10 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=True)
 
-    async def subscribe_ticker(self, symbols: List[str]) -> bool:
+    async def subscribe_ticker(self, symbols: list[str]) -> bool:
         """
         Subscribe to ticker updates for symbols
-        
+
         Args:
             symbols: List of trading pairs (e.g., ['BTC/USDT', 'ETH/USDT'])
         """
@@ -547,10 +547,10 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=False)
 
-    async def subscribe_orderbook(self, symbols: List[str], depth: int = 10) -> bool:
+    async def subscribe_orderbook(self, symbols: list[str], depth: int = 10) -> bool:
         """
         Subscribe to orderbook updates for symbols
-        
+
         Args:
             symbols: List of trading pairs
             depth: Orderbook depth (10, 25, 100, 500, 1000)
@@ -566,10 +566,10 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=False)
 
-    async def subscribe_trades(self, symbols: List[str]) -> bool:
+    async def subscribe_trades(self, symbols: list[str]) -> bool:
         """
         Subscribe to trade updates for symbols
-        
+
         Args:
             symbols: List of trading pairs
         """
@@ -583,10 +583,10 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=False)
 
-    async def subscribe_ohlc(self, symbols: List[str], interval: int = 1) -> bool:
+    async def subscribe_ohlc(self, symbols: list[str], interval: int = 1) -> bool:
         """
         Subscribe to OHLC updates for symbols
-        
+
         Args:
             symbols: List of trading pairs
             interval: OHLC interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
@@ -602,10 +602,10 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=False)
 
-    async def unsubscribe(self, channel: str, symbols: List[str] = None) -> bool:
+    async def unsubscribe(self, channel: str, symbols: list[str] = None) -> bool:
         """
         Unsubscribe from channel
-        
+
         Args:
             channel: Channel name to unsubscribe from
             symbols: Symbols to unsubscribe (if applicable)
@@ -674,41 +674,41 @@ class KrakenWebSocketV2:
 
     # Data Access Methods
 
-    def get_balance(self, asset: str) -> Optional[Dict[str, Any]]:
+    def get_balance(self, asset: str) -> Optional[dict[str, Any]]:
         """Get current balance for asset"""
         balance_update = self.balance_data.get(asset)
         if balance_update:
             return balance_update.to_dict()
         return None
 
-    def get_all_balances(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_balances(self) -> dict[str, dict[str, Any]]:
         """Get all current balances"""
         return {
             asset: balance_update.to_dict()
             for asset, balance_update in self.balance_data.items()
         }
 
-    def get_ticker(self, symbol: str) -> Optional[Dict[str, Any]]:
+    def get_ticker(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get current ticker for symbol"""
         ticker_update = self.ticker_data.get(symbol)
         if ticker_update:
             return ticker_update.to_dict()
         return None
 
-    def get_orderbook(self, symbol: str) -> Optional[Dict[str, Any]]:
+    def get_orderbook(self, symbol: str) -> Optional[dict[str, Any]]:
         """Get current orderbook for symbol"""
         orderbook_update = self.orderbook_data.get(symbol)
         if orderbook_update:
             return orderbook_update.to_dict()
         return None
 
-    def get_recent_trades(self, symbol: str, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_trades(self, symbol: str, limit: int = 50) -> list[dict[str, Any]]:
         """Get recent trades for symbol"""
         trades = self.trade_data.get(symbol, [])
         recent_trades = trades[-limit:] if len(trades) > limit else trades
         return [trade.to_dict() for trade in recent_trades]
 
-    def get_ohlc_data(self, symbol: str, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_ohlc_data(self, symbol: str, limit: int = 100) -> list[dict[str, Any]]:
         """Get OHLC data for symbol"""
         ohlc_list = self.ohlc_data.get(symbol, [])
         recent_ohlc = ohlc_list[-limit:] if len(ohlc_list) > limit else ohlc_list
@@ -716,7 +716,7 @@ class KrakenWebSocketV2:
 
     # Status and Monitoring
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get detailed connection status"""
         status = {
             'is_running': self.is_running,
@@ -772,7 +772,7 @@ class KrakenWebSocketV2:
 
     # Integration Methods for Existing Code
 
-    def get_balance_streaming_status(self) -> Dict[str, Any]:
+    def get_balance_streaming_status(self) -> dict[str, Any]:
         """Get balance streaming status for compatibility with existing code"""
         return {
             'websocket_connected': self.is_connected(),

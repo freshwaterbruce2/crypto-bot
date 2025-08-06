@@ -28,14 +28,14 @@ Usage:
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
 class ErrorDetails:
     """
     Detailed error information from Kraken API.
-    
+
     Attributes:
         error_code: Kraken error code
         message: Error message
@@ -48,8 +48,8 @@ class ErrorDetails:
     error_code: str
     message: str
     endpoint: Optional[str] = None
-    request_data: Optional[Dict[str, Any]] = None
-    response_data: Optional[Dict[str, Any]] = None
+    request_data: Optional[dict[str, Any]] = None
+    response_data: Optional[dict[str, Any]] = None
     timestamp: float = None
     retry_after: Optional[float] = None
 
@@ -61,7 +61,7 @@ class ErrorDetails:
 class KrakenAPIError(Exception):
     """
     Base exception for all Kraken API errors.
-    
+
     Provides common functionality for error handling, logging,
     and retry logic across all Kraken API error types.
     """
@@ -71,14 +71,14 @@ class KrakenAPIError(Exception):
         message: str,
         error_code: Optional[str] = None,
         endpoint: Optional[str] = None,
-        request_data: Optional[Dict[str, Any]] = None,
-        response_data: Optional[Dict[str, Any]] = None,
+        request_data: Optional[dict[str, Any]] = None,
+        response_data: Optional[dict[str, Any]] = None,
         retry_after: Optional[float] = None,
         original_exception: Optional[Exception] = None
     ):
         """
         Initialize Kraken API error.
-        
+
         Args:
             message: Error message
             error_code: Kraken error code
@@ -124,16 +124,16 @@ class KrakenAPIError(Exception):
     def is_retryable(self) -> bool:
         """
         Check if this error is retryable.
-        
+
         Returns:
             True if the error can be retried
         """
         return self.retry_after is not None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """
         Convert error to dictionary format.
-        
+
         Returns:
             Dictionary representation of the error
         """
@@ -173,7 +173,7 @@ class KrakenAPIError(Exception):
 class AuthenticationError(KrakenAPIError):
     """
     Authentication-related errors.
-    
+
     Raised when API key, signature, or nonce issues occur.
     Common error codes: EAuth:Invalid, EAuth:Invalid key, EAuth:Invalid nonce
     """
@@ -194,7 +194,7 @@ class AuthenticationError(KrakenAPIError):
 class RateLimitError(KrakenAPIError):
     """
     Rate limiting errors.
-    
+
     Raised when API rate limits are exceeded.
     Common error codes: EGeneral:Temporary lockout, EAPI:Rate limit exceeded
     """
@@ -219,12 +219,12 @@ class RateLimitError(KrakenAPIError):
 class ValidationError(KrakenAPIError):
     """
     Request validation errors.
-    
+
     Raised when request parameters are invalid or missing.
     Common error codes: EGeneral:Invalid arguments, EOrder:Invalid order
     """
 
-    def __init__(self, message: str, validation_errors: Optional[List[str]] = None, **kwargs):
+    def __init__(self, message: str, validation_errors: Optional[list[str]] = None, **kwargs):
         super().__init__(message, **kwargs)
         self.validation_errors = validation_errors or []
 
@@ -236,7 +236,7 @@ class ValidationError(KrakenAPIError):
 class NetworkError(KrakenAPIError):
     """
     Network and connectivity errors.
-    
+
     Raised when network issues prevent API communication.
     Includes timeout, connection, and DNS resolution errors.
     """
@@ -261,7 +261,7 @@ class NetworkError(KrakenAPIError):
 class InsufficientFundsError(KrakenAPIError):
     """
     Insufficient funds errors.
-    
+
     Raised when account doesn't have sufficient balance for the operation.
     Common error codes: EGeneral:Insufficient funds, EOrder:Insufficient funds
     """
@@ -283,7 +283,7 @@ class InsufficientFundsError(KrakenAPIError):
         """Insufficient funds errors are not retryable."""
         return False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Include funding details in dictionary representation."""
         result = super().to_dict()
         result.update({
@@ -297,7 +297,7 @@ class InsufficientFundsError(KrakenAPIError):
 class OrderError(KrakenAPIError):
     """
     Order-related errors.
-    
+
     Raised when order operations fail due to order-specific issues.
     Common error codes: EOrder:Order minimum not met, EOrder:Invalid price
     """
@@ -316,7 +316,7 @@ class OrderError(KrakenAPIError):
     def is_retryable(self) -> bool:
         """
         Order errors may be retryable depending on the specific error.
-        
+
         Returns:
             True if the order error can be retried
         """
@@ -329,7 +329,7 @@ class OrderError(KrakenAPIError):
 
         return any(msg in self.details.message.lower() for msg in retryable_messages)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Include order details in dictionary representation."""
         result = super().to_dict()
         result.update({
@@ -342,7 +342,7 @@ class OrderError(KrakenAPIError):
 class SystemError(KrakenAPIError):
     """
     Kraken system errors.
-    
+
     Raised when Kraken's systems are experiencing issues.
     Common error codes: EService:Unavailable, EGeneral:Internal error
     """
@@ -410,19 +410,19 @@ def create_exception_from_error(
     error_code: str,
     message: str,
     endpoint: Optional[str] = None,
-    request_data: Optional[Dict[str, Any]] = None,
-    response_data: Optional[Dict[str, Any]] = None
+    request_data: Optional[dict[str, Any]] = None,
+    response_data: Optional[dict[str, Any]] = None
 ) -> KrakenAPIError:
     """
     Create appropriate exception based on Kraken error code.
-    
+
     Args:
         error_code: Kraken error code
         message: Error message
         endpoint: API endpoint that failed
         request_data: Request data that caused the error
         response_data: Full response data
-        
+
     Returns:
         Appropriate KrakenAPIError subclass instance
     """
@@ -438,18 +438,18 @@ def create_exception_from_error(
 
 
 def parse_kraken_errors(
-    response_data: Dict[str, Any],
+    response_data: dict[str, Any],
     endpoint: Optional[str] = None,
-    request_data: Optional[Dict[str, Any]] = None
-) -> List[KrakenAPIError]:
+    request_data: Optional[dict[str, Any]] = None
+) -> list[KrakenAPIError]:
     """
     Parse Kraken API response and create appropriate exceptions.
-    
+
     Args:
         response_data: Kraken API response data
         endpoint: API endpoint that was called
         request_data: Request data that was sent
-        
+
     Returns:
         List of KrakenAPIError instances
     """
@@ -480,18 +480,18 @@ def parse_kraken_errors(
 
 
 def raise_for_kraken_errors(
-    response_data: Dict[str, Any],
+    response_data: dict[str, Any],
     endpoint: Optional[str] = None,
-    request_data: Optional[Dict[str, Any]] = None
+    request_data: Optional[dict[str, Any]] = None
 ) -> None:
     """
     Check Kraken API response for errors and raise appropriate exceptions.
-    
+
     Args:
         response_data: Kraken API response data
         endpoint: API endpoint that was called
         request_data: Request data that was sent
-        
+
     Raises:
         KrakenAPIError: If the response contains errors
     """

@@ -8,7 +8,7 @@ nonce issues while providing robust, real-time balance access.
 
 Features:
 - WebSocket V2 primary with REST fallback
-- Seamless integration with existing bot architecture  
+- Seamless integration with existing bot architecture
 - Real-time balance streaming with 90% WebSocket usage
 - Intelligent source selection and failover
 - Circuit breaker protection and error recovery
@@ -22,7 +22,7 @@ import logging
 import time
 from dataclasses import dataclass
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from .hybrid_portfolio_manager import HybridPortfolioConfig, HybridPortfolioManager
 from .websocket_balance_stream import BalanceUpdate, WebSocketBalanceStream
@@ -63,7 +63,7 @@ class BalanceManagerV2Config:
 class BalanceManagerV2:
     """
     Unified balance manager with WebSocket V2 primary and REST fallback
-    
+
     Provides a simple, unified interface for balance operations while using
     WebSocket streaming as the primary source and REST API as fallback only.
     """
@@ -74,7 +74,7 @@ class BalanceManagerV2:
                  config: Optional[BalanceManagerV2Config] = None):
         """
         Initialize Balance Manager V2
-        
+
         Args:
             websocket_client: WebSocket V2 client for streaming
             exchange_client: Exchange client for REST fallback and token management
@@ -95,8 +95,8 @@ class BalanceManagerV2:
         self._running = False
 
         # Legacy compatibility attributes
-        self.balances: Dict[str, Dict[str, Any]] = {}
-        self.websocket_balances: Dict[str, Dict[str, Any]] = {}
+        self.balances: dict[str, dict[str, Any]] = {}
+        self.websocket_balances: dict[str, dict[str, Any]] = {}
         self.last_update = 0.0
         self.circuit_breaker_active = False
         self.consecutive_failures = 0
@@ -105,8 +105,8 @@ class BalanceManagerV2:
         self._api_call_counter = 0
 
         # Callback management for legacy compatibility
-        self._balance_callbacks: List[Callable] = []
-        self._update_callbacks: List[Callable] = []
+        self._balance_callbacks: list[Callable] = []
+        self._update_callbacks: list[Callable] = []
 
         # Background tasks
         self._sync_task: Optional[asyncio.Task] = None
@@ -130,7 +130,7 @@ class BalanceManagerV2:
     async def initialize(self) -> bool:
         """
         Initialize the balance manager and all components with enhanced error handling
-        
+
         Returns:
             True if initialization successful
         """
@@ -396,14 +396,14 @@ class BalanceManagerV2:
 
     # Primary balance access methods
 
-    async def get_balance(self, asset: str, force_refresh: bool = False) -> Optional[Dict[str, Any]]:
+    async def get_balance(self, asset: str, force_refresh: bool = False) -> Optional[dict[str, Any]]:
         """
         Get balance for specific asset
-        
+
         Args:
             asset: Asset symbol (e.g., 'USDT', 'BTC')
             force_refresh: Force refresh (will use WebSocket stream data)
-            
+
         Returns:
             Balance dictionary or None if not found
         """
@@ -528,13 +528,13 @@ class BalanceManagerV2:
             self.stats['failed_requests'] += 1
             return None
 
-    async def get_all_balances(self, force_refresh: bool = False) -> Dict[str, Dict[str, Any]]:
+    async def get_all_balances(self, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
         """
         Get all available balances
-        
+
         Args:
             force_refresh: Force refresh (will use WebSocket stream data)
-            
+
         Returns:
             Dictionary of all balances keyed by asset
         """
@@ -600,7 +600,7 @@ class BalanceManagerV2:
     async def get_usdt_total(self) -> float:
         """
         Get total USDT across all USDT variants
-        
+
         Returns:
             Total USDT amount
         """
@@ -651,7 +651,7 @@ class BalanceManagerV2:
     async def force_refresh(self) -> bool:
         """
         Force refresh all balance data
-        
+
         Returns:
             True if refresh successful
         """
@@ -694,30 +694,30 @@ class BalanceManagerV2:
 
     # Legacy compatibility methods
 
-    def get_balance_sync(self, asset: str) -> Optional[Dict[str, Any]]:
+    def get_balance_sync(self, asset: str) -> Optional[dict[str, Any]]:
         """
         Synchronous balance access for legacy compatibility
-        
+
         Args:
             asset: Asset symbol
-            
+
         Returns:
             Balance dictionary or None
         """
         with self._lock:
             return self.balances.get(asset)
 
-    def get_all_balances_sync(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_balances_sync(self) -> dict[str, dict[str, Any]]:
         """
         Synchronous all balances access for legacy compatibility
-        
+
         Returns:
             Dictionary of all cached balances
         """
         with self._lock:
             return self.balances.copy()
 
-    async def process_websocket_update(self, balance_updates: Dict[str, Dict[str, Any]]):
+    async def process_websocket_update(self, balance_updates: dict[str, dict[str, Any]]):
         """Legacy method for WebSocket update processing"""
         try:
             with self._lock:
@@ -771,7 +771,7 @@ class BalanceManagerV2:
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error handling balance update: {e}")
 
-    async def _call_balance_callbacks(self, asset: str, balance_data: Dict[str, Any]):
+    async def _call_balance_callbacks(self, asset: str, balance_data: dict[str, Any]):
         """Call registered balance callbacks"""
         for callback in self._balance_callbacks + self._update_callbacks:
             try:
@@ -782,10 +782,10 @@ class BalanceManagerV2:
             except Exception as e:
                 logger.error(f"[BALANCE_MANAGER_V2] Balance callback error: {e}")
 
-    async def _update_balance_atomic(self, asset: str, balance_data: Dict[str, Any], source: str):
+    async def _update_balance_atomic(self, asset: str, balance_data: dict[str, Any], source: str):
         """
         Atomically update balance for a single asset with timestamp validation
-        
+
         Args:
             asset: Asset symbol
             balance_data: Balance data dictionary
@@ -825,10 +825,10 @@ class BalanceManagerV2:
                 logger.error(f"[BALANCE_MANAGER_V2] Error in atomic balance update for {asset}: {e}")
                 raise
 
-    async def _update_all_balances_atomic(self, balances_dict: Dict[str, Dict[str, Any]], source: str):
+    async def _update_all_balances_atomic(self, balances_dict: dict[str, dict[str, Any]], source: str):
         """
         Atomically update all balances with conflict resolution
-        
+
         Args:
             balances_dict: Dictionary of all balance data
             source: Source of the balance data
@@ -989,7 +989,7 @@ class BalanceManagerV2:
 
             # Get component statuses
             ws_status = self.websocket_stream.get_status() if self.websocket_stream else {}
-            hybrid_status = self.hybrid_manager.get_status() if self.hybrid_manager else {}
+            self.hybrid_manager.get_status() if self.hybrid_manager else {}
 
             logger.info(f"[BALANCE_MANAGER_V2] Performance Summary - "
                        f"Uptime: {uptime:.1f}s, "
@@ -1013,7 +1013,7 @@ class BalanceManagerV2:
 
     # Public status and monitoring methods
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive status information"""
         uptime = time.time() - self.stats['uptime_start'] if self.stats['uptime_start'] > 0 else 0
         success_rate = (self.stats['successful_requests'] /
@@ -1053,7 +1053,7 @@ class BalanceManagerV2:
 
         return status
 
-    def get_balance_streaming_status(self) -> Dict[str, Any]:
+    def get_balance_streaming_status(self) -> dict[str, Any]:
         """Get balance streaming status for compatibility"""
         return self.get_status()
 
@@ -1072,12 +1072,12 @@ async def create_balance_manager_v2(websocket_client,
                                    config: Optional[BalanceManagerV2Config] = None) -> BalanceManagerV2:
     """
     Factory function to create and initialize Balance Manager V2
-    
+
     Args:
         websocket_client: WebSocket V2 client
         exchange_client: Exchange client for REST fallback
         config: Configuration object
-        
+
     Returns:
         Initialized BalanceManagerV2 instance
     """

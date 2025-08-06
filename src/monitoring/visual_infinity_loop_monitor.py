@@ -15,7 +15,7 @@ import logging
 import time
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ class VisualInfinityLoopMonitor:
     def __init__(self, reallocation_engine=None):
         """Initialize the visual monitor"""
         self.reallocation_engine = reallocation_engine
-        self.active_cycles: Dict[str, TradingCycle] = {}
-        self.completed_cycles: List[TradingCycle] = []
+        self.active_cycles: dict[str, TradingCycle] = {}
+        self.completed_cycles: list[TradingCycle] = []
         self.cycle_counter = 0
 
         # Performance tracking
@@ -216,7 +216,7 @@ class VisualInfinityLoopMonitor:
         except Exception as e:
             logger.error(f"[INFINITY_MONITOR] Error recording circular block: {e}")
 
-    def update_visual_state(self, portfolio_data: Dict, opportunities: List, emergency_mode: bool = False) -> None:
+    def update_visual_state(self, portfolio_data: dict, opportunities: list, emergency_mode: bool = False) -> None:
         """Update the current visual state of the infinity loop"""
         try:
             # Update portfolio allocation
@@ -307,7 +307,7 @@ class VisualInfinityLoopMonitor:
         except Exception as e:
             logger.error(f"[INFINITY_MONITOR] Error updating health status: {e}")
 
-    def get_dashboard_data(self) -> Dict:
+    def get_dashboard_data(self) -> dict:
         """Get comprehensive dashboard data for visualization"""
         try:
             return {

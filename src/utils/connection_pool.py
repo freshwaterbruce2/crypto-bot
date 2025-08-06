@@ -12,7 +12,7 @@ import time
 from collections import deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +52,10 @@ class PooledConnection:
             reconnect_count=0,
             avg_latency=0.0
         )
-        self.subscribers: Set[str] = set()
+        self.subscribers: set[str] = set()
         self.last_heartbeat = time.time()
 
-    async def send_message(self, message: Dict[str, Any]) -> bool:
+    async def send_message(self, message: dict[str, Any]) -> bool:
         """Send message through this connection"""
         try:
             if self.state != ConnectionState.ACTIVE:
@@ -132,9 +132,9 @@ class WebSocketConnectionPool:
         self.idle_timeout = idle_timeout
         self.cleanup_interval = cleanup_interval
 
-        self.connections: Dict[str, PooledConnection] = {}
+        self.connections: dict[str, PooledConnection] = {}
         self.connection_queue = deque()  # For round-robin assignment
-        self.subscriber_to_connection: Dict[str, str] = {}
+        self.subscriber_to_connection: dict[str, str] = {}
 
         self.total_connections_created = 0
         self.total_messages_sent = 0
@@ -151,7 +151,7 @@ class WebSocketConnectionPool:
         self._connection_factory = factory
 
     async def get_connection(self, subscriber_id: str,
-                           preferred_symbols: List[str] = None) -> Optional[PooledConnection]:
+                           preferred_symbols: list[str] = None) -> Optional[PooledConnection]:
         """Get or create a connection for the subscriber"""
 
         # Check if subscriber already has a connection
@@ -248,7 +248,7 @@ class WebSocketConnectionPool:
 
         del self.subscriber_to_connection[subscriber_id]
 
-    async def send_message(self, subscriber_id: str, message: Dict[str, Any]) -> bool:
+    async def send_message(self, subscriber_id: str, message: dict[str, Any]) -> bool:
         """Send message through subscriber's connection"""
         connection = await self.get_connection(subscriber_id)
         if connection:
@@ -313,7 +313,7 @@ class WebSocketConnectionPool:
             except Exception as e:
                 logger.error(f"[POOL] Cleanup loop error: {e}")
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics"""
         active_connections = sum(1 for c in self.connections.values()
                                if c.state == ConnectionState.ACTIVE)

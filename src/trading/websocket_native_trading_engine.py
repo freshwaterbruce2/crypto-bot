@@ -27,7 +27,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from ..utils.kraken_order_validator import kraken_validator
 from ..utils.trade_cooldown import get_cooldown_manager
@@ -95,7 +95,7 @@ class ExecutionUpdate:
 class WebSocketNativeTradingEngine:
     """
     WebSocket-native trading engine for high-performance order execution.
-    
+
     Eliminates REST API dependency by using WebSocket streams for:
     - Order placement and cancellation
     - Real-time execution tracking
@@ -103,10 +103,10 @@ class WebSocketNativeTradingEngine:
     - Position management
     """
 
-    def __init__(self, websocket_manager, balance_manager, exchange_client=None, config: Dict[str, Any] = None):
+    def __init__(self, websocket_manager, balance_manager, exchange_client=None, config: dict[str, Any] = None):
         """
         Initialize WebSocket-native trading engine.
-        
+
         Args:
             websocket_manager: WebSocket V2 manager instance
             balance_manager: Balance manager for fund verification
@@ -119,13 +119,13 @@ class WebSocketNativeTradingEngine:
         self.config = config or {}
 
         # Order tracking
-        self.active_orders: Dict[str, WebSocketOrder] = {}
+        self.active_orders: dict[str, WebSocketOrder] = {}
         self.order_history: deque = deque(maxlen=1000)
         self.execution_updates: deque = deque(maxlen=500)
 
         # Order callbacks
-        self.order_callbacks: Dict[str, List[Callable]] = defaultdict(list)
-        self.execution_callbacks: List[Callable] = []
+        self.order_callbacks: dict[str, list[Callable]] = defaultdict(list)
+        self.execution_callbacks: list[Callable] = []
 
         # WebSocket channels
         self.subscribed_channels = set()
@@ -155,7 +155,7 @@ class WebSocketNativeTradingEngine:
     async def initialize(self) -> bool:
         """
         Initialize WebSocket trading engine with order execution channels.
-        
+
         Returns:
             True if initialization successful
         """
@@ -256,13 +256,13 @@ class WebSocketNativeTradingEngine:
     async def place_buy_order(self, symbol: str, quantity: str, price: str = None, order_type: OrderType = OrderType.MARKET) -> Optional[WebSocketOrder]:
         """
         Place a buy order via WebSocket.
-        
+
         Args:
             symbol: Trading pair symbol (e.g., 'BTC/USDT')
             quantity: Order quantity in base currency
             price: Order price (required for limit orders)
             order_type: Order type (market, limit, ioc)
-            
+
         Returns:
             WebSocketOrder instance if successful, None otherwise
         """
@@ -271,13 +271,13 @@ class WebSocketNativeTradingEngine:
     async def place_sell_order(self, symbol: str, quantity: str, price: str = None, order_type: OrderType = OrderType.MARKET) -> Optional[WebSocketOrder]:
         """
         Place a sell order via WebSocket.
-        
+
         Args:
             symbol: Trading pair symbol (e.g., 'BTC/USDT')
             quantity: Order quantity in base currency
             price: Order price (required for limit orders)
             order_type: Order type (market, limit, ioc)
-            
+
         Returns:
             WebSocketOrder instance if successful, None otherwise
         """
@@ -286,14 +286,14 @@ class WebSocketNativeTradingEngine:
     async def _place_order(self, symbol: str, side: str, quantity: str, price: str = None, order_type: OrderType = OrderType.MARKET) -> Optional[WebSocketOrder]:
         """
         Internal method to place orders via WebSocket.
-        
+
         Args:
             symbol: Trading pair symbol
             side: Order side ('buy' or 'sell')
             quantity: Order quantity
             price: Order price (optional for market orders)
             order_type: Order type
-            
+
         Returns:
             WebSocketOrder instance if successful
         """
@@ -406,10 +406,10 @@ class WebSocketNativeTradingEngine:
     async def _send_websocket_order(self, order: WebSocketOrder) -> tuple[bool, Optional[str]]:
         """
         Send order via WebSocket to Kraken.
-        
+
         Args:
             order: WebSocketOrder to place
-            
+
         Returns:
             Tuple of (success, order_id)
         """
@@ -418,7 +418,6 @@ class WebSocketNativeTradingEngine:
                 logger.error("[WEBSOCKET_TRADING] No WebSocket bot available")
                 return False, None
 
-            bot = self.websocket_manager.bot
 
             # Prepare order parameters for Kraken WebSocket V2
             order_params = {
@@ -508,10 +507,10 @@ class WebSocketNativeTradingEngine:
     async def cancel_order(self, order_id: str) -> bool:
         """
         Cancel an active order via WebSocket.
-        
+
         Args:
             order_id: Order ID to cancel
-            
+
         Returns:
             True if cancellation successful
         """
@@ -551,7 +550,6 @@ class WebSocketNativeTradingEngine:
             if not self.websocket_manager or not hasattr(self.websocket_manager, 'bot'):
                 return False
 
-            bot = self.websocket_manager.bot
 
             # Send cancellation request
             # Note: Placeholder for actual Kraken WebSocket cancellation API
@@ -580,12 +578,12 @@ class WebSocketNativeTradingEngine:
     async def modify_order(self, order_id: str, new_price: str = None, new_quantity: str = None) -> bool:
         """
         Modify an existing order.
-        
+
         Args:
             order_id: Order ID to modify
             new_price: New order price (optional)
             new_quantity: New order quantity (optional)
-            
+
         Returns:
             True if modification successful
         """
@@ -620,10 +618,10 @@ class WebSocketNativeTradingEngine:
     async def get_order_status(self, order_id: str) -> Optional[WebSocketOrder]:
         """
         Get current status of an order.
-        
+
         Args:
             order_id: Order ID to query
-            
+
         Returns:
             WebSocketOrder with current status, or None if not found
         """
@@ -677,7 +675,7 @@ class WebSocketNativeTradingEngine:
         }
         return status_mapping.get(rest_status.lower(), OrderStatus.PENDING)
 
-    async def _handle_execution_update(self, execution_data: Dict[str, Any]) -> None:
+    async def _handle_execution_update(self, execution_data: dict[str, Any]) -> None:
         """Handle execution update from WebSocket"""
         try:
             logger.info(f"[WEBSOCKET_TRADING] Execution update received: {execution_data}")
@@ -737,7 +735,7 @@ class WebSocketNativeTradingEngine:
         except Exception as e:
             logger.error(f"[WEBSOCKET_TRADING] Error handling execution update: {e}")
 
-    async def _handle_order_status_update(self, order_data: Dict[str, Any]) -> None:
+    async def _handle_order_status_update(self, order_data: dict[str, Any]) -> None:
         """Handle order status update from WebSocket"""
         try:
             logger.info(f"[WEBSOCKET_TRADING] Order status update: {order_data}")
@@ -770,16 +768,16 @@ class WebSocketNativeTradingEngine:
         try:
             if execution.side.lower() == 'buy':
                 # Buying: decrease quote currency, increase base currency
-                base_currency = execution.symbol.split('/')[0]
-                quote_currency = execution.symbol.split('/')[1]
+                execution.symbol.split('/')[0]
+                execution.symbol.split('/')[1]
 
                 # Update balances (this will trigger balance refresh)
                 await self.balance_manager.force_refresh()
 
             elif execution.side.lower() == 'sell':
                 # Selling: decrease base currency, increase quote currency
-                base_currency = execution.symbol.split('/')[0]
-                quote_currency = execution.symbol.split('/')[1]
+                execution.symbol.split('/')[0]
+                execution.symbol.split('/')[1]
 
                 # Update balances
                 await self.balance_manager.force_refresh()
@@ -832,7 +830,7 @@ class WebSocketNativeTradingEngine:
         except Exception as e:
             logger.error(f"[WEBSOCKET_TRADING] Order queue processor error: {e}")
 
-    async def _execute_queued_order(self, order_request: Dict[str, Any]) -> None:
+    async def _execute_queued_order(self, order_request: dict[str, Any]) -> None:
         """Execute a queued order request"""
         try:
             symbol = order_request['symbol']
@@ -860,19 +858,19 @@ class WebSocketNativeTradingEngine:
         """Add callback for specific order updates"""
         self.order_callbacks[order_id].append(callback)
 
-    def get_active_orders(self) -> Dict[str, WebSocketOrder]:
+    def get_active_orders(self) -> dict[str, WebSocketOrder]:
         """Get all active orders"""
         return self.active_orders.copy()
 
-    def get_order_history(self) -> List[WebSocketOrder]:
+    def get_order_history(self) -> list[WebSocketOrder]:
         """Get order history"""
         return list(self.order_history)
 
-    def get_execution_history(self) -> List[ExecutionUpdate]:
+    def get_execution_history(self) -> list[ExecutionUpdate]:
         """Get execution history"""
         return list(self.execution_updates)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get trading engine metrics"""
         return {
             **self.metrics,
@@ -911,10 +909,10 @@ class WebSocketNativeTradingEngine:
 async def create_websocket_trading_engine(bot_instance) -> Optional[WebSocketNativeTradingEngine]:
     """
     Create and initialize WebSocket trading engine for existing bot.
-    
+
     Args:
         bot_instance: Main bot instance with websocket_manager and balance_manager
-        
+
     Returns:
         Initialized WebSocketNativeTradingEngine or None if failed
     """
@@ -964,13 +962,13 @@ class WebSocketTradeExecutorAdapter:
         self.rest_executor = rest_executor
         self.prefer_websocket = True
 
-    async def execute_trade(self, trade_params: Dict[str, Any]) -> Dict[str, Any]:
+    async def execute_trade(self, trade_params: dict[str, Any]) -> dict[str, Any]:
         """
         Execute trade using WebSocket engine with REST fallback.
-        
+
         Args:
             trade_params: Trade parameters from enhanced trade executor
-            
+
         Returns:
             Trade execution result
         """
@@ -1039,7 +1037,7 @@ class WebSocketTradeExecutorAdapter:
             logger.error(f"[WEBSOCKET_ADAPTER] Cancel error: {e}")
             return False
 
-    async def get_order_status(self, order_id: str) -> Dict[str, Any]:
+    async def get_order_status(self, order_id: str) -> dict[str, Any]:
         """Get order status via WebSocket with REST fallback"""
         try:
             if self.websocket_engine.order_execution_ready:

@@ -24,7 +24,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 
@@ -57,7 +57,7 @@ class BalanceHistoryEntry:
         if self.timestamp == 0:
             self.timestamp = time.time()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'asset': self.asset,
@@ -73,7 +73,7 @@ class BalanceHistoryEntry:
         }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'BalanceHistoryEntry':
+    def from_dict(cls, data: dict[str, Any]) -> 'BalanceHistoryEntry':
         """Create entry from dictionary"""
         return cls(
             asset=data['asset'],
@@ -102,7 +102,7 @@ class BalanceTrend:
     analysis_period_hours: float
     volatility_score: float  # 0.0 to 1.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'asset': self.asset,
@@ -130,7 +130,7 @@ class BalanceHistory:
                  persistence_file: Optional[str] = None):
         """
         Initialize balance history system
-        
+
         Args:
             max_entries_per_asset: Maximum history entries per asset
             retention_hours: How long to keep history data
@@ -143,10 +143,10 @@ class BalanceHistory:
         self.persistence_file = persistence_file
 
         # History storage: asset -> deque of entries
-        self._history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=max_entries_per_asset))
+        self._history: dict[str, deque] = defaultdict(lambda: deque(maxlen=max_entries_per_asset))
 
         # Current balance tracking for change detection
-        self._current_balances: Dict[str, BalanceHistoryEntry] = {}
+        self._current_balances: dict[str, BalanceHistoryEntry] = {}
 
         # Thread safety
         self._lock = RLock()
@@ -167,10 +167,10 @@ class BalanceHistory:
         self._running = False
 
         # Change detection callbacks
-        self._change_callbacks: List[Callable] = []
+        self._change_callbacks: list[Callable] = []
 
         # Trend analysis cache
-        self._trend_cache: Dict[str, Tuple[BalanceTrend, float]] = {}  # asset -> (trend, cache_time)
+        self._trend_cache: dict[str, tuple[BalanceTrend, float]] = {}  # asset -> (trend, cache_time)
         self._trend_cache_ttl = 300  # 5 minutes
 
         logger.info(f"[BALANCE_HISTORY] Initialized with retention={retention_hours}h, max_entries={max_entries_per_asset}")
@@ -221,7 +221,7 @@ class BalanceHistory:
                                timestamp: Optional[float] = None) -> BalanceHistoryEntry:
         """
         Add a new balance entry
-        
+
         Args:
             asset: Asset symbol
             balance: Total balance
@@ -229,7 +229,7 @@ class BalanceHistory:
             source: Source of balance data
             change_reason: Reason for balance change
             timestamp: Timestamp (uses current time if None)
-            
+
         Returns:
             The created history entry
         """
@@ -278,15 +278,15 @@ class BalanceHistory:
     def get_asset_history(self,
                          asset: str,
                          limit: Optional[int] = None,
-                         since_timestamp: Optional[float] = None) -> List[BalanceHistoryEntry]:
+                         since_timestamp: Optional[float] = None) -> list[BalanceHistoryEntry]:
         """
         Get history entries for a specific asset
-        
+
         Args:
             asset: Asset symbol
             limit: Maximum number of entries to return
             since_timestamp: Only return entries after this timestamp
-            
+
         Returns:
             List of history entries (newest first)
         """
@@ -311,7 +311,7 @@ class BalanceHistory:
         with self._lock:
             return self._current_balances.get(asset)
 
-    def get_all_current_balances(self) -> Dict[str, BalanceHistoryEntry]:
+    def get_all_current_balances(self) -> dict[str, BalanceHistoryEntry]:
         """Get current balance entries for all assets"""
         with self._lock:
             return dict(self._current_balances)
@@ -319,11 +319,11 @@ class BalanceHistory:
     def get_balance_at_timestamp(self, asset: str, timestamp: float) -> Optional[BalanceHistoryEntry]:
         """
         Get balance entry closest to a specific timestamp
-        
+
         Args:
             asset: Asset symbol
             timestamp: Target timestamp
-            
+
         Returns:
             Closest balance entry or None if not found
         """
@@ -340,15 +340,15 @@ class BalanceHistory:
     def get_balance_changes(self,
                            asset: str,
                            since_timestamp: Optional[float] = None,
-                           change_threshold: Optional[Decimal] = None) -> List[BalanceHistoryEntry]:
+                           change_threshold: Optional[Decimal] = None) -> list[BalanceHistoryEntry]:
         """
         Get balance entries that represent significant changes
-        
+
         Args:
             asset: Asset symbol
             since_timestamp: Only consider changes after this timestamp
             change_threshold: Minimum change amount to include
-            
+
         Returns:
             List of entries with significant balance changes
         """
@@ -372,12 +372,12 @@ class BalanceHistory:
                                    use_cache: bool = True) -> Optional[BalanceTrend]:
         """
         Analyze balance trend for an asset
-        
+
         Args:
             asset: Asset symbol
             analysis_hours: How many hours back to analyze
             use_cache: Whether to use cached results
-            
+
         Returns:
             Balance trend analysis or None if insufficient data
         """
@@ -433,7 +433,7 @@ class BalanceHistory:
 
                 return trend
 
-    def _calculate_trend_direction(self, balances: List[Decimal], timestamps: List[float]) -> Tuple[str, float]:
+    def _calculate_trend_direction(self, balances: list[Decimal], timestamps: list[float]) -> tuple[str, float]:
         """Calculate trend direction and strength using linear regression"""
         if len(balances) < 2:
             return 'stable', 0.0
@@ -482,7 +482,7 @@ class BalanceHistory:
             logger.warning(f"[BALANCE_HISTORY] Trend calculation error for {balances[0] if balances else 'unknown'}: {e}")
             return 'stable', 0.0
 
-    def _calculate_volatility(self, balances: List[Decimal]) -> float:
+    def _calculate_volatility(self, balances: list[Decimal]) -> float:
         """Calculate volatility score (0.0 to 1.0)"""
         if len(balances) < 2:
             return 0.0
@@ -531,7 +531,7 @@ class BalanceHistory:
                 cutoff_time = time.time() - (self.retention_hours * 3600)
                 removed_count = 0
 
-                for asset, entries in self._history.items():
+                for _asset, entries in self._history.items():
                     # Convert deque to list for easier manipulation
                     entries_list = list(entries)
 
@@ -650,7 +650,7 @@ class BalanceHistory:
             except Exception as e:
                 logger.error(f"[BALANCE_HISTORY] Change callback error: {e}")
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get history statistics"""
         with self._lock:
             return {

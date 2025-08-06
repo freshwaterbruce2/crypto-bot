@@ -4,7 +4,7 @@ Handles risk management and circuit breaker settings
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +12,12 @@ logger = logging.getLogger(__name__)
 class RiskConfigManager:
     """Risk configuration manager"""
 
-    def __init__(self, core_config: Dict[str, Any]):
+    def __init__(self, core_config: dict[str, Any]):
         """Initialize risk config manager"""
         self.core_config = core_config
         self.risk_config = self._get_risk_defaults()
 
-    def _get_risk_defaults(self) -> Dict[str, Any]:
+    def _get_risk_defaults(self) -> dict[str, Any]:
         """Get default risk configuration"""
         return {
             # Position risk
@@ -40,7 +40,7 @@ class RiskConfigManager:
             "risk_per_trade_pct": 2.0
         }
 
-    def get_all_settings(self) -> Dict[str, Any]:
+    def get_all_settings(self) -> dict[str, Any]:
         """Get all risk settings"""
         return self.risk_config
 

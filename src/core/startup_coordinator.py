@@ -32,7 +32,7 @@ class StartupCoordinator:
     async def coordinate_startup(self) -> bool:
         """
         Coordinate the startup sequence to prevent nonce collisions
-        
+
         Returns:
             bool: True if startup successful
         """
@@ -311,10 +311,10 @@ class StartupCoordinator:
 async def fix_nonce_collision_startup(bot_instance) -> bool:
     """
     Emergency fix for nonce collision during startup
-    
+
     Args:
         bot_instance: The trading bot instance
-        
+
     Returns:
         bool: True if startup successful
     """

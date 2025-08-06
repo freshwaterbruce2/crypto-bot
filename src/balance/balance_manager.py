@@ -2,7 +2,7 @@
 Unified Balance Manager System
 =============================
 
-Main balance management system that integrates WebSocket V2 streaming, REST API 
+Main balance management system that integrates WebSocket V2 streaming, REST API
 fallback, intelligent caching, validation, and history tracking. Provides a unified
 interface for all balance operations in the crypto trading bot.
 
@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from ..circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from ..utils.decimal_precision_fix import safe_decimal
@@ -93,7 +93,7 @@ class BalanceManager:
                  config: Optional[BalanceManagerConfig] = None):
         """
         Initialize balance manager
-        
+
         Args:
             websocket_client: WebSocket V2 client for real-time streaming
             rest_client: REST API client for fallback operations
@@ -140,7 +140,7 @@ class BalanceManager:
 
         # Balance state
         self._last_full_refresh = 0.0
-        self._balance_sources: Dict[str, BalanceSource] = {}
+        self._balance_sources: dict[str, BalanceSource] = {}
 
         # Background tasks
         self._websocket_monitor_task: Optional[asyncio.Task] = None
@@ -148,7 +148,7 @@ class BalanceManager:
         self._cleanup_task: Optional[asyncio.Task] = None
 
         # Callbacks
-        self._callbacks: Dict[str, List[Callable]] = {
+        self._callbacks: dict[str, list[Callable]] = {
             'balance_update': [],
             'balance_change': [],
             'websocket_connected': [],
@@ -175,7 +175,7 @@ class BalanceManager:
     async def initialize(self) -> bool:
         """
         Initialize the balance manager and all components
-        
+
         Returns:
             True if initialization successful
         """
@@ -236,14 +236,14 @@ class BalanceManager:
 
         logger.info("[BALANCE_MANAGER] Shutdown complete")
 
-    async def get_balance(self, asset: str, force_refresh: bool = False) -> Optional[Dict[str, Any]]:
+    async def get_balance(self, asset: str, force_refresh: bool = False) -> Optional[dict[str, Any]]:
         """
         Get balance for a specific asset
-        
+
         Args:
             asset: Asset symbol (e.g., 'USDT', 'BTC')
             force_refresh: Force refresh from API if True
-            
+
         Returns:
             Balance dictionary or None if not found
         """
@@ -294,13 +294,13 @@ class BalanceManager:
             await self._call_callbacks('error', e)
             return None
 
-    async def get_all_balances(self, force_refresh: bool = False) -> Dict[str, Dict[str, Any]]:
+    async def get_all_balances(self, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
         """
         Get all available balances
-        
+
         Args:
             force_refresh: Force refresh from API if True
-            
+
         Returns:
             Dictionary of all balances keyed by asset
         """
@@ -334,10 +334,10 @@ class BalanceManager:
     async def refresh_balance(self, asset: str) -> bool:
         """
         Force refresh balance for specific asset
-        
+
         Args:
             asset: Asset symbol to refresh
-            
+
         Returns:
             True if refresh successful
         """
@@ -351,7 +351,7 @@ class BalanceManager:
     async def refresh_all_balances(self) -> bool:
         """
         Force refresh all balances
-        
+
         Returns:
             True if refresh successful
         """
@@ -365,7 +365,7 @@ class BalanceManager:
     def register_callback(self, event_type: str, callback: Callable):
         """
         Register callback for balance events
-        
+
         Args:
             event_type: Type of event ('balance_update', 'balance_change', 'websocket_connected', etc.)
             callback: Async callback function
@@ -425,7 +425,7 @@ class BalanceManager:
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER] WebSocket integration cleanup failed: {e}")
 
-    async def _handle_websocket_balance_update(self, balance_updates: List[Any]):
+    async def _handle_websocket_balance_update(self, balance_updates: list[Any]):
         """Handle balance updates from WebSocket"""
         try:
             for balance_update in balance_updates:
@@ -517,7 +517,7 @@ class BalanceManager:
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER] Error subscribing to balance updates: {e}")
 
-    async def _get_balance_from_websocket(self, asset: str) -> Optional[Dict[str, Any]]:
+    async def _get_balance_from_websocket(self, asset: str) -> Optional[dict[str, Any]]:
         """Get balance from WebSocket client data"""
         try:
             if hasattr(self.websocket_client, 'get_balance'):
@@ -531,7 +531,7 @@ class BalanceManager:
 
         return None
 
-    async def _get_all_balances_from_websocket(self) -> Optional[Dict[str, Dict[str, Any]]]:
+    async def _get_all_balances_from_websocket(self) -> Optional[dict[str, dict[str, Any]]]:
         """Get all balances from WebSocket client data"""
         try:
             if hasattr(self.websocket_client, 'get_all_balances'):
@@ -547,7 +547,7 @@ class BalanceManager:
 
         return None
 
-    async def _get_balance_from_rest_api(self, asset: str) -> Optional[Dict[str, Any]]:
+    async def _get_balance_from_rest_api(self, asset: str) -> Optional[dict[str, Any]]:
         """Get balance from REST API with circuit breaker protection"""
         if not self.rest_client:
             return None
@@ -595,7 +595,7 @@ class BalanceManager:
 
         return None
 
-    async def _get_all_balances_from_rest_api(self) -> Optional[Dict[str, Dict[str, Any]]]:
+    async def _get_all_balances_from_rest_api(self) -> Optional[dict[str, dict[str, Any]]]:
         """Get all balances from REST API with circuit breaker protection"""
         if not self.rest_client:
             return None
@@ -655,7 +655,7 @@ class BalanceManager:
 
         return None
 
-    async def _process_balance_data(self, asset: str, balance_data: Dict[str, Any], source: BalanceSource):
+    async def _process_balance_data(self, asset: str, balance_data: dict[str, Any], source: BalanceSource):
         """Process and store balance data"""
         try:
             balance = safe_decimal(balance_data.get('balance', 0))
@@ -694,7 +694,7 @@ class BalanceManager:
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER] Error processing balance data for {asset}: {e}")
 
-    async def _perform_initial_balance_refresh(self) -> Dict[str, Dict[str, Any]]:
+    async def _perform_initial_balance_refresh(self) -> dict[str, dict[str, Any]]:
         """Perform initial balance refresh on startup"""
         logger.info("[BALANCE_MANAGER] Performing initial balance refresh...")
 
@@ -856,7 +856,7 @@ class BalanceManager:
 
     # Public status and monitoring methods
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive balance manager status"""
         cache_stats = self.cache.get_statistics()
         history_stats = self.history.get_statistics()
@@ -882,7 +882,7 @@ class BalanceManager:
             'balance_sources': {asset: source.value for asset, source in self._balance_sources.items()}
         }
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get detailed statistics"""
         return dict(self._stats)
 

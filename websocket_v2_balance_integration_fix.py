@@ -19,7 +19,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -40,7 +40,7 @@ logger = configure_logging()
 class WebSocketV2BalanceBridge:
     """
     Bridge component that connects WebSocket V2 balance system to existing bot
-    
+
     This bridge:
     1. Receives balance updates from WebSocket V2
     2. Converts them to the format expected by existing bot components
@@ -66,11 +66,11 @@ class WebSocketV2BalanceBridge:
         self.initialized = False
 
         # Callback management - compatibility with existing bot
-        self.balance_callbacks: List[Callable] = []
-        self.update_callbacks: List[Callable] = []
+        self.balance_callbacks: list[Callable] = []
+        self.update_callbacks: list[Callable] = []
 
         # Balance data cache for immediate access
-        self.current_balances: Dict[str, Dict[str, Any]] = {}
+        self.current_balances: dict[str, dict[str, Any]] = {}
         self.last_update_time = 0.0
 
         # Statistics
@@ -209,7 +209,7 @@ class WebSocketV2BalanceBridge:
         except Exception as e:
             logger.error(f"[WEBSOCKET_V2_BRIDGE] Initial balance sync failed: {e}")
 
-    async def _on_balance_manager_v2_update(self, asset: str, balance_data: Dict[str, Any]):
+    async def _on_balance_manager_v2_update(self, asset: str, balance_data: dict[str, Any]):
         """Handle balance updates from Balance Manager V2"""
         try:
             self.stats['updates_received'] += 1
@@ -261,7 +261,7 @@ class WebSocketV2BalanceBridge:
         except Exception as e:
             logger.error(f"[WEBSOCKET_V2_BRIDGE] Error handling existing balance manager update: {e}")
 
-    def _convert_balance_format(self, balance_data: Dict[str, Any], asset: str) -> Dict[str, Any]:
+    def _convert_balance_format(self, balance_data: dict[str, Any], asset: str) -> dict[str, Any]:
         """Convert balance data to format expected by existing bot components"""
         try:
             self.stats['format_conversions'] += 1
@@ -296,7 +296,7 @@ class WebSocketV2BalanceBridge:
                 'source': 'websocket_v2_bridge_error'
             }
 
-    async def _forward_to_existing_balance_manager(self, balances: Dict[str, Dict[str, Any]]):
+    async def _forward_to_existing_balance_manager(self, balances: dict[str, dict[str, Any]]):
         """Forward balance updates to existing balance manager"""
         try:
             if not self.existing_balance_manager:
@@ -325,7 +325,7 @@ class WebSocketV2BalanceBridge:
         except Exception as e:
             logger.error(f"[WEBSOCKET_V2_BRIDGE] Error forwarding to existing balance manager: {e}")
 
-    async def _distribute_balance_update(self, balances: Dict[str, Dict[str, Any]], source: str = 'unknown'):
+    async def _distribute_balance_update(self, balances: dict[str, dict[str, Any]], source: str = 'unknown'):
         """Distribute balance updates to all registered callbacks"""
         try:
             # Call balance callbacks (expect balances dict)
@@ -365,7 +365,7 @@ class WebSocketV2BalanceBridge:
         self.update_callbacks.append(callback)
         logger.info("[WEBSOCKET_V2_BRIDGE] Registered update callback")
 
-    async def get_balance(self, asset: str) -> Optional[Dict[str, Any]]:
+    async def get_balance(self, asset: str) -> Optional[dict[str, Any]]:
         """Get balance for specific asset (compatible interface)"""
         try:
             if self.balance_manager_v2:
@@ -381,7 +381,7 @@ class WebSocketV2BalanceBridge:
             logger.error(f"[WEBSOCKET_V2_BRIDGE] Error getting balance for {asset}: {e}")
             return None
 
-    async def get_all_balances(self) -> Dict[str, Dict[str, Any]]:
+    async def get_all_balances(self) -> dict[str, dict[str, Any]]:
         """Get all balances (compatible interface)"""
         try:
             if self.balance_manager_v2:
@@ -436,7 +436,7 @@ class WebSocketV2BalanceBridge:
             logger.error(f"[WEBSOCKET_V2_BRIDGE] Error during force refresh: {e}")
             return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get bridge status information"""
         uptime = time.time() - self.stats['bridge_start_time'] if self.stats['bridge_start_time'] > 0 else 0
 

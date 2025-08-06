@@ -7,7 +7,7 @@ import logging
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -34,11 +34,11 @@ class AgentToolsBridge:
             'github_status': self.github_status
         }
 
-    def get_available_tools(self) -> List[str]:
+    def get_available_tools(self) -> list[str]:
         """Get list of available tools for agents"""
         return list(self.tools_available.keys())
 
-    def execute_tool(self, tool_name: str, **kwargs) -> Dict[str, Any]:
+    def execute_tool(self, tool_name: str, **kwargs) -> dict[str, Any]:
         """Execute a tool with given parameters"""
         try:
             if tool_name not in self.tools_available:
@@ -132,7 +132,7 @@ class AgentToolsBridge:
         except Exception as e:
             raise Exception(f"Error editing {file_path}: {e}")
 
-    def multi_edit_file(self, file_path: str, edits: List[Dict[str, Any]]) -> str:
+    def multi_edit_file(self, file_path: str, edits: list[dict[str, Any]]) -> str:
         """Perform multiple edits on a file (equivalent to Claude Code MultiEdit tool)"""
         full_path = self.project_root / file_path
 
@@ -161,7 +161,7 @@ class AgentToolsBridge:
         except Exception as e:
             raise Exception(f"Error multi-editing {file_path}: {e}")
 
-    def bash_command(self, command: str, timeout: int = 120) -> Dict[str, Any]:
+    def bash_command(self, command: str, timeout: int = 120) -> dict[str, Any]:
         """Execute bash command (equivalent to Claude Code Bash tool)"""
         try:
             result = subprocess.run(
@@ -194,7 +194,7 @@ class AgentToolsBridge:
                 'command': command
             }
 
-    def list_files(self, path: str = ".", ignore: List[str] = None) -> List[str]:
+    def list_files(self, path: str = ".", ignore: list[str] = None) -> list[str]:
         """List files in directory (equivalent to Claude Code LS tool)"""
         full_path = self.project_root / path
         ignore = ignore or []
@@ -215,7 +215,7 @@ class AgentToolsBridge:
         except Exception as e:
             raise Exception(f"Error listing {path}: {e}")
 
-    def glob_search(self, pattern: str, path: str = ".") -> List[str]:
+    def glob_search(self, pattern: str, path: str = ".") -> list[str]:
         """Search files by pattern (equivalent to Claude Code Glob tool)"""
         full_path = self.project_root / path
 
@@ -226,7 +226,7 @@ class AgentToolsBridge:
             raise Exception(f"Error globbing {pattern}: {e}")
 
     def grep_search(self, pattern: str, path: str = ".", file_type: str = None,
-                   case_insensitive: bool = False, context_lines: int = 0) -> List[Dict[str, Any]]:
+                   case_insensitive: bool = False, context_lines: int = 0) -> list[dict[str, Any]]:
         """Search text in files (equivalent to Claude Code Grep tool)"""
         try:
             # Build ripgrep command
@@ -324,11 +324,11 @@ class AgentToolsBridge:
         except Exception as e:
             raise Exception(f"Error copying {src} to {dst}: {e}")
 
-    def github_status(self) -> Dict[str, Any]:
+    def github_status(self) -> dict[str, Any]:
         """Get git status (equivalent to git status)"""
         return self.bash_command("git status --porcelain")
 
-    def github_commit(self, message: str, add_all: bool = True) -> Dict[str, Any]:
+    def github_commit(self, message: str, add_all: bool = True) -> dict[str, Any]:
         """Commit changes to git with Claude Code signature"""
         try:
             commands = []
@@ -373,7 +373,7 @@ EOF
                 'command': 'github_commit'
             }
 
-    def github_push(self, branch: str = None) -> Dict[str, Any]:
+    def github_push(self, branch: str = None) -> dict[str, Any]:
         """Push changes to GitHub"""
         cmd = "git push"
         if branch:
@@ -394,7 +394,7 @@ def get_agent_bridge(project_root: str = None) -> AgentToolsBridge:
 
     return _bridge
 
-def register_agent_tools(agent_id: str, project_root: str = None) -> Dict[str, Any]:
+def register_agent_tools(agent_id: str, project_root: str = None) -> dict[str, Any]:
     """Register full file system tools for an agent"""
     bridge = get_agent_bridge(project_root)
 
@@ -413,7 +413,7 @@ def register_agent_tools(agent_id: str, project_root: str = None) -> Dict[str, A
         ]
     }
 
-def execute_agent_tool(agent_id: str, tool_name: str, **kwargs) -> Dict[str, Any]:
+def execute_agent_tool(agent_id: str, tool_name: str, **kwargs) -> dict[str, Any]:
     """Execute a tool on behalf of an agent"""
     bridge = get_agent_bridge()
 

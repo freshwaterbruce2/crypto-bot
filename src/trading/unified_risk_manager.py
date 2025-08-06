@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class UnifiedRiskManager:
     Centralized risk management system that coordinates all risk-related decisions
     """
 
-    def __init__(self, config: Dict[str, Any], balance_manager=None, exchange=None):
+    def __init__(self, config: dict[str, Any], balance_manager=None, exchange=None):
         """Initialize unified risk manager"""
         self.config = config
         self.balance_manager = balance_manager
@@ -121,8 +121,8 @@ class UnifiedRiskManager:
 
         # Risk tracking
         self.risk_metrics = RiskMetrics()
-        self.positions: Dict[str, PositionRisk] = {}
-        self.trade_history: List[Dict[str, Any]] = []
+        self.positions: dict[str, PositionRisk] = {}
+        self.trade_history: list[dict[str, Any]] = []
         self.daily_stats = {
             'date': datetime.now().date(),
             'trades': 0,
@@ -133,12 +133,12 @@ class UnifiedRiskManager:
         }
 
         # Volatility tracking
-        self.volatility_data: Dict[str, List[float]] = {}
+        self.volatility_data: dict[str, list[float]] = {}
         self.volatility_window = 20  # 20 candle ATR
 
         # Performance tracking
         self.performance_window = 100  # Last 100 trades for metrics
-        self.equity_curve: List[float] = []
+        self.equity_curve: list[float] = []
         self.peak_equity = 0.0
 
         # Lock for thread safety
@@ -172,10 +172,10 @@ class UnifiedRiskManager:
         except Exception as e:
             logger.error(f"[RISK_MANAGER] Initialization error: {e}")
 
-    async def validate_trade(self, symbol: str, side: str, amount: float, price: float = None) -> Tuple[bool, str, Dict[str, Any]]:
+    async def validate_trade(self, symbol: str, side: str, amount: float, price: float = None) -> tuple[bool, str, dict[str, Any]]:
         """
         Validate trade against all risk parameters
-        
+
         Returns:
             - allowed: bool - Whether trade is allowed
             - reason: str - Reason if rejected
@@ -473,7 +473,7 @@ class UnifiedRiskManager:
                         self.circuit_breaker['recovery_trades'] = 0
                         logger.info("[RISK_MANAGER] Circuit breaker moved to half-open after cooldown")
 
-    async def get_risk_status(self) -> Dict[str, Any]:
+    async def get_risk_status(self) -> dict[str, Any]:
         """Get comprehensive risk status"""
         async with self._lock:
             return {
@@ -586,7 +586,7 @@ class UnifiedRiskManager:
 
     def _calculate_position_risk(self, amount: float, balance: float) -> float:
         """Calculate risk percentage for position
-        
+
         Args:
             amount: Position size in quote currency
             balance: Effective balance (can be portfolio value for deployed capital)
@@ -748,7 +748,7 @@ class UnifiedRiskManager:
             logger.error(f"[RISK_MANAGER] Error calculating volatility for {symbol}: {e}")
             return 1.5  # Safe default
 
-    def _calculate_atr(self, ohlc_data: List[Dict[str, float]], period: int = None) -> float:
+    def _calculate_atr(self, ohlc_data: list[dict[str, float]], period: int = None) -> float:
         """Calculate Average True Range from OHLC data"""
         if period is None:
             period = self.volatility_window
@@ -806,7 +806,7 @@ class UnifiedRiskManager:
             logger.error(f"[RISK_MANAGER] ATR calculation error: {e}")
             return 1.5
 
-    def update_ohlc_data(self, symbol: str, ohlc_data: List[Dict[str, float]]):
+    def update_ohlc_data(self, symbol: str, ohlc_data: list[dict[str, float]]):
         """Update OHLC data for ATR calculation"""
         try:
             # Calculate and cache ATR

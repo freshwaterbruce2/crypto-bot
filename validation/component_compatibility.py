@@ -12,7 +12,7 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -33,7 +33,7 @@ class CompatibilityTest:
     """Individual compatibility test"""
     name: str
     description: str
-    components: List[str]
+    components: list[str]
     test_function: str
     expected_result: Any
     critical: bool = False
@@ -45,12 +45,12 @@ class CompatibilityResult:
     test_name: str
     passed: bool
     duration: float
-    components_tested: List[str]
-    interface_mismatches: List[str]
-    version_conflicts: List[str]
-    dependency_issues: List[str]
-    recommendations: List[str]
-    details: Dict[str, Any]
+    components_tested: list[str]
+    interface_mismatches: list[str]
+    version_conflicts: list[str]
+    dependency_issues: list[str]
+    recommendations: list[str]
+    details: dict[str, Any]
 
 
 @dataclass
@@ -58,10 +58,10 @@ class ComponentInterface:
     """Component interface specification"""
     component_name: str
     class_name: str
-    required_methods: List[str]
-    optional_methods: List[str]
-    required_attributes: List[str]
-    dependencies: List[str]
+    required_methods: list[str]
+    optional_methods: list[str]
+    required_attributes: list[str]
+    dependencies: list[str]
     version: str
 
 
@@ -71,7 +71,7 @@ class ComponentCompatibilityTester:
     def __init__(self):
         self.config = TradingConfig()
         self.logger = self._setup_logging()
-        self.results: List[CompatibilityResult] = []
+        self.results: list[CompatibilityResult] = []
 
         # Component registry
         self.components = {}
@@ -265,7 +265,7 @@ class ComponentCompatibilityTester:
             )
         ]
 
-    async def run_compatibility_tests(self) -> List[CompatibilityResult]:
+    async def run_compatibility_tests(self) -> list[CompatibilityResult]:
         """Run all compatibility tests"""
         self.logger.info("Starting component compatibility testing")
 
@@ -279,7 +279,6 @@ class ComponentCompatibilityTester:
                 if result.passed:
                     self.logger.info(f"✅ {test.name} PASSED")
                 else:
-                    level = "ERROR" if test.critical else "WARNING"
                     self.logger.log(
                         logging.ERROR if test.critical else logging.WARNING,
                         f"❌ {test.name} FAILED"
@@ -397,7 +396,7 @@ class ComponentCompatibilityTester:
                 return False
 
             # Test that balance manager can use dependencies
-            test_balance = await balance_manager.get_balance()
+            await balance_manager.get_balance()
             # Balance can be None in test environment
 
             return True
@@ -435,8 +434,8 @@ class ComponentCompatibilityTester:
                 return False
 
             # Test that portfolio manager can use dependencies
-            total_balance = await portfolio_manager.get_total_balance()
-            positions = await portfolio_manager.get_current_positions()
+            await portfolio_manager.get_total_balance()
+            await portfolio_manager.get_current_positions()
 
             await database_manager.close()
 
@@ -498,11 +497,11 @@ class ComponentCompatibilityTester:
                 await circuit_breaker.reset()
 
             # Record some failures
-            for i in range(3):
+            for _i in range(3):
                 await circuit_breaker.record_failure()
 
             # Test that circuit breaker state can be checked
-            is_open = circuit_breaker.is_open()
+            circuit_breaker.is_open()
 
             # Reset for clean state
             await circuit_breaker.reset()
@@ -622,15 +621,15 @@ class ComponentCompatibilityTester:
             config = TradingConfig()
 
             # Test that components can access configuration
-            auth = KrakenAuth()
-            rate_limiter = KrakenRateLimiter()
+            KrakenAuth()
+            KrakenRateLimiter()
 
             # Test configuration values are accessible
             if hasattr(config, 'trading_pairs'):
-                trading_pairs = config.trading_pairs
+                pass
 
             if hasattr(config, 'position_size_percent'):
-                position_size = config.position_size_percent
+                pass
 
             return True
 
@@ -658,7 +657,7 @@ class ComponentCompatibilityTester:
                 database_manager=database_manager
             )
 
-            websocket_manager = WebSocketManagerV2(
+            WebSocketManagerV2(
                 auth=auth,
                 balance_manager=balance_manager
             )
@@ -669,7 +668,7 @@ class ComponentCompatibilityTester:
             await balance_manager._update_cached_balance(test_balance)
 
             # 2. Test that portfolio manager can access updated balance
-            total_balance = await portfolio_manager.get_total_balance()
+            await portfolio_manager.get_total_balance()
 
             # 3. Test that data can be stored in database
             test_data = {"test": "data", "timestamp": datetime.now().isoformat()}
@@ -686,7 +685,7 @@ class ComponentCompatibilityTester:
             self.logger.error(f"Data flow compatibility error: {e}")
             return False
 
-    def check_interface_compatibility(self, component_name: str) -> List[str]:
+    def check_interface_compatibility(self, component_name: str) -> list[str]:
         """Check interface compatibility for a component"""
         issues = []
 
@@ -737,7 +736,7 @@ class ComponentCompatibilityTester:
 
         return issues
 
-    def generate_compatibility_report(self) -> Dict[str, Any]:
+    def generate_compatibility_report(self) -> dict[str, Any]:
         """Generate comprehensive compatibility report"""
         total_tests = len(self.results)
         passed_tests = sum(1 for r in self.results if r.passed)
@@ -794,7 +793,7 @@ class ComponentCompatibilityTester:
             "component_matrix": self._generate_component_matrix()
         }
 
-    def _generate_component_matrix(self) -> Dict[str, Any]:
+    def _generate_component_matrix(self) -> dict[str, Any]:
         """Generate component compatibility matrix"""
         matrix = {}
 

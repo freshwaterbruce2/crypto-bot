@@ -6,7 +6,7 @@ Handles base configuration loading and validation
 import json
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class CoreConfigManager:
         self.config_path = config_path
         self.config_data = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load configuration from file with fallback defaults"""
         try:
             if os.path.exists(self.config_path):
@@ -34,7 +34,7 @@ class CoreConfigManager:
             logger.error(f"[CORE_CONFIG] Error loading config: {e}")
             return self._get_default_config()
 
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """Get default configuration"""
         return {
             # Core settings
@@ -60,11 +60,11 @@ class CoreConfigManager:
             "data_directory": "D:/trading_bot_data"
         }
 
-    def get_core_config(self) -> Dict[str, Any]:
+    def get_core_config(self) -> dict[str, Any]:
         """Get core configuration"""
         return self.config_data
 
-    def get_all_settings(self) -> Dict[str, Any]:
+    def get_all_settings(self) -> dict[str, Any]:
         """Get all core settings"""
         return self.config_data
 

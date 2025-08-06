@@ -37,10 +37,10 @@ async def demo_saas_platform():
     # Initialize services
     user_service = UserService()
     subscription_service = SubscriptionService()
-    payment_service = PaymentService()
+    PaymentService()
     marketplace = StrategyMarketplace()
     api_service = APIService()
-    analytics_service = AnalyticsService()
+    AnalyticsService()
 
     # Initialize subscription tiers
     await subscription_service.initialize_default_tiers()
@@ -125,7 +125,7 @@ def strategy_logic(data):
     sma_20 = calculate_sma(data['close'], 20)
     sma_50 = calculate_sma(data['close'], 50)
     volume_avg = calculate_sma(data['volume'], 10)
-    
+
     if data['close'][-1] > sma_20[-1] and data['volume'][-1] > volume_avg[-1] * 1.5:
         return 'BUY'
     elif data['close'][-1] < sma_50[-1]:

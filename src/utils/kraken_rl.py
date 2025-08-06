@@ -22,7 +22,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -109,11 +109,11 @@ class KrakenRateLimiter:
             self.config.api_decay_rate = 0.5
 
         # Rate counters per trading pair
-        self.rate_counters: Dict[str, float] = defaultdict(float)
-        self.last_update: Dict[str, float] = defaultdict(float)
+        self.rate_counters: dict[str, float] = defaultdict(float)
+        self.last_update: dict[str, float] = defaultdict(float)
 
         # Open order tracking
-        self.open_orders: Dict[str, int] = defaultdict(int)
+        self.open_orders: dict[str, int] = defaultdict(int)
 
         # REST API token bucket (separate from trading engine)
         self.api_counter = 0.0
@@ -379,7 +379,7 @@ class KrakenRateLimiter:
     def increment_counter(self, symbol: str, amount: float = 1.0) -> None:
         """
         Legacy method for compatibility. Use check_rate_limit instead.
-        
+
         Args:
             symbol: Trading pair symbol
             amount: Amount to increment (default 1.0)
@@ -447,7 +447,7 @@ class KrakenRateLimiter:
         except Exception as e:
             logger.error(f"[KRAKEN_RL] Error handling Kraken error: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive rate limiter status."""
         current_time = time.time()
 
@@ -490,7 +490,7 @@ class KrakenRateLimiter:
     def update_websocket_counter(self, counter_value: float) -> None:
         """
         Update rate counter from WebSocket ratecounter message.
-        
+
         Args:
             counter_value: Current rate counter value from WebSocket
         """
@@ -530,7 +530,7 @@ class KrakenRateLimiter:
     def check_circuit_breaker(self) -> bool:
         """
         Check if circuit breaker allows operations.
-        
+
         Returns:
             True if operations can proceed
         """
@@ -544,7 +544,7 @@ class KrakenRateLimiter:
     def track_ioc_order(self, success: bool) -> None:
         """
         Track IOC order outcome for optimization metrics.
-        
+
         Args:
             success: Whether the IOC order was filled
         """
@@ -565,7 +565,7 @@ class KrakenRateLimiter:
             f"{self.regular_orders_cancelled * 8} penalty points"
         )
 
-    def get_ioc_optimization_stats(self) -> Dict[str, Any]:
+    def get_ioc_optimization_stats(self) -> dict[str, Any]:
         """Get IOC optimization statistics."""
         total_ioc = self.ioc_orders_success + self.ioc_orders_failed
 
@@ -601,10 +601,10 @@ class KrakenRateLimiter:
     async def check_rest_api_limit(self, endpoint: str) -> bool:
         """
         Check REST API rate limit (separate from trading engine).
-        
+
         Args:
             endpoint: API endpoint name
-            
+
         Returns:
             bool: True if request can proceed
         """

@@ -5,7 +5,7 @@ Simple simulated exchange for paper trading
 
 import asyncio
 import random
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class PaperExchange:
@@ -24,7 +24,7 @@ class PaperExchange:
             'BERA/USDT': 2.0
         }
 
-    async def get_ticker(self, symbol: str) -> Dict[str, Any]:
+    async def get_ticker(self, symbol: str) -> dict[str, Any]:
         """Get simulated ticker data"""
         base_price = self.prices.get(symbol, 100.0)
 
@@ -40,7 +40,7 @@ class PaperExchange:
             'volume': random.uniform(1000, 10000)
         }
 
-    async def place_order(self, symbol: str, side: str, amount: float, price: Optional[float] = None) -> Dict[str, Any]:
+    async def place_order(self, symbol: str, side: str, amount: float, price: Optional[float] = None) -> dict[str, Any]:
         """Simulate order placement"""
         # Simulate network delay
         await asyncio.sleep(random.uniform(0.1, 0.3))

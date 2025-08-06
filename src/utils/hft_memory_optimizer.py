@@ -18,7 +18,7 @@ import tracemalloc
 from collections import OrderedDict, deque
 from dataclasses import dataclass
 from threading import RLock
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class BoundedCache:
             self.cache.clear()
             self.memory_usage = 0
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         with self._lock:
             hit_rate = self.stats['hits'] / (self.stats['hits'] + self.stats['misses']) if (self.stats['hits'] + self.stats['misses']) > 0 else 0
@@ -147,7 +147,7 @@ class ObjectPool:
                 return True
             return False
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics"""
         with self._lock:
             reuse_rate = self.stats['reused'] / (self.stats['created'] + self.stats['reused']) if (self.stats['created'] + self.stats['reused']) > 0 else 0
@@ -183,7 +183,7 @@ class CircularBuffer:
                 # Buffer is full, move head
                 self.head = (self.head + 1) % self.max_size
 
-    def get_latest(self, count: int = 1) -> List[Any]:
+    def get_latest(self, count: int = 1) -> list[Any]:
         """Get latest N items"""
         with self._lock:
             if count > self.size:
@@ -197,7 +197,7 @@ class CircularBuffer:
 
             return items
 
-    def get_all(self) -> List[Any]:
+    def get_all(self) -> list[Any]:
         """Get all items in order"""
         with self._lock:
             items = []
@@ -275,13 +275,13 @@ class HFTMemoryOptimizer:
         # Cache for rate limit data
         self.caches['rate_limits'] = BoundedCache(max_size=100, max_memory_mb=5)
 
-    def get_price_data_object(self) -> Dict[str, Any]:
+    def get_price_data_object(self) -> dict[str, Any]:
         """Get reusable price data object"""
         obj = self.object_pools['price_data'].get()
         self.stats.object_pool_hits += 1
         return obj
 
-    def return_price_data_object(self, obj: Dict[str, Any]):
+    def return_price_data_object(self, obj: dict[str, Any]):
         """Return price data object to pool"""
         # Clear sensitive data
         for key in obj:
@@ -291,13 +291,13 @@ class HFTMemoryOptimizer:
                 obj[key] = ''
         self.object_pools['price_data'].return_object(obj)
 
-    def get_signal_data_object(self) -> Dict[str, Any]:
+    def get_signal_data_object(self) -> dict[str, Any]:
         """Get reusable signal data object"""
         obj = self.object_pools['signal_data'].get()
         self.stats.object_pool_hits += 1
         return obj
 
-    def return_signal_data_object(self, obj: Dict[str, Any]):
+    def return_signal_data_object(self, obj: dict[str, Any]):
         """Return signal data object to pool"""
         # Clear sensitive data
         for key in obj:
@@ -307,7 +307,7 @@ class HFTMemoryOptimizer:
                 obj[key] = ''
         self.object_pools['signal_data'].return_object(obj)
 
-    def cache_market_data(self, symbol: str, data: Dict[str, Any]) -> bool:
+    def cache_market_data(self, symbol: str, data: dict[str, Any]) -> bool:
         """Cache market data with memory management"""
         key = f"market_{symbol}_{int(time.time())}"
         estimated_size = sys.getsizeof(data) + len(str(data))
@@ -320,7 +320,7 @@ class HFTMemoryOptimizer:
 
         return success
 
-    def get_cached_market_data(self, symbol: str, max_age: float = 1.0) -> Optional[Dict[str, Any]]:
+    def get_cached_market_data(self, symbol: str, max_age: float = 1.0) -> Optional[dict[str, Any]]:
         """Get cached market data within age limit"""
         current_time = int(time.time())
 
@@ -426,7 +426,7 @@ class HFTMemoryOptimizer:
         self.monitoring_enabled = False
         logger.info("[HFT_MEMORY] Memory monitoring stopped")
 
-    def take_memory_snapshot(self) -> Dict[str, Any]:
+    def take_memory_snapshot(self) -> dict[str, Any]:
         """Take memory snapshot for analysis"""
         if not self.monitoring_enabled:
             return {}
@@ -442,7 +442,7 @@ class HFTMemoryOptimizer:
         self.memory_snapshots.append(snapshot)
         return snapshot
 
-    def get_memory_stats(self) -> Dict[str, Any]:
+    def get_memory_stats(self) -> dict[str, Any]:
         """Get comprehensive memory statistics"""
         stats = {
             'optimizer_stats': {

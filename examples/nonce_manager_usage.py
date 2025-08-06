@@ -101,7 +101,7 @@ def statistics_example():
     # Generate some activity
     for i in range(3):
         conn_id = f"stats_conn_{i}"
-        for j in range(5):
+        for _j in range(5):
             nonce_manager.get_nonce(conn_id)
 
     # Get statistics
@@ -147,7 +147,7 @@ def practical_websocket_example():
     print("\n=== Practical WebSocket Usage ===")
 
     # Initialize components
-    nonce_manager = KrakenUnifiedUnifiedKrakenNonceManager()
+    KrakenUnifiedUnifiedKrakenNonceManager()
     coordinator = get_unified_nonce_manager()
 
     # Connection setup

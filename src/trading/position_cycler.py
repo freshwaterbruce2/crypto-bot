@@ -16,7 +16,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 import numpy as np
 
@@ -37,7 +37,7 @@ class PositionInfo:
     hold_time: float = 0.0
     profit_target: float = 0.002  # 0.2% default
     stop_loss: float = 0.001  # 0.1% default
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def update_pnl(self, current_price: float):
         """Update P&L calculations"""
@@ -55,7 +55,7 @@ class PositionInfo:
 class PositionCycler:
     """Manages rapid position cycling for capital efficiency"""
 
-    def __init__(self, bot, config: Dict[str, Any]):
+    def __init__(self, bot, config: dict[str, Any]):
         """Initialize position cycler"""
         self.bot = bot
         self.config = config
@@ -67,9 +67,9 @@ class PositionCycler:
         self.force_exit_time = 300  # 5 minutes - force exit
 
         # Position tracking
-        self.positions: Dict[str, PositionInfo] = {}
-        self.exit_queue: List[str] = []
-        self.locked_positions: Set[str] = set()  # Positions being processed
+        self.positions: dict[str, PositionInfo] = {}
+        self.exit_queue: list[str] = []
+        self.locked_positions: set[str] = set()  # Positions being processed
 
         # Performance tracking
         self.exits_by_reason = {
@@ -103,7 +103,7 @@ class PositionCycler:
         logger.info("[POSITION_CYCLER] Stopped")
 
     def add_position(self, symbol: str, side: str, size: float, entry_price: float,
-                    profit_target: float = None, stop_loss: float = None, metadata: Dict = None):
+                    profit_target: float = None, stop_loss: float = None, metadata: dict = None):
         """Add new position to track"""
         position = PositionInfo(
             symbol=symbol,
@@ -316,7 +316,7 @@ class PositionCycler:
             logger.error(f"[POSITION_CYCLER] Exit execution error: {e}")
             return False
 
-    def get_position_summary(self) -> Dict[str, Any]:
+    def get_position_summary(self) -> dict[str, Any]:
         """Get summary of current positions"""
         if not self.positions:
             return {
@@ -348,7 +348,7 @@ class PositionCycler:
             'exit_stats': self.exits_by_reason
         }
 
-    def get_cycling_metrics(self) -> Dict[str, Any]:
+    def get_cycling_metrics(self) -> dict[str, Any]:
         """Get position cycling metrics"""
         total_exits = sum(self.exits_by_reason.values())
 

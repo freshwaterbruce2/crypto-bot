@@ -2,7 +2,7 @@
 Portfolio Manager
 ================
 
-Main portfolio management system that orchestrates position tracking, 
+Main portfolio management system that orchestrates position tracking,
 risk management, rebalancing, and analytics for comprehensive portfolio management.
 
 Features:
@@ -25,7 +25,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 from .analytics import AnalyticsConfig, MetricPeriod, PortfolioAnalytics
@@ -61,7 +61,7 @@ class PortfolioConfig:
     """Portfolio manager configuration"""
     # Strategy settings
     strategy: PortfolioStrategy = PortfolioStrategy.BALANCED
-    target_allocations: Dict[str, float] = None  # symbol -> weight
+    target_allocations: dict[str, float] = None  # symbol -> weight
 
     # Risk settings
     max_portfolio_risk_pct: float = 2.0
@@ -98,7 +98,7 @@ class PortfolioConfig:
                 "ADA/USDT": 0.1
             }
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
         data['strategy'] = self.strategy.value
@@ -114,7 +114,7 @@ class PortfolioManager:
                  config: Optional[PortfolioConfig] = None, exchange=None, account_tier=None):
         """
         Initialize portfolio manager
-        
+
         Args:
             balance_manager: Balance manager instance
             trade_executor: Trade executor instance
@@ -186,7 +186,7 @@ class PortfolioManager:
         )
 
         # Event callbacks
-        self._callbacks: Dict[str, List[Callable]] = {
+        self._callbacks: dict[str, list[Callable]] = {
             'position_opened': [],
             'position_closed': [],
             'risk_limit_exceeded': [],
@@ -285,10 +285,10 @@ class PortfolioManager:
 
     async def create_position(self, symbol: str, position_type: PositionType,
                             size: Union[float, Decimal], entry_price: Union[float, Decimal],
-                            strategy: str = None, tags: List[str] = None) -> Optional[Position]:
+                            strategy: str = None, tags: list[str] = None) -> Optional[Position]:
         """
         Create a new position with risk checking
-        
+
         Args:
             symbol: Trading pair symbol
             position_type: LONG or SHORT
@@ -296,7 +296,7 @@ class PortfolioManager:
             entry_price: Entry price
             strategy: Strategy name
             tags: Optional tags
-            
+
         Returns:
             Created position or None if rejected
         """
@@ -305,7 +305,7 @@ class PortfolioManager:
 
         try:
             # Risk check
-            position_value = float(size) * float(entry_price)
+            float(size) * float(entry_price)
             risk_action, risk_reason = await self.risk_manager.check_position_risk(
                 symbol, float(size), float(entry_price), position_type.value
             )
@@ -337,13 +337,13 @@ class PortfolioManager:
                            size: Union[float, Decimal] = None, fees: Union[float, Decimal] = 0) -> bool:
         """
         Close a position (partial or full)
-        
+
         Args:
             position_id: Position ID to close
             price: Exit price
             size: Size to close (None for full close)
             fees: Trading fees
-            
+
         Returns:
             True if successful
         """
@@ -385,14 +385,14 @@ class PortfolioManager:
             await self._call_callbacks('error', e)
             return False
 
-    async def update_position_price(self, symbol: str, price: Union[float, Decimal]) -> List[str]:
+    async def update_position_price(self, symbol: str, price: Union[float, Decimal]) -> list[str]:
         """
         Update price for all positions of a symbol
-        
+
         Args:
             symbol: Symbol to update
             price: New price
-            
+
         Returns:
             List of updated position IDs
         """
@@ -411,7 +411,7 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error updating position price: {e}")
             return []
 
-    async def get_portfolio_summary(self) -> Dict[str, Any]:
+    async def get_portfolio_summary(self) -> dict[str, Any]:
         """Get comprehensive portfolio summary"""
         try:
             # Base portfolio summary
@@ -447,7 +447,7 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error getting portfolio summary: {e}")
             return {'error': str(e), 'timestamp': time.time()}
 
-    async def get_performance_report(self, periods: List[MetricPeriod] = None) -> Dict[str, Any]:
+    async def get_performance_report(self, periods: list[MetricPeriod] = None) -> dict[str, Any]:
         """Get comprehensive performance report"""
         if not self.config.analytics_enabled:
             return {'error': 'Analytics not enabled'}
@@ -458,7 +458,7 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error generating performance report: {e}")
             return {'error': str(e)}
 
-    async def get_risk_report(self) -> Dict[str, Any]:
+    async def get_risk_report(self) -> dict[str, Any]:
         """Get comprehensive risk report"""
         try:
             return await self.risk_manager.get_risk_report()
@@ -467,14 +467,14 @@ class PortfolioManager:
             return {'error': str(e)}
 
     async def rebalance_portfolio(self, strategy: RebalanceStrategy = None,
-                                custom_targets: Dict[str, float] = None) -> Optional[RebalanceResult]:
+                                custom_targets: dict[str, float] = None) -> Optional[RebalanceResult]:
         """
         Manually trigger portfolio rebalancing
-        
+
         Args:
             strategy: Rebalancing strategy (uses config default if None)
             custom_targets: Custom target allocations
-            
+
         Returns:
             RebalanceResult if successful
         """
@@ -514,13 +514,13 @@ class PortfolioManager:
             await self._call_callbacks('error', e)
             return None
 
-    async def set_target_allocations(self, targets: Dict[str, float]) -> bool:
+    async def set_target_allocations(self, targets: dict[str, float]) -> bool:
         """
         Set new target allocations
-        
+
         Args:
             targets: New target allocations (symbol -> weight)
-            
+
         Returns:
             True if successful
         """
@@ -575,13 +575,13 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error resuming portfolio: {e}")
             return False
 
-    async def liquidate_portfolio(self, emergency: bool = False) -> Dict[str, Any]:
+    async def liquidate_portfolio(self, emergency: bool = False) -> dict[str, Any]:
         """
         Liquidate all positions
-        
+
         Args:
             emergency: If True, use market orders for immediate liquidation
-            
+
         Returns:
             Liquidation results
         """
@@ -894,10 +894,10 @@ class PortfolioManager:
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error saving status: {e}")
 
-    async def get_balances(self) -> Dict[str, Decimal]:
+    async def get_balances(self) -> dict[str, Decimal]:
         """
         Get all account balances through exchange
-        
+
         Returns:
             Dict mapping symbol to balance amount
         """
@@ -915,10 +915,10 @@ class PortfolioManager:
     async def get_balance(self, symbol: str = 'USDT') -> Decimal:
         """
         Get balance for specific symbol
-        
+
         Args:
             symbol: Symbol to get balance for
-            
+
         Returns:
             Balance amount as Decimal
         """
@@ -932,7 +932,7 @@ class PortfolioManager:
     async def get_portfolio_value(self) -> Decimal:
         """
         Get total portfolio value in USDT
-        
+
         Returns:
             Total portfolio value
         """
@@ -963,10 +963,10 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error calculating portfolio value: {e}")
             return Decimal('0')
 
-    async def get_open_positions(self) -> Dict[str, Any]:
+    async def get_open_positions(self) -> dict[str, Any]:
         """
         Get all open positions from position tracker
-        
+
         Returns:
             Dictionary of open positions keyed by position ID
         """
@@ -990,10 +990,10 @@ class PortfolioManager:
             logger.error(f"[PORTFOLIO_MANAGER] Error getting open positions: {e}")
             return {}
 
-    def get_open_positions_sync(self) -> Dict[str, Any]:
+    def get_open_positions_sync(self) -> dict[str, Any]:
         """
         Synchronous version of get_open_positions for compatibility
-        
+
         Returns:
             Dictionary of open positions keyed by position ID
         """
@@ -1020,11 +1020,11 @@ class PortfolioManager:
     async def force_sync_with_exchange(self, exchange=None, balance_manager=None) -> bool:
         """
         Force synchronization with exchange data
-        
+
         Args:
             exchange: Exchange instance (optional, for compatibility)
             balance_manager: Balance manager instance (optional, for compatibility)
-        
+
         Returns:
             True if sync successful
         """

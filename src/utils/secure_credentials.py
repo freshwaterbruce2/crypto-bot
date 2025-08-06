@@ -15,7 +15,7 @@ Key Features:
 import hashlib
 import logging
 import os
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class SecureCredentials:
     """
     Secure credential management system
-    
+
     Features:
     - Secure API key/secret loading
     - Safe logging without credential exposure
@@ -40,7 +40,7 @@ class SecureCredentials:
     def load_credentials(self) -> bool:
         """
         Securely load credentials from environment
-        
+
         Returns:
             True if credentials loaded successfully
         """
@@ -116,7 +116,7 @@ class SecureCredentials:
             return None
         return self._api_secret
 
-    def get_credentials(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_credentials(self) -> tuple[Optional[str], Optional[str]]:
         """Get both credentials as tuple"""
         return self.get_api_key(), self.get_api_secret()
 
@@ -126,7 +126,7 @@ class SecureCredentials:
             return "unknown"
         return f"key_{self._api_key_hash}"
 
-    def get_validation_status(self) -> Dict[str, Any]:
+    def get_validation_status(self) -> dict[str, Any]:
         """Get validation status without exposing credentials"""
         if not self._is_loaded:
             return {
@@ -182,7 +182,7 @@ def load_credentials() -> bool:
     return get_secure_credentials().load_credentials()
 
 
-def get_api_credentials() -> Tuple[Optional[str], Optional[str]]:
+def get_api_credentials() -> tuple[Optional[str], Optional[str]]:
     """Get API credentials using global instance"""
     return get_secure_credentials().get_credentials()
 
@@ -195,11 +195,11 @@ def get_safe_key_id() -> str:
 def mask_credential(credential: str, show_chars: int = 4) -> str:
     """
     Safely mask credential for logging
-    
+
     Args:
         credential: The credential to mask
         show_chars: Number of characters to show at start/end
-    
+
     Returns:
         Masked credential safe for logging
     """
@@ -230,7 +230,7 @@ def safe_log_credentials():
 def validate_no_credential_logging(text: str) -> bool:
     """
     Validate that text doesn't contain exposed credentials
-    
+
     Returns:
         False if credentials are detected in text
     """
@@ -253,7 +253,7 @@ def validate_no_credential_logging(text: str) -> bool:
 def secure_print(message: str, *args, **kwargs):
     """
     Secure print function that prevents credential exposure
-    
+
     Use this instead of print() for any message that might contain credentials
     """
     if not validate_no_credential_logging(message):
@@ -267,7 +267,7 @@ def secure_print(message: str, *args, **kwargs):
 def secure_logger_wrapper(original_logger):
     """
     Wrap logger to prevent credential exposure
-    
+
     Usage:
         logger = secure_logger_wrapper(logging.getLogger(__name__))
     """

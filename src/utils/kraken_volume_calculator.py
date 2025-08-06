@@ -4,7 +4,6 @@ Ensures all orders meet exchange requirements
 """
 
 from decimal import Decimal
-from typing import Tuple
 
 # Kraken minimum order sizes by base currency
 KRAKEN_MINIMUMS = {
@@ -29,15 +28,15 @@ KRAKEN_MINIMUMS = {
     "BERA": 1.0
 }
 
-def calculate_order_volume(symbol: str, usdt_amount: float, price: float) -> Tuple[float, float]:
+def calculate_order_volume(symbol: str, usdt_amount: float, price: float) -> tuple[float, float]:
     """
     Calculate order volume that meets Kraken minimums
-    
+
     Args:
         symbol: Trading pair (e.g., 'ADA/USDT')
         usdt_amount: Desired order size in USDT
         price: Current price of the asset
-        
+
     Returns:
         Tuple of (volume, actual_usdt_cost)
     """

@@ -4,13 +4,13 @@ Trade Assistant - Core trading operations helper
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class TradeAssistant:
     """Assistant for trade-related operations"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.logger = logging.getLogger(__name__)
 

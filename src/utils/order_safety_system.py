@@ -19,7 +19,7 @@ import logging
 import time
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -47,12 +47,12 @@ class OrderRequest:
 class OrderSafetySystem:
     """
     Comprehensive order safety system with P0 critical fixes
-    
+
     Ensures all orders pass validation before execution to prevent
     systematic rejections and optimize for small balance trading.
     """
 
-    def __init__(self, exchange_wrapper=None, config: Dict[str, Any] = None):
+    def __init__(self, exchange_wrapper=None, config: dict[str, Any] = None):
         self.exchange = exchange_wrapper
         self.config = config or {}
 
@@ -82,11 +82,11 @@ class OrderSafetySystem:
     def validate_minimum_order_size(self, symbol: str, amount_usd: float) -> bool:
         """
         Validate that order meets minimum size requirements
-        
+
         Args:
             symbol: Trading pair symbol (e.g., 'SHIB/USDT')
             amount_usd: Order amount in USD
-            
+
         Returns:
             bool: True if order meets minimum requirements
         """
@@ -121,14 +121,14 @@ class OrderSafetySystem:
             logger.error(f"[ORDER_SAFETY] Error validating minimum order size: {e}")
             return False
 
-    async def validate_buy_order(self, symbol: str, amount_usd: float) -> Dict[str, Any]:
+    async def validate_buy_order(self, symbol: str, amount_usd: float) -> dict[str, Any]:
         """
         Validate buy order feasibility with balance and minimum checks
-        
+
         Args:
             symbol: Trading pair symbol
             amount_usd: Amount to spend in USD
-            
+
         Returns:
             Dict with validation results
         """
@@ -196,14 +196,14 @@ class OrderSafetySystem:
                 'error': str(e)
             }
 
-    async def validate_sell_order(self, symbol: str, amount_tokens: float) -> Dict[str, Any]:
+    async def validate_sell_order(self, symbol: str, amount_tokens: float) -> dict[str, Any]:
         """
         Validate sell order feasibility with balance checks
-        
+
         Args:
             symbol: Trading pair symbol (e.g., 'SHIB/USDT')
             amount_tokens: Amount of tokens to sell
-            
+
         Returns:
             Dict with validation results
         """
@@ -264,14 +264,14 @@ class OrderSafetySystem:
                 'error': str(e)
             }
 
-    async def execute_safe_buy_order(self, symbol: str, amount_usd: float) -> Dict[str, Any]:
+    async def execute_safe_buy_order(self, symbol: str, amount_usd: float) -> dict[str, Any]:
         """
         Execute buy order with comprehensive safety checks
-        
+
         Args:
             symbol: Trading pair symbol
             amount_usd: Amount in USD to spend
-            
+
         Returns:
             Dict with execution results
         """
@@ -329,7 +329,7 @@ class OrderSafetySystem:
                 'amount_usd': amount_usd
             }
 
-    def get_safety_status(self) -> Dict[str, Any]:
+    def get_safety_status(self) -> dict[str, Any]:
         """Get current safety system status"""
         return {
             'circuit_breaker_active': self.circuit_breaker_active,
@@ -346,10 +346,10 @@ class OrderSafetySystem:
 async def safe_buy_order(symbol: str,
                         amount: Union[float, Decimal],
                         exchange_wrapper=None,
-                        config: Dict[str, Any] = None) -> Dict[str, Any]:
+                        config: dict[str, Any] = None) -> dict[str, Any]:
     """
     Execute a safe buy order with all P0 protections
-    
+
     Usage:
         result = await safe_buy_order('SHIB/USDT', 1.0, exchange, config)
     """
@@ -360,10 +360,10 @@ async def safe_buy_order(symbol: str,
 async def safe_sell_order(symbol: str,
                          amount: Union[float, Decimal],
                          exchange_wrapper=None,
-                         config: Dict[str, Any] = None) -> Dict[str, Any]:
+                         config: dict[str, Any] = None) -> dict[str, Any]:
     """
     Execute a safe sell order with all P0 protections
-    
+
     Usage:
         result = await safe_sell_order('SHIB/USDT', 100000, exchange, config)
     """
@@ -420,10 +420,10 @@ async def validate_order_feasibility(symbol: str,
                                    side: str,
                                    amount: Union[float, Decimal],
                                    exchange_wrapper=None,
-                                   config: Dict[str, Any] = None) -> Dict[str, Any]:
+                                   config: dict[str, Any] = None) -> dict[str, Any]:
     """
     Validate order feasibility without executing
-    
+
     Usage:
         result = await validate_order_feasibility('SHIB/USDT', 'buy', 1.0, exchange, config)
     """

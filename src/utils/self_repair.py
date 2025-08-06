@@ -12,7 +12,7 @@ import logging
 import os
 import time
 from datetime import datetime
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class SelfRepairSystem:
     def __init__(self, bot_instance: Any = None):
         """Initialize the self-repair system."""
         self.bot = bot_instance
-        self.repair_actions: Dict[str, RepairAction] = {}
+        self.repair_actions: dict[str, RepairAction] = {}
         self.repair_history = []
         self.diagnostic_results = {}
         self.max_repair_attempts = 3
@@ -111,10 +111,10 @@ class SelfRepairSystem:
         self.repair_actions[repair_action.name] = repair_action
         logger.info(f"[SELF_REPAIR] Registered repair: {repair_action.name}")
 
-    async def diagnose_and_repair(self) -> Dict[str, Any]:
+    async def diagnose_and_repair(self) -> dict[str, Any]:
         """
         Run diagnostics and apply repairs as needed.
-        
+
         Returns:
             Dict with repair results
         """
@@ -342,7 +342,7 @@ class SelfRepairSystem:
             logger.error(f"[SELF_REPAIR] Rate limit repair failed: {e}")
             return False
 
-    def get_repair_history(self) -> List[Dict]:
+    def get_repair_history(self) -> list[dict]:
         """Get repair history."""
         return self.repair_history
 
@@ -388,7 +388,7 @@ class SelfRepairSystem:
             logger.error(f"[SELF_REPAIR] Error validating repair function: {e}")
             return False
 
-    def get_repair_stats(self) -> Dict[str, Any]:
+    def get_repair_stats(self) -> dict[str, Any]:
         """Get repair statistics."""
         total_repairs = len(self.repair_history)
         successful_repairs = sum(1 for r in self.repair_history if r['success'])

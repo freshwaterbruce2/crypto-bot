@@ -10,7 +10,7 @@ for operations on multiple assets or historical data.
 import logging
 import time
 from functools import wraps
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +83,8 @@ class VectorizedPortfolioAnalyzer:
 
     @require_numpy
     def analyze_portfolio_performance(self,
-                                    positions: List[Dict[str, Any]],
-                                    price_history: Dict[str, List[float]]) -> Dict[str, Any]:
+                                    positions: list[dict[str, Any]],
+                                    price_history: dict[str, list[float]]) -> dict[str, Any]:
         """Vectorized portfolio performance analysis"""
         start_time = time.time()
 
@@ -154,10 +154,10 @@ class VectorizedPortfolioAnalyzer:
             return self._empty_portfolio_result()
 
     def _calculate_portfolio_risk_metrics(self,
-                                        symbols: List[str],
+                                        symbols: list[str],
                                         quantities: np.ndarray,
-                                        price_history: Dict[str, List[float]],
-                                        weights: np.ndarray) -> Tuple[float, float]:
+                                        price_history: dict[str, list[float]],
+                                        weights: np.ndarray) -> tuple[float, float]:
         """Calculate portfolio volatility and Sharpe ratio"""
         try:
             # Calculate returns for each asset
@@ -198,7 +198,7 @@ class VectorizedPortfolioAnalyzer:
             logger.error(f"[VECTORIZED] Risk metrics calculation error: {e}")
             return 0.0, 0.0
 
-    def _empty_portfolio_result(self) -> Dict[str, Any]:
+    def _empty_portfolio_result(self) -> dict[str, Any]:
         """Return empty portfolio analysis result"""
         return {
             'total_value': 0.0,
@@ -220,8 +220,8 @@ class VectorizedTechnicalIndicators:
 
     @staticmethod
     @require_numpy
-    def calculate_moving_averages(prices: List[float],
-                                windows: List[int]) -> Dict[int, float]:
+    def calculate_moving_averages(prices: list[float],
+                                windows: list[int]) -> dict[int, float]:
         """Calculate multiple moving averages efficiently"""
         if not prices or not windows:
             return {}
@@ -240,7 +240,7 @@ class VectorizedTechnicalIndicators:
 
     @staticmethod
     @require_numpy
-    def calculate_rsi(prices: List[float], period: int = 14) -> float:
+    def calculate_rsi(prices: list[float], period: int = 14) -> float:
         """Calculate RSI using vectorized operations"""
         if len(prices) < period + 1:
             return 50.0  # Neutral RSI
@@ -264,9 +264,9 @@ class VectorizedTechnicalIndicators:
 
     @staticmethod
     @require_numpy
-    def calculate_bollinger_bands(prices: List[float],
+    def calculate_bollinger_bands(prices: list[float],
                                 period: int = 20,
-                                std_dev: float = 2.0) -> Dict[str, float]:
+                                std_dev: float = 2.0) -> dict[str, float]:
         """Calculate Bollinger Bands"""
         if len(prices) < period:
             last_price = prices[-1] if prices else 0.0
@@ -297,9 +297,9 @@ class VectorizedRiskCalculator:
 
     @staticmethod
     @require_numpy
-    def calculate_position_sizes_batch(balances: List[float],
-                                     risk_percentages: List[float],
-                                     prices: List[float]) -> List[float]:
+    def calculate_position_sizes_batch(balances: list[float],
+                                     risk_percentages: list[float],
+                                     prices: list[float]) -> list[float]:
         """Calculate position sizes for multiple assets simultaneously"""
         if not balances or not risk_percentages or not prices:
             return []
@@ -319,8 +319,8 @@ class VectorizedRiskCalculator:
 
     @staticmethod
     @require_numpy
-    def calculate_portfolio_var(positions: List[Dict[str, Any]],
-                              price_volatilities: Dict[str, float],
+    def calculate_portfolio_var(positions: list[dict[str, Any]],
+                              price_volatilities: dict[str, float],
                               confidence_level: float = 0.95,
                               time_horizon: int = 1) -> float:
         """Calculate Portfolio Value at Risk (VaR)"""
@@ -398,19 +398,19 @@ class PerformanceOptimizer:
                           vectorized_func: callable,
                           fallback_func: callable,
                           test_data: Any,
-                          iterations: int = 100) -> Dict[str, Any]:
+                          iterations: int = 100) -> dict[str, Any]:
         """Benchmark vectorized vs fallback operations"""
 
         # Benchmark vectorized version
         start_time = time.time()
         for _ in range(iterations):
-            vectorized_result = vectorized_func(test_data)
+            vectorized_func(test_data)
         vectorized_time = time.time() - start_time
 
         # Benchmark fallback version
         start_time = time.time()
         for _ in range(iterations):
-            fallback_result = fallback_func(test_data)
+            fallback_func(test_data)
         fallback_time = time.time() - start_time
 
         speedup = fallback_time / vectorized_time if vectorized_time > 0 else 1.0
@@ -431,7 +431,7 @@ class PerformanceOptimizer:
 
         return benchmark_result
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
         return {
             'numpy_available': HAS_NUMPY,

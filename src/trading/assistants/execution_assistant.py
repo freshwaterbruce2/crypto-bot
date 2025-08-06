@@ -4,20 +4,20 @@ Execution Assistant - Trade execution helper
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class ExecutionAssistant:
     """Assistant for trade execution operations"""
 
-    def __init__(self, config: Dict[str, Any], bot_reference: Any = None):
+    def __init__(self, config: dict[str, Any], bot_reference: Any = None):
         self.config = config
         self.bot = bot_reference  # CLAUDE FLOW FIX: Add bot reference for compatibility
         self.bot_reference = bot_reference  # Primary reference
         self.logger = logging.getLogger(__name__)
 
     def prepare_order_parameters(self, symbol: str, side: str, amount: Decimal,
-                               order_type: str = 'market', price: Optional[Decimal] = None) -> Dict[str, Any]:
+                               order_type: str = 'market', price: Optional[Decimal] = None) -> dict[str, Any]:
         """Prepare order parameters for execution"""
         try:
             params = {
@@ -36,7 +36,7 @@ class ExecutionAssistant:
             self.logger.error(f"Order parameter preparation error: {e}")
             return {}
 
-    def validate_execution_conditions(self, symbol: str, market_conditions: Dict[str, Any]) -> bool:
+    def validate_execution_conditions(self, symbol: str, market_conditions: dict[str, Any]) -> bool:
         """Validate if conditions are suitable for execution"""
         try:
             # Basic validation - in real implementation would check volatility, liquidity, etc.

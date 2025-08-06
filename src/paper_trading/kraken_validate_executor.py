@@ -4,7 +4,7 @@ Combines paper trading with Kraken's validate parameter for comprehensive testin
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 from .paper_executor import PaperTradeExecutor
 
@@ -19,7 +19,7 @@ class KrakenValidateIntegratedExecutor(PaperTradeExecutor):
         self.validate_successes = 0
         self.validate_failures = 0
 
-    async def execute(self, request) -> Dict[str, Any]:
+    async def execute(self, request) -> dict[str, Any]:
         """Execute paper trade AND test Kraken validate parameter"""
 
         # First run the paper trade simulation
@@ -36,7 +36,7 @@ class KrakenValidateIntegratedExecutor(PaperTradeExecutor):
 
         return combined_result
 
-    async def _test_kraken_validate(self, request) -> Dict[str, Any]:
+    async def _test_kraken_validate(self, request) -> dict[str, Any]:
         """Test order using Kraken's validate parameter"""
         try:
             self.validate_tests += 1
@@ -90,7 +90,7 @@ class KrakenValidateIntegratedExecutor(PaperTradeExecutor):
                 'kraken_validation': 'error'
             }
 
-    def get_validation_stats(self) -> Dict[str, Any]:
+    def get_validation_stats(self) -> dict[str, Any]:
         """Get Kraken validation test statistics"""
         success_rate = (self.validate_successes / self.validate_tests * 100) if self.validate_tests > 0 else 0
 
@@ -101,7 +101,7 @@ class KrakenValidateIntegratedExecutor(PaperTradeExecutor):
             'validate_success_rate': success_rate
         }
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Enhanced performance summary with validation stats"""
         summary = super().get_performance_summary()
         summary['kraken_validation'] = self.get_validation_stats()

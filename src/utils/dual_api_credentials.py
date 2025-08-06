@@ -9,7 +9,7 @@ Provides a unified interface for accessing the appropriate credentials for each 
 import logging
 import os
 from dataclasses import dataclass
-from typing import Optional, Tuple
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class DualAPICredentialsManager:
             raise ValueError("WebSocket API credentials not available")
         return self._websocket_credentials
 
-    def get_legacy_credentials(self) -> Tuple[str, str]:
+    def get_legacy_credentials(self) -> tuple[str, str]:
         """Get legacy format credentials (api_key, api_secret) - uses REST credentials"""
         rest_creds = self.get_rest_credentials()
         return rest_creds.api_key, rest_creds.api_secret
@@ -149,7 +149,7 @@ def get_websocket_credentials() -> APICredentials:
     return get_credentials_manager().get_websocket_credentials()
 
 
-def get_legacy_credentials() -> Tuple[str, str]:
+def get_legacy_credentials() -> tuple[str, str]:
     """Convenience function to get legacy format credentials"""
     return get_credentials_manager().get_legacy_credentials()
 

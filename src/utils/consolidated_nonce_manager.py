@@ -28,7 +28,7 @@ import threading
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Optional, Union
 from urllib.parse import urlencode
 
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 class KrakenNonceFixer:
     """
     Advanced nonce fix implementation for eliminating 'EAPI:Invalid nonce' errors.
-    
+
     Provides guaranteed-unique, increasing nonce generation with enhanced API integration.
     """
 
@@ -70,7 +70,7 @@ class KrakenNonceFixer:
             logger.debug(f"[NONCE_FIXER] Generated nonce: {nonce}")
             return str(nonce)
 
-    async def make_authenticated_api_call(self, uri_path: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def make_authenticated_api_call(self, uri_path: str, params: dict[str, Any] = None) -> dict[str, Any]:
         """Make authenticated API call with enhanced nonce handling."""
         import aiohttp
 
@@ -159,12 +159,12 @@ class KrakenNonceFixer:
 class ConsolidatedNonceManager:
     """
     THE SINGLE, CONSOLIDATED NONCE MANAGER FOR ALL KRAKEN API OPERATIONS.
-    
+
     This manager consolidates all previous nonce management systems into one
     authoritative implementation that ensures nonces are always increasing,
     even across multiple API connections, REST and WebSocket calls, bot restarts,
     and concurrent operations.
-    
+
     SINGLETON PATTERN: Only one instance can exist to prevent conflicts.
     """
 
@@ -222,11 +222,11 @@ class ConsolidatedNonceManager:
         self._save_counter = 0
 
         # Connection tracking (for debugging/monitoring)
-        self._connection_tracker: Dict[str, int] = {}
-        self._connection_counts: Dict[str, int] = {}
-        self._connection_handlers: Dict[str, Callable] = {}
-        self._nonce_history: Dict[str, list] = {}
-        self._failed_nonces: Dict[str, list] = {}
+        self._connection_tracker: dict[str, int] = {}
+        self._connection_counts: dict[str, int] = {}
+        self._connection_handlers: dict[str, Callable] = {}
+        self._nonce_history: dict[str, list] = {}
+        self._failed_nonces: dict[str, list] = {}
 
         # Statistics and monitoring
         self._total_nonces = 0
@@ -247,7 +247,7 @@ class ConsolidatedNonceManager:
                 with open(self._state_file) as f:
                     data = json.load(f)
                     saved_nonce = data.get('last_nonce', 0)
-                    saved_time = data.get('timestamp', 0)
+                    data.get('timestamp', 0)
 
                     # Validate saved nonce
                     # Use MILLISECONDS
@@ -301,19 +301,19 @@ class ConsolidatedNonceManager:
     def get_nonce(self, connection_id: str = "default") -> str:
         """
         Get the next valid nonce for API operations.
-        
+
         This is the PRIMARY method for getting nonces - all other methods
         should ultimately call this one to ensure consistency.
-        
+
         Thread-safe method that guarantees:
         - Nonces always increase
         - Minimum increment between nonces
         - No collisions across connections
         - Proper state persistence
-        
+
         Args:
             connection_id: Identifier for the connection (for tracking)
-            
+
         Returns:
             String representation of the next nonce
         """
@@ -488,14 +488,14 @@ class ConsolidatedNonceManager:
 
             logger.info(f"[CONSOLIDATED_NONCE] Cleaned up connection: {connection_id}")
 
-    async def make_authenticated_api_call(self, uri_path: str, params: Dict[str, Any] = None) -> Dict[str, Any]:
+    async def make_authenticated_api_call(self, uri_path: str, params: dict[str, Any] = None) -> dict[str, Any]:
         """Make authenticated API call using integrated KrakenNonceFixer."""
         if not self._nonce_fixer:
             raise Exception("KrakenNonceFixer not initialized. Provide API credentials to enable enhanced authentication.")
 
         return await self._nonce_fixer.make_authenticated_api_call(uri_path, params)
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive status and statistics."""
         with self._thread_lock:
             # Use MILLISECONDS
@@ -579,14 +579,14 @@ def get_nonce_coordinator() -> ConsolidatedNonceManager:
 def initialize_enhanced_nonce_manager(api_key: str, api_secret: str) -> ConsolidatedNonceManager:
     """
     Initialize the consolidated nonce manager with enhanced KrakenNonceFixer integration.
-    
+
     This should be called once during application initialization to enable
     the most robust nonce handling for all Kraken API operations.
-    
+
     Args:
         api_key: Kraken API key
         api_secret: Base64-encoded Kraken API secret
-        
+
     Returns:
         Enhanced ConsolidatedNonceManager instance
     """

@@ -12,7 +12,7 @@ import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +45,8 @@ class SellPerformanceStats:
     total_profit_usd: float = 0.0
     success_rate: float = 0.0
     avg_confidence: float = 0.0
-    speed_percentiles: Dict[str, float] = field(default_factory=dict)
-    profit_distribution: Dict[str, int] = field(default_factory=dict)
+    speed_percentiles: dict[str, float] = field(default_factory=dict)
+    profit_distribution: dict[str, int] = field(default_factory=dict)
 
 
 class SellPerformanceMonitor:
@@ -87,7 +87,7 @@ class SellPerformanceMonitor:
             'decision_started': True
         }
 
-    def record_decision_complete(self, decision_id: str, sell_signal: Dict[str, Any]) -> None:
+    def record_decision_complete(self, decision_id: str, sell_signal: dict[str, Any]) -> None:
         """Record completion of sell decision"""
         if decision_id not in self.active_decisions:
             logger.warning(f"[SELL_MONITOR] Unknown decision ID: {decision_id}")
@@ -111,7 +111,7 @@ class SellPerformanceMonitor:
                 'warning'
             )
 
-    def record_execution_complete(self, decision_id: str, execution_result: Dict[str, Any]) -> None:
+    def record_execution_complete(self, decision_id: str, execution_result: dict[str, Any]) -> None:
         """Record completion of sell execution"""
         if decision_id not in self.active_decisions:
             logger.warning(f"[SELL_MONITOR] Unknown decision ID for execution: {decision_id}")
@@ -219,7 +219,7 @@ class SellPerformanceMonitor:
 
         return stats
 
-    def get_real_time_metrics(self) -> Dict[str, Any]:
+    def get_real_time_metrics(self) -> dict[str, Any]:
         """Get real-time performance metrics"""
         stats_1h = self.get_performance_stats(1)
         stats_24h = self.get_performance_stats(24)
@@ -273,7 +273,7 @@ class SellPerformanceMonitor:
             'profit_distribution': stats_1h.profit_distribution
         }
 
-    def get_optimization_recommendations(self) -> List[Dict[str, Any]]:
+    def get_optimization_recommendations(self) -> list[dict[str, Any]]:
         """Get optimization recommendations based on performance analysis"""
         recommendations = []
         stats = self.get_performance_stats(4)  # 4-hour window
@@ -360,7 +360,7 @@ class SellPerformanceMonitor:
             else:
                 return 'F'
 
-    def export_performance_data(self, hours: int = 24) -> Dict[str, Any]:
+    def export_performance_data(self, hours: int = 24) -> dict[str, Any]:
         """Export performance data for analysis"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
         recent_executions = [

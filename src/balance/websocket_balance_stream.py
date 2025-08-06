@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from ..utils.decimal_precision_fix import is_zero, safe_decimal
 
@@ -63,7 +63,7 @@ class BalanceUpdate:
     change_reason: Optional[str] = None
     wallet_type: str = "spot"
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'asset': self.asset,
@@ -82,8 +82,8 @@ class BalanceUpdate:
 class WebSocketBalanceStream:
     """
     WebSocket-primary balance streaming system
-    
-    Provides real-time balance updates by subscribing to Kraken's 'balances' 
+
+    Provides real-time balance updates by subscribing to Kraken's 'balances'
     channel via WebSocket V2. Eliminates REST API dependency for balance operations.
     """
 
@@ -94,7 +94,7 @@ class WebSocketBalanceStream:
                  connection_timeout: float = 10.0):
         """
         Initialize WebSocket balance stream
-        
+
         Args:
             websocket_client: WebSocket V2 client instance
             exchange_client: Exchange client for token refresh
@@ -112,8 +112,8 @@ class WebSocketBalanceStream:
         self._async_lock = asyncio.Lock()
 
         # Balance data storage
-        self.balances: Dict[str, BalanceUpdate] = {}
-        self.balance_history: List[BalanceUpdate] = []
+        self.balances: dict[str, BalanceUpdate] = {}
+        self.balance_history: list[BalanceUpdate] = []
         self.max_history = 1000
 
         # Authentication and connection
@@ -124,9 +124,9 @@ class WebSocketBalanceStream:
         self._permission_denied = False  # Track if API key lacks WebSocket permissions
 
         # Callback management
-        self._balance_callbacks: List[Callable[[BalanceUpdate], None]] = []
-        self._state_callbacks: List[Callable[[BalanceStreamState], None]] = []
-        self._error_callbacks: List[Callable[[Exception], None]] = []
+        self._balance_callbacks: list[Callable[[BalanceUpdate], None]] = []
+        self._state_callbacks: list[Callable[[BalanceStreamState], None]] = []
+        self._error_callbacks: list[Callable[[Exception], None]] = []
 
         # Background tasks
         self._token_refresh_task: Optional[asyncio.Task] = None
@@ -153,7 +153,7 @@ class WebSocketBalanceStream:
     async def start(self) -> bool:
         """
         Start the WebSocket balance streaming system
-        
+
         Returns:
             True if started successfully
         """
@@ -242,16 +242,16 @@ class WebSocketBalanceStream:
 
                     if 'EGeneral:Permission denied' in error_msg:
                         logger.error("""[WEBSOCKET_BALANCE_STREAM] ❌ WEBSOCKET PERMISSION ERROR!
-                        
+
                         Your API key doesn't have 'Access WebSockets API' permission.
-                        
+
                         TO FIX:
                         1. Log into Kraken.com
                         2. Go to Security -> API
-                        3. Edit your API key  
+                        3. Edit your API key
                         4. Check 'Access WebSockets API'
                         5. Save and restart bot
-                        
+
                         FALLBACK: Bot will use REST-only mode for balance updates.""")
 
                         # Set a special flag to indicate permission denied
@@ -521,16 +521,16 @@ class WebSocketBalanceStream:
                 error_msg = str(sub_error).lower()
                 if 'credentials' in error_msg or 'permission' in error_msg or 'access' in error_msg:
                     logger.error("""[WEBSOCKET_BALANCE_STREAM] WEBSOCKET PERMISSION ERROR!
-                    
+
                     Your API key doesn't have 'Access WebSockets API' permission.
-                    
+
                     TO FIX:
                     1. Log into Kraken.com
                     2. Go to Security -> API
-                    3. Edit your API key  
+                    3. Edit your API key
                     4. Check 'Access WebSockets API'
                     5. Save and restart bot
-                    
+
                     Current permissions might be missing WebSocket access.""")
                 elif 'invalid' in error_msg or 'expired' in error_msg:
                     logger.error("[WEBSOCKET_BALANCE_STREAM] Authentication token issue - try restarting bot to get fresh token")
@@ -544,10 +544,10 @@ class WebSocketBalanceStream:
             self.stats['errors'] += 1
             return False
 
-    async def _handle_websocket_balance_update(self, balance_data: List[Dict[str, Any]]):
+    async def _handle_websocket_balance_update(self, balance_data: list[dict[str, Any]]):
         """
         Handle balance updates from WebSocket V2
-        
+
         Args:
             balance_data: List of balance update dictionaries from WebSocket
         """
@@ -732,13 +732,13 @@ class WebSocketBalanceStream:
 
     # Public API methods
 
-    def get_balance(self, asset: str) -> Optional[Dict[str, Any]]:
+    def get_balance(self, asset: str) -> Optional[dict[str, Any]]:
         """
         Get current balance for asset
-        
+
         Args:
             asset: Asset symbol (e.g., 'USDT', 'BTC')
-            
+
         Returns:
             Balance dictionary or None if not found
         """
@@ -746,10 +746,10 @@ class WebSocketBalanceStream:
             balance_update = self.balances.get(asset)
             return balance_update.to_dict() if balance_update else None
 
-    def get_all_balances(self) -> Dict[str, Dict[str, Any]]:
+    def get_all_balances(self) -> dict[str, dict[str, Any]]:
         """
         Get all current balances
-        
+
         Returns:
             Dictionary of all balances keyed by asset
         """
@@ -783,7 +783,7 @@ class WebSocketBalanceStream:
         self._error_callbacks.append(callback)
         logger.debug("[WEBSOCKET_BALANCE_STREAM] Registered error callback")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive status information"""
         with self._lock:
             uptime = time.time() - self.stats['uptime_start'] if self.stats['uptime_start'] > 0 else 0
@@ -809,14 +809,14 @@ class WebSocketBalanceStream:
                                           else float('inf'))
             }
 
-    def get_balance_history(self, asset: Optional[str] = None, limit: int = 100) -> List[Dict[str, Any]]:
+    def get_balance_history(self, asset: Optional[str] = None, limit: int = 100) -> list[dict[str, Any]]:
         """
         Get balance change history
-        
+
         Args:
             asset: Specific asset to filter by (optional)
             limit: Maximum number of entries to return
-            
+
         Returns:
             List of balance history entries
         """

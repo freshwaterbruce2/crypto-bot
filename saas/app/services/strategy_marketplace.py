@@ -9,7 +9,7 @@ revenue sharing, and strategy management.
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -152,7 +152,7 @@ class StrategyMarketplace:
         max_price: float = None,
         risk_level: str = None,
         sort_by: str = "popularity"
-    ) -> List[Strategy]:
+    ) -> list[Strategy]:
         """Get strategies from marketplace with filtering"""
         async with get_db_session() as session:
             stmt = select(Strategy).options(
@@ -160,7 +160,7 @@ class StrategyMarketplace:
             ).where(
                 and_(
                     Strategy.status == "approved",
-                    Strategy.is_public == True
+                    Strategy.is_public
                 )
             )
 
@@ -204,7 +204,7 @@ class StrategyMarketplace:
             result = await session.execute(stmt)
             return result.scalars().all()
 
-    async def get_strategy_details(self, strategy_id: int, user_id: int = None) -> Dict[str, Any]:
+    async def get_strategy_details(self, strategy_id: int, user_id: int = None) -> dict[str, Any]:
         """Get detailed strategy information"""
         async with get_db_session() as session:
             strategy = await session.get(
@@ -283,7 +283,7 @@ class StrategyMarketplace:
         strategy_id: int,
         buyer_id: int,
         payment_method: str = "stripe"
-    ) -> Tuple[StrategyPurchase, str]:
+    ) -> tuple[StrategyPurchase, str]:
         """Purchase a strategy from the marketplace"""
         async with get_db_session() as session:
             strategy = await session.get(Strategy, strategy_id, options=[selectinload(Strategy.owner)])
@@ -450,7 +450,7 @@ class StrategyMarketplace:
         self,
         strategy_id: int,
         user_id: int,
-        backtest_params: Dict[str, Any]
+        backtest_params: dict[str, Any]
     ) -> StrategyBacktest:
         """Run backtest for a strategy"""
         async with get_db_session() as session:
@@ -508,14 +508,14 @@ class StrategyMarketplace:
             await session.commit()
             return backtest
 
-    async def get_user_strategies(self, user_id: int) -> List[Strategy]:
+    async def get_user_strategies(self, user_id: int) -> list[Strategy]:
         """Get strategies owned by user"""
         async with get_db_session() as session:
             stmt = select(Strategy).where(Strategy.owner_id == user_id).order_by(desc(Strategy.created_at))
             result = await session.execute(stmt)
             return result.scalars().all()
 
-    async def get_user_purchases(self, user_id: int) -> List[StrategyPurchase]:
+    async def get_user_purchases(self, user_id: int) -> list[StrategyPurchase]:
         """Get strategies purchased by user"""
         async with get_db_session() as session:
             stmt = select(StrategyPurchase).options(
@@ -530,7 +530,7 @@ class StrategyMarketplace:
             result = await session.execute(stmt)
             return result.scalars().all()
 
-    async def get_marketplace_stats(self) -> Dict[str, Any]:
+    async def get_marketplace_stats(self) -> dict[str, Any]:
         """Get marketplace statistics"""
         async with get_db_session() as session:
             # Strategy counts
@@ -580,7 +580,7 @@ class StrategyMarketplace:
         required_keywords = ["def", "class", "return"]
         return any(keyword in code for keyword in required_keywords)
 
-    async def _validate_strategy_for_publication(self, strategy: Strategy) -> Dict[str, Any]:
+    async def _validate_strategy_for_publication(self, strategy: Strategy) -> dict[str, Any]:
         """Validate strategy before publication"""
         # In production, this would run comprehensive tests
         validation_issues = []
@@ -633,7 +633,7 @@ class StrategyMarketplace:
             strategy.review_count = review_count or 0
             strategy.updated_at = datetime.utcnow()
 
-    async def _run_backtest_simulation(self, strategy: Strategy, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def _run_backtest_simulation(self, strategy: Strategy, params: dict[str, Any]) -> dict[str, Any]:
         """Run backtest simulation (mock implementation)"""
         # This would integrate with the actual trading bot's backtesting engine
         # For now, return mock results

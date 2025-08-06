@@ -17,7 +17,7 @@ Features:
 import asyncio
 import logging
 import weakref
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .unified_websocket_data_pipeline import (
     DataChannel,
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class WebSocketPipelineIntegrator:
     """
     Integration layer for the unified WebSocket data pipeline
-    
+
     Handles automatic component discovery, registration, and coordination
     with the existing bot architecture.
     """
@@ -40,7 +40,7 @@ class WebSocketPipelineIntegrator:
     def __init__(self, websocket_manager, bot_instance=None):
         """
         Initialize the pipeline integrator
-        
+
         Args:
             websocket_manager: WebSocket V2 manager instance
             bot_instance: Main bot instance for component discovery
@@ -81,10 +81,10 @@ class WebSocketPipelineIntegrator:
     async def integrate_with_bot(self, bot_instance=None) -> bool:
         """
         Integrate pipeline with bot components
-        
+
         Args:
             bot_instance: Bot instance to discover components from
-            
+
         Returns:
             True if integration successful
         """
@@ -316,7 +316,7 @@ class WebSocketPipelineIntegrator:
             except Exception as e:
                 logger.error(f"[INTEGRATION] Error in health monitor: {e}")
 
-    def get_integration_status(self) -> Dict[str, Any]:
+    def get_integration_status(self) -> dict[str, Any]:
         """Get integration status and health information"""
         status = {
             'integrated': self._integrated,
@@ -341,7 +341,7 @@ class WebSocketPipelineIntegrator:
 
         return status
 
-    async def manual_route_balance_update(self, balance_data: Dict[str, Any]) -> bool:
+    async def manual_route_balance_update(self, balance_data: dict[str, Any]) -> bool:
         """Manually route balance update through pipeline"""
         if not self._integrated:
             logger.warning("[INTEGRATION] Not integrated, cannot route balance update")
@@ -349,7 +349,7 @@ class WebSocketPipelineIntegrator:
 
         return await self.pipeline.route_balance_update(balance_data)
 
-    async def manual_route_ticker_update(self, symbol: str, ticker_data: Dict[str, Any]) -> bool:
+    async def manual_route_ticker_update(self, symbol: str, ticker_data: dict[str, Any]) -> bool:
         """Manually route ticker update through pipeline"""
         if not self._integrated:
             logger.warning("[INTEGRATION] Not integrated, cannot route ticker update")
@@ -358,7 +358,7 @@ class WebSocketPipelineIntegrator:
         ticker_data['symbol'] = symbol
         return await self.pipeline.route_ticker_update(ticker_data)
 
-    async def manual_route_execution_update(self, execution_data: Dict[str, Any]) -> bool:
+    async def manual_route_execution_update(self, execution_data: dict[str, Any]) -> bool:
         """Manually route execution update through pipeline"""
         if not self._integrated:
             logger.warning("[INTEGRATION] Not integrated, cannot route execution update")
@@ -366,7 +366,7 @@ class WebSocketPipelineIntegrator:
 
         return await self.pipeline.route_execution_update(execution_data)
 
-    def register_additional_component(self, name: str, component: Any, channels: List[str]):
+    def register_additional_component(self, name: str, component: Any, channels: list[str]):
         """Register additional component with the pipeline"""
         if not self._integrated:
             logger.warning("[INTEGRATION] Not integrated, cannot register component")
@@ -403,11 +403,11 @@ class WebSocketPipelineIntegrator:
 async def setup_websocket_pipeline(websocket_manager, bot_instance) -> Optional[WebSocketPipelineIntegrator]:
     """
     Convenience function to setup WebSocket pipeline integration
-    
+
     Args:
         websocket_manager: WebSocket V2 manager
         bot_instance: Main bot instance
-        
+
     Returns:
         WebSocketPipelineIntegrator instance if successful, None otherwise
     """

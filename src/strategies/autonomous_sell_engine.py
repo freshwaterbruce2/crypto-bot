@@ -8,7 +8,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class SellOrder:
     entry_time: float = 0.0
     current_profit_pct: float = 0.0
     retries: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def age_minutes(self) -> float:
         """Get order age in minutes"""
@@ -161,7 +161,7 @@ class AutonomousSellEngine:
     def schedule_sell(self, symbol: str, amount: float, trigger: SellTrigger,
                      urgency: SellUrgency = SellUrgency.MEDIUM,
                      entry_price: float = 0.0, entry_time: float = 0.0,
-                     metadata: Dict[str, Any] = None) -> bool:
+                     metadata: dict[str, Any] = None) -> bool:
         """Schedule a sell order"""
         try:
             sell_order = SellOrder(
@@ -212,7 +212,7 @@ class AutonomousSellEngine:
             logger.error(f"[SELL_ENGINE] Error cancelling sell for {symbol}: {e}")
             return False
 
-    def get_pending_sells(self) -> List[SellOrder]:
+    def get_pending_sells(self) -> list[SellOrder]:
         """Get all pending sell orders"""
         return list(self.pending_sells.values())
 
@@ -283,7 +283,7 @@ class AutonomousSellEngine:
                 except Exception as e:
                     logger.error(f"[SELL_ENGINE] Error processing sell order for {sell_order.symbol}: {e}")
 
-    def _should_execute_sell(self, sell_order: SellOrder) -> Tuple[bool, str]:
+    def _should_execute_sell(self, sell_order: SellOrder) -> tuple[bool, str]:
         """Enhanced sell execution logic with micro-profit optimization"""
         try:
             current_price = self.price_cache.get(sell_order.symbol, 0)
@@ -438,10 +438,10 @@ class AutonomousSellEngine:
             if current_price > 0:
                 sell_order.update_profit(current_price)
 
-    async def on_position_update(self, symbol: str, position_data: Dict[str, Any]):
+    async def on_position_update(self, symbol: str, position_data: dict[str, Any]):
         """
         Handle position updates from portfolio scanner (2025 compliant).
-        
+
         Args:
             symbol: Trading symbol (e.g., 'ALGO/USDT')
             position_data: Position information with amount, entry_price, etc.
@@ -477,7 +477,7 @@ class AutonomousSellEngine:
         except Exception as e:
             logger.error(f"[SELL_ENGINE] Error handling position update for {symbol}: {e}")
 
-    def get_engine_stats(self) -> Dict[str, Any]:
+    def get_engine_stats(self) -> dict[str, Any]:
         """Get engine performance statistics"""
         return {
             'is_running': self.is_running,

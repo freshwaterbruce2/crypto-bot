@@ -7,7 +7,7 @@ Authentication, authorization, and security middleware for the SaaS platform.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 import jwt
 import redis.asyncio as redis
@@ -44,7 +44,7 @@ class SecurityManager:
         """Verify a password against its hash"""
         return pwd_context.verify(plain_password, hashed_password)
 
-    def create_access_token(self, data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
+    def create_access_token(self, data: dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
         """Create JWT access token"""
         to_encode = data.copy()
 
@@ -57,7 +57,7 @@ class SecurityManager:
         encoded_jwt = jwt.encode(to_encode, self.settings.SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
-    def create_refresh_token(self, data: Dict[str, Any]) -> str:
+    def create_refresh_token(self, data: dict[str, Any]) -> str:
         """Create JWT refresh token"""
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(days=self.settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -65,7 +65,7 @@ class SecurityManager:
         encoded_jwt = jwt.encode(to_encode, self.settings.SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
-    def verify_token(self, token: str, token_type: str = "access") -> Dict[str, Any]:
+    def verify_token(self, token: str, token_type: str = "access") -> dict[str, Any]:
         """Verify and decode JWT token"""
         try:
             payload = jwt.decode(token, self.settings.SECRET_KEY, algorithms=[ALGORITHM])
@@ -207,7 +207,7 @@ class APIKeyManager:
         return f"ctb_{secrets.token_urlsafe(32)}"
 
     @staticmethod
-    async def validate_api_key(api_key: str) -> Optional[Dict[str, Any]]:
+    async def validate_api_key(api_key: str) -> Optional[dict[str, Any]]:
         """Validate API key and return associated user/permissions"""
         try:
             # Get API key from database
@@ -241,7 +241,7 @@ class APIKeyManager:
             return None
 
 
-async def verify_api_key(request: Request) -> Dict[str, Any]:
+async def verify_api_key(request: Request) -> dict[str, Any]:
     """Verify API key from request headers"""
     api_key = request.headers.get("X-API-Key")
 

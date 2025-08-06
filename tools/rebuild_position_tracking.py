@@ -19,7 +19,7 @@ import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -29,7 +29,7 @@ import ccxt
 from src.config import load_config
 
 
-async def get_recent_trades(exchange, hours=24) -> List[Dict[str, Any]]:
+async def get_recent_trades(exchange, hours=24) -> list[dict[str, Any]]:
     """Fetch recent trades from exchange."""
     print(f"\n[SCAN] Fetching trades from last {hours} hours...")
 
@@ -55,7 +55,7 @@ async def get_recent_trades(exchange, hours=24) -> List[Dict[str, Any]]:
         return []
 
 
-async def get_current_balances(exchange) -> Dict[str, float]:
+async def get_current_balances(exchange) -> dict[str, float]:
     """Get current non-zero balances."""
     print("\n[SCAN] Fetching current balances...")
 
@@ -75,7 +75,7 @@ async def get_current_balances(exchange) -> Dict[str, float]:
         return {}
 
 
-async def match_trades_to_holdings(trades: List[Dict], holdings: Dict[str, float]) -> Dict[str, Dict]:
+async def match_trades_to_holdings(trades: list[dict], holdings: dict[str, float]) -> dict[str, dict]:
     """Match buy trades to current holdings to determine entry prices."""
     print("\n[MATCH] Analyzing trades to determine entry prices...")
 
@@ -134,7 +134,7 @@ async def rebuild_position_tracking():
     print("=" * 60)
 
     # Load config and create exchange
-    config = load_config()
+    load_config()
     exchange = ccxt.kraken({
         'apiKey': os.getenv('KRAKEN_API_KEY'),
         'secret': os.getenv('KRAKEN_API_SECRET'),

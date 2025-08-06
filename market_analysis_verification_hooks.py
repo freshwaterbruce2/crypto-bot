@@ -18,7 +18,6 @@ import asyncio
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ class MarketAnalysisHook:
         self.analysis_cache = {}
         self.last_analysis = {}
 
-    async def analyze_market_conditions(self, pairs: List[str]) -> Dict:
+    async def analyze_market_conditions(self, pairs: list[str]) -> dict:
         """Analyze current market conditions for trading pairs"""
         logger.info("📊 Analyzing market conditions...")
 
@@ -68,7 +67,6 @@ class MarketAnalysisHook:
         """Get overall crypto market sentiment"""
         # Simulate market sentiment analysis
         # In production, this would aggregate multiple sources
-        sentiments = ['bullish', 'bearish', 'neutral', 'mixed']
 
         # Simple simulation based on time of day
         hour = datetime.now().hour
@@ -86,7 +84,7 @@ class MarketAnalysisHook:
         import random
         return round(random.uniform(0.3, 0.7), 2)
 
-    async def _analyze_pair(self, pair: str) -> Dict:
+    async def _analyze_pair(self, pair: str) -> dict:
         """Analyze individual trading pair"""
         # Cache check
         cache_key = f"{pair}_{datetime.now().strftime('%Y%m%d%H')}"
@@ -125,7 +123,7 @@ class MarketAnalysisHook:
         self.analysis_cache[cache_key] = analysis
         return analysis
 
-    async def verify_strategy_performance(self, strategy: str, results: Dict) -> Dict:
+    async def verify_strategy_performance(self, strategy: str, results: dict) -> dict:
         """Verify strategy performance against market benchmarks"""
         logger.info(f"🔍 Verifying {strategy} performance...")
 
@@ -166,7 +164,7 @@ class StrategyOptimizationHook:
     def __init__(self):
         self.optimization_history = []
 
-    async def optimize_trading_parameters(self, current_params: Dict, performance: Dict) -> Dict:
+    async def optimize_trading_parameters(self, current_params: dict, performance: dict) -> dict:
         """Optimize trading parameters based on performance"""
         logger.info("🔧 Optimizing trading parameters...")
 
@@ -223,7 +221,7 @@ class StrategyOptimizationHook:
 
         return optimized
 
-    async def suggest_strategy_changes(self, current_strategy: str, market_analysis: Dict) -> List[str]:
+    async def suggest_strategy_changes(self, current_strategy: str, market_analysis: dict) -> list[str]:
         """Suggest strategy changes based on market conditions"""
         suggestions = []
 
@@ -259,7 +257,7 @@ class RiskAssessmentHook:
     def __init__(self):
         self.risk_metrics = {}
 
-    async def assess_portfolio_risk(self, positions: List[Dict], market_data: Dict) -> Dict:
+    async def assess_portfolio_risk(self, positions: list[dict], market_data: dict) -> dict:
         """Assess current portfolio risk level"""
         logger.info("⚠️ Assessing portfolio risk...")
 
@@ -316,7 +314,7 @@ class RiskAssessmentHook:
 
         return risk_assessment
 
-    async def generate_risk_mitigation_plan(self, risk_assessment: Dict) -> Dict:
+    async def generate_risk_mitigation_plan(self, risk_assessment: dict) -> dict:
         """Generate automated risk mitigation plan"""
         plan = {
             'actions': [],
@@ -358,7 +356,7 @@ class PerformanceValidationHook:
     def __init__(self):
         self.performance_history = []
 
-    async def validate_trading_performance(self, trades: List[Dict], timeframe: str = '24h') -> Dict:
+    async def validate_trading_performance(self, trades: list[dict], timeframe: str = '24h') -> dict:
         """Validate trading performance against expectations"""
         logger.info(f"📈 Validating trading performance ({timeframe})...")
 
@@ -428,7 +426,7 @@ class PerformanceValidationHook:
 
         return validation
 
-    async def generate_performance_report(self) -> Dict:
+    async def generate_performance_report(self) -> dict:
         """Generate comprehensive performance report"""
         logger.info("📊 Generating performance report...")
 
@@ -546,7 +544,7 @@ class AutomatedHookSystem:
                 logger.error(f"Error in validation loop: {e}")
                 await asyncio.sleep(60)
 
-    async def generate_comprehensive_report(self) -> Dict:
+    async def generate_comprehensive_report(self) -> dict:
         """Generate comprehensive system report"""
         return {
             'timestamp': datetime.now().isoformat(),

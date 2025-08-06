@@ -27,7 +27,7 @@ import time
 from collections import defaultdict, deque
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class HighFrequencyLogSampler:
@@ -267,7 +267,7 @@ class LogHealthMonitor:
             if level in ['ERROR', 'CRITICAL']:
                 self.error_counts[module] += 1
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Generate health report"""
         with self.lock:
             uptime_hours = (time.time() - self.start_time) / 3600
@@ -283,7 +283,7 @@ class LogHealthMonitor:
                 "last_check": datetime.fromtimestamp(self.last_health_check).isoformat()
             }
 
-    def check_health(self) -> List[str]:
+    def check_health(self) -> list[str]:
         """Check log system health and return issues"""
         issues = []
 
@@ -521,7 +521,7 @@ class ProfessionalLoggingSystem:
 
         return logger
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Get comprehensive health report"""
         return self.health_monitor.get_health_report()
 
@@ -586,7 +586,7 @@ def get_professional_logger(name: str) -> logging.Logger:
     return _logging_system.get_logger(name)
 
 
-def get_logging_health_report() -> Dict[str, Any]:
+def get_logging_health_report() -> dict[str, Any]:
     """Get logging system health report"""
     if _logging_system is None:
         return {"error": "Logging system not initialized"}

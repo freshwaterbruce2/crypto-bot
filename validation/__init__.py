@@ -5,14 +5,14 @@ This package provides complete validation and testing capabilities for the
 crypto trading bot system, ensuring production readiness through:
 
 - Integration testing across all components
-- Component compatibility verification  
+- Component compatibility verification
 - Error recovery and resilience testing
 - Realistic trading scenario validation
 - Final system readiness assessment
 
 Usage:
     python -m validation.final_report_generator
-    
+
 Components:
     - integration_validator: End-to-end integration testing
     - component_compatibility: Interface and dependency validation

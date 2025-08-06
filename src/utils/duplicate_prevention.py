@@ -7,7 +7,7 @@ import ast
 import hashlib
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +17,11 @@ class DuplicateDetector:
 
     def __init__(self, project_root: str):
         self.project_root = Path(project_root)
-        self.function_signatures: Dict[str, List[Tuple[str, int]]] = {}
-        self.code_hashes: Dict[str, List[Tuple[str, int, str]]] = {}
+        self.function_signatures: dict[str, list[tuple[str, int]]] = {}
+        self.code_hashes: dict[str, list[tuple[str, int, str]]] = {}
         self.duplicate_threshold = 0.8  # 80% similarity threshold
 
-    def scan_project(self) -> Dict[str, Any]:
+    def scan_project(self) -> dict[str, Any]:
         """Scan entire project for duplicate code"""
         results = {
             'duplicate_functions': [],
@@ -76,7 +76,7 @@ class DuplicateDetector:
 
         # Create function signature
         args = [arg.arg for arg in node.args.args]
-        signature = f"{func_name}({', '.join(args)})"
+        f"{func_name}({', '.join(args)})"
 
         # Store function location
         if func_name not in self.function_signatures:
@@ -123,14 +123,14 @@ class DuplicateDetector:
                 lines.append(line)
         return '\n'.join(lines)
 
-    def _find_duplicate_functions(self) -> List[Dict[str, Any]]:
+    def _find_duplicate_functions(self) -> list[dict[str, Any]]:
         """Find functions with identical names in multiple files"""
         duplicates = []
 
         for func_name, locations in self.function_signatures.items():
             if len(locations) > 1:
                 # Check if these are actually different implementations
-                unique_files = set(loc[0] for loc in locations)
+                unique_files = {loc[0] for loc in locations}
                 if len(unique_files) > 1:
                     duplicates.append({
                         'function_name': func_name,
@@ -141,13 +141,13 @@ class DuplicateDetector:
 
         return sorted(duplicates, key=lambda x: x['duplicate_count'], reverse=True)
 
-    def _find_duplicate_code_blocks(self) -> List[Dict[str, Any]]:
+    def _find_duplicate_code_blocks(self) -> list[dict[str, Any]]:
         """Find identical code blocks across files"""
         duplicates = []
 
         for code_hash, locations in self.code_hashes.items():
             if len(locations) > 1:
-                unique_files = set(loc[0] for loc in locations)
+                unique_files = {loc[0] for loc in locations}
                 if len(unique_files) > 1:
                     duplicates.append({
                         'code_hash': code_hash,
@@ -158,7 +158,7 @@ class DuplicateDetector:
 
         return sorted(duplicates, key=lambda x: x['duplicate_count'], reverse=True)
 
-    def _find_similar_patterns(self) -> List[Dict[str, Any]]:
+    def _find_similar_patterns(self) -> list[dict[str, Any]]:
         """Find similar code patterns using fuzzy matching"""
         similar_patterns = []
 
@@ -167,7 +167,7 @@ class DuplicateDetector:
 
         return similar_patterns
 
-    def generate_report(self, results: Dict[str, Any]) -> str:
+    def generate_report(self, results: dict[str, Any]) -> str:
         """Generate a readable duplicate code report"""
         report = []
         report.append("=" * 60)
@@ -213,7 +213,7 @@ class DuplicationPrevention:
         """Add a pattern to the duplication whitelist"""
         self.whitelist_patterns.add(pattern)
 
-    def check_file_before_commit(self, file_path: str) -> Dict[str, Any]:
+    def check_file_before_commit(self, file_path: str) -> dict[str, Any]:
         """Check a file for potential duplications before commit"""
         try:
             # Run duplicate detection on the specific file
@@ -240,7 +240,7 @@ class DuplicationPrevention:
                 'error': str(e)
             }
 
-    def _generate_recommendation(self, duplicates: List[Dict[str, Any]]) -> str:
+    def _generate_recommendation(self, duplicates: list[dict[str, Any]]) -> str:
         """Generate recommendations for fixing duplicates"""
         if not duplicates:
             return "No duplicates detected."
@@ -263,7 +263,7 @@ class DuplicationPrevention:
 
         return "\n".join(recommendations)
 
-    def create_refactoring_plan(self, results: Dict[str, Any]) -> Dict[str, Any]:
+    def create_refactoring_plan(self, results: dict[str, Any]) -> dict[str, Any]:
         """Create a plan for refactoring duplicate code"""
         plan = {
             'high_priority': [],
@@ -295,7 +295,7 @@ class DuplicationPrevention:
         return plan
 
 
-def scan_for_duplicates(project_root: str = None) -> Dict[str, Any]:
+def scan_for_duplicates(project_root: str = None) -> dict[str, Any]:
     """Convenience function to scan for duplicates"""
     if project_root is None:
         project_root = Path.cwd()
@@ -314,7 +314,7 @@ def generate_duplicate_report(project_root: str = None) -> str:
     return detector.generate_report(results)
 
 
-def check_for_new_duplicates(file_path: str, project_root: str = None) -> Dict[str, Any]:
+def check_for_new_duplicates(file_path: str, project_root: str = None) -> dict[str, Any]:
     """Check if a file introduces new duplicates"""
     if project_root is None:
         project_root = Path.cwd()

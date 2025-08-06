@@ -61,7 +61,7 @@ async def test_exchange_connection():
             return False
 
         api_key, api_secret = creds
-        exchange = NativeKrakenExchange(api_key, api_secret)
+        NativeKrakenExchange(api_key, api_secret)
 
         # Test connection without actual API call
         print("✅ Exchange client initialized successfully")

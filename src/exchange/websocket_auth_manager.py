@@ -8,7 +8,7 @@ import hashlib
 import hmac
 import logging
 import time
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from .websocket_manager import KrakenWebSocketManager, WebSocketMessage
 
@@ -28,7 +28,7 @@ class WebSocketAuthManager:
                  auth_endpoint: str = "wss://ws-auth.kraken.com"):
         """
         Initialize the WebSocket authentication manager.
-        
+
         Args:
             api_key: Kraken API key
             api_secret: Kraken API secret
@@ -56,7 +56,7 @@ class WebSocketAuthManager:
     async def authenticate(self) -> bool:
         """
         Authenticate with the WebSocket API.
-        
+
         Returns:
             True if authentication successful
         """
@@ -81,7 +81,7 @@ class WebSocketAuthManager:
     async def _get_auth_token(self) -> Optional[str]:
         """
         Get authentication token from Kraken REST API.
-        
+
         Returns:
             Authentication token or None if failed
         """
@@ -153,11 +153,11 @@ class WebSocketAuthManager:
     def _sign_message(self, message: str, path: str) -> str:
         """
         Sign a message with the API secret.
-        
+
         Args:
             message: Message to sign
             path: API path
-            
+
         Returns:
             Base64 encoded signature
         """
@@ -181,11 +181,11 @@ class WebSocketAuthManager:
     async def subscribe_private(self, subscription_name: str, **kwargs) -> bool:
         """
         Subscribe to a private WebSocket channel.
-        
+
         Args:
             subscription_name: Name of the private subscription
             **kwargs: Additional subscription parameters
-            
+
         Returns:
             True if subscription successful
         """
@@ -220,10 +220,10 @@ class WebSocketAuthManager:
     async def unsubscribe_private(self, subscription_name: str) -> bool:
         """
         Unsubscribe from a private WebSocket channel.
-        
+
         Args:
             subscription_name: Name of the private subscription
-            
+
         Returns:
             True if unsubscription successful
         """
@@ -258,7 +258,7 @@ class WebSocketAuthManager:
     def add_private_handler(self, channel: str, handler: Callable[[WebSocketMessage], None]) -> None:
         """
         Add a message handler for a private channel.
-        
+
         Args:
             channel: Private channel name
             handler: Handler function
@@ -273,7 +273,7 @@ class WebSocketAuthManager:
     async def handle_private_message(self, message: WebSocketMessage) -> None:
         """
         Handle private channel messages.
-        
+
         Args:
             message: WebSocket message
         """
@@ -296,7 +296,7 @@ class WebSocketAuthManager:
     async def subscribe_to_orders(self) -> bool:
         """
         Subscribe to order updates.
-        
+
         Returns:
             True if subscription successful
         """
@@ -305,7 +305,7 @@ class WebSocketAuthManager:
     async def subscribe_to_trades(self) -> bool:
         """
         Subscribe to trade updates.
-        
+
         Returns:
             True if subscription successful
         """
@@ -314,16 +314,16 @@ class WebSocketAuthManager:
     async def subscribe_to_balances(self) -> bool:
         """
         Subscribe to balance updates.
-        
+
         Returns:
             True if subscription successful
         """
         return await self.subscribe_private("balances")
 
-    def setup_order_handler(self, handler: Callable[[Dict[str, Any]], None]) -> None:
+    def setup_order_handler(self, handler: Callable[[dict[str, Any]], None]) -> None:
         """
         Set up handler for order updates.
-        
+
         Args:
             handler: Function to handle order updates
         """
@@ -341,10 +341,10 @@ class WebSocketAuthManager:
         self.add_private_handler("openOrders", order_message_handler)
         logger.info("Order handler set up")
 
-    def setup_trade_handler(self, handler: Callable[[Dict[str, Any]], None]) -> None:
+    def setup_trade_handler(self, handler: Callable[[dict[str, Any]], None]) -> None:
         """
         Set up handler for trade updates.
-        
+
         Args:
             handler: Function to handle trade updates
         """
@@ -362,10 +362,10 @@ class WebSocketAuthManager:
         self.add_private_handler("ownTrades", trade_message_handler)
         logger.info("Trade handler set up")
 
-    def setup_balance_handler(self, handler: Callable[[Dict[str, Any]], None]) -> None:
+    def setup_balance_handler(self, handler: Callable[[dict[str, Any]], None]) -> None:
         """
         Set up handler for balance updates.
-        
+
         Args:
             handler: Function to handle balance updates
         """
@@ -387,7 +387,7 @@ class WebSocketAuthManager:
         """Check if authenticated."""
         return self.authenticated
 
-    def get_auth_status(self) -> Dict[str, Any]:
+    def get_auth_status(self) -> dict[str, Any]:
         """Get authentication status."""
         return {
             'authenticated': self.authenticated,
@@ -400,7 +400,7 @@ class WebSocketAuthManager:
     async def refresh_authentication(self) -> bool:
         """
         Refresh authentication token.
-        
+
         Returns:
             True if refresh successful
         """
@@ -413,11 +413,10 @@ class WebSocketAuthManager:
                 return False
 
             # Update token
-            old_token = self.auth_token
             self.auth_token = new_token
 
             # Resubscribe to all private channels with new token
-            for subscription_name, subscription_msg in self.private_subscriptions.items():
+            for _subscription_name, subscription_msg in self.private_subscriptions.items():
                 subscription_msg['subscription']['token'] = new_token
                 await self.websocket_manager._send_message(subscription_msg)
 
@@ -428,7 +427,7 @@ class WebSocketAuthManager:
             logger.error(f"Error refreshing authentication: {e}")
             return False
 
-    def get_private_subscriptions(self) -> Dict[str, Any]:
+    def get_private_subscriptions(self) -> dict[str, Any]:
         """Get all private subscriptions."""
         return self.private_subscriptions.copy()
 
@@ -438,7 +437,7 @@ class WebSocketAuthManager:
         self.private_handlers.clear()
         logger.info("Cleared all private subscriptions")
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get authentication manager statistics."""
         return {
             'authenticated': self.authenticated,

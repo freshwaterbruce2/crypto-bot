@@ -10,7 +10,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..config.constants import (
     INFINITY_LOOP_CONFIG,
@@ -39,7 +39,7 @@ class TradingState:
     loop_iterations: int = 0
     last_optimization: float = 0.0
     health_status: str = "healthy"
-    capital_flow: Dict[str, Any] = field(default_factory=lambda: {
+    capital_flow: dict[str, Any] = field(default_factory=lambda: {
         'total_buys': 0,
         'total_sells': 0,
         'total_buy_volume': 0.0,
@@ -259,7 +259,7 @@ class InfinityTradingManager:
 
         logger.info("[MANAGER] All assistants stopped")
 
-    async def _check_capital_availability(self, force_refresh: bool = False) -> Dict[str, float]:
+    async def _check_capital_availability(self, force_refresh: bool = False) -> dict[str, float]:
         """Check available capital for trading with caching optimization"""
         try:
             current_time = time.time()
@@ -321,7 +321,7 @@ class InfinityTradingManager:
             logger.error(f"[MANAGER] Error checking capital: {e}")
             return {'total': 0, 'deployed': 0, 'available': 0, 'deployment_ratio': 0}
 
-    async def _batch_and_execute_signals(self, signals: List[Dict[str, Any]]):
+    async def _batch_and_execute_signals(self, signals: list[dict[str, Any]]):
         """Batch signals and execute efficiently"""
         # Add to batch
         self.signal_batch.extend(signals)
@@ -360,7 +360,7 @@ class InfinityTradingManager:
             self.last_batch_time = current_time
             self.metrics['signals_executed'] += len(to_execute)
 
-    async def _update_capital_flow(self, trade_result: Dict[str, Any]):
+    async def _update_capital_flow(self, trade_result: dict[str, Any]):
         """Update capital flow tracking"""
         if trade_result.get('side') == 'sell':
             proceeds = trade_result.get('proceeds', 0)
@@ -415,7 +415,7 @@ class InfinityTradingManager:
                 logger.error(f"[MANAGER] Health monitoring error: {e}")
                 await asyncio.sleep(30)
 
-    async def _check_system_health(self) -> Dict[str, Any]:
+    async def _check_system_health(self) -> dict[str, Any]:
         """Check health of all system components"""
         health_checks = {
             'data_assistant': await self.data_assistant.health_check(),
@@ -434,7 +434,7 @@ class InfinityTradingManager:
             'timestamp': time.time()
         }
 
-    async def _handle_health_issue(self, health_status: Dict[str, Any]):
+    async def _handle_health_issue(self, health_status: dict[str, Any]):
         """Handle system health issues with self-healing capabilities"""
         unhealthy_components = [
             name for name, status in health_status['components'].items()
@@ -585,7 +585,7 @@ class InfinityTradingManager:
         """Get current trading state"""
         return self.state
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         uptime = time.time() - self.metrics['start_time']
 
@@ -610,9 +610,9 @@ class InfinityTradingManager:
             }
         }
 
-    async def get_next_action(self) -> Optional[List[Dict[str, Any]]]:
+    async def get_next_action(self) -> Optional[list[dict[str, Any]]]:
         """Get next trading actions from the infinity loop
-        
+
         This method is called by the main bot to get signals.
         Returns a list of trading signals ready for execution.
         """
@@ -737,7 +737,7 @@ class InfinityTradingManager:
         # Tighten risk parameters
         await self.risk_assistant.adjust_risk_parameters(tighter=True)
 
-    async def _focus_on_best_symbols(self, best_symbols: List[Dict[str, Any]]):
+    async def _focus_on_best_symbols(self, best_symbols: list[dict[str, Any]]):
         """Focus trading on best performing symbols"""
         # Extract symbol names
         symbol_names = [s['symbol'] for s in best_symbols]
@@ -746,7 +746,7 @@ class InfinityTradingManager:
         if hasattr(self.signal_assistant, 'set_priority_symbols'):
             await self.signal_assistant.set_priority_symbols(symbol_names)
 
-    async def self_diagnose(self) -> Dict[str, Any]:
+    async def self_diagnose(self) -> dict[str, Any]:
         """Run comprehensive self-diagnosis"""
         logger.info("[SELF-DIAGNOSE] Running comprehensive diagnosis...")
 

@@ -13,7 +13,7 @@ import asyncio
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 from ..signal_generation_mixin import SignalGenerationMixin
 
@@ -27,7 +27,7 @@ logger = configure_logging()
 class BaseStrategy(SignalGenerationMixin, ABC):
     """
     Abstract base class that all trading strategies must inherit from.
-    
+
     Enhanced with:
     - Portfolio Intelligence for capital deployment awareness
     - Learning Manager for trade validation
@@ -57,7 +57,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         position_side: str = "long_only",
         order_size_usdt: float = 5.0,  # Updated for 2025 Kraken $5 minimum compliance
         min_candles: int = 5,
-        status_update_callback: Optional[Callable[[str, str, str, Dict], None]] = None,
+        status_update_callback: Optional[Callable[[str, str, str, dict], None]] = None,
         bot_reference: Optional[Any] = None,  # Reference to main bot for component access
         **kwargs,
     ):
@@ -416,21 +416,21 @@ class BaseStrategy(SignalGenerationMixin, ABC):
 
     @abstractmethod
     async def generate_signals(
-        self, market_data: Union[Dict[str, Any], List[Dict[str, Any]]]
-    ) -> Dict[str, Any]:
+        self, market_data: Union[dict[str, Any], list[dict[str, Any]]]
+    ) -> dict[str, Any]:
         """
         Generate trading signals based on market data.
         Must be implemented by subclasses.
         """
         pass
 
-    async def validate_signal_with_portfolio(self, signal: Dict[str, Any]) -> Dict[str, Any]:
+    async def validate_signal_with_portfolio(self, signal: dict[str, Any]) -> dict[str, Any]:
         """
         Validate signal with portfolio intelligence before execution.
-        
+
         Args:
             signal: Trading signal to validate
-            
+
         Returns:
             Enhanced signal with portfolio validation
         """
@@ -473,7 +473,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
             logger.error(f"[{self.symbol}] Error validating signal with portfolio: {e}")
             return signal
 
-    def get_risk_params(self) -> Tuple[float, float]:
+    def get_risk_params(self) -> tuple[float, float]:
         """Get the risk parameters for this strategy."""
         return (self.stop_loss_pct, self.take_profit_pct)
 
@@ -570,7 +570,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         # Update final status
         self._change_status("Stopped")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get the current status of the strategy with enhanced portfolio info."""
         status = {
             "name": self.name,
@@ -612,7 +612,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
     def is_ready(self) -> bool:
         """
         Check if strategy is ready to trade.
-        
+
         Returns:
             bool: True if strategy is ready, False otherwise
         """
@@ -710,7 +710,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
 
         return True
 
-    def record_trade_attempt(self, success: bool, details: Dict[str, Any]) -> None:
+    def record_trade_attempt(self, success: bool, details: dict[str, Any]) -> None:
         """Record trade attempt for learning purposes."""
         if self.learning_manager:
             try:

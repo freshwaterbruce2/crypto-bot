@@ -19,7 +19,7 @@ import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class OrderRequest:
     size: float
     order_type: str = 'market'
     price: Optional[float] = None
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
     priority: int = 0
     created_at: float = 0.0
     retry_count: int = 0
@@ -45,14 +45,14 @@ class OrderResult:
     success: bool
     order_id: Optional[str]
     execution_time: float
-    response: Dict[str, Any]
+    response: dict[str, Any]
     error: Optional[str] = None
 
 
 class FastOrderRouter:
     """Ultra-fast order routing for high-frequency trading"""
 
-    def __init__(self, exchange_client, config: Dict[str, Any]):
+    def __init__(self, exchange_client, config: dict[str, Any]):
         """Initialize fast order router"""
         self.exchange = exchange_client
         self.config = config
@@ -84,7 +84,7 @@ class FastOrderRouter:
 
         logger.info(f"[FAST_ROUTER] Initialized - Target: {self.target_execution_time*1000:.0f}ms")
 
-    def _create_order_templates(self) -> Dict[str, Dict[str, Any]]:
+    def _create_order_templates(self) -> dict[str, dict[str, Any]]:
         """Create pre-validated order templates"""
         return {
             'market_buy': {
@@ -144,7 +144,7 @@ class FastOrderRouter:
                 error=str(e)
             )
 
-    async def execute_batch(self, requests: List[OrderRequest]) -> List[OrderResult]:
+    async def execute_batch(self, requests: list[OrderRequest]) -> list[OrderResult]:
         """Execute multiple orders in parallel"""
         logger.info(f"[FAST_ROUTER] Executing batch of {len(requests)} orders")
 
@@ -311,7 +311,7 @@ class FastOrderRouter:
                 error=error_msg
             )
 
-    def _build_order_params(self, request: OrderRequest) -> Dict[str, Any]:
+    def _build_order_params(self, request: OrderRequest) -> dict[str, Any]:
         """Build order parameters from template"""
         # Get base template
         template_key = f"{request.order_type}_{request.side}"
@@ -344,7 +344,7 @@ class FastOrderRouter:
         error_lower = error.lower()
         return any(perma in error_lower for perma in permanent_errors)
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get router performance statistics"""
         total_orders = self.success_count + self.failure_count
 
@@ -378,7 +378,7 @@ class FastOrderRouter:
             }
         }
 
-    async def create_market_buy(self, symbol: str, size: float, metadata: Dict = None) -> OrderResult:
+    async def create_market_buy(self, symbol: str, size: float, metadata: dict = None) -> OrderResult:
         """Convenience method for market buy orders"""
         request = OrderRequest(
             symbol=symbol,
@@ -390,7 +390,7 @@ class FastOrderRouter:
         )
         return await self.execute_order(request)
 
-    async def create_market_sell(self, symbol: str, size: float, metadata: Dict = None) -> OrderResult:
+    async def create_market_sell(self, symbol: str, size: float, metadata: dict = None) -> OrderResult:
         """Convenience method for market sell orders"""
         request = OrderRequest(
             symbol=symbol,

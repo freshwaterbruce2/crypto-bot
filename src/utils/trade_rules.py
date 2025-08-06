@@ -4,7 +4,7 @@ Kraken-specific trading rules and validation
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class KrakenTradeRules:
 trade_rules = KrakenTradeRules()
 
 
-def check_order(symbol: str, amount: float, price: float) -> Dict[str, Any]:
+def check_order(symbol: str, amount: float, price: float) -> dict[str, Any]:
     """Check if order meets all requirements"""
     order_value = amount * price
 

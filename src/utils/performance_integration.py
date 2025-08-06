@@ -12,7 +12,7 @@ in the crypto trading bot system.
 
 import time
 from contextlib import asynccontextmanager
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .batch_processor import TradingMessageProcessor
 from .bounded_cache import TradingDataCache, get_trading_cache
@@ -113,8 +113,8 @@ class PerformanceManager:
         logger.info(f"[PERF] Available optimizations: {', '.join(optimizations)}")
 
     @timed_operation("portfolio_analysis")
-    async def analyze_portfolio_performance(self, positions: List[Dict[str, Any]],
-                                          price_history: Dict[str, List[float]] = None) -> Dict[str, Any]:
+    async def analyze_portfolio_performance(self, positions: list[dict[str, Any]],
+                                          price_history: dict[str, list[float]] = None) -> dict[str, Any]:
         """High-performance portfolio analysis"""
 
         if not positions:
@@ -129,7 +129,7 @@ class PerformanceManager:
         # Fallback to basic analysis
         return self._basic_portfolio_analysis(positions)
 
-    def _basic_portfolio_analysis(self, positions: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _basic_portfolio_analysis(self, positions: list[dict[str, Any]]) -> dict[str, Any]:
         """Fallback portfolio analysis without NumPy"""
         total_value = sum(pos.get('value', 0) for pos in positions)
         total_invested = sum(pos.get('entry_value', 0) for pos in positions)
@@ -145,7 +145,7 @@ class PerformanceManager:
         }
 
     @timed_operation("batch_calculation")
-    def calculate_multiple_profits(self, trades: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def calculate_multiple_profits(self, trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Calculate profits for multiple trades efficiently"""
 
         # Use batch calculator for performance
@@ -156,9 +156,9 @@ class PerformanceManager:
 
     @timed_operation("position_sizing_batch")
     def calculate_position_sizes_batch(self,
-                                     balances: List[float],
-                                     risk_percentages: List[float],
-                                     prices: List[float]) -> List[float]:
+                                     balances: list[float],
+                                     risk_percentages: list[float],
+                                     prices: list[float]) -> list[float]:
         """Calculate position sizes for multiple assets"""
 
         if HAS_NUMPY:
@@ -191,14 +191,14 @@ class PerformanceManager:
             return True
         return False
 
-    async def process_websocket_message(self, message: Dict[str, Any]) -> bool:
+    async def process_websocket_message(self, message: dict[str, Any]) -> bool:
         """Process WebSocket message through batch processor"""
         if self.message_processor:
             self.message_processor.process_message(message)
             return True
         return False
 
-    def get_performance_stats(self) -> Dict[str, Any]:
+    def get_performance_stats(self) -> dict[str, Any]:
         """Get comprehensive performance statistics"""
         stats = {
             'manager_metrics': self.metrics,
@@ -278,22 +278,22 @@ async def performance_context(exchange_manager=None,
 
 
 # High-level performance functions
-async def optimized_portfolio_analysis(positions: List[Dict[str, Any]],
-                                     price_history: Dict[str, List[float]] = None) -> Dict[str, Any]:
+async def optimized_portfolio_analysis(positions: list[dict[str, Any]],
+                                     price_history: dict[str, list[float]] = None) -> dict[str, Any]:
     """High-level function for optimized portfolio analysis"""
     manager = get_performance_manager()
     return await manager.analyze_portfolio_performance(positions, price_history)
 
 
-def optimized_profit_calculations(trades: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def optimized_profit_calculations(trades: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """High-level function for optimized profit calculations"""
     manager = get_performance_manager()
     return manager.calculate_multiple_profits(trades)
 
 
-def optimized_position_sizing(balances: List[float],
-                            risk_percentages: List[float],
-                            prices: List[float]) -> List[float]:
+def optimized_position_sizing(balances: list[float],
+                            risk_percentages: list[float],
+                            prices: list[float]) -> list[float]:
     """High-level function for optimized position sizing"""
     manager = get_performance_manager()
     return manager.calculate_position_sizes_batch(balances, risk_percentages, prices)

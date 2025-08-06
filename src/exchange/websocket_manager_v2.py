@@ -2,21 +2,20 @@
 WebSocket Manager V2 - DIRECT IMPLEMENTATION (NO SDK)
 ====================================================
 
-This is the direct WebSocket V2 implementation that connects to 
+This is the direct WebSocket V2 implementation that connects to
 Kraken WebSocket V2 endpoints without any SDK dependencies.
 """
 
 import asyncio
-import json
 import logging
-from typing import Callable, Dict, List, Optional, Any
+from typing import Callable
 
 logger = logging.getLogger(__name__)
 
 class WebSocketManagerV2:
     """Simple WebSocket V2 Manager that works without complex dependencies"""
 
-    def __init__(self, exchange_client=None, symbols: List[str] = None, **kwargs):
+    def __init__(self, exchange_client=None, symbols: list[str] = None, **kwargs):
         self.logger = logger
         self.exchange_client = exchange_client
         self.symbols = symbols or []
@@ -38,20 +37,20 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2] Connection failed: {e}")
             return False
-    
+
     async def connect_with_retry(self):
         """Connect with proper retry logic per 2025 guidelines"""
         max_retries = 10
         retry_count = 0
-        
+
         while retry_count < max_retries:
             try:
                 self.logger.info(f"[WEBSOCKET_V2] Connection attempt {retry_count + 1}/{max_retries}")
-                
+
                 if await self.connect():
                     self.logger.info("[WEBSOCKET_V2] Successfully connected")
                     return True
-                
+
             except Exception as e:
                 if 'maintenance' in str(e).lower():
                     # Maintenance error - wait 5 seconds
@@ -61,9 +60,9 @@ class WebSocketManagerV2:
                     # Other errors - instant retry with small delay
                     self.logger.warning(f"[WEBSOCKET_V2] Connection error: {e}, retrying immediately")
                     await asyncio.sleep(0.1)
-            
+
             retry_count += 1
-        
+
         self.logger.error(f"[WEBSOCKET_V2] Failed to connect after {max_retries} attempts")
         return False
 
@@ -90,7 +89,7 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2] Disconnect failed: {e}")
             return False
-    
+
     async def close(self):
         """Alias for disconnect - for compatibility"""
         return await self.disconnect()
@@ -106,7 +105,7 @@ class WebSocketManagerV2:
             self.logger.error(f"[WEBSOCKET_V2_DIRECT] Balance subscription failed: {e}")
             return False
 
-    async def subscribe_to_ticker(self, symbols: List[str], callback: Callable = None):
+    async def subscribe_to_ticker(self, symbols: list[str], callback: Callable = None):
         """Subscribe to ticker updates"""
         try:
             if callback:
@@ -151,7 +150,7 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2_DIRECT] Error setting manager: {e}")
             return False
-    
+
     def has_fresh_data(self, symbol: str, max_age: float = 5.0) -> bool:
         """Check if we have fresh data for a symbol"""
         try:
@@ -160,7 +159,7 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2_DIRECT] Error checking fresh data: {e}")
             return False
-    
+
     async def run(self):
         """Run WebSocket manager (compatibility method)"""
         try:

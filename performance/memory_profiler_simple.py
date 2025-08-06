@@ -22,7 +22,7 @@ import tracemalloc
 import weakref
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -77,9 +77,9 @@ class AdvancedMemoryProfiler:
         """Initialize memory profiler"""
         self.sampling_interval = sampling_interval
         self.is_profiling = False
-        self.snapshots: List[MemorySnapshot] = []
-        self.detected_leaks: List[MemoryLeak] = []
-        self.recommendations: List[OptimizationRecommendation] = []
+        self.snapshots: list[MemorySnapshot] = []
+        self.detected_leaks: list[MemoryLeak] = []
+        self.recommendations: list[OptimizationRecommendation] = []
 
         # Memory tracking
         self.reference_tracker = weakref.WeakSet()
@@ -336,7 +336,7 @@ class AdvancedMemoryProfiler:
                 implementation_difficulty="LOW"
             ))
 
-    def get_analysis_report(self) -> Dict[str, Any]:
+    def get_analysis_report(self) -> dict[str, Any]:
         """Get comprehensive memory analysis report"""
         if not self.snapshots:
             return {"error": "No profiling data available"}
@@ -399,7 +399,7 @@ async def main():
     profiler = AdvancedMemoryProfiler(sampling_interval=0.5)
 
     # Start profiling
-    profiling_task = asyncio.create_task(profiler.start_profiling())
+    asyncio.create_task(profiler.start_profiling())
 
     # Simulate some memory-intensive operations
     data = []

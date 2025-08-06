@@ -21,12 +21,12 @@ import requests
 def get_kraken_signature(urlpath: str, data: dict, secret: str) -> str:
     """
     Generate Kraken API signature
-    
+
     Args:
         urlpath: API endpoint path (e.g., '/0/private/GetWebSocketsToken')
         data: POST data including nonce
         secret: Base64 encoded API secret
-    
+
     Returns:
         Base64 encoded signature
     """
@@ -48,7 +48,7 @@ def get_kraken_signature(urlpath: str, data: dict, secret: str) -> str:
 def get_websocket_token() -> Optional[str]:
     """
     Get WebSocket authentication token from Kraken REST API
-    
+
     Returns:
         WebSocket token string or None if failed
     """
@@ -148,10 +148,10 @@ def get_websocket_token() -> Optional[str]:
 def connect_websocket_v2(token: str) -> bool:
     """
     Test WebSocket V2 connection with the token
-    
+
     Args:
         token: WebSocket authentication token from REST API
-    
+
     Returns:
         True if connection successful
     """

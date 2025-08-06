@@ -12,7 +12,7 @@ import logging
 import secrets
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.orm import selectinload
@@ -96,14 +96,14 @@ class APIService:
             ).where(
                 and_(
                     APIKey.key_hash == key_hash,
-                    APIKey.is_active == True
+                    APIKey.is_active
                 )
             )
 
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
-    async def get_user_api_keys(self, user_id: int) -> List[APIKey]:
+    async def get_user_api_keys(self, user_id: int) -> list[APIKey]:
         """Get all API keys for a user"""
         async with get_db_session() as session:
             stmt = select(APIKey).where(APIKey.user_id == user_id).order_by(desc(APIKey.created_at))
@@ -191,7 +191,7 @@ class APIService:
             await session.commit()
             return usage_log
 
-    async def check_rate_limits(self, api_key_id: int) -> Dict[str, Any]:
+    async def check_rate_limits(self, api_key_id: int) -> dict[str, Any]:
         """Check current rate limit status for API key"""
         async with get_db_session() as session:
             api_key = await session.get(APIKey, api_key_id)
@@ -275,7 +275,7 @@ class APIService:
         self,
         user_id: int,
         days: int = 30
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Get API usage analytics for user"""
         async with get_db_session() as session:
             since_date = datetime.utcnow() - timedelta(days=days)
@@ -394,7 +394,7 @@ class APIService:
             await session.commit()
             return bot
 
-    async def get_user_trading_bots(self, user_id: int) -> List[TradingBot]:
+    async def get_user_trading_bots(self, user_id: int) -> list[TradingBot]:
         """Get user's trading bots"""
         async with get_db_session() as session:
             stmt = select(TradingBot).where(TradingBot.user_id == user_id).order_by(desc(TradingBot.created_at))
@@ -452,7 +452,7 @@ class APIService:
         self,
         user_id: int,
         event_type: str,
-        event_data: Dict[str, Any]
+        event_data: dict[str, Any]
     ):
         """Trigger webhooks for user events"""
         async with get_db_session() as session:
@@ -461,7 +461,7 @@ class APIService:
                 select(WebhookEndpoint).where(
                     and_(
                         WebhookEndpoint.user_id == user_id,
-                        WebhookEndpoint.is_active == True,
+                        WebhookEndpoint.is_active,
                         WebhookEndpoint.enabled_events.contains([event_type])
                     )
                 )
@@ -491,7 +491,7 @@ class APIService:
         """Hash API key for storage"""
         return hashlib.sha256(api_key.encode()).hexdigest()
 
-    def _get_rate_limits_for_tier(self, tier_name: str) -> Dict[str, int]:
+    def _get_rate_limits_for_tier(self, tier_name: str) -> dict[str, int]:
         """Get rate limits based on subscription tier"""
         limits = {
             "free": {"per_minute": 10, "per_hour": 100, "per_day": 1000},

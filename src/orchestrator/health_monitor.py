@@ -11,7 +11,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 import psutil
 
@@ -61,11 +61,11 @@ class ComponentHealth:
     """Health information for a component"""
     name: str
     status: HealthStatus
-    metrics: Dict[str, HealthMetric] = field(default_factory=dict)
+    metrics: dict[str, HealthMetric] = field(default_factory=dict)
     last_check: datetime = field(default_factory=datetime.now)
     error_count: int = 0
     consecutive_failures: int = 0
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def add_metric(self, metric: HealthMetric):
         """Add or update a health metric"""
@@ -95,10 +95,10 @@ class HealthAlert:
     level: AlertLevel
     message: str
     timestamp: datetime = field(default_factory=datetime.now)
-    metrics: Dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, Any] = field(default_factory=dict)
     resolved: bool = False
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
             'component': self.component,
@@ -192,11 +192,11 @@ class HealthMonitor:
 
     def __init__(self, check_interval: int = 60):
         self.check_interval = check_interval
-        self.components: Dict[str, ComponentHealth] = {}
-        self.health_checks: Dict[str, HealthCheck] = {}
+        self.components: dict[str, ComponentHealth] = {}
+        self.health_checks: dict[str, HealthCheck] = {}
         self.alert_history: deque = deque(maxlen=1000)
-        self.alert_handlers: List[Callable] = []
-        self.recovery_handlers: Dict[str, Callable] = {}
+        self.alert_handlers: list[Callable] = []
+        self.recovery_handlers: dict[str, Callable] = {}
         self._monitoring_task: Optional[asyncio.Task] = None
         self._lock = asyncio.Lock()
 
@@ -208,7 +208,7 @@ class HealthMonitor:
         }
 
         # Component dependencies for cascading checks
-        self.dependencies: Dict[str, Set[str]] = {}
+        self.dependencies: dict[str, set[str]] = {}
 
         # System health check
         self.register_health_check(SystemHealthCheck())
@@ -231,7 +231,7 @@ class HealthMonitor:
             except asyncio.CancelledError:
                 pass
 
-    def register_component(self, name: str, dependencies: List[str] = None):
+    def register_component(self, name: str, dependencies: list[str] = None):
         """Register a component for monitoring"""
         self.components[name] = ComponentHealth(name=name, status=HealthStatus.UNKNOWN)
 
@@ -316,7 +316,7 @@ class HealthMonitor:
                 message=f"Component degraded: {old_status.value} -> {new_status.value}"
             )
 
-    async def _create_alert(self, component: str, level: AlertLevel, message: str, metrics: Dict[str, Any] = None):
+    async def _create_alert(self, component: str, level: AlertLevel, message: str, metrics: dict[str, Any] = None):
         """Create and dispatch an alert"""
         alert = HealthAlert(
             component=component,
@@ -372,7 +372,7 @@ class HealthMonitor:
                     message=f"Recovery failed: {str(e)}"
                 )
 
-    async def update_component_status(self, name: str, status: HealthStatus, metrics: Dict[str, Any] = None):
+    async def update_component_status(self, name: str, status: HealthStatus, metrics: dict[str, Any] = None):
         """Manually update component status"""
         async with self._lock:
             if name not in self.components:
@@ -396,7 +396,7 @@ class HealthMonitor:
         """Get health information for a component"""
         return self.components.get(name)
 
-    def get_all_health(self) -> Dict[str, ComponentHealth]:
+    def get_all_health(self) -> dict[str, ComponentHealth]:
         """Get health information for all components"""
         return self.components.copy()
 
@@ -418,11 +418,11 @@ class HealthMonitor:
         else:
             return HealthStatus.HEALTHY
 
-    def get_recent_alerts(self, limit: int = 100) -> List[HealthAlert]:
+    def get_recent_alerts(self, limit: int = 100) -> list[HealthAlert]:
         """Get recent alerts"""
         return list(self.alert_history)[-limit:]
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get health monitoring diagnostics"""
         system_status = self.get_system_status()
 

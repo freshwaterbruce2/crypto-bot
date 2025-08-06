@@ -21,7 +21,7 @@ from collections import defaultdict, deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import numpy as np
 import psutil
@@ -133,7 +133,7 @@ class AsyncTaskPool:
         while True:
             try:
                 task_func, args, kwargs = await self.task_queue.get()
-                start_time = time.time()
+                time.time()
 
                 try:
                     if asyncio.iscoroutinefunction(task_func):
@@ -169,7 +169,7 @@ class AdaptiveGCTuner:
         """Dynamically tune GC parameters based on performance"""
         try:
             # Collect current GC stats
-            gc_stats = gc.get_stats()
+            gc.get_stats()
             memory_info = psutil.virtual_memory()
 
             # Analyze memory pressure
@@ -493,7 +493,7 @@ class Performance2025Maximizer:
         """Run AI-driven adaptive optimizations"""
         try:
             # Analyze current performance
-            memory_info = psutil.virtual_memory()
+            psutil.virtual_memory()
             cpu_percent = psutil.cpu_percent(interval=1)
 
             # Tune GC based on current conditions
@@ -568,7 +568,7 @@ class Performance2025Maximizer:
                 logger.error(f"[PERF2025] Performance monitoring error: {e}")
                 await asyncio.sleep(30.0)
 
-    def get_performance_report(self) -> Dict[str, Any]:
+    def get_performance_report(self) -> dict[str, Any]:
         """Get comprehensive performance report"""
         uptime = time.time() - self.start_time
 
@@ -624,7 +624,7 @@ class Performance2025Maximizer:
             }
         }
 
-    async def benchmark_performance(self) -> Dict[str, float]:
+    async def benchmark_performance(self) -> dict[str, float]:
         """Run performance benchmarks"""
         logger.info("[PERF2025] Running performance benchmarks...")
 
@@ -638,7 +638,7 @@ class Performance2025Maximizer:
 
         # Memory allocation benchmark
         start_time = time.time()
-        large_lists = [[i for i in range(1000)] for _ in range(100)]
+        large_lists = [list(range(1000)) for _ in range(100)]
         del large_lists
         benchmarks['memory_allocation_100k'] = time.time() - start_time
 
@@ -683,6 +683,6 @@ async def enable_burst_mode_2025(duration: float = 300.0):
     """Enable burst mode for maximum performance"""
     await performance_maximizer_2025.enable_burst_mode(duration)
 
-def get_2025_performance_report() -> Dict[str, Any]:
+def get_2025_performance_report() -> dict[str, Any]:
     """Get 2025 performance report"""
     return performance_maximizer_2025.get_performance_report()

@@ -8,7 +8,7 @@ This prevents connection pool exhaustion and nonce conflicts.
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +28,16 @@ class ExchangeSingleton:
                           api_key: str = None,
                           api_secret: str = None,
                           tier: str = 'starter',
-                          config: Dict[str, Any] = None) -> Any:
+                          config: dict[str, Any] = None) -> Any:
         """
         Get or create the singleton exchange instance.
-        
+
         Args:
             api_key: Kraken API key
             api_secret: Kraken API secret
             tier: API tier (starter, intermediate, pro)
             config: Bot configuration
-            
+
         Returns:
             The singleton exchange instance
         """
@@ -194,6 +194,6 @@ class ExchangeSingleton:
 async def get_exchange(api_key: str = None,
                       api_secret: str = None,
                       tier: str = 'starter',
-                      config: Dict[str, Any] = None) -> Any:
+                      config: dict[str, Any] = None) -> Any:
     """Get the singleton exchange instance"""
     return await ExchangeSingleton.get_instance(api_key, api_secret, tier, config)

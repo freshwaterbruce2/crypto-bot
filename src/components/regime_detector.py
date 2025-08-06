@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 import numpy as np
 
@@ -47,7 +47,7 @@ class RegimeDetector:
                  confidence_threshold: float = 0.7):
         """
         Initialize the regime detector.
-        
+
         Args:
             lookback_period: Number of periods to look back for analysis
             volatility_threshold: Threshold for high/low volatility classification
@@ -60,9 +60,9 @@ class RegimeDetector:
         self.confidence_threshold = confidence_threshold
 
         # Historical data storage
-        self.price_history: List[float] = []
-        self.volume_history: List[float] = []
-        self.regime_history: List[RegimeMetrics] = []
+        self.price_history: list[float] = []
+        self.volume_history: list[float] = []
+        self.regime_history: list[RegimeMetrics] = []
 
         # Current regime state
         self.current_regime: Optional[MarketRegime] = None
@@ -73,7 +73,7 @@ class RegimeDetector:
     def update_data(self, price: float, volume: float = 0.0) -> None:
         """
         Update the detector with new price and volume data.
-        
+
         Args:
             price: Current price
             volume: Current volume
@@ -192,10 +192,10 @@ class RegimeDetector:
 
         return min(confidence, 1.0)
 
-    def get_current_regime(self) -> Tuple[MarketRegime, float]:
+    def get_current_regime(self) -> tuple[MarketRegime, float]:
         """
         Get the current market regime and confidence.
-        
+
         Returns:
             Tuple of (regime, confidence)
         """
@@ -211,10 +211,10 @@ class RegimeDetector:
     def is_regime_stable(self, periods: int = 5) -> bool:
         """
         Check if the current regime has been stable for the specified periods.
-        
+
         Args:
             periods: Number of periods to check for stability
-            
+
         Returns:
             True if regime has been stable
         """
@@ -224,10 +224,10 @@ class RegimeDetector:
         recent_regimes = [r.regime for r in self.regime_history[-periods:]]
         return len(set(recent_regimes)) == 1
 
-    def get_regime_transition_probability(self) -> Dict[MarketRegime, float]:
+    def get_regime_transition_probability(self) -> dict[MarketRegime, float]:
         """
         Calculate transition probabilities to different regimes.
-        
+
         Returns:
             Dictionary mapping regimes to transition probabilities
         """
@@ -258,7 +258,7 @@ class RegimeDetector:
 
         return probabilities
 
-    def get_regime_statistics(self) -> Dict[str, any]:
+    def get_regime_statistics(self) -> dict[str, any]:
         """Get comprehensive regime statistics."""
         if not self.regime_history:
             return {}

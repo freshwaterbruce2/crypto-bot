@@ -5,7 +5,7 @@ Prevents runaway trading and protects API keys
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class TradingSafetyWrapper:
         if self.daily_pnl < 0 and abs(self.daily_pnl) > self.limits['emergency_stop_loss_pct']:
             self.activate_circuit_breaker(f"Daily loss exceeded {self.limits['emergency_stop_loss_pct']}%")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current safety status"""
         uptime = time.time() - self.start_time
 

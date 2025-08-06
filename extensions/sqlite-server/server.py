@@ -223,7 +223,7 @@ class SQLiteServer:
 
                 # Get basic stats
                 cursor.execute(f'''
-                    SELECT 
+                    SELECT
                         COUNT(*) as total_trades,
                         SUM(CASE WHEN pnl > 0 THEN 1 ELSE 0 END) as winning_trades,
                         SUM(pnl) as total_pnl,

@@ -14,7 +14,7 @@ This example demonstrates:
 
 import asyncio
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..exchange.websocket_manager_v2 import KrakenProWebSocketManager
 from .websocket_authentication_manager import (
@@ -34,7 +34,7 @@ class EnhancedWebSocketIntegration:
     def __init__(self, exchange_client, api_key: str, private_key: str):
         """
         Initialize enhanced WebSocket integration.
-        
+
         Args:
             exchange_client: Kraken exchange client
             api_key: API key
@@ -55,7 +55,7 @@ class EnhancedWebSocketIntegration:
     async def start_with_enhanced_authentication(self) -> bool:
         """
         Start WebSocket connection with enhanced authentication.
-        
+
         Returns:
             True if started successfully, False otherwise
         """
@@ -93,10 +93,10 @@ class EnhancedWebSocketIntegration:
             logger.error(f"[WS_INTEGRATION] Error starting enhanced authentication: {e}")
             return False
 
-    async def demonstrate_authentication_monitoring(self) -> Dict[str, Any]:
+    async def demonstrate_authentication_monitoring(self) -> dict[str, Any]:
         """
         Demonstrate authentication status monitoring.
-        
+
         Returns:
             Comprehensive authentication status
         """
@@ -135,7 +135,7 @@ class EnhancedWebSocketIntegration:
     async def demonstrate_error_recovery(self) -> bool:
         """
         Demonstrate authentication error recovery.
-        
+
         Returns:
             True if recovery test successful
         """
@@ -166,7 +166,7 @@ class EnhancedWebSocketIntegration:
     async def demonstrate_proactive_refresh(self) -> bool:
         """
         Demonstrate proactive token refresh.
-        
+
         Returns:
             True if refresh successful
         """
@@ -191,10 +191,10 @@ class EnhancedWebSocketIntegration:
             logger.error(f"[WS_INTEGRATION] Error in refresh test: {e}")
             return False
 
-    async def run_comprehensive_demo(self) -> Dict[str, Any]:
+    async def run_comprehensive_demo(self) -> dict[str, Any]:
         """
         Run comprehensive demonstration of enhanced authentication features.
-        
+
         Returns:
             Results of all demonstration tests
         """
@@ -277,7 +277,7 @@ class EnhancedWebSocketIntegration:
 async def run_integration_example():
     """
     Main function to run the WebSocket authentication integration example.
-    
+
     This function demonstrates how to integrate enhanced authentication
     with your trading bot's WebSocket connections.
     """

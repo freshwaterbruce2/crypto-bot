@@ -12,7 +12,7 @@ import time
 import traceback
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -26,16 +26,16 @@ class TestResult:
     duration: float
     memory_usage_mb: float
     error_message: Optional[str] = None
-    details: Optional[Dict[str, Any]] = None
+    details: Optional[dict[str, Any]] = None
 
 class SimpleIntegrationTest:
     """Simplified integration test suite focusing on core functionality"""
 
     def __init__(self):
-        self.results: List[TestResult] = []
+        self.results: list[TestResult] = []
         self.test_start_time = time.time()
 
-    async def run_all_tests(self) -> Dict[str, Any]:
+    async def run_all_tests(self) -> dict[str, Any]:
         """Run all integration tests"""
         print("🚀 Starting Simple Integration Test Suite")
 
@@ -115,7 +115,7 @@ class SimpleIntegrationTest:
         print("\n⚙️ Test 2: Configuration System")
 
         start_time = time.time()
-        memory_before = self._get_memory_usage()
+        self._get_memory_usage()
 
         try:
             from src.config.constants import TradingConstants
@@ -168,7 +168,7 @@ class SimpleIntegrationTest:
         print("\n🗄️ Test 3: Database System")
 
         start_time = time.time()
-        memory_before = self._get_memory_usage()
+        self._get_memory_usage()
 
         try:
             from src.storage.database_manager import DatabaseManager
@@ -225,7 +225,7 @@ class SimpleIntegrationTest:
         print("\n🛠️ Test 4: Utility Functions")
 
         start_time = time.time()
-        memory_before = self._get_memory_usage()
+        self._get_memory_usage()
 
         try:
             from src.utils.priority_message_queue import MessagePriority, PriorityMessageQueue
@@ -291,7 +291,7 @@ class SimpleIntegrationTest:
         print("\n⚡ Test 5: Performance Optimizations")
 
         start_time = time.time()
-        memory_before = self._get_memory_usage()
+        self._get_memory_usage()
 
         try:
             from src.utils.memory_optimizer import MemoryOptimizer
@@ -418,11 +418,11 @@ class SimpleIntegrationTest:
                 # Simulate trading operation
                 test_balance = 1000.0
                 test_price = 50000.0 + (i % 100)
-                position_size = (test_balance * 0.01) / test_price
+                (test_balance * 0.01) / test_price
 
                 # Some calculations
-                profit_target = test_price * 1.005
-                stop_loss = test_price * 0.995
+                test_price * 1.005
+                test_price * 0.995
 
                 operation_times.append(time.time() - op_start)
 
@@ -469,7 +469,7 @@ class SimpleIntegrationTest:
         except:
             return 0.0
 
-    async def _generate_test_report(self) -> Dict[str, Any]:
+    async def _generate_test_report(self) -> dict[str, Any]:
         """Generate comprehensive test report"""
         print("\n📊 Generating Integration Test Report")
 

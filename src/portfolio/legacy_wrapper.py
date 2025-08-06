@@ -12,7 +12,7 @@ the modern WebSocket-first balance management system.
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, Union
+from typing import Any, Union
 
 from ..balance.balance_manager_v2 import BalanceManagerV2
 from ..utils.decimal_precision_fix import safe_decimal
@@ -42,7 +42,7 @@ class LegacyBalanceManagerWrapper:
             self.logger.error(f"[LEGACY_WRAPPER_V2] Error getting balance for {symbol}: {e}")
             return Decimal('0')
 
-    async def get_balances(self) -> Dict[str, Decimal]:
+    async def get_balances(self) -> dict[str, Decimal]:
         """Get all balances"""
         try:
             all_balances = await self.balance_manager_v2.get_all_balances()
@@ -124,7 +124,7 @@ class LegacyBalanceManagerWrapper:
         """Check if wrapper is initialized"""
         return self.balance_manager_v2._initialized
 
-    async def get_portfolio_summary(self) -> Dict[str, Any]:
+    async def get_portfolio_summary(self) -> dict[str, Any]:
         """Get portfolio summary for legacy compatibility"""
         try:
             all_balances = await self.balance_manager_v2.get_all_balances()
@@ -150,11 +150,11 @@ class LegacyBalanceManagerWrapper:
         """Get USDT balance specifically"""
         return await self.get_balance('USDT')
 
-    async def get_all_balances(self) -> Dict[str, Decimal]:
+    async def get_all_balances(self) -> dict[str, Decimal]:
         """Alias for get_balances for compatibility"""
         return await self.get_balances()
 
-    def get_deployment_status(self, asset: str = 'USDT') -> Dict[str, Any]:
+    def get_deployment_status(self, asset: str = 'USDT') -> dict[str, Any]:
         """Get deployment status for compatibility"""
         try:
             cached_balance = self.balance_manager_v2.get_balance_sync(asset)
@@ -171,7 +171,7 @@ class LegacyBalanceManagerWrapper:
             self.logger.error(f"[LEGACY_WRAPPER_V2] Error getting deployment status: {e}")
             return {'deployed_amount': Decimal('0'), 'available_amount': Decimal('0'), 'total_amount': Decimal('0'), 'deployment_ratio': 0.0}
 
-    async def analyze_portfolio_state(self, base_asset: str = 'USDT') -> Dict[str, Any]:
+    async def analyze_portfolio_state(self, base_asset: str = 'USDT') -> dict[str, Any]:
         """Analyze portfolio state for compatibility"""
         try:
             all_balances = await self.balance_manager_v2.get_all_balances()
@@ -188,7 +188,7 @@ class LegacyBalanceManagerWrapper:
             self.logger.error(f"[LEGACY_WRAPPER_V2] Error analyzing portfolio state: {e}")
             return {}
 
-    async def process_websocket_update(self, balance_updates: Dict[str, Dict[str, Any]]):
+    async def process_websocket_update(self, balance_updates: dict[str, dict[str, Any]]):
         """Process WebSocket updates for compatibility"""
         try:
             # Forward to Balance Manager V2

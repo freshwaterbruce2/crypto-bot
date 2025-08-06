@@ -15,10 +15,10 @@ Key Features:
 Usage:
     fallback_manager = RestFallbackManager(strategic_client, websocket_manager)
     await fallback_manager.initialize()
-    
+
     # Handle WebSocket failure
     await fallback_manager.handle_websocket_failure()
-    
+
     # Emergency operations
     balance = await fallback_manager.emergency_get_balance()
     result = await fallback_manager.emergency_cancel_order(txid)
@@ -29,7 +29,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from .strategic_rest_client import StrategicRestClient
 
@@ -58,7 +58,7 @@ class FallbackOperation:
     operation_id: str
     priority: OperationPriority
     endpoint: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     callback: Optional[Callable] = None
     timeout: float = 30.0
     max_retries: int = 3
@@ -108,7 +108,7 @@ class FallbackStats:
 class RestFallbackManager:
     """
     Manages fallback operations and service degradation when primary data sources fail.
-    
+
     Provides coordinated fallback strategies, emergency operation handling,
     and automatic recovery management for critical trading operations.
     """
@@ -123,7 +123,7 @@ class RestFallbackManager:
     ):
         """
         Initialize REST fallback manager.
-        
+
         Args:
             strategic_client: Strategic REST client instance
             websocket_manager: WebSocket manager to monitor
@@ -145,7 +145,7 @@ class RestFallbackManager:
         )
 
         # Operation management
-        self._pending_operations: List[FallbackOperation] = []
+        self._pending_operations: list[FallbackOperation] = []
         self._operation_lock = asyncio.Lock()
         self._operation_counter = 0
 
@@ -169,7 +169,7 @@ class RestFallbackManager:
         }
 
         # Callbacks for service level changes
-        self._service_level_callbacks: List[Callable] = []
+        self._service_level_callbacks: list[Callable] = []
 
         # State
         self._initialized = False
@@ -256,7 +256,7 @@ class RestFallbackManager:
 
     async def _check_service_health(self) -> None:
         """Check health of WebSocket and REST services."""
-        current_time = time.time()
+        time.time()
 
         # Check WebSocket health
         websocket_healthy = await self._check_websocket_health()
@@ -380,7 +380,7 @@ class RestFallbackManager:
     async def handle_websocket_failure(self, reason: str = "Unknown") -> None:
         """
         Handle WebSocket failure event.
-        
+
         Args:
             reason: Reason for the failure
         """
@@ -393,10 +393,10 @@ class RestFallbackManager:
         # Force health check and service level update
         await self._check_service_health()
 
-    async def emergency_get_balance(self) -> Dict[str, Any]:
+    async def emergency_get_balance(self) -> dict[str, Any]:
         """
         Emergency balance retrieval via REST.
-        
+
         Returns:
             Account balance data
         """
@@ -407,10 +407,10 @@ class RestFallbackManager:
 
         return await self.strategic_client.emergency_balance_check()
 
-    async def emergency_get_open_orders(self) -> Dict[str, Any]:
+    async def emergency_get_open_orders(self) -> dict[str, Any]:
         """
         Emergency open orders retrieval via REST.
-        
+
         Returns:
             Open orders data
         """
@@ -421,13 +421,13 @@ class RestFallbackManager:
 
         return await self.strategic_client.emergency_open_orders()
 
-    async def emergency_cancel_order(self, txid: str) -> Dict[str, Any]:
+    async def emergency_cancel_order(self, txid: str) -> dict[str, Any]:
         """
         Emergency order cancellation via REST.
-        
+
         Args:
             txid: Transaction ID to cancel
-            
+
         Returns:
             Cancellation result
         """
@@ -438,10 +438,10 @@ class RestFallbackManager:
 
         return await self.strategic_client.emergency_cancel_order(txid)
 
-    async def emergency_cancel_all_orders(self) -> Dict[str, Any]:
+    async def emergency_cancel_all_orders(self) -> dict[str, Any]:
         """
         Emergency cancellation of all orders via REST.
-        
+
         Returns:
             Cancellation result
         """
@@ -455,10 +455,10 @@ class RestFallbackManager:
             priority="emergency"
         )
 
-    async def emergency_system_status(self) -> Dict[str, Any]:
+    async def emergency_system_status(self) -> dict[str, Any]:
         """
         Emergency system status check via REST.
-        
+
         Returns:
             System status data
         """
@@ -471,21 +471,21 @@ class RestFallbackManager:
     async def queue_operation(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         priority: OperationPriority = OperationPriority.MEDIUM,
         callback: Optional[Callable] = None,
         timeout: float = 30.0
     ) -> str:
         """
         Queue an operation for fallback execution.
-        
+
         Args:
             endpoint: API endpoint name
             params: Request parameters
             priority: Operation priority
             callback: Completion callback
             timeout: Operation timeout
-            
+
         Returns:
             Operation ID
         """
@@ -667,7 +667,7 @@ class RestFallbackManager:
     def add_service_level_callback(self, callback: Callable) -> None:
         """
         Add callback for service level changes.
-        
+
         Args:
             callback: Function to call on service level change
         """
@@ -677,7 +677,7 @@ class RestFallbackManager:
     def remove_service_level_callback(self, callback: Callable) -> None:
         """
         Remove service level callback.
-        
+
         Args:
             callback: Function to remove
         """
@@ -689,7 +689,7 @@ class RestFallbackManager:
 
     # ====== STATUS AND MONITORING ======
 
-    def get_service_status(self) -> Dict[str, Any]:
+    def get_service_status(self) -> dict[str, Any]:
         """Get current service status."""
         return {
             'service_level': self.service_status.level.value,
@@ -704,7 +704,7 @@ class RestFallbackManager:
             'pending_operations': len(self._pending_operations)
         }
 
-    def get_fallback_stats(self) -> Dict[str, Any]:
+    def get_fallback_stats(self) -> dict[str, Any]:
         """Get fallback statistics."""
         return {
             'total_fallbacks': self.stats.total_fallbacks,
@@ -720,10 +720,10 @@ class RestFallbackManager:
             )
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform fallback manager health check.
-        
+
         Returns:
             Health status
         """

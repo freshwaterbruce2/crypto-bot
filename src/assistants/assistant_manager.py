@@ -4,7 +4,7 @@ Assistant Manager - Coordinates all AI assistants in the trading bot
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -110,7 +110,7 @@ class AssistantManager:
             except Exception as e:
                 self.logger.error(f"[ASSISTANT_MANAGER] Failed to initialize {assistant_name}: {e}")
 
-    async def get_buy_recommendation(self, symbol: str, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_buy_recommendation(self, symbol: str, market_data: dict[str, Any]) -> dict[str, Any]:
         """Get buy recommendation from buy logic assistant"""
         try:
             if 'buy_logic' in self.assistants:
@@ -140,7 +140,7 @@ class AssistantManager:
             self._record_error('buy_logic', str(e))
             return {'recommend': False, 'reason': f'Error: {str(e)}'}
 
-    async def get_sell_recommendation(self, symbol: str, position: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_sell_recommendation(self, symbol: str, position: dict[str, Any]) -> dict[str, Any]:
         """Get sell recommendation from sell logic assistant"""
         try:
             # Try adaptive selling first
@@ -179,7 +179,7 @@ class AssistantManager:
             self._record_error('sell_logic', str(e))
             return {'recommend': False, 'reason': f'Error: {str(e)}'}
 
-    async def log_trade_event(self, event_type: str, trade_data: Dict[str, Any]):
+    async def log_trade_event(self, event_type: str, trade_data: dict[str, Any]):
         """Log trade event through analytics assistant"""
         try:
             if 'analytics' in self.assistants:
@@ -194,7 +194,7 @@ class AssistantManager:
             self.logger.error(f"[ASSISTANT_MANAGER] Error logging trade event: {e}")
             self._record_error('analytics', str(e))
 
-    async def remember_pattern(self, pattern_type: str, pattern_data: Dict[str, Any]):
+    async def remember_pattern(self, pattern_type: str, pattern_data: dict[str, Any]):
         """Store pattern in memory assistant"""
         try:
             if 'memory' in self.assistants:
@@ -209,7 +209,7 @@ class AssistantManager:
             self.logger.error(f"[ASSISTANT_MANAGER] Error remembering pattern: {e}")
             self._record_error('memory', str(e))
 
-    async def get_historical_patterns(self, pattern_type: str, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def get_historical_patterns(self, pattern_type: str, symbol: Optional[str] = None) -> list[dict[str, Any]]:
         """Retrieve historical patterns from memory"""
         try:
             if 'memory' in self.assistants:
@@ -245,7 +245,7 @@ class AssistantManager:
                 }
             )
 
-    async def _get_portfolio_state(self) -> Dict[str, Any]:
+    async def _get_portfolio_state(self) -> dict[str, Any]:
         """Get current portfolio state from bot"""
         try:
             if hasattr(self.bot, 'balance_manager') and self.bot.balance_manager:
@@ -255,7 +255,7 @@ class AssistantManager:
             self.logger.error(f"[ASSISTANT_MANAGER] Error getting portfolio state: {e}")
             return {}
 
-    async def _get_market_data(self, symbol: str) -> Dict[str, Any]:
+    async def _get_market_data(self, symbol: str) -> dict[str, Any]:
         """Get current market data for symbol"""
         try:
             if hasattr(self.bot, 'exchange') and self.bot.exchange:
@@ -266,7 +266,7 @@ class AssistantManager:
             self.logger.error(f"[ASSISTANT_MANAGER] Error getting market data: {e}")
             return {}
 
-    def get_assistant_stats(self) -> Dict[str, Any]:
+    def get_assistant_stats(self) -> dict[str, Any]:
         """Get statistics for all assistants"""
         return {
             'assistants': self.assistant_stats,

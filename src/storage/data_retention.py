@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -85,12 +85,12 @@ class RetentionPolicy:
     audit_deletions: bool = True
     require_backup_before_delete: bool = True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'RetentionPolicy':
+    def from_dict(cls, data: dict[str, Any]) -> 'RetentionPolicy':
         """Create from dictionary"""
         return cls(**data)
 
@@ -127,7 +127,7 @@ class RetentionStats:
     cleanup_rate_records_per_second: float = 0.0
     compression_ratio: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return asdict(self)
 
@@ -148,12 +148,12 @@ class DataRetentionManager:
         Path(self.base_archive_path).mkdir(parents=True, exist_ok=True)
 
         # Retention policies
-        self.policies: Dict[str, RetentionPolicy] = {}
-        self.stats: Dict[str, RetentionStats] = {}
+        self.policies: dict[str, RetentionPolicy] = {}
+        self.stats: dict[str, RetentionStats] = {}
 
         # State management
         self._running = False
-        self._cleanup_tasks: List[asyncio.Task] = []
+        self._cleanup_tasks: list[asyncio.Task] = []
         self._lock = asyncio.Lock()
 
         # Load default policies
@@ -366,22 +366,22 @@ class DataRetentionManager:
             current_time_ms = int(time.time() * 1000)
 
             age_analysis_query = f"""
-            SELECT 
-                SUM(CASE 
-                    WHEN timestamp_ms >= ? THEN 1 
-                    ELSE 0 
+            SELECT
+                SUM(CASE
+                    WHEN timestamp_ms >= ? THEN 1
+                    ELSE 0
                 END) as hot_records,
-                SUM(CASE 
-                    WHEN timestamp_ms >= ? AND timestamp_ms < ? THEN 1 
-                    ELSE 0 
+                SUM(CASE
+                    WHEN timestamp_ms >= ? AND timestamp_ms < ? THEN 1
+                    ELSE 0
                 END) as warm_records,
-                SUM(CASE 
-                    WHEN timestamp_ms >= ? AND timestamp_ms < ? THEN 1 
-                    ELSE 0 
+                SUM(CASE
+                    WHEN timestamp_ms >= ? AND timestamp_ms < ? THEN 1
+                    ELSE 0
                 END) as cold_records,
-                SUM(CASE 
-                    WHEN timestamp_ms < ? THEN 1 
-                    ELSE 0 
+                SUM(CASE
+                    WHEN timestamp_ms < ? THEN 1
+                    ELSE 0
                 END) as frozen_records
             FROM {table_name}
             """
@@ -404,14 +404,6 @@ class DataRetentionManager:
                 stats.frozen_records = data.get('frozen_records', 0)
 
             # Get table size information
-            size_query = f"""
-            SELECT 
-                page_count * page_size as size_bytes
-            FROM pragma_table_info('{table_name}'), 
-                 (SELECT page_size FROM pragma_page_size),
-                 (SELECT page_count FROM pragma_page_count)
-            LIMIT 1
-            """
 
             try:
                 # Simplified size calculation
@@ -557,8 +549,8 @@ class DataRetentionManager:
                     batch_size = min(policy.cleanup_batch_size, records_to_delete - deleted_total)
 
                     delete_query = f"""
-                    DELETE FROM {policy.table_name} 
-                    WHERE timestamp_ms < ? 
+                    DELETE FROM {policy.table_name}
+                    WHERE timestamp_ms < ?
                     LIMIT ?
                     """
 
@@ -581,7 +573,7 @@ class DataRetentionManager:
             logger.error(f"[DATA_RETENTION] Error cleaning up frozen data: {e}")
             return False
 
-    async def _save_to_archive(self, records: List[Dict[str, Any]], archive_path: str,
+    async def _save_to_archive(self, records: list[dict[str, Any]], archive_path: str,
                              policy: RetentionPolicy, tier: DataTier) -> bool:
         """Save records to archive file"""
         try:
@@ -663,7 +655,7 @@ class DataRetentionManager:
 
     async def _start_cleanup_tasks(self):
         """Start background cleanup tasks for each policy"""
-        for policy_name, policy in self.policies.items():
+        for policy_name, _policy in self.policies.items():
             task = asyncio.create_task(self._cleanup_task_loop(policy_name))
             self._cleanup_tasks.append(task)
 
@@ -739,7 +731,7 @@ class DataRetentionManager:
 
     # Public interface methods
 
-    def get_retention_status(self) -> Dict[str, Any]:
+    def get_retention_status(self) -> dict[str, Any]:
         """Get comprehensive retention system status"""
         return {
             'system': {
@@ -758,7 +750,7 @@ class DataRetentionManager:
             }
         }
 
-    def get_retention_summary(self) -> Dict[str, Any]:
+    def get_retention_summary(self) -> dict[str, Any]:
         """Get summary of retention statistics"""
         total_stats = {
             'total_hot_records': 0,
@@ -803,7 +795,7 @@ class DataRetentionManager:
             logger.error(f"[DATA_RETENTION] Error in force cleanup: {e}")
             return False
 
-    def estimate_cleanup_impact(self, policy_name: str) -> Dict[str, Any]:
+    def estimate_cleanup_impact(self, policy_name: str) -> dict[str, Any]:
         """Estimate impact of running cleanup for a policy"""
         if policy_name not in self.policies:
             return {'error': f'Policy not found: {policy_name}'}
@@ -815,9 +807,9 @@ class DataRetentionManager:
         hot_excess = max(0, stats.hot_records - policy.max_hot_records)
 
         current_time = time.time()
-        warm_cutoff = current_time - (policy.warm_retention_days * 86400)
-        cold_cutoff = current_time - (policy.cold_retention_days * 86400)
-        frozen_cutoff = current_time - (policy.frozen_retention_years * 365 * 86400)
+        current_time - (policy.warm_retention_days * 86400)
+        current_time - (policy.cold_retention_days * 86400)
+        current_time - (policy.frozen_retention_years * 365 * 86400)
 
         # Rough estimates (would need actual queries for precision)
         estimated_warm_archives = stats.warm_records * 0.1  # Estimate 10% of warm data is old
@@ -931,7 +923,7 @@ class ArchivalManager:
             logger.error(f"[ARCHIVAL_MANAGER] Error creating historical archive: {e}")
             return None
 
-    def list_archives(self, tier: DataTier = None) -> List[Dict[str, Any]]:
+    def list_archives(self, tier: DataTier = None) -> list[dict[str, Any]]:
         """List available archives"""
         archives = []
 
@@ -1052,7 +1044,7 @@ class ArchivalManager:
             logger.error(f"[ARCHIVAL_MANAGER] Error restoring from archive: {e}")
             return False
 
-    def get_archive_info(self, archive_path: str) -> Optional[Dict[str, Any]]:
+    def get_archive_info(self, archive_path: str) -> Optional[dict[str, Any]]:
         """Get detailed information about an archive"""
         try:
             if not os.path.exists(archive_path):

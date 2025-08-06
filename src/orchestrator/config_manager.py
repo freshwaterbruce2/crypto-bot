@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
@@ -23,9 +23,9 @@ logger = logging.getLogger(__name__)
 class ConfigSection:
     """Configuration section with validation and defaults"""
     name: str
-    data: Dict[str, Any]
-    validators: List[Callable] = field(default_factory=list)
-    defaults: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any]
+    validators: list[Callable] = field(default_factory=list)
+    defaults: dict[str, Any] = field(default_factory=dict)
     last_updated: datetime = field(default_factory=datetime.now)
 
     def validate(self) -> bool:
@@ -69,8 +69,8 @@ class ConfigManager:
         # Create directory if it doesn't exist
         self.config_dir.mkdir(exist_ok=True)
 
-        self.sections: Dict[str, ConfigSection] = {}
-        self.observers: List[Callable] = []
+        self.sections: dict[str, ConfigSection] = {}
+        self.observers: list[Callable] = []
         self.file_observer: Optional[Observer] = None
         self._lock = asyncio.Lock()
 
@@ -349,7 +349,7 @@ class ConfigManager:
             except Exception as e:
                 logger.error(f"Error notifying config observer: {e}")
 
-    def export_config(self, section: str = None) -> Dict[str, Any]:
+    def export_config(self, section: str = None) -> dict[str, Any]:
         """Export configuration as dictionary"""
         if section:
             return self.sections[section].data if section in self.sections else {}
@@ -373,7 +373,7 @@ class ConfigManager:
                     json.dump(config, f, indent=2)
                 logger.info("Saved all configuration sections")
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get configuration diagnostics"""
         return {
             'config_dir': str(self.config_dir),

@@ -28,7 +28,7 @@ import weakref
 from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import psutil
 
@@ -69,8 +69,8 @@ class MemorySnapshot:
     available_mb: float
     percent_used: float
     objects_count: int
-    gc_count: Tuple[int, int, int]  # Generation 0, 1, 2 collection counts
-    top_allocations: List[Dict[str, Any]]
+    gc_count: tuple[int, int, int]  # Generation 0, 1, 2 collection counts
+    top_allocations: list[dict[str, Any]]
 
 
 @dataclass
@@ -82,7 +82,7 @@ class MemoryLeak:
     rate_per_minute: float
     first_detected: float
     last_observed: float
-    stack_trace: List[str]
+    stack_trace: list[str]
     severity: str  # LOW, MEDIUM, HIGH, CRITICAL
 
 
@@ -95,7 +95,7 @@ class OptimizationRecommendation:
     recommendation: str
     expected_savings_mb: float
     implementation_effort: str  # LOW, MEDIUM, HIGH
-    code_examples: List[str]
+    code_examples: list[str]
 
 
 class AdvancedMemoryProfiler:
@@ -105,9 +105,9 @@ class AdvancedMemoryProfiler:
         """Initialize memory profiler"""
         self.sampling_interval = sampling_interval
         self.is_profiling = False
-        self.snapshots: List[MemorySnapshot] = []
-        self.detected_leaks: List[MemoryLeak] = []
-        self.recommendations: List[OptimizationRecommendation] = []
+        self.snapshots: list[MemorySnapshot] = []
+        self.detected_leaks: list[MemoryLeak] = []
+        self.recommendations: list[OptimizationRecommendation] = []
 
         # Memory tracking
         if HAVE_PYMPLER:
@@ -324,7 +324,7 @@ class AdvancedMemoryProfiler:
 
             # Object count
             objects = muppy.get_objects()
-            object_summary = summary.summarize(objects)
+            summary.summarize(objects)
 
             # Format top allocations
             top_allocations = []
@@ -538,7 +538,7 @@ class AdvancedMemoryProfiler:
 
     def analyze_specific_component(self, component_name: str,
                                  test_function: callable,
-                                 iterations: int = 1000) -> Dict[str, Any]:
+                                 iterations: int = 1000) -> dict[str, Any]:
         """Analyze memory usage of a specific component"""
         logger.info(f"Analyzing memory usage of component: {component_name}")
 
@@ -611,7 +611,7 @@ class AdvancedMemoryProfiler:
 
         return analysis
 
-    def profile_trading_operations(self) -> Dict[str, Any]:
+    def profile_trading_operations(self) -> dict[str, Any]:
         """Profile memory usage of common trading operations"""
         logger.info("Profiling trading operations memory usage...")
 
@@ -717,7 +717,7 @@ class AdvancedMemoryProfiler:
 
         return results
 
-    def generate_comprehensive_report(self) -> Dict[str, Any]:
+    def generate_comprehensive_report(self) -> dict[str, Any]:
         """Generate comprehensive memory analysis report"""
         if not self.snapshots:
             logger.warning("No memory snapshots available for report")
@@ -758,7 +758,7 @@ class AdvancedMemoryProfiler:
 
         return report
 
-    def save_report(self, report: Dict[str, Any], filename: str = None):
+    def save_report(self, report: dict[str, Any], filename: str = None):
         """Save memory analysis report to file"""
         if filename is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -773,7 +773,7 @@ class AdvancedMemoryProfiler:
         except Exception as e:
             logger.error(f"Failed to save report: {e}")
 
-    def print_summary(self, report: Dict[str, Any]):
+    def print_summary(self, report: dict[str, Any]):
         """Print memory analysis summary to console"""
         print("\n" + "="*80)
         print("🧠 MEMORY USAGE ANALYSIS REPORT")

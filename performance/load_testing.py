@@ -7,7 +7,7 @@ Tests system behavior under sustained load, burst traffic, and stress conditions
 
 Load Testing Scenarios:
 - Sustained high-frequency trading load
-- Burst order execution stress testing  
+- Burst order execution stress testing
 - WebSocket message flood handling
 - Rate limiting under extreme load
 - Balance update storms
@@ -30,7 +30,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
 import numpy as np
 import psutil
@@ -102,7 +102,7 @@ class HFTLoadTester:
     def __init__(self, config: LoadTestConfig = None):
         """Initialize load tester"""
         self.config = config or LoadTestConfig()
-        self.results: List[LoadTestResult] = []
+        self.results: list[LoadTestResult] = []
         self.is_running = False
         self.start_time = 0
         self.process = psutil.Process()
@@ -119,7 +119,7 @@ class HFTLoadTester:
 
         logger.info("HFT Load Tester initialized")
 
-    def _initialize_price_data(self) -> Dict[str, float]:
+    def _initialize_price_data(self) -> dict[str, float]:
         """Initialize realistic price data for symbols"""
         prices = {
             'BTC/USDT': 50000.0,
@@ -135,7 +135,7 @@ class HFTLoadTester:
         }
         return prices
 
-    async def run_comprehensive_load_tests(self) -> Dict[str, Any]:
+    async def run_comprehensive_load_tests(self) -> dict[str, Any]:
         """Run complete suite of load tests"""
         logger.info("Starting comprehensive HFT load testing suite")
         start_time = time.time()
@@ -235,8 +235,8 @@ class HFTLoadTester:
             try:
                 # Ultra-fast order operations
                 symbol = random.choice(self.symbols)
-                price = self.price_data[symbol] * (1 + random.uniform(-0.001, 0.001))
-                quantity = random.uniform(0.1, 10.0)
+                self.price_data[symbol] * (1 + random.uniform(-0.001, 0.001))
+                random.uniform(0.1, 10.0)
 
                 # Minimal latency operations
                 await asyncio.sleep(0.0001)  # Order validation
@@ -285,7 +285,7 @@ class HFTLoadTester:
 
             try:
                 # Simulate order burst conditions
-                symbol = random.choice(self.symbols[:5])  # Focus on top symbols
+                random.choice(self.symbols[:5])  # Focus on top symbols
 
                 # Multiple operations in quick succession
                 operations = random.randint(1, 5)
@@ -341,7 +341,7 @@ class HFTLoadTester:
                 msg_type = np.random.choice(message_types, p=message_weights)
 
                 if msg_type == 'ticker':
-                    message = {
+                    {
                         'channel': 'ticker',
                         'data': [{
                             'symbol': random.choice(self.symbols),
@@ -352,7 +352,7 @@ class HFTLoadTester:
                         }]
                     }
                 elif msg_type == 'trade':
-                    message = {
+                    {
                         'channel': 'trade',
                         'data': [{
                             'symbol': random.choice(self.symbols),
@@ -363,7 +363,7 @@ class HFTLoadTester:
                         }]
                     }
                 elif msg_type == 'orderbook':
-                    message = {
+                    {
                         'channel': 'book',
                         'data': [{
                             'symbol': random.choice(self.symbols),
@@ -372,7 +372,7 @@ class HFTLoadTester:
                         }]
                     }
                 else:  # balance
-                    message = {
+                    {
                         'channel': 'balances',
                         'data': [{
                             'asset': random.choice(['BTC', 'ETH', 'USDT', 'ADA']),
@@ -477,7 +477,7 @@ class HFTLoadTester:
         )
 
         # Calculate rate limiting accuracy
-        total_requests = allowed_requests + denied_requests
+        allowed_requests + denied_requests
         expected_allowed = 1800 * 3  # 30/sec * 180 seconds
         actual_allowed = allowed_requests
         accuracy = 100 - abs(actual_allowed - expected_allowed) / expected_allowed * 100
@@ -693,7 +693,7 @@ class HFTLoadTester:
 
                 # Periodic cleanup
                 if len(memory_allocations) > 100:
-                    memory_allocations = memory_allocations[-50:]  # Keep last 50
+                    memory_allocations[-50:]  # Keep last 50
                     gc.collect()
                     gc_collections += 1
 
@@ -770,7 +770,7 @@ class HFTLoadTester:
 
                 else:  # compute
                     # Simulate CPU-intensive operation
-                    result = sum(i ** 2 for i in range(1000))  # CPU load
+                    sum(i ** 2 for i in range(1000))  # CPU load
                     await asyncio.sleep(0.001)
 
                 # Resource cleanup (simplified)
@@ -1173,7 +1173,7 @@ class HFTLoadTester:
             stability_score=stability_score
         )
 
-    def _generate_load_test_report(self, total_time: float) -> Dict[str, Any]:
+    def _generate_load_test_report(self, total_time: float) -> dict[str, Any]:
         """Generate comprehensive load test report"""
 
         # Summary statistics
@@ -1281,7 +1281,7 @@ class HFTLoadTester:
 
         return report
 
-    def save_report(self, report: Dict[str, Any], filename: str = None):
+    def save_report(self, report: dict[str, Any], filename: str = None):
         """Save load test report to file"""
         if filename is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -1296,7 +1296,7 @@ class HFTLoadTester:
         except Exception as e:
             logger.error(f"Failed to save report: {e}")
 
-    def print_summary(self, report: Dict[str, Any]):
+    def print_summary(self, report: dict[str, Any]):
         """Print load test summary to console"""
         print("\n" + "="*80)
         print("⚡ HIGH-FREQUENCY TRADING LOAD TEST RESULTS")

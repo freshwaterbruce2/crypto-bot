@@ -212,7 +212,7 @@ class RestIntegrationExample:
                 logger.info("Testing WebSocket performance...")
                 start_time = asyncio.get_event_loop().time()
                 try:
-                    balance_ws = await self.data_coordinator.get_balance(source=DataSource.WEBSOCKET)
+                    await self.data_coordinator.get_balance(source=DataSource.WEBSOCKET)
                     ws_time = asyncio.get_event_loop().time() - start_time
                     logger.info(f"WebSocket balance retrieval: {ws_time:.3f}s")
                 except Exception as e:
@@ -222,7 +222,7 @@ class RestIntegrationExample:
             logger.info("Testing REST performance...")
             start_time = asyncio.get_event_loop().time()
             try:
-                balance_rest = await self.data_coordinator.get_balance(source=DataSource.REST)
+                await self.data_coordinator.get_balance(source=DataSource.REST)
                 rest_time = asyncio.get_event_loop().time() - start_time
                 logger.info(f"REST balance retrieval: {rest_time:.3f}s")
             except Exception as e:

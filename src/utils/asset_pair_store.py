@@ -6,7 +6,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Set
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class AssetPairInfo:
     volume_precision: int
     tick_size: float
     is_active: bool = True
-    fees: Dict[str, float] = field(default_factory=dict)
+    fees: dict[str, float] = field(default_factory=dict)
     last_updated: datetime = field(default_factory=datetime.now)
 
 
@@ -44,10 +44,10 @@ class AssetPairStore:
 
     def __init__(self):
         """Initialize the asset pair store."""
-        self.pairs: Dict[str, AssetPairInfo] = {}
-        self.active_pairs: Set[str] = set()
-        self.base_assets: Set[str] = set()
-        self.quote_assets: Set[str] = set()
+        self.pairs: dict[str, AssetPairInfo] = {}
+        self.active_pairs: set[str] = set()
+        self.base_assets: set[str] = set()
+        self.quote_assets: set[str] = set()
 
         # Default configuration
         self.default_min_order_size = 10.0
@@ -61,7 +61,7 @@ class AssetPairStore:
     def add_pair(self, pair_info: AssetPairInfo) -> None:
         """
         Add a trading pair to the store.
-        
+
         Args:
             pair_info: Information about the trading pair
         """
@@ -78,7 +78,7 @@ class AssetPairStore:
     def remove_pair(self, symbol: str) -> None:
         """
         Remove a trading pair from the store.
-        
+
         Args:
             symbol: Symbol of the pair to remove
         """
@@ -90,10 +90,10 @@ class AssetPairStore:
     def get_pair_info(self, symbol: str) -> Optional[AssetPairInfo]:
         """
         Get information about a trading pair.
-        
+
         Args:
             symbol: Symbol of the trading pair
-            
+
         Returns:
             AssetPairInfo if pair exists, None otherwise
         """
@@ -102,26 +102,26 @@ class AssetPairStore:
     def is_pair_active(self, symbol: str) -> bool:
         """
         Check if a trading pair is active.
-        
+
         Args:
             symbol: Symbol of the trading pair
-            
+
         Returns:
             True if pair is active, False otherwise
         """
         return symbol in self.active_pairs
 
-    def get_active_pairs(self) -> List[str]:
+    def get_active_pairs(self) -> list[str]:
         """Get list of active trading pairs."""
         return list(self.active_pairs)
 
-    def get_pairs_by_base_asset(self, base_asset: str) -> List[str]:
+    def get_pairs_by_base_asset(self, base_asset: str) -> list[str]:
         """
         Get all pairs with a specific base asset.
-        
+
         Args:
             base_asset: Base asset to filter by
-            
+
         Returns:
             List of pair symbols
         """
@@ -130,13 +130,13 @@ class AssetPairStore:
             if info.base_asset == base_asset and info.is_active
         ]
 
-    def get_pairs_by_quote_asset(self, quote_asset: str) -> List[str]:
+    def get_pairs_by_quote_asset(self, quote_asset: str) -> list[str]:
         """
         Get all pairs with a specific quote asset.
-        
+
         Args:
             quote_asset: Quote asset to filter by
-            
+
         Returns:
             List of pair symbols
         """
@@ -148,11 +148,11 @@ class AssetPairStore:
     def validate_order_size(self, symbol: str, size: float) -> None:
         """
         Validate if order size meets minimum requirements.
-        
+
         Args:
             symbol: Trading pair symbol
             size: Order size to validate
-            
+
         Raises:
             OrderVolumeTooLow: If order size is too low
         """
@@ -169,10 +169,10 @@ class AssetPairStore:
     def get_min_order_size(self, symbol: str) -> float:
         """
         Get minimum order size for a trading pair.
-        
+
         Args:
             symbol: Trading pair symbol
-            
+
         Returns:
             Minimum order size
         """
@@ -183,13 +183,13 @@ class AssetPairStore:
 
         return pair_info.min_order_size
 
-    def get_trading_fees(self, symbol: str) -> Dict[str, float]:
+    def get_trading_fees(self, symbol: str) -> dict[str, float]:
         """
         Get trading fees for a pair.
-        
+
         Args:
             symbol: Trading pair symbol
-            
+
         Returns:
             Dictionary with maker and taker fees
         """
@@ -203,11 +203,11 @@ class AssetPairStore:
     def round_price(self, symbol: str, price: float) -> float:
         """
         Round price to appropriate precision for the pair.
-        
+
         Args:
             symbol: Trading pair symbol
             price: Price to round
-            
+
         Returns:
             Rounded price
         """
@@ -221,11 +221,11 @@ class AssetPairStore:
     def round_volume(self, symbol: str, volume: float) -> float:
         """
         Round volume to appropriate precision for the pair.
-        
+
         Args:
             symbol: Trading pair symbol
             volume: Volume to round
-            
+
         Returns:
             Rounded volume
         """
@@ -239,10 +239,10 @@ class AssetPairStore:
     def get_tick_size(self, symbol: str) -> float:
         """
         Get tick size for a trading pair.
-        
+
         Args:
             symbol: Trading pair symbol
-            
+
         Returns:
             Tick size
         """
@@ -256,7 +256,7 @@ class AssetPairStore:
     def update_pair_status(self, symbol: str, is_active: bool) -> None:
         """
         Update the active status of a trading pair.
-        
+
         Args:
             symbol: Trading pair symbol
             is_active: New active status
@@ -277,15 +277,15 @@ class AssetPairStore:
 
         logger.debug(f"Updated pair {symbol} active status to {is_active}")
 
-    def get_all_base_assets(self) -> List[str]:
+    def get_all_base_assets(self) -> list[str]:
         """Get all unique base assets."""
         return list(self.base_assets)
 
-    def get_all_quote_assets(self) -> List[str]:
+    def get_all_quote_assets(self) -> list[str]:
         """Get all unique quote assets."""
         return list(self.quote_assets)
 
-    def get_pair_statistics(self) -> Dict[str, any]:
+    def get_pair_statistics(self) -> dict[str, any]:
         """Get statistics about the pair store."""
         return {
             'total_pairs': len(self.pairs),
@@ -302,10 +302,10 @@ class AssetPairStore:
             }
         }
 
-    def load_from_exchange(self, exchange_info: Dict[str, any]) -> None:
+    def load_from_exchange(self, exchange_info: dict[str, any]) -> None:
         """
         Load pair information from exchange data.
-        
+
         Args:
             exchange_info: Exchange information dictionary
         """
@@ -354,7 +354,7 @@ class AssetPairStore:
     def save_to_file(self, filepath: str) -> None:
         """
         Save pair store to file.
-        
+
         Args:
             filepath: Path to save file
         """
@@ -395,7 +395,7 @@ class AssetPairStore:
     def load_from_file(self, filepath: str) -> None:
         """
         Load pair store from file.
-        
+
         Args:
             filepath: Path to load file
         """
@@ -410,7 +410,7 @@ class AssetPairStore:
             self.quote_assets.clear()
 
             # Load pairs
-            for symbol, info_dict in data['pairs'].items():
+            for _symbol, info_dict in data['pairs'].items():
                 pair_info = AssetPairInfo(
                     symbol=info_dict['symbol'],
                     base_asset=info_dict['base_asset'],

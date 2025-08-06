@@ -69,7 +69,7 @@ async def verify_startup_fix():
         alignment_checker = KrakenAlignmentChecker()
 
         # Initialize rate limiter
-        rate_limiter = alignment_checker.initialize_rate_limiter()
+        alignment_checker.initialize_rate_limiter()
         logger.info("✅ Rate limiter initialized")
 
         # Load configuration

@@ -77,7 +77,7 @@ def test_memory_optimization():
 
         # Create memory pressure
         large_data = []
-        for i in range(500):
+        for _i in range(500):
             large_data.append([j * 1.5 for j in range(200)])
 
         memory_peak = get_memory_mb()

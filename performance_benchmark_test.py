@@ -15,7 +15,7 @@ import traceback
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import psutil
 
@@ -51,13 +51,13 @@ class PerformanceMetrics:
     operations_count: int
     memory_start_mb: float
     memory_end_mb: float
-    cpu_samples: List[float]
+    cpu_samples: list[float]
 
 class PerformanceBenchmarkTest:
     """Performance benchmark test suite for optimization validation"""
 
     def __init__(self):
-        self.results: List[BenchmarkResult] = []
+        self.results: list[BenchmarkResult] = []
         self.memory_optimizer = MemoryOptimizer()
         self.performance_maximizer = PerformanceMaximizer2025()
         self.vectorized_math = VectorizedMath()
@@ -73,7 +73,7 @@ class PerformanceBenchmarkTest:
             'concurrent_connections': 100
         }
 
-    async def run_all_benchmarks(self) -> Dict[str, Any]:
+    async def run_all_benchmarks(self) -> dict[str, Any]:
         """Run all performance benchmarks"""
         print("🏎️ Starting Performance Benchmark Suite")
         print(f"Benchmark Configuration: {json.dumps(self.benchmark_config, indent=2)}")
@@ -174,7 +174,7 @@ class PerformanceBenchmarkTest:
 
         # Create memory pressure
         memory_hogs = []
-        for i in range(1000):
+        for _i in range(1000):
             memory_hogs.append([j * j for j in range(1000)])  # Create memory pressure
 
         # Benchmark memory optimization
@@ -497,40 +497,40 @@ class PerformanceBenchmarkTest:
 
             # Simulate processing the message
             if message["type"] == "update":
-                symbol = message["data"]["symbol"]
+                message["data"]["symbol"]
                 price = message["data"]["price"]
                 # Minimal processing simulation
-                processed_price = float(price) * 1.0001
+                float(price) * 1.0001
 
-    def _run_vectorized_calculations(self, data: List[float], iterations: int):
+    def _run_vectorized_calculations(self, data: list[float], iterations: int):
         """Run vectorized mathematical calculations"""
         for _ in range(iterations):
             # Use vectorized operations
-            result = self.vectorized_math.calculate_moving_average(data, 10)
-            volatility = self.vectorized_math.calculate_volatility(data)
-            correlation = self.vectorized_math.calculate_correlation(data, data)
+            self.vectorized_math.calculate_moving_average(data, 10)
+            self.vectorized_math.calculate_volatility(data)
+            self.vectorized_math.calculate_correlation(data, data)
 
-    def _run_standard_calculations(self, data: List[float], iterations: int):
+    def _run_standard_calculations(self, data: list[float], iterations: int):
         """Run standard mathematical calculations for comparison"""
         for _ in range(iterations):
             # Standard moving average
             window = 10
             if len(data) >= window:
-                ma = sum(data[-window:]) / window
+                sum(data[-window:]) / window
 
             # Standard volatility calculation
             if len(data) > 1:
                 mean = sum(data) / len(data)
                 variance = sum((x - mean) ** 2 for x in data) / len(data)
-                volatility = variance ** 0.5
+                variance ** 0.5
 
     def _run_optimized_calculations(self, iterations: int):
         """Run optimized calculations"""
         for _ in range(iterations):
             # Use optimized calculation methods
-            result = self.optimized_calc.fast_rsi([50, 51, 49, 52, 48])
-            bollinger = self.optimized_calc.bollinger_bands([50, 51, 49, 52, 48], 5, 2)
-            ema = self.optimized_calc.exponential_moving_average([50, 51, 49, 52, 48], 0.1)
+            self.optimized_calc.fast_rsi([50, 51, 49, 52, 48])
+            self.optimized_calc.bollinger_bands([50, 51, 49, 52, 48], 5, 2)
+            self.optimized_calc.exponential_moving_average([50, 51, 49, 52, 48], 0.1)
 
     async def _run_concurrent_operations(self, count: int):
         """Run concurrent operations"""
@@ -561,7 +561,7 @@ class PerformanceBenchmarkTest:
                 # Get operation
                 cache.get(f"key_{i % 100}")  # Get from existing keys
 
-    def _run_batch_processing(self, processor: BatchProcessor, items: List[Dict]):
+    def _run_batch_processing(self, processor: BatchProcessor, items: list[dict]):
         """Run batch processing"""
 
         def process_batch(batch):
@@ -628,7 +628,7 @@ class PerformanceBenchmarkTest:
             cpu_samples=cpu_samples
         )
 
-    async def _generate_benchmark_report(self) -> Dict[str, Any]:
+    async def _generate_benchmark_report(self) -> dict[str, Any]:
         """Generate comprehensive benchmark report"""
         print("\n📊 Generating Performance Benchmark Report")
 

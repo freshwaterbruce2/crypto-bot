@@ -8,7 +8,7 @@ opportunity scanner.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from src.autonomous_minimum_learning import minimum_discovery_learning
 from src.trading.smart_minimum_manager import (
@@ -26,7 +26,7 @@ class MinimumManagerIntegration:
     def __init__(self, exchange=None, balance_manager=None):
         """
         Initialize the integration layer.
-        
+
         Args:
             exchange: CCXT exchange instance
             balance_manager: Enhanced balance manager instance
@@ -63,15 +63,15 @@ class MinimumManagerIntegration:
         logger.info("[MINIMUM_INTEGRATION] Initialization complete")
 
     async def calculate_trade_volume(self, symbol: str, available_balance: Optional[float] = None,
-                                   current_price: Optional[float] = None) -> Tuple[float, str]:
+                                   current_price: Optional[float] = None) -> tuple[float, str]:
         """
         Calculate optimal trade volume for a symbol.
-        
+
         Args:
             symbol: Trading pair
             available_balance: Available USDT (fetches if not provided)
             current_price: Current price (fetches if not provided)
-            
+
         Returns:
             Tuple of (volume, reason)
         """
@@ -103,15 +103,15 @@ class MinimumManagerIntegration:
             logger.error(f"[MINIMUM_INTEGRATION] Error calculating volume for {symbol}: {e}")
             return 0.0, f"Error: {str(e)}"
 
-    async def validate_order_size(self, symbol: str, volume: float, price: float) -> Tuple[bool, str]:
+    async def validate_order_size(self, symbol: str, volume: float, price: float) -> tuple[bool, str]:
         """
         Validate if an order meets minimum requirements.
-        
+
         Args:
             symbol: Trading pair
             volume: Proposed volume
             price: Order price
-            
+
         Returns:
             Tuple of (is_valid, reason)
         """
@@ -140,13 +140,13 @@ class MinimumManagerIntegration:
                                  attempted_volume: float, attempted_price: float) -> bool:
         """
         Handle a minimum order error by learning from it.
-        
+
         Args:
             symbol: Trading pair
             error_message: Error message from exchange
             attempted_volume: Volume that failed
             attempted_price: Price used
-            
+
         Returns:
             bool: True if learning was successful
         """
@@ -162,13 +162,13 @@ class MinimumManagerIntegration:
 
         return success
 
-    def get_tradeable_pairs(self, available_balance: float) -> List[Dict[str, Any]]:
+    def get_tradeable_pairs(self, available_balance: float) -> list[dict[str, Any]]:
         """
         Get list of tradeable pairs based on balance and minimums.
-        
+
         Args:
             available_balance: Available USDT balance
-            
+
         Returns:
             List of dicts with pair info
         """
@@ -186,19 +186,19 @@ class MinimumManagerIntegration:
 
         return tradeable
 
-    def filter_portfolio_pairs(self, all_pairs: List[str]) -> List[str]:
+    def filter_portfolio_pairs(self, all_pairs: list[str]) -> list[str]:
         """
         Filter a list of pairs to only include portfolio pairs.
-        
+
         Args:
             all_pairs: List of all trading pairs
-            
+
         Returns:
             List of pairs that are in our portfolio
         """
         return [p for p in all_pairs if self.smart_minimum_manager.is_portfolio_pair(p)]
 
-    async def get_minimum_summary(self) -> Dict[str, Any]:
+    async def get_minimum_summary(self) -> dict[str, Any]:
         """Get a summary of minimum requirements for all portfolio pairs."""
         summary = {
             "portfolio_pairs": {},
@@ -227,7 +227,7 @@ class MinimumManagerIntegration:
 
         return summary
 
-    async def refresh_all_minimums(self) -> Dict[str, Dict[str, float]]:
+    async def refresh_all_minimums(self) -> dict[str, dict[str, float]]:
         """Refresh minimums for all portfolio pairs."""
         logger.info("[MINIMUM_INTEGRATION] Refreshing all portfolio minimums...")
         return await self.smart_minimum_manager.bulk_update_minimums()
@@ -246,13 +246,13 @@ def get_minimum_integration(exchange=None, balance_manager=None) -> MinimumManag
 
 
 # Convenience functions
-async def validate_portfolio_order(symbol: str, volume: float, price: float) -> Tuple[bool, str]:
+async def validate_portfolio_order(symbol: str, volume: float, price: float) -> tuple[bool, str]:
     """Validate if a portfolio order meets minimums."""
     integration = get_minimum_integration()
     return await integration.validate_order_size(symbol, volume, price)
 
 
-async def get_portfolio_volume(symbol: str, balance: float = None, price: float = None) -> Tuple[float, str]:
+async def get_portfolio_volume(symbol: str, balance: float = None, price: float = None) -> tuple[float, str]:
     """Get optimal volume for a portfolio pair."""
     integration = get_minimum_integration()
     return await integration.calculate_trade_volume(symbol, balance, price)

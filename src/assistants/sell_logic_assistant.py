@@ -6,7 +6,7 @@ Provides intelligent sell signal analysis and exit point optimization
 import logging
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -48,16 +48,16 @@ class SellLogicAssistant:
 
         self.logger.info("[SELL_LOGIC] Assistant initialized")
 
-    async def analyze_exit_opportunity(self, position: Dict[str, Any], market_data: Dict[str, Any],
-                                     portfolio_state: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_exit_opportunity(self, position: dict[str, Any], market_data: dict[str, Any],
+                                     portfolio_state: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze exit opportunity for a position
-        
+
         Args:
             position: Position data with symbol, amount, entry_price, entry_time
             market_data: Current market data with price, volume, indicators
             portfolio_state: Current portfolio state and risk metrics
-            
+
         Returns:
             Dict with recommendation, confidence, exit_price, exit_amount, reasoning
         """
@@ -233,7 +233,7 @@ class SellLogicAssistant:
             return 0.0
 
     def _analyze_risk_factors(self, profit_pct: float, hold_time_seconds: float,
-                             portfolio_state: Dict[str, Any]) -> float:
+                             portfolio_state: dict[str, Any]) -> float:
         """Analyze risk factors requiring exit"""
         try:
             score = 0.0
@@ -272,7 +272,7 @@ class SellLogicAssistant:
             self.logger.error(f"[SELL_LOGIC] Error in risk analysis: {e}")
             return 0.0
 
-    async def _analyze_technical_exits(self, market_data: Dict[str, Any], current_price: Decimal) -> float:
+    async def _analyze_technical_exits(self, market_data: dict[str, Any], current_price: Decimal) -> float:
         """Analyze technical indicators for exit signals"""
         try:
             score = 0.0
@@ -317,7 +317,7 @@ class SellLogicAssistant:
             self.logger.error(f"[SELL_LOGIC] Error in technical analysis: {e}")
             return 0.0
 
-    def _analyze_market_conditions(self, market_data: Dict[str, Any], position: Dict[str, Any]) -> float:
+    def _analyze_market_conditions(self, market_data: dict[str, Any], position: dict[str, Any]) -> float:
         """Analyze overall market conditions for exit timing"""
         try:
             score = 0.0
@@ -386,7 +386,7 @@ class SellLogicAssistant:
             self.logger.error(f"[SELL_LOGIC] Error calculating exit amount: {e}")
             return float(position_size * Decimal('0.5'))  # Default 50% exit
 
-    async def _optimize_exit_price(self, current_price: Decimal, market_data: Dict[str, Any]) -> float:
+    async def _optimize_exit_price(self, current_price: Decimal, market_data: dict[str, Any]) -> float:
         """Optimize exit price based on market microstructure"""
         try:
             optimized_price = float(current_price)
@@ -413,8 +413,8 @@ class SellLogicAssistant:
             self.logger.error(f"[SELL_LOGIC] Error optimizing exit price: {e}")
             return float(current_price)
 
-    async def _check_trailing_stop(self, position: Dict[str, Any], current_price: Decimal,
-                                 market_data: Dict[str, Any]) -> Optional[float]:
+    async def _check_trailing_stop(self, position: dict[str, Any], current_price: Decimal,
+                                 market_data: dict[str, Any]) -> Optional[float]:
         """Check if trailing stop should be triggered"""
         try:
             entry_price = Decimal(str(position.get('entry_price', 0)))
@@ -440,7 +440,7 @@ class SellLogicAssistant:
             self.logger.error(f"[SELL_LOGIC] Error checking trailing stop: {e}")
             return None
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary of exit decisions"""
         if self.exit_performance['total_exits'] > 0:
             success_rate = self.exit_performance['profitable_exits'] / self.exit_performance['total_exits']
@@ -479,7 +479,7 @@ class SellLogicAssistant:
         except Exception as e:
             self.logger.error(f"[SELL_LOGIC] Error updating parameters: {e}")
 
-    async def analyze_sell_opportunity(self, symbol: str, position: Dict[str, Any]) -> Dict[str, Any]:
+    async def analyze_sell_opportunity(self, symbol: str, position: dict[str, Any]) -> dict[str, Any]:
         """
         Analyze sell opportunity for a position (simplified interface)
         Called by AssistantManager - provides compatibility with existing code

@@ -8,7 +8,7 @@ Service layer for subscription tiers, billing, and feature access management.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -88,13 +88,13 @@ class SubscriptionService:
 
             logger.info("Default subscription tiers created successfully")
 
-    async def get_subscription_tiers(self, active_only: bool = True) -> List[SubscriptionTier]:
+    async def get_subscription_tiers(self, active_only: bool = True) -> list[SubscriptionTier]:
         """Get all subscription tiers"""
         async with get_db_session() as session:
             stmt = select(SubscriptionTier)
 
             if active_only:
-                stmt = stmt.where(SubscriptionTier.is_active == True)
+                stmt = stmt.where(SubscriptionTier.is_active)
 
             stmt = stmt.order_by(SubscriptionTier.sort_order)
 
@@ -285,7 +285,7 @@ class SubscriptionService:
         user_id: int,
         resource_type: str,
         quantity: int = 1
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Check if user can use a resource within subscription limits"""
         subscription = await self.get_user_subscription(user_id)
 
@@ -321,7 +321,7 @@ class SubscriptionService:
         user_id: int,
         resource_type: str,
         quantity: int = 1,
-        metadata: Dict[str, Any] = None
+        metadata: dict[str, Any] = None
     ) -> bool:
         """Record resource usage for a user"""
         async with get_db_session() as session:
@@ -356,7 +356,7 @@ class SubscriptionService:
             await session.commit()
             return True
 
-    async def get_subscription_analytics(self, user_id: int) -> Dict[str, Any]:
+    async def get_subscription_analytics(self, user_id: int) -> dict[str, Any]:
         """Get subscription analytics for a user"""
         subscription = await self.get_user_subscription(user_id)
         if not subscription:
@@ -402,7 +402,7 @@ class SubscriptionService:
     async def create_white_label_config(
         self,
         user_id: int,
-        config_data: Dict[str, Any]
+        config_data: dict[str, Any]
     ) -> WhiteLabelConfig:
         """Create white-label configuration for enterprise client"""
         async with get_db_session() as session:
@@ -428,7 +428,7 @@ class SubscriptionService:
             await session.commit()
             return config
 
-    async def get_subscription_stats(self) -> Dict[str, Any]:
+    async def get_subscription_stats(self) -> dict[str, Any]:
         """Get overall subscription statistics"""
         async with get_db_session() as session:
             # Total subscriptions by tier
@@ -498,7 +498,7 @@ class SubscriptionService:
         from_tier: str = None,
         to_tier: str = None,
         amount: Decimal = None,
-        metadata: Dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
         session: AsyncSession = None
     ):
         """Log subscription lifecycle event"""

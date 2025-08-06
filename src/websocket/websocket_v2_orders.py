@@ -24,7 +24,7 @@ import time
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 from ..utils.kraken_order_validator import validate_order_params
@@ -68,7 +68,7 @@ class OrderRequest:
     price: Optional[Decimal] = None
     stop_price: Optional[Decimal] = None
     time_in_force: str = "GTC"  # Good Till Canceled
-    order_flags: List[str] = None
+    order_flags: list[str] = None
     user_ref: Optional[str] = None
 
     def __post_init__(self):
@@ -116,7 +116,7 @@ class OrderUpdate:
 class WebSocketV2OrderManager:
     """
     Order management via WebSocket V2.
-    
+
     Provides comprehensive order management including placement,
     modification, cancellation, and real-time status tracking.
     """
@@ -124,16 +124,16 @@ class WebSocketV2OrderManager:
     def __init__(self, websocket_manager):
         """
         Initialize order manager.
-        
+
         Args:
             websocket_manager: WebSocket V2 manager instance
         """
         self.websocket_manager = websocket_manager
 
         # Order tracking
-        self._active_orders: Dict[str, OrderUpdate] = {}
-        self._pending_orders: Dict[str, OrderRequest] = {}
-        self._order_history: List[OrderUpdate] = []
+        self._active_orders: dict[str, OrderUpdate] = {}
+        self._pending_orders: dict[str, OrderRequest] = {}
+        self._order_history: list[OrderUpdate] = []
         self._order_lock = asyncio.Lock()
 
         # Performance tracking
@@ -149,7 +149,7 @@ class WebSocketV2OrderManager:
         }
 
         # Request tracking for response correlation
-        self._pending_requests: Dict[str, Dict[str, Any]] = {}
+        self._pending_requests: dict[str, dict[str, Any]] = {}
         self._request_counter = 0
 
         logger.info("[WS_V2_ORDERS] Order manager initialized")
@@ -163,13 +163,13 @@ class WebSocketV2OrderManager:
         price: Optional[Union[str, float, Decimal]] = None,
         stop_price: Optional[Union[str, float, Decimal]] = None,
         time_in_force: str = "GTC",
-        order_flags: Optional[List[str]] = None,
+        order_flags: Optional[list[str]] = None,
         user_ref: Optional[str] = None,
         validate: bool = True
     ) -> OrderResponse:
         """
         Place order via WebSocket V2.
-        
+
         Args:
             symbol: Trading pair (e.g., 'BTC/USDT')
             side: 'buy' or 'sell'
@@ -181,7 +181,7 @@ class WebSocketV2OrderManager:
             order_flags: Order flags (e.g., ['fciq'] for fee-in-quote)
             user_ref: User reference ID
             validate: Whether to validate order parameters
-            
+
         Returns:
             OrderResponse with order ID or error information
         """
@@ -302,11 +302,11 @@ class WebSocketV2OrderManager:
     ) -> OrderResponse:
         """
         Cancel order via WebSocket V2.
-        
+
         Args:
             order_id: Order ID to cancel
             user_ref: User reference ID to cancel
-            
+
         Returns:
             OrderResponse with cancellation status
         """
@@ -380,10 +380,10 @@ class WebSocketV2OrderManager:
     async def cancel_all_orders(self, symbol: Optional[str] = None) -> OrderResponse:
         """
         Cancel all orders via WebSocket V2.
-        
+
         Args:
             symbol: Optional symbol to limit cancellation to
-            
+
         Returns:
             OrderResponse with cancellation status
         """
@@ -445,7 +445,7 @@ class WebSocketV2OrderManager:
                 timestamp=time.time()
             )
 
-    async def _send_private_message(self, message: Dict[str, Any]) -> None:
+    async def _send_private_message(self, message: dict[str, Any]) -> None:
         """Send message via private WebSocket"""
         websocket = self.websocket_manager._websocket_private
 
@@ -455,13 +455,13 @@ class WebSocketV2OrderManager:
         await websocket.send(json.dumps(message))
         logger.debug(f"[WS_V2_ORDERS] Sent message: {message.get('method', 'unknown')}")
 
-    async def _validate_order(self, order_request: OrderRequest) -> Dict[str, Any]:
+    async def _validate_order(self, order_request: OrderRequest) -> dict[str, Any]:
         """
         Validate order parameters.
-        
+
         Args:
             order_request: Order request to validate
-            
+
         Returns:
             Validation result with 'valid' boolean and optional 'error'
         """
@@ -524,10 +524,10 @@ class WebSocketV2OrderManager:
 
         self._order_stats['last_order_time'] = time.time()
 
-    async def process_order_response(self, message: Dict[str, Any]) -> None:
+    async def process_order_response(self, message: dict[str, Any]) -> None:
         """
         Process order response from WebSocket.
-        
+
         Args:
             message: WebSocket message containing order response
         """
@@ -619,10 +619,10 @@ class WebSocketV2OrderManager:
             logger.error(f"[WS_V2_ORDERS] Error processing order response: {e}")
             logger.debug(f"[WS_V2_ORDERS] Failed message: {message}")
 
-    async def process_order_update(self, message: Dict[str, Any]) -> None:
+    async def process_order_update(self, message: dict[str, Any]) -> None:
         """
         Process order status update from WebSocket.
-        
+
         Args:
             message: WebSocket message containing order update
         """
@@ -696,7 +696,7 @@ class WebSocketV2OrderManager:
             logger.error(f"[WS_V2_ORDERS] Error processing order updates: {e}")
 
     # Data access methods
-    def get_active_orders(self) -> Dict[str, OrderUpdate]:
+    def get_active_orders(self) -> dict[str, OrderUpdate]:
         """Get all active orders"""
         return dict(self._active_orders)
 
@@ -704,16 +704,16 @@ class WebSocketV2OrderManager:
         """Get order by ID"""
         return self._active_orders.get(order_id)
 
-    def get_orders_by_symbol(self, symbol: str) -> List[OrderUpdate]:
+    def get_orders_by_symbol(self, symbol: str) -> list[OrderUpdate]:
         """Get all orders for symbol"""
         return [order for order in self._active_orders.values()
                 if order.symbol == symbol]
 
-    def get_order_history(self, limit: int = 100) -> List[OrderUpdate]:
+    def get_order_history(self, limit: int = 100) -> list[OrderUpdate]:
         """Get recent order history"""
         return self._order_history[-limit:] if limit > 0 else self._order_history
 
-    def get_order_stats(self) -> Dict[str, Any]:
+    def get_order_stats(self) -> dict[str, Any]:
         """Get order statistics"""
         stats = dict(self._order_stats)
 

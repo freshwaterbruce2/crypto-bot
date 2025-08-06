@@ -7,7 +7,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +159,7 @@ class RealtimePnLTracker:
         except Exception as e:
             logger.error(f"[PNL_TRACKER] Error checking profit opportunities: {e}")
 
-    async def _check_position_profit(self, symbol: str, position_data: Dict[str, Any]):
+    async def _check_position_profit(self, symbol: str, position_data: dict[str, Any]):
         """Check individual position for profit-taking"""
         try:
             # Ensure position_data is a dictionary
@@ -202,7 +202,7 @@ class RealtimePnLTracker:
         except Exception as e:
             logger.error(f"[PNL_TRACKER] Error logging summary: {e}")
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         runtime_hours = (time.time() - self.start_time) / 3600
         profit_pct = (self.total_unrealized_pnl / self.start_value) * 100 if self.start_value > 0 else 0

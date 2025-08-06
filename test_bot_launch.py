@@ -25,49 +25,49 @@ async def test_bot_launch():
     logger.info("=" * 60)
     logger.info("TESTING BOT LAUNCH")
     logger.info("=" * 60)
-    
+
     try:
         # Import the bot
         from src.core.bot import KrakenTradingBot
-        
+
         logger.info("✓ Bot module imported successfully")
-        
+
         # Initialize the bot
         bot = KrakenTradingBot()
         logger.info("✓ Bot initialized successfully")
-        
+
         # Check critical components
         if bot.exchange:
             logger.info("✓ Exchange initialized")
         else:
             logger.warning("✗ Exchange not initialized")
-            
+
         if bot.balance_manager:
             logger.info("✓ Balance manager initialized")
         else:
             logger.warning("✗ Balance manager not initialized")
-            
+
         if bot.strategy_manager:
             logger.info("✓ Strategy manager initialized")
         else:
             logger.warning("✗ Strategy manager not initialized")
-        
+
         # Try to start the bot (but stop immediately)
         logger.info("\nAttempting to start bot components...")
-        
+
         # Just initialize, don't run the full loop
         await bot.initialize()
         logger.info("✓ Bot initialization completed")
-        
+
         # Cleanup
         if hasattr(bot, 'cleanup'):
             await bot.cleanup()
-        
+
         logger.info("\n" + "=" * 60)
         logger.info("✓ BOT LAUNCH TEST SUCCESSFUL")
         logger.info("=" * 60)
         return True
-        
+
     except Exception as e:
         logger.error(f"\n✗ BOT LAUNCH FAILED: {e}")
         logger.error(f"Error type: {type(e).__name__}")

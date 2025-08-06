@@ -26,7 +26,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ class CriticalEvent:
     error_type: str
     error_message: str
     stack_trace: str
-    system_state: Dict[str, Any]
+    system_state: dict[str, Any]
     recovery_attempted: bool = False
     recovery_successful: bool = False
     kill_switch_triggered: bool = False
@@ -73,7 +73,7 @@ class CriticalErrorGuardian:
         self.kill_switch_engaged = False
 
         # Critical event tracking
-        self.critical_events: List[CriticalEvent] = []
+        self.critical_events: list[CriticalEvent] = []
         self.max_events_history = 100  # Reduced for memory efficiency
         # Error thresholds for automatic actions
         self.thresholds = {
@@ -159,7 +159,7 @@ class CriticalErrorGuardian:
                 self.logger.error(f"[GUARDIAN] Monitoring error: {e}")
                 # Guardian must never fail completely
                 await asyncio.sleep(self.monitoring_interval)
-    async def handle_error(self, component: str, error: Exception, context: Dict[str, Any]) -> bool:
+    async def handle_error(self, component: str, error: Exception, context: dict[str, Any]) -> bool:
         """
         Handle an error and determine if it's critical.
         Returns True if the bot should continue, False if it should stop.
@@ -218,10 +218,10 @@ class CriticalErrorGuardian:
             await self.engage_kill_switch("Guardian system failure")
             return False
 
-    def _classify_error(self, component: str, error: Exception, context: Dict[str, Any]) -> CriticalityLevel:
+    def _classify_error(self, component: str, error: Exception, context: dict[str, Any]) -> CriticalityLevel:
         """Classify the criticality level of an error with Kraken-specific handling"""
         error_str = str(error).lower()
-        error_type = type(error).__name__
+        type(error).__name__
 
         # Check for Kraken-specific errors first
         error_msg = str(error)
@@ -638,7 +638,7 @@ class CriticalErrorGuardian:
         # to prevent future occurrences
         pass
 
-    async def _capture_system_state(self) -> Dict[str, Any]:
+    async def _capture_system_state(self) -> dict[str, Any]:
         """Capture current system state"""
         state = {
             'timestamp': time.time(),
@@ -722,7 +722,7 @@ class CriticalErrorGuardian:
         except Exception as e:
             self.logger.error(f"[GUARDIAN] Cleanup error: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get current guardian status"""
         return {
             'active': self.active,

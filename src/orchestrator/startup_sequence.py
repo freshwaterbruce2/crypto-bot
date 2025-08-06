@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class StartupStep:
     name: str
     phase: StartupPhase
     handler: Callable
-    dependencies: Set[str] = field(default_factory=set)
+    dependencies: set[str] = field(default_factory=set)
     timeout: int = 30
     retry_count: int = 3
     critical: bool = True
@@ -68,10 +68,10 @@ class StartupSequence:
     """Manages system startup and shutdown sequences"""
 
     def __init__(self):
-        self.steps: Dict[str, StartupStep] = {}
-        self.completed_steps: Set[str] = set()
-        self.results: List[StartupResult] = []
-        self.shutdown_handlers: List[tuple[Callable, ShutdownPriority]] = []
+        self.steps: dict[str, StartupStep] = {}
+        self.completed_steps: set[str] = set()
+        self.results: list[StartupResult] = []
+        self.shutdown_handlers: list[tuple[Callable, ShutdownPriority]] = []
         self.is_running = False
         self.shutdown_event = asyncio.Event()
         self._lock = asyncio.Lock()
@@ -94,7 +94,7 @@ class StartupSequence:
         name: str,
         phase: StartupPhase,
         handler: Callable,
-        dependencies: List[str] = None,
+        dependencies: list[str] = None,
         timeout: int = 30,
         retry_count: int = 3,
         critical: bool = True,
@@ -175,7 +175,7 @@ class StartupSequence:
                 await self._rollback()
                 return False
 
-    async def _execute_phase(self, steps: List[StartupStep]) -> bool:
+    async def _execute_phase(self, steps: list[StartupStep]) -> bool:
         """Execute steps in a phase"""
         # Sort steps by dependencies
         sorted_steps = self._topological_sort(steps)
@@ -253,7 +253,7 @@ class StartupSequence:
             retry_count=step.retry_count
         )
 
-    def _topological_sort(self, steps: List[StartupStep]) -> List[StartupStep]:
+    def _topological_sort(self, steps: list[StartupStep]) -> list[StartupStep]:
         """Sort steps by dependencies"""
         # Create dependency graph, filtering out already completed dependencies
         graph = {}
@@ -364,7 +364,7 @@ class StartupSequence:
             if not result.success:
                 logger.error(f"Failed step: {result.step_name} - {result.error}")
 
-    def get_startup_report(self) -> Dict[str, Any]:
+    def get_startup_report(self) -> dict[str, Any]:
         """Get detailed startup report"""
         return {
             'is_running': self.is_running,
@@ -402,7 +402,7 @@ class StartupSequence:
         finally:
             await self.shutdown()
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get startup sequence diagnostics"""
         return {
             'is_running': self.is_running,

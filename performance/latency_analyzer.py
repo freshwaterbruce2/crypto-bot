@@ -27,7 +27,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 # Optional numpy import
 try:
@@ -46,7 +46,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 logger = logging.getLogger(__name__)
 
 
-def percentile(data: List[float], percentile: float) -> float:
+def percentile(data: list[float], percentile: float) -> float:
     """Calculate percentile without numpy dependency"""
     if HAVE_NUMPY:
         import numpy as np
@@ -74,7 +74,7 @@ class LatencyMeasurement:
     end_time: float
     latency_ms: float
     success: bool
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     trace_id: str = ""
 
 
@@ -100,7 +100,7 @@ class CriticalPath:
     """Critical path analysis result"""
     path_name: str
     total_latency_ms: float
-    components: List[Tuple[str, float]]  # (component_name, latency_ms)
+    components: list[tuple[str, float]]  # (component_name, latency_ms)
     bottleneck_component: str
     bottleneck_latency_ms: float
     bottleneck_percentage: float
@@ -125,7 +125,7 @@ class LatencyTracker:
 
     def __init__(self, analyzer: 'CriticalPathLatencyAnalyzer',
                  component: str, operation: str,
-                 metadata: Dict[str, Any] = None):
+                 metadata: dict[str, Any] = None):
         self.analyzer = analyzer
         self.component = component
         self.operation = operation
@@ -207,9 +207,9 @@ class CriticalPathLatencyAnalyzer:
         """Initialize latency analyzer"""
         self.retention_hours = retention_hours
         self.measurements: deque = deque(maxlen=100000)  # Keep last 100K measurements
-        self.component_stats: Dict[str, LatencyStats] = {}
-        self.critical_paths: List[CriticalPath] = []
-        self.regressions: List[LatencyRegression] = []
+        self.component_stats: dict[str, LatencyStats] = {}
+        self.critical_paths: list[CriticalPath] = []
+        self.regressions: list[LatencyRegression] = []
 
         # Real-time monitoring
         self.real_time_window = deque(maxlen=1000)  # Last 1000 measurements
@@ -223,7 +223,7 @@ class CriticalPathLatencyAnalyzer:
         }
 
         # Baseline measurements for regression detection
-        self.baselines: Dict[str, float] = {}
+        self.baselines: dict[str, float] = {}
         self.baseline_window_size = 1000
 
         # Threading for background analysis
@@ -233,7 +233,7 @@ class CriticalPathLatencyAnalyzer:
         logger.info("Critical Path Latency Analyzer initialized")
 
     def track_latency(self, component: str, operation: str,
-                     metadata: Dict[str, Any] = None) -> LatencyTracker:
+                     metadata: dict[str, Any] = None) -> LatencyTracker:
         """Create a latency tracker context manager"""
         return LatencyTracker(self, component, operation, metadata)
 
@@ -411,7 +411,7 @@ class CriticalPathLatencyAnalyzer:
                                  f"{current_stats.component}_{current_stats.operation} "
                                  f"{regression_percentage:.1f}% slower")
 
-    async def analyze_critical_paths(self) -> List[CriticalPath]:
+    async def analyze_critical_paths(self) -> list[CriticalPath]:
         """Analyze critical trading paths end-to-end"""
         logger.info("Analyzing critical trading paths...")
 
@@ -515,7 +515,7 @@ class CriticalPathLatencyAnalyzer:
 
         return estimates.get(component, 10.0)  # Default 10ms
 
-    async def benchmark_trading_operations(self) -> Dict[str, Any]:
+    async def benchmark_trading_operations(self) -> dict[str, Any]:
         """Benchmark critical trading operations"""
         logger.info("Benchmarking critical trading operations...")
 
@@ -541,9 +541,8 @@ class CriticalPathLatencyAnalyzer:
 
         return benchmarks
 
-    async def _benchmark_authentication(self) -> Dict[str, Any]:
+    async def _benchmark_authentication(self) -> dict[str, Any]:
         """Benchmark authentication operations"""
-        results = []
         iterations = 1000
 
         # Mock authentication operations
@@ -577,7 +576,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No authentication measurements available'}
 
-    async def _benchmark_balance_operations(self) -> Dict[str, Any]:
+    async def _benchmark_balance_operations(self) -> dict[str, Any]:
         """Benchmark balance operations"""
         iterations = 500
 
@@ -615,7 +614,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No balance measurements available'}
 
-    async def _benchmark_order_operations(self) -> Dict[str, Any]:
+    async def _benchmark_order_operations(self) -> dict[str, Any]:
         """Benchmark order operations"""
         iterations = 200
 
@@ -656,7 +655,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No order measurements available'}
 
-    async def _benchmark_websocket_processing(self) -> Dict[str, Any]:
+    async def _benchmark_websocket_processing(self) -> dict[str, Any]:
         """Benchmark WebSocket message processing"""
         iterations = 2000
 
@@ -695,7 +694,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No WebSocket measurements available'}
 
-    async def _benchmark_database_operations(self) -> Dict[str, Any]:
+    async def _benchmark_database_operations(self) -> dict[str, Any]:
         """Benchmark database operations"""
         iterations = 300
 
@@ -736,7 +735,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No database measurements available'}
 
-    async def _benchmark_portfolio_calculations(self) -> Dict[str, Any]:
+    async def _benchmark_portfolio_calculations(self) -> dict[str, Any]:
         """Benchmark portfolio calculations"""
         iterations = 100
 
@@ -774,7 +773,7 @@ class CriticalPathLatencyAnalyzer:
 
         return {'error': 'No portfolio measurements available'}
 
-    def generate_latency_report(self) -> Dict[str, Any]:
+    def generate_latency_report(self) -> dict[str, Any]:
         """Generate comprehensive latency analysis report"""
         report = {
             'timestamp': datetime.now().isoformat(),
@@ -809,7 +808,7 @@ class CriticalPathLatencyAnalyzer:
 
         return report
 
-    def save_report(self, report: Dict[str, Any], filename: str = None):
+    def save_report(self, report: dict[str, Any], filename: str = None):
         """Save latency analysis report to file"""
         if filename is None:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -824,7 +823,7 @@ class CriticalPathLatencyAnalyzer:
         except Exception as e:
             logger.error(f"Failed to save report: {e}")
 
-    def print_summary(self, report: Dict[str, Any]):
+    def print_summary(self, report: dict[str, Any]):
         """Print latency analysis summary to console"""
         print("\n" + "="*80)
         print("⚡ CRITICAL PATH LATENCY ANALYSIS REPORT")
@@ -863,7 +862,7 @@ class CriticalPathLatencyAnalyzer:
                                      key=lambda x: x[1]['mean_latency_ms'],
                                      reverse=True)[:5]
 
-            for key, stats in sorted_components:
+            for _key, stats in sorted_components:
                 component = stats['component']
                 operation = stats['operation']
                 mean_lat = stats['mean_latency_ms']
@@ -909,7 +908,7 @@ async def main():
         benchmarks = await analyzer.benchmark_trading_operations()
 
         # Analyze critical paths
-        critical_paths = await analyzer.analyze_critical_paths()
+        await analyzer.analyze_critical_paths()
 
         # Wait for some background analysis
         await asyncio.sleep(5)

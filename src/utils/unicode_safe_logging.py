@@ -24,13 +24,13 @@ import os
 import re
 import sys
 from logging.handlers import RotatingFileHandler
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class UnicodeSafeFormatter(logging.Formatter):
     """
     Custom formatter that sanitizes Unicode characters to prevent encoding errors.
-    
+
     This formatter automatically replaces problematic Unicode characters with
     safe ASCII alternatives while preserving log functionality.
     """
@@ -118,7 +118,6 @@ class UnicodeSafeFormatter(logging.Formatter):
         '₿': 'BTC',
         # Quote marks and dashes
         '"': '"',
-        '"': '"',
         ''': "'",
         ''': "'",
         '–': '-',
@@ -147,10 +146,10 @@ class UnicodeSafeFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord) -> str:
         """
         Format the log record with Unicode safety.
-        
+
         Args:
             record: The log record to format
-            
+
         Returns:
             str: Safely formatted log message
         """
@@ -170,10 +169,10 @@ class UnicodeSafeFormatter(logging.Formatter):
     def _sanitize_unicode(self, text: str) -> str:
         """
         Sanitize Unicode characters in text.
-        
+
         Args:
             text: Input text that may contain Unicode characters
-            
+
         Returns:
             str: Text with Unicode characters safely replaced
         """
@@ -214,7 +213,7 @@ class UnicodeSafeStreamHandler(logging.StreamHandler):
     def emit(self, record: logging.LogRecord):
         """
         Emit a log record with Unicode safety.
-        
+
         Args:
             record: The log record to emit
         """
@@ -263,7 +262,7 @@ def setup_unicode_safe_logging(
 ) -> logging.Logger:
     """
     Set up a Unicode-safe logger with comprehensive configuration.
-    
+
     Args:
         name: Logger name (typically __name__)
         level: Logging level (default: INFO)
@@ -273,7 +272,7 @@ def setup_unicode_safe_logging(
         backup_count: Number of backup files to keep
         console_output: Whether to output to console
         file_output: Whether to output to file
-        
+
     Returns:
         logging.Logger: Configured Unicode-safe logger
     """
@@ -329,14 +328,14 @@ def setup_unicode_safe_logging(
 def configure_global_unicode_safe_logging(
     log_dir: str = "trading_data/logs",
     log_level: int = logging.INFO
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Configure global Unicode-safe logging for the entire application.
-    
+
     Args:
         log_dir: Directory for log files
         log_level: Global logging level
-        
+
     Returns:
         Dict[str, Any]: Configuration summary
     """

@@ -8,7 +8,7 @@ Manages secure storage and retrieval of API credentials for the trading bot.
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class CredentialManager:
     def __init__(self, config_dir: Optional[Path] = None):
         """
         Initialize credential manager.
-        
+
         Args:
             config_dir: Directory for configuration files
         """
@@ -54,7 +54,7 @@ class CredentialManager:
     async def initialize(self) -> bool:
         """
         Initialize the credential manager (required by dependency injector).
-        
+
         Returns:
             True if initialization successful
         """
@@ -79,16 +79,16 @@ class CredentialManager:
             logger.error(f"Failed to initialize credential manager: {e}")
             return False
 
-    def get_kraken_credentials(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_kraken_credentials(self) -> tuple[Optional[str], Optional[str]]:
         """
         Get Kraken API credentials from environment variables.
-        
+
         Priority order:
         1. KRAKEN_KEY / KRAKEN_SECRET (new unified approach)
         2. KRAKEN_API_KEY / KRAKEN_API_SECRET (legacy)
         3. API_KEY / API_SECRET (legacy fallback)
         4. Windows environment variables (if in WSL)
-        
+
         Returns:
             Tuple of (api_key, private_key) or (None, None) if not found
         """
@@ -150,18 +150,18 @@ class CredentialManager:
                 logger.warning("Kraken API credentials not found in environment variables")
             return None, None
 
-    def get_kraken_rest_credentials(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_kraken_rest_credentials(self) -> tuple[Optional[str], Optional[str]]:
         """
         Get Kraken REST API credentials from environment variables.
         These are used for trading operations and GetWebSocketsToken requests.
-        
+
         Priority order:
         1. KRAKEN_KEY / KRAKEN_SECRET (new unified approach)
         2. KRAKEN_REST_API_KEY / KRAKEN_REST_API_SECRET (legacy specific)
         3. KRAKEN_API_KEY / KRAKEN_API_SECRET (legacy generic)
         4. API_KEY / API_SECRET (legacy fallback)
         5. Windows environment variables (if in WSL)
-        
+
         Returns:
             Tuple of (api_key, private_key) or (None, None) if not found
         """
@@ -202,18 +202,18 @@ class CredentialManager:
                 logger.warning("Kraken REST API credentials not found in environment variables")
             return None, None
 
-    def get_kraken_websocket_credentials(self) -> Tuple[Optional[str], Optional[str]]:
+    def get_kraken_websocket_credentials(self) -> tuple[Optional[str], Optional[str]]:
         """
         Get Kraken WebSocket API credentials from environment variables.
         These are used for WebSocket V2 data streaming connections.
-        
+
         Priority order:
         1. KRAKEN_KEY / KRAKEN_SECRET (new unified approach)
         2. KRAKEN_WEBSOCKET_API_KEY / KRAKEN_WEBSOCKET_API_SECRET (legacy specific)
         3. KRAKEN_API_KEY / KRAKEN_API_SECRET (legacy generic)
         4. API_KEY / API_SECRET (legacy fallback)
         5. Windows environment variables (if in WSL)
-        
+
         Returns:
             Tuple of (api_key, private_key) or (None, None) if not found
         """
@@ -257,11 +257,11 @@ class CredentialManager:
     def validate_credentials(self, api_key: str, private_key: str) -> bool:
         """
         Validate that credentials have the correct format.
-        
+
         Args:
             api_key: API key to validate
             private_key: Private key to validate
-            
+
         Returns:
             True if credentials appear valid
         """
@@ -278,10 +278,10 @@ class CredentialManager:
 
         return True
 
-    def get_credential_status(self) -> Dict[str, Any]:
+    def get_credential_status(self) -> dict[str, Any]:
         """
         Get status of credential configuration.
-        
+
         Returns:
             Dictionary with credential status information
         """
@@ -370,11 +370,11 @@ class CredentialManager:
 
         return status
 
-    def generate_test_credentials(self) -> Tuple[str, str]:
+    def generate_test_credentials(self) -> tuple[str, str]:
         """
         Generate secure test credentials for validation purposes.
         SECURITY: Never use hardcoded credentials - generate random ones.
-        
+
         Returns:
             Tuple of randomly generated test (api_key, private_key)
         """
@@ -393,22 +393,22 @@ class CredentialManager:
 credential_manager = CredentialManager()
 
 
-def get_kraken_credentials() -> Tuple[Optional[str], Optional[str]]:
+def get_kraken_credentials() -> tuple[Optional[str], Optional[str]]:
     """Convenience function to get Kraken credentials"""
     return credential_manager.get_kraken_credentials()
 
 
-def get_kraken_rest_credentials() -> Tuple[Optional[str], Optional[str]]:
+def get_kraken_rest_credentials() -> tuple[Optional[str], Optional[str]]:
     """Convenience function to get Kraken REST API credentials"""
     return credential_manager.get_kraken_rest_credentials()
 
 
-def get_kraken_websocket_credentials() -> Tuple[Optional[str], Optional[str]]:
+def get_kraken_websocket_credentials() -> tuple[Optional[str], Optional[str]]:
     """Convenience function to get Kraken WebSocket API credentials"""
     return credential_manager.get_kraken_websocket_credentials()
 
 
-def get_credential_status() -> Dict[str, Any]:
+def get_credential_status() -> dict[str, Any]:
     """Convenience function to get credential status"""
     return credential_manager.get_credential_status()
 

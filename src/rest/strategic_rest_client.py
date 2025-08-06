@@ -14,10 +14,10 @@ Key Principles:
 Usage:
     client = StrategicRestClient(api_key, private_key)
     await client.initialize()
-    
+
     # Emergency balance check
     balance = await client.emergency_balance_check()
-    
+
     # Historical data fetch (batch)
     historical = await client.batch_historical_query(pairs, timeframe)
 """
@@ -27,7 +27,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..api.exceptions import NetworkError
 from ..api.kraken_rest_client import KrakenRestClient, RequestConfig
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class BatchRequest:
     """Represents a batched API request."""
     endpoint: str
-    params: Dict[str, Any]
+    params: dict[str, Any]
     priority: int = 1  # Higher = more important
     timestamp: float = field(default_factory=time.time)
     callback: Optional[callable] = None
@@ -70,7 +70,7 @@ class StrategicUsageStats:
 class StrategicRestClient:
     """
     Strategic REST client that minimizes API usage while providing essential fallback.
-    
+
     Design Philosophy:
     1. WebSocket V2 is primary data source
     2. REST is for emergency/validation/historical only
@@ -90,7 +90,7 @@ class StrategicRestClient:
     ):
         """
         Initialize strategic REST client.
-        
+
         Args:
             api_key: Kraken API key
             private_key: Kraken private key
@@ -114,7 +114,7 @@ class StrategicRestClient:
         self._nonce_prefix = "strategic_rest"
 
         # Request batching
-        self._pending_requests: List[BatchRequest] = []
+        self._pending_requests: list[BatchRequest] = []
         self._batch_lock = asyncio.Lock()
         self._batch_task: Optional[asyncio.Task] = None
 
@@ -226,17 +226,17 @@ class StrategicRestClient:
     async def _execute_strategic_request(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         priority: str = "normal"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute a strategic REST request with full protection.
-        
+
         Args:
             endpoint: API endpoint name
             params: Request parameters
             priority: Request priority (emergency, normal, batch)
-            
+
         Returns:
             API response data
         """
@@ -308,10 +308,10 @@ class StrategicRestClient:
 
     # ====== EMERGENCY OPERATIONS ======
 
-    async def emergency_balance_check(self) -> Dict[str, Any]:
+    async def emergency_balance_check(self) -> dict[str, Any]:
         """
         Emergency balance check when WebSocket fails.
-        
+
         Returns:
             Account balance data
         """
@@ -321,10 +321,10 @@ class StrategicRestClient:
             priority="emergency"
         )
 
-    async def emergency_open_orders(self) -> Dict[str, Any]:
+    async def emergency_open_orders(self) -> dict[str, Any]:
         """
         Emergency check of open orders.
-        
+
         Returns:
             Open orders data
         """
@@ -334,13 +334,13 @@ class StrategicRestClient:
             priority="emergency"
         )
 
-    async def emergency_cancel_order(self, txid: str) -> Dict[str, Any]:
+    async def emergency_cancel_order(self, txid: str) -> dict[str, Any]:
         """
         Emergency order cancellation.
-        
+
         Args:
             txid: Transaction ID to cancel
-            
+
         Returns:
             Cancellation response
         """
@@ -351,10 +351,10 @@ class StrategicRestClient:
             priority="emergency"
         )
 
-    async def emergency_system_status(self) -> Dict[str, Any]:
+    async def emergency_system_status(self) -> dict[str, Any]:
         """
         Emergency system status check.
-        
+
         Returns:
             System status data
         """
@@ -368,13 +368,13 @@ class StrategicRestClient:
     async def add_to_batch(
         self,
         endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         priority: int = 1,
         callback: Optional[callable] = None
     ) -> None:
         """
         Add request to batch queue.
-        
+
         Args:
             endpoint: API endpoint name
             params: Request parameters
@@ -433,7 +433,7 @@ class StrategicRestClient:
             if self._pending_requests:
                 await asyncio.sleep(0.5)
 
-    async def _execute_batch(self, batch: List[BatchRequest]) -> None:
+    async def _execute_batch(self, batch: list[BatchRequest]) -> None:
         """Execute a batch of requests."""
         if not batch:
             return
@@ -472,18 +472,18 @@ class StrategicRestClient:
 
     async def batch_historical_query(
         self,
-        pairs: List[str],
+        pairs: list[str],
         timeframe: int = 1,
         max_age_hours: int = 24
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Batch query for historical OHLC data.
-        
+
         Args:
             pairs: List of trading pairs
             timeframe: Timeframe in minutes
             max_age_hours: Maximum age of data to fetch
-            
+
         Returns:
             Combined historical data
         """
@@ -512,13 +512,13 @@ class StrategicRestClient:
 
         return results
 
-    async def get_ticker_snapshot(self, pairs: List[str]) -> Dict[str, Any]:
+    async def get_ticker_snapshot(self, pairs: list[str]) -> dict[str, Any]:
         """
         Get ticker snapshots for multiple pairs.
-        
+
         Args:
             pairs: List of trading pairs
-            
+
         Returns:
             Ticker data for all pairs
         """
@@ -539,14 +539,14 @@ class StrategicRestClient:
 
     # ====== VALIDATION OPERATIONS ======
 
-    async def validate_order_book(self, pair: str, count: int = 10) -> Dict[str, Any]:
+    async def validate_order_book(self, pair: str, count: int = 10) -> dict[str, Any]:
         """
         Validate order book data against WebSocket.
-        
+
         Args:
             pair: Trading pair
             count: Number of levels to fetch
-            
+
         Returns:
             Order book data
         """
@@ -557,10 +557,10 @@ class StrategicRestClient:
             priority="normal"
         )
 
-    async def validate_balance_snapshot(self) -> Dict[str, Any]:
+    async def validate_balance_snapshot(self) -> dict[str, Any]:
         """
         Validate balance against WebSocket data.
-        
+
         Returns:
             Balance validation data
         """
@@ -572,7 +572,7 @@ class StrategicRestClient:
 
     # ====== STATUS AND MONITORING ======
 
-    def get_strategic_stats(self) -> Dict[str, Any]:
+    def get_strategic_stats(self) -> dict[str, Any]:
         """Get strategic REST usage statistics."""
         return {
             'initialized': self._initialized,
@@ -592,10 +592,10 @@ class StrategicRestClient:
             'minimum_interval': self._minimum_interval
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform strategic REST health check.
-        
+
         Returns:
             Health status
         """
@@ -635,7 +635,7 @@ class StrategicRestClient:
     def set_emergency_mode(self, enabled: bool) -> None:
         """
         Enable or disable emergency-only mode.
-        
+
         Args:
             enabled: True to enable emergency-only mode
         """
@@ -645,7 +645,7 @@ class StrategicRestClient:
     def set_minimum_interval(self, interval: float) -> None:
         """
         Set minimum interval between requests.
-        
+
         Args:
             interval: Minimum seconds between requests
         """
@@ -661,7 +661,7 @@ class RestWebSocketCoordinator:
     def __init__(self, strategic_client: StrategicRestClient):
         """
         Initialize coordinator.
-        
+
         Args:
             strategic_client: Strategic REST client instance
         """
@@ -672,7 +672,7 @@ class RestWebSocketCoordinator:
     def websocket_status_update(self, active: bool) -> None:
         """
         Update WebSocket status.
-        
+
         Args:
             active: True if WebSocket is active and receiving data
         """
@@ -689,10 +689,10 @@ class RestWebSocketCoordinator:
     def should_use_rest_fallback(self, data_age_seconds: float = 10.0) -> bool:
         """
         Determine if REST fallback should be used.
-        
+
         Args:
             data_age_seconds: Maximum age of WebSocket data before fallback
-            
+
         Returns:
             True if REST fallback should be used
         """

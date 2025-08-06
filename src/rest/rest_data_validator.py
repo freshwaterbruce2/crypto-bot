@@ -15,10 +15,10 @@ Key Features:
 Usage:
     validator = RestDataValidator(strategic_client, websocket_manager)
     await validator.initialize()
-    
+
     # Validate specific data
     is_valid = await validator.validate_balance_data(rest_data, ws_data)
-    
+
     # Run continuous validation
     await validator.start_continuous_validation()
 """
@@ -28,7 +28,7 @@ import logging
 import time
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from .strategic_rest_client import StrategicRestClient
 
@@ -40,9 +40,9 @@ class ValidationResult:
     """Results from data validation."""
     is_valid: bool
     confidence: float  # 0.0 to 1.0
-    discrepancies: List[str] = field(default_factory=list)
-    rest_data: Optional[Dict[str, Any]] = None
-    websocket_data: Optional[Dict[str, Any]] = None
+    discrepancies: list[str] = field(default_factory=list)
+    rest_data: Optional[dict[str, Any]] = None
+    websocket_data: Optional[dict[str, Any]] = None
     timestamp: float = field(default_factory=time.time)
     resolution_action: Optional[str] = None
 
@@ -86,7 +86,7 @@ class ValidationStats:
 class RestDataValidator:
     """
     Cross-validation system for REST and WebSocket data integrity.
-    
+
     Provides comprehensive data validation, discrepancy detection,
     and automated resolution strategies to ensure data consistency.
     """
@@ -101,7 +101,7 @@ class RestDataValidator:
     ):
         """
         Initialize REST data validator.
-        
+
         Args:
             strategic_client: Strategic REST client instance
             websocket_manager: WebSocket manager for data comparison
@@ -117,8 +117,8 @@ class RestDataValidator:
 
         # Validation tracking
         self.stats = ValidationStats()
-        self._validation_history: List[ValidationResult] = []
-        self._discrepancy_patterns: Dict[str, int] = {}
+        self._validation_history: list[ValidationResult] = []
+        self._discrepancy_patterns: dict[str, int] = {}
 
         # Validation tasks
         self._validation_task: Optional[asyncio.Task] = None
@@ -237,16 +237,16 @@ class RestDataValidator:
 
     async def validate_balance_data(
         self,
-        rest_balance: Optional[Dict[str, Any]] = None,
-        websocket_balance: Optional[Dict[str, Any]] = None
+        rest_balance: Optional[dict[str, Any]] = None,
+        websocket_balance: Optional[dict[str, Any]] = None
     ) -> ValidationResult:
         """
         Validate balance data between REST and WebSocket sources.
-        
+
         Args:
             rest_balance: REST balance data (fetched if None)
             websocket_balance: WebSocket balance data
-            
+
         Returns:
             Validation result
         """
@@ -297,17 +297,17 @@ class RestDataValidator:
     async def validate_price_data(
         self,
         pair: str,
-        rest_price: Optional[Dict[str, Any]] = None,
-        websocket_price: Optional[Dict[str, Any]] = None
+        rest_price: Optional[dict[str, Any]] = None,
+        websocket_price: Optional[dict[str, Any]] = None
     ) -> ValidationResult:
         """
         Validate price data for a specific pair.
-        
+
         Args:
             pair: Trading pair to validate
             rest_price: REST price data (fetched if None)
             websocket_price: WebSocket price data
-            
+
         Returns:
             Validation result
         """
@@ -358,11 +358,11 @@ class RestDataValidator:
     ) -> ValidationResult:
         """
         Validate order book data between sources.
-        
+
         Args:
             pair: Trading pair
             depth: Order book depth to validate
-            
+
         Returns:
             Validation result
         """
@@ -399,8 +399,8 @@ class RestDataValidator:
 
     def _compare_balance_data(
         self,
-        rest_balance: Dict[str, Any],
-        websocket_balance: Optional[Dict[str, Any]]
+        rest_balance: dict[str, Any],
+        websocket_balance: Optional[dict[str, Any]]
     ) -> ValidationResult:
         """Compare balance data from different sources."""
         discrepancies = []
@@ -481,8 +481,8 @@ class RestDataValidator:
     def _compare_price_data(
         self,
         pair: str,
-        rest_price: Dict[str, Any],
-        websocket_price: Optional[Dict[str, Any]]
+        rest_price: dict[str, Any],
+        websocket_price: Optional[dict[str, Any]]
     ) -> ValidationResult:
         """Compare price data from different sources."""
         discrepancies = []
@@ -551,8 +551,8 @@ class RestDataValidator:
     def _compare_orderbook_data(
         self,
         pair: str,
-        rest_orderbook: Dict[str, Any],
-        websocket_orderbook: Optional[Dict[str, Any]]
+        rest_orderbook: dict[str, Any],
+        websocket_orderbook: Optional[dict[str, Any]]
     ) -> ValidationResult:
         """Compare order book data from different sources."""
         discrepancies = []
@@ -639,7 +639,7 @@ class RestDataValidator:
         logger.debug("[REST_VALIDATOR] Performing scheduled validation")
 
         # Validate balance
-        balance_result = await self.validate_balance_data()
+        await self.validate_balance_data()
 
         # Validate critical pairs
         for pair in self._critical_pairs:
@@ -693,7 +693,7 @@ class RestDataValidator:
 
     # ====== WEBSOCKET INTEGRATION ======
 
-    async def _get_websocket_balance(self) -> Optional[Dict[str, Any]]:
+    async def _get_websocket_balance(self) -> Optional[dict[str, Any]]:
         """Get balance data from WebSocket manager."""
         if not self.websocket_manager:
             return None
@@ -710,7 +710,7 @@ class RestDataValidator:
 
         return None
 
-    async def _get_websocket_ticker(self, pair: str) -> Optional[Dict[str, Any]]:
+    async def _get_websocket_ticker(self, pair: str) -> Optional[dict[str, Any]]:
         """Get ticker data from WebSocket manager."""
         if not self.websocket_manager:
             return None
@@ -725,7 +725,7 @@ class RestDataValidator:
 
         return None
 
-    async def _get_websocket_orderbook(self, pair: str) -> Optional[Dict[str, Any]]:
+    async def _get_websocket_orderbook(self, pair: str) -> Optional[dict[str, Any]]:
         """Get order book data from WebSocket manager."""
         if not self.websocket_manager:
             return None
@@ -745,7 +745,7 @@ class RestDataValidator:
     def add_critical_pair(self, pair: str) -> None:
         """
         Add a trading pair to critical validation list.
-        
+
         Args:
             pair: Trading pair to add
         """
@@ -755,14 +755,14 @@ class RestDataValidator:
     def remove_critical_pair(self, pair: str) -> None:
         """
         Remove a trading pair from critical validation list.
-        
+
         Args:
             pair: Trading pair to remove
         """
         self._critical_pairs.discard(pair)
         logger.info(f"[REST_VALIDATOR] Removed critical pair: {pair}")
 
-    def get_validation_stats(self) -> Dict[str, Any]:
+    def get_validation_stats(self) -> dict[str, Any]:
         """Get validation statistics."""
         return {
             'stats': {
@@ -805,10 +805,10 @@ class RestDataValidator:
             )
             self._discrepancy_patterns = dict(sorted_patterns[:50])
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform validator health check.
-        
+
         Returns:
             Health status
         """

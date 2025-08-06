@@ -31,7 +31,7 @@ import uuid
 from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 try:
     from ..guardian.critical_error_guardian import CriticalErrorGuardian, CriticalityLevel
@@ -114,7 +114,7 @@ class OrderExecution:
     execution_id: Optional[str] = None
 
     @classmethod
-    def from_kraken_execution(cls, raw_data: Dict[str, Any]) -> 'OrderExecution':
+    def from_kraken_execution(cls, raw_data: dict[str, Any]) -> 'OrderExecution':
         """Create OrderExecution from Kraken execution message"""
         return cls(
             order_id=raw_data.get('order_id', ''),
@@ -145,7 +145,7 @@ class OrderState:
     total_fees: str = "0"
     created_at: float = field(default_factory=time.time)
     updated_at: float = field(default_factory=time.time)
-    executions: List[OrderExecution] = field(default_factory=list)
+    executions: list[OrderExecution] = field(default_factory=list)
     error_message: Optional[str] = None
     retry_count: int = 0
 
@@ -171,7 +171,7 @@ class OrderState:
 class WebSocketOrderExecutionManager:
     """
     Comprehensive WebSocket V2 order execution manager
-    
+
     Manages order lifecycle through WebSocket connections:
     1. Order placement via WebSocket add_order method
     2. Real-time execution tracking via executions channel
@@ -185,7 +185,7 @@ class WebSocketOrderExecutionManager:
                  rate_limiter: Optional[KrakenRateLimiter] = None):
         """
         Initialize WebSocket order execution manager
-        
+
         Args:
             exchange_client: Exchange client for REST API fallback
             websocket_manager: WebSocket V2 manager for real-time data
@@ -198,8 +198,8 @@ class WebSocketOrderExecutionManager:
         self.rate_limiter = rate_limiter or KrakenRateLimiter(max_calls_per_second=10)
 
         # Order tracking
-        self.active_orders: Dict[str, OrderState] = {}  # client_order_id -> OrderState
-        self.order_id_mapping: Dict[str, str] = {}  # order_id -> client_order_id
+        self.active_orders: dict[str, OrderState] = {}  # client_order_id -> OrderState
+        self.order_id_mapping: dict[str, str] = {}  # order_id -> client_order_id
         self.execution_history: deque = deque(maxlen=1000)  # Recent executions
 
         # WebSocket connection state
@@ -210,8 +210,8 @@ class WebSocketOrderExecutionManager:
         self.token_refresh_interval = 13 * 60  # 13 minutes
 
         # Execution callbacks
-        self.execution_callbacks: List[Callable] = []
-        self.order_status_callbacks: List[Callable] = []
+        self.execution_callbacks: list[Callable] = []
+        self.order_status_callbacks: list[Callable] = []
 
         # Circuit breaker state
         self.circuit_breaker_active = False
@@ -241,7 +241,7 @@ class WebSocketOrderExecutionManager:
     async def initialize(self) -> bool:
         """
         Initialize the order execution manager
-        
+
         Returns:
             bool: True if initialization successful
         """
@@ -286,10 +286,10 @@ class WebSocketOrderExecutionManager:
     async def add_order(self, order_request: OrderRequest) -> Optional[str]:
         """
         Place a new order via WebSocket or REST fallback
-        
+
         Args:
             order_request: Order details
-            
+
         Returns:
             str: Client order ID if successful, None otherwise
         """
@@ -474,10 +474,10 @@ class WebSocketOrderExecutionManager:
     async def cancel_order(self, client_order_id: str) -> bool:
         """
         Cancel an order via WebSocket or REST fallback
-        
+
         Args:
             client_order_id: Client order ID to cancel
-            
+
         Returns:
             bool: True if cancellation successful
         """
@@ -573,12 +573,12 @@ class WebSocketOrderExecutionManager:
                          new_price: Optional[str] = None) -> bool:
         """
         Modify an existing order via WebSocket amend_order method
-        
+
         Args:
             client_order_id: Client order ID to modify
             new_quantity: New order quantity
             new_price: New order price
-            
+
         Returns:
             bool: True if amendment successful
         """
@@ -630,13 +630,13 @@ class WebSocketOrderExecutionManager:
                 await self.guardian.handle_critical_error("order_amendment", e, CriticalityLevel.MEDIUM)
             return False
 
-    async def batch_cancel(self, client_order_ids: List[str]) -> Dict[str, bool]:
+    async def batch_cancel(self, client_order_ids: list[str]) -> dict[str, bool]:
         """
         Cancel multiple orders efficiently
-        
+
         Args:
             client_order_ids: List of client order IDs to cancel
-            
+
         Returns:
             Dict[str, bool]: Results for each order ID
         """
@@ -689,7 +689,7 @@ class WebSocketOrderExecutionManager:
                 await self.guardian.handle_critical_error("batch_cancel", e, CriticalityLevel.MEDIUM)
             return dict.fromkeys(client_order_ids, False)
 
-    async def _batch_cancel_websocket(self, order_ids: List[str]) -> bool:
+    async def _batch_cancel_websocket(self, order_ids: list[str]) -> bool:
         """Cancel multiple orders via WebSocket batch operation"""
         try:
             cancel_params = {
@@ -714,10 +714,10 @@ class WebSocketOrderExecutionManager:
             logger.error(f"[WS_ORDER_EXEC] Batch cancel WebSocket error: {e}")
             return False
 
-    async def _handle_execution_update(self, execution_data: List[Dict[str, Any]]):
+    async def _handle_execution_update(self, execution_data: list[dict[str, Any]]):
         """
         Handle execution updates from WebSocket executions channel
-        
+
         Args:
             execution_data: List of execution messages from Kraken
         """
@@ -916,15 +916,15 @@ class WebSocketOrderExecutionManager:
         """Get current order status"""
         return self.active_orders.get(client_order_id)
 
-    def get_active_orders(self) -> Dict[str, OrderState]:
+    def get_active_orders(self) -> dict[str, OrderState]:
         """Get all active orders"""
         return {k: v for k, v in self.active_orders.items() if not v.is_final_state}
 
-    def get_order_history(self, limit: int = 100) -> List[OrderExecution]:
+    def get_order_history(self, limit: int = 100) -> list[OrderExecution]:
         """Get recent execution history"""
         return list(self.execution_history)[-limit:]
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get execution manager statistics"""
         stats = self.stats.copy()
         stats.update({
@@ -1010,7 +1010,7 @@ class OrderExecutionIntegration:
                          order_type: str = "limit", price: str = None, **kwargs) -> Optional[str]:
         """
         Convenient order placement method for existing bot code
-        
+
         Args:
             symbol: Trading pair
             side: 'buy' or 'sell'
@@ -1018,7 +1018,7 @@ class OrderExecutionIntegration:
             order_type: Order type ('market', 'limit', etc.)
             price: Order price for limit orders
             **kwargs: Additional order parameters
-            
+
         Returns:
             str: Client order ID if successful
         """

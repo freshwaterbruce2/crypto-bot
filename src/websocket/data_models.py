@@ -10,7 +10,7 @@ import time
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal, safe_float
 
@@ -42,12 +42,12 @@ class WebSocketMessage:
     """Base WebSocket message structure"""
     channel: str
     type: MessageType
-    data: Dict[str, Any] = field(default_factory=dict)
+    data: dict[str, Any] = field(default_factory=dict)
     timestamp: float = field(default_factory=time.time)
     req_id: Optional[int] = None
 
     @classmethod
-    def from_raw(cls, raw_data: Dict[str, Any]) -> 'WebSocketMessage':
+    def from_raw(cls, raw_data: dict[str, Any]) -> 'WebSocketMessage':
         """Create message from raw WebSocket data"""
         channel = raw_data.get('channel', 'unknown')
         message_type = raw_data.get('type', channel)
@@ -80,10 +80,10 @@ class WebSocketMessage:
 class SubscriptionRequest:
     """WebSocket subscription request"""
     method: str = "subscribe"
-    params: Dict[str, Any] = field(default_factory=dict)
+    params: dict[str, Any] = field(default_factory=dict)
     req_id: Optional[int] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         result = {
             "method": self.method,
@@ -98,14 +98,14 @@ class SubscriptionRequest:
 class SubscriptionResponse:
     """WebSocket subscription response"""
     method: str
-    result: Dict[str, Any]
+    result: dict[str, Any]
     success: bool
     error: Optional[str] = None
     req_id: Optional[int] = None
     timestamp: float = field(default_factory=time.time)
 
     @classmethod
-    def from_raw(cls, raw_data: Dict[str, Any]) -> 'SubscriptionResponse':
+    def from_raw(cls, raw_data: dict[str, Any]) -> 'SubscriptionResponse':
         """Create response from raw WebSocket data"""
         return cls(
             method=raw_data.get('method', 'unknown'),
@@ -136,7 +136,7 @@ class BalanceUpdate:
         return self.balance
 
     @classmethod
-    def from_raw(cls, raw_data: Dict[str, Any]) -> 'BalanceUpdate':
+    def from_raw(cls, raw_data: dict[str, Any]) -> 'BalanceUpdate':
         """Create balance update from raw data"""
         return cls(
             asset=raw_data.get('asset', ''),
@@ -145,7 +145,7 @@ class BalanceUpdate:
             timestamp=time.time()
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format compatible with existing code"""
         return {
             'free': safe_float(self.free_balance),
@@ -189,7 +189,7 @@ class TickerUpdate:
         return Decimal('0')
 
     @classmethod
-    def from_raw(cls, symbol: str, raw_data: Dict[str, Any]) -> 'TickerUpdate':
+    def from_raw(cls, symbol: str, raw_data: dict[str, Any]) -> 'TickerUpdate':
         """Create ticker update from raw data"""
         return cls(
             symbol=symbol,
@@ -204,7 +204,7 @@ class TickerUpdate:
             timestamp=time.time()
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format compatible with existing code"""
         return {
             'bid': safe_float(self.bid),
@@ -230,7 +230,7 @@ class OrderBookLevel:
     timestamp: float = field(default_factory=time.time)
 
     @classmethod
-    def from_raw(cls, raw_data: Union[List, Dict]) -> 'OrderBookLevel':
+    def from_raw(cls, raw_data: Union[list, dict]) -> 'OrderBookLevel':
         """Create level from raw data (array or dict format)"""
         if isinstance(raw_data, list) and len(raw_data) >= 2:
             return cls(
@@ -252,8 +252,8 @@ class OrderBookLevel:
 class OrderBookUpdate:
     """Orderbook update message"""
     symbol: str
-    bids: List[OrderBookLevel] = field(default_factory=list)
-    asks: List[OrderBookLevel] = field(default_factory=list)
+    bids: list[OrderBookLevel] = field(default_factory=list)
+    asks: list[OrderBookLevel] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
     checksum: Optional[str] = None
 
@@ -290,7 +290,7 @@ class OrderBookUpdate:
         return Decimal('0')
 
     @classmethod
-    def from_raw(cls, symbol: str, raw_data: Dict[str, Any]) -> 'OrderBookUpdate':
+    def from_raw(cls, symbol: str, raw_data: dict[str, Any]) -> 'OrderBookUpdate':
         """Create orderbook update from raw data"""
         bids = []
         asks = []
@@ -321,7 +321,7 @@ class OrderBookUpdate:
             checksum=raw_data.get('checksum')
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format compatible with existing code"""
         return {
             'bids': [{'price': safe_float(b.price), 'volume': safe_float(b.volume)} for b in self.bids],
@@ -343,7 +343,7 @@ class TradeUpdate:
     trade_id: Optional[str] = None
 
     @classmethod
-    def from_raw(cls, symbol: str, raw_data: Dict[str, Any]) -> 'TradeUpdate':
+    def from_raw(cls, symbol: str, raw_data: dict[str, Any]) -> 'TradeUpdate':
         """Create trade update from raw data"""
         return cls(
             symbol=symbol,
@@ -354,7 +354,7 @@ class TradeUpdate:
             trade_id=raw_data.get('trade_id')
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format compatible with existing code"""
         return {
             'side': self.side,
@@ -378,7 +378,7 @@ class OHLCUpdate:
     timestamp: float = field(default_factory=time.time)
 
     @classmethod
-    def from_raw(cls, symbol: str, raw_data: Dict[str, Any]) -> 'OHLCUpdate':
+    def from_raw(cls, symbol: str, raw_data: dict[str, Any]) -> 'OHLCUpdate':
         """Create OHLC update from raw data"""
         # Handle timestamp conversion
         timestamp_raw = raw_data.get('timestamp', time.time())
@@ -403,7 +403,7 @@ class OHLCUpdate:
             timestamp=timestamp
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format compatible with existing code"""
         return {
             'open': safe_float(self.open_price),
@@ -421,7 +421,7 @@ class ConnectionStatus:
     """WebSocket connection status"""
     connected: bool = False
     authenticated: bool = False
-    subscriptions: List[str] = field(default_factory=list)
+    subscriptions: list[str] = field(default_factory=list)
     last_heartbeat: float = 0
     connection_time: float = 0
     reconnect_count: int = 0
@@ -448,7 +448,7 @@ class ConnectionStatus:
 
         return True
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for status reporting"""
         return {
             'connected': self.connected,

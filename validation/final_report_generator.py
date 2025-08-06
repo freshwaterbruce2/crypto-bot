@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -52,7 +52,7 @@ class ValidationSummary:
     success_rate: float
     duration: float
     status: SystemStatus
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 @dataclass
@@ -61,11 +61,11 @@ class SystemReadinessAssessment:
     overall_status: SystemStatus
     confidence_score: float  # 0-100
     production_readiness: bool
-    critical_blockers: List[str]
-    warnings: List[str]
-    strengths: List[str]
-    improvement_areas: List[str]
-    go_live_checklist: List[str]
+    critical_blockers: list[str]
+    warnings: list[str]
+    strengths: list[str]
+    improvement_areas: list[str]
+    go_live_checklist: list[str]
 
 
 class FinalValidationReportGenerator:
@@ -81,7 +81,7 @@ class FinalValidationReportGenerator:
         self.trading_tester = TradingScenarioTester()
 
         # Results storage
-        self.validation_summaries: List[ValidationSummary] = []
+        self.validation_summaries: list[ValidationSummary] = []
         self.detailed_results = {}
         self.system_metrics = {}
 
@@ -99,7 +99,7 @@ class FinalValidationReportGenerator:
 
         return logger
 
-    async def generate_complete_validation_report(self) -> Dict[str, Any]:
+    async def generate_complete_validation_report(self) -> dict[str, Any]:
         """Generate complete system validation report"""
         self.logger.info("Starting complete system validation")
 
@@ -281,9 +281,9 @@ class FinalValidationReportGenerator:
         # Calculate overall metrics
         total_tests = sum(s.total_tests for s in self.validation_summaries)
         total_passed = sum(s.passed_tests for s in self.validation_summaries)
-        total_critical = sum(s.critical_failures for s in self.validation_summaries)
+        sum(s.critical_failures for s in self.validation_summaries)
 
-        overall_success_rate = total_passed / total_tests if total_tests > 0 else 0
+        total_passed / total_tests if total_tests > 0 else 0
 
         # Determine overall status
         category_statuses = [s.status for s in self.validation_summaries]
@@ -386,7 +386,7 @@ class FinalValidationReportGenerator:
         # Cap at 100
         return min(100.0, base_score)
 
-    def _generate_go_live_checklist(self) -> List[str]:
+    def _generate_go_live_checklist(self) -> list[str]:
         """Generate go-live checklist based on validation results"""
         checklist = []
 
@@ -426,7 +426,7 @@ class FinalValidationReportGenerator:
         return checklist
 
     def _generate_final_report(self, readiness_assessment: SystemReadinessAssessment,
-                              total_duration: float) -> Dict[str, Any]:
+                              total_duration: float) -> dict[str, Any]:
         """Generate comprehensive final validation report"""
 
         # Calculate aggregate statistics
@@ -506,7 +506,7 @@ class FinalValidationReportGenerator:
         else:
             return "NOT READY: Critical issues must be resolved before system can be deployed."
 
-    def _get_immediate_actions(self, assessment: SystemReadinessAssessment) -> List[str]:
+    def _get_immediate_actions(self, assessment: SystemReadinessAssessment) -> list[str]:
         """Get immediate actions required"""
         actions = []
 
@@ -520,7 +520,7 @@ class FinalValidationReportGenerator:
 
         return actions
 
-    def _get_optimization_suggestions(self) -> List[str]:
+    def _get_optimization_suggestions(self) -> list[str]:
         """Get optimization suggestions"""
         suggestions = []
 
@@ -538,7 +538,7 @@ class FinalValidationReportGenerator:
 
         return suggestions
 
-    def _get_monitoring_requirements(self) -> List[str]:
+    def _get_monitoring_requirements(self) -> list[str]:
         """Get monitoring requirements for production"""
         return [
             "Real-time system health monitoring",
@@ -552,7 +552,7 @@ class FinalValidationReportGenerator:
             "WebSocket connection stability"
         ]
 
-    def _identify_high_risk_areas(self) -> List[str]:
+    def _identify_high_risk_areas(self) -> list[str]:
         """Identify high-risk areas based on test results"""
         high_risk = []
 
@@ -564,7 +564,7 @@ class FinalValidationReportGenerator:
 
         return high_risk
 
-    def _get_mitigation_strategies(self) -> List[str]:
+    def _get_mitigation_strategies(self) -> list[str]:
         """Get risk mitigation strategies"""
         return [
             "Start with minimal position sizes and gradually increase",
@@ -575,7 +575,7 @@ class FinalValidationReportGenerator:
             "Ensure quick response team availability during launch"
         ]
 
-    def _assess_deployment_risks(self, assessment: SystemReadinessAssessment) -> Dict[str, str]:
+    def _assess_deployment_risks(self, assessment: SystemReadinessAssessment) -> dict[str, str]:
         """Assess deployment risks"""
         risks = {}
 
@@ -594,7 +594,7 @@ class FinalValidationReportGenerator:
 
         return risks
 
-    def _generate_executive_summary(self, report: Dict[str, Any]) -> Dict[str, Any]:
+    def _generate_executive_summary(self, report: dict[str, Any]) -> dict[str, Any]:
         """Generate executive summary for stakeholders"""
         return {
             "validation_date": datetime.now().strftime("%Y-%m-%d"),
@@ -608,7 +608,7 @@ class FinalValidationReportGenerator:
             "go_live_approval": "APPROVED" if report["readiness_assessment"]["production_readiness"] else "PENDING"
         }
 
-    async def _save_validation_report(self, report: Dict[str, Any]):
+    async def _save_validation_report(self, report: dict[str, Any]):
         """Save validation report to files"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -633,7 +633,7 @@ class FinalValidationReportGenerator:
         self.logger.info(f"  - Executive summary: {summary_file}")
         self.logger.info(f"  - Human-readable: {readme_file}")
 
-    def _generate_human_readable_summary(self, report: Dict[str, Any]) -> str:
+    def _generate_human_readable_summary(self, report: dict[str, Any]) -> str:
         """Generate human-readable validation summary"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 

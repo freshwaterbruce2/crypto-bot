@@ -5,7 +5,7 @@ Quick profit-oriented trading strategy for immediate market opportunities
 
 import logging
 import time
-from typing import Any, Dict, List, Union
+from typing import Any, Union
 
 from .base_strategy import BaseStrategy
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class FastStartStrategy(BaseStrategy):
     """Fast start strategy for quick profits"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize fast start strategy"""
         # Extract required parameters for BaseStrategy constructor
         exchange = config.get('exchange')
@@ -48,7 +48,7 @@ class FastStartStrategy(BaseStrategy):
 
         logger.info(f"[FAST_START] Strategy initialized with {self.profit_target}% target")
 
-    async def analyze(self, symbol: str, timeframe: str = '1m') -> Dict[str, Any]:
+    async def analyze(self, symbol: str, timeframe: str = '1m') -> dict[str, Any]:
         """Fast analysis for immediate trading decisions"""
         start_time = time.time()
 
@@ -115,7 +115,7 @@ class FastStartStrategy(BaseStrategy):
             logger.error(f"[FAST_START] Error analyzing {symbol}: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Analysis error: {e}'}
 
-    async def should_buy(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_buy(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Quick buy decision"""
         try:
             if analysis.get('action') != 'BUY':
@@ -138,7 +138,7 @@ class FastStartStrategy(BaseStrategy):
             logger.error(f"[FAST_START] Error in buy decision for {symbol}: {e}")
             return False
 
-    async def should_sell(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_sell(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Quick sell decision"""
         try:
             if analysis.get('action') != 'SELL':
@@ -162,7 +162,7 @@ class FastStartStrategy(BaseStrategy):
             logger.error(f"[FAST_START] Error in sell decision for {symbol}: {e}")
             return False
 
-    async def generate_signals(self, market_data: Union[Dict[str, Any], List[Dict[str, Any]]]) -> Dict[str, Any]:
+    async def generate_signals(self, market_data: Union[dict[str, Any], list[dict[str, Any]]]) -> dict[str, Any]:
         """
         Generate trading signals based on market data.
         Required implementation for BaseStrategy abstract method.
@@ -177,7 +177,7 @@ class FastStartStrategy(BaseStrategy):
                 data = market_data
 
             # Extract relevant data
-            symbol = data.get('symbol', '')
+            data.get('symbol', '')
             current_price = float(data.get('close', 0))
             volume = float(data.get('volume', 0))
 
@@ -221,7 +221,7 @@ class FastStartStrategy(BaseStrategy):
             logger.error(f"[FAST_START] Error generating signals: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Error: {str(e)}'}
 
-    def get_strategy_info(self) -> Dict[str, Any]:
+    def get_strategy_info(self) -> dict[str, Any]:
         """Get strategy information"""
         return {
             'name': 'FastStartStrategy',

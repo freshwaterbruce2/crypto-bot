@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import numpy as np
 
@@ -57,7 +57,7 @@ class ScalpingSignal:
     risk_reward_ratio: float
     timeframe: str
     indicators: MomentumIndicators
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class MomentumScalping:
@@ -83,7 +83,7 @@ class MomentumScalping:
                  min_risk_reward: float = 1.5):
         """
         Initialize the momentum scalping strategy.
-        
+
         Args:
             timeframe: Trading timeframe
             rsi_period: RSI calculation period
@@ -116,16 +116,16 @@ class MomentumScalping:
         self.min_risk_reward = min_risk_reward
 
         # Data storage
-        self.price_data: List[float] = []
-        self.volume_data: List[float] = []
-        self.high_data: List[float] = []
-        self.low_data: List[float] = []
-        self.timestamp_data: List[datetime] = []
+        self.price_data: list[float] = []
+        self.volume_data: list[float] = []
+        self.high_data: list[float] = []
+        self.low_data: list[float] = []
+        self.timestamp_data: list[datetime] = []
 
         # Indicator history
-        self.rsi_history: List[float] = []
-        self.macd_history: List[float] = []
-        self.signal_history: List[ScalpingSignal] = []
+        self.rsi_history: list[float] = []
+        self.macd_history: list[float] = []
+        self.signal_history: list[ScalpingSignal] = []
 
         # Strategy state
         self.current_signal: Optional[ScalpingSignal] = None
@@ -143,7 +143,7 @@ class MomentumScalping:
                    timestamp: Optional[datetime] = None) -> None:
         """
         Update strategy with new market data.
-        
+
         Args:
             price: Current price (close price)
             volume: Current volume
@@ -175,7 +175,7 @@ class MomentumScalping:
     def calculate_indicators(self) -> Optional[MomentumIndicators]:
         """
         Calculate momentum indicators.
-        
+
         Returns:
             MomentumIndicators object or None if insufficient data
         """
@@ -340,7 +340,6 @@ class MomentumScalping:
         macd_line = ema_fast - ema_slow
 
         # Calculate signal line (EMA of MACD line)
-        macd_values = [macd_line]  # Simplified for this example
         signal_line = macd_line  # Would be EMA of MACD line in full implementation
 
         # Calculate histogram
@@ -362,7 +361,7 @@ class MomentumScalping:
 
         return ema
 
-    def _calculate_stochastic(self, prices: np.ndarray, highs: np.ndarray, lows: np.ndarray) -> Tuple[float, float]:
+    def _calculate_stochastic(self, prices: np.ndarray, highs: np.ndarray, lows: np.ndarray) -> tuple[float, float]:
         """Calculate Stochastic oscillator."""
         if len(prices) < 14:
             return 50.0, 50.0
@@ -404,7 +403,7 @@ class MomentumScalping:
     def generate_signal(self) -> Optional[ScalpingSignal]:
         """
         Generate scalping signal based on momentum indicators.
-        
+
         Returns:
             ScalpingSignal or None if no signal
         """
@@ -577,7 +576,7 @@ class MomentumScalping:
     def update_signal_result(self, signal_id: str, success: bool, pnl: float) -> None:
         """
         Update signal result for performance tracking.
-        
+
         Args:
             signal_id: Signal identifier
             success: Whether signal was successful
@@ -594,11 +593,11 @@ class MomentumScalping:
         """Get current active signal."""
         return self.current_signal
 
-    def get_signal_history(self, limit: int = 100) -> List[ScalpingSignal]:
+    def get_signal_history(self, limit: int = 100) -> list[ScalpingSignal]:
         """Get signal history."""
         return self.signal_history[-limit:]
 
-    def get_strategy_statistics(self) -> Dict[str, Any]:
+    def get_strategy_statistics(self) -> dict[str, Any]:
         """Get strategy performance statistics."""
         win_rate = self.successful_signals / max(self.signals_generated, 1)
 
@@ -633,13 +632,13 @@ class MomentumScalping:
 
         logger.info("Strategy reset")
 
-    def optimize_parameters(self, historical_data: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def optimize_parameters(self, historical_data: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Optimize strategy parameters based on historical data.
-        
+
         Args:
             historical_data: List of historical price/volume data
-            
+
         Returns:
             Dictionary with optimized parameters
         """

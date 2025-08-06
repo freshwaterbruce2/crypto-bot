@@ -11,7 +11,7 @@ import shutil
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import List, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class LogRotationManager:
                  disk_space_threshold_pct: int = 90):
         """
         Initialize log rotation manager
-        
+
         Args:
             log_dir: Directory containing logs
             max_log_size_mb: Maximum size of a log file before rotation
@@ -63,7 +63,7 @@ class LogRotationManager:
             used_percent = ((total - free) / total) * 100
             return used_percent
 
-    def rotate_large_files(self) -> List[str]:
+    def rotate_large_files(self) -> list[str]:
         """Rotate files that exceed size limit"""
         rotated_files = []
 

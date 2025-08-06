@@ -3,7 +3,7 @@ FastAPI-based trading API with subscription management.
 Provides RESTful endpoints for bot control, monitoring, and trading operations.
 """
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Optional
 
 import uvicorn
 from fastapi import Depends, FastAPI, HTTPException, Security, status
@@ -22,7 +22,7 @@ class TradingSignal(BaseModel):
     confidence: float = Field(..., ge=0, le=1)
     price: float
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Optional[Dict] = None
+    metadata: Optional[dict] = None
 
 
 class OrderRequest(BaseModel):
@@ -62,15 +62,15 @@ class BacktestRequest(BaseModel):
     start_date: datetime
     end_date: datetime
     initial_balance: float = 10000.0
-    parameters: Optional[Dict] = None
+    parameters: Optional[dict] = None
 
 
 class StrategyConfig(BaseModel):
     """Strategy configuration model."""
     name: str
     enabled: bool = True
-    parameters: Dict
-    pairs: List[str]
+    parameters: dict
+    pairs: list[str]
     risk_limit: float = 0.02
 
 
@@ -160,7 +160,7 @@ async def get_account_info(user: User = Depends(get_current_user)):
     }
 
 
-@app.get("/api/balance", response_model=List[BalanceResponse])
+@app.get("/api/balance", response_model=list[BalanceResponse])
 async def get_balances(user: User = Depends(get_current_user)):
     """Get current account balances."""
     # Check rate limit
@@ -194,7 +194,7 @@ async def create_order(
 ):
     """Create a new trading order."""
     # Check subscription features
-    features = subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
+    subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
 
     # Validate trading pair limit
     # In production, check against user's active pairs
@@ -270,7 +270,7 @@ async def run_backtest(
 @app.get("/api/strategies")
 async def get_strategies(user: User = Depends(get_current_user)):
     """Get available trading strategies."""
-    features = subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
+    subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
 
     # Basic strategies available to all
     strategies = [
@@ -310,7 +310,7 @@ async def activate_strategy(
 ):
     """Activate a trading strategy."""
     # Validate strategy limits
-    features = subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
+    subscription_manager.SUBSCRIPTION_TIERS[user.subscription_tier]
 
     # In production, activate strategy
     return {
@@ -349,7 +349,7 @@ async def get_live_signals(
 @app.post("/api/webhooks")
 async def create_webhook(
     url: str,
-    events: List[str],
+    events: list[str],
     user: User = Depends(get_current_user),
 ):
     """Create webhook for automated notifications."""

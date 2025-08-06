@@ -356,8 +356,8 @@ class DesktopCommander:
     async def manage_windows(self, args: dict) -> CallToolResult:
         """Manage windows"""
         action = args.get("action", "list")
-        window_title = args.get("window_title", "")
-        process_name = args.get("process_name", "")
+        args.get("window_title", "")
+        args.get("process_name", "")
 
         try:
             if action == "list":

@@ -2,7 +2,7 @@
 Balance Cache System
 ===================
 
-Intelligent caching system for balance data with TTL (Time To Live) and LRU 
+Intelligent caching system for balance data with TTL (Time To Live) and LRU
 (Least Recently Used) eviction policies. Provides thread-safe operations and
 integration with WebSocket streaming and REST API fallback.
 
@@ -22,7 +22,7 @@ from collections import OrderedDict
 from dataclasses import dataclass, field
 from decimal import Decimal
 from threading import RLock
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 
@@ -60,7 +60,7 @@ class BalanceCacheEntry:
         self.access_count += 1
         self.last_access = time.time()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'asset': self.asset,
@@ -88,7 +88,7 @@ class BalanceCache:
                  cleanup_interval: float = 60.0):  # 1 minute
         """
         Initialize balance cache
-        
+
         Args:
             max_size: Maximum number of cache entries
             default_ttl: Default TTL for cache entries in seconds
@@ -121,7 +121,7 @@ class BalanceCache:
         self._running = False
 
         # Callbacks for cache events
-        self._callbacks: Dict[str, List[Callable]] = {
+        self._callbacks: dict[str, list[Callable]] = {
             'hit': [],
             'miss': [],
             'eviction': [],
@@ -161,10 +161,10 @@ class BalanceCache:
     async def get(self, asset: str) -> Optional[BalanceCacheEntry]:
         """
         Get balance entry from cache
-        
+
         Args:
             asset: Asset symbol to retrieve
-            
+
         Returns:
             Cache entry if found and not expired, None otherwise
         """
@@ -203,14 +203,14 @@ class BalanceCache:
                   ttl_seconds: Optional[float] = None) -> BalanceCacheEntry:
         """
         Put balance entry into cache
-        
+
         Args:
             asset: Asset symbol
             balance: Total balance
             hold_trade: Amount held in trades
             source: Source of balance data
             ttl_seconds: TTL for this entry (uses default if None)
-            
+
         Returns:
             The created cache entry
         """
@@ -254,10 +254,10 @@ class BalanceCache:
     async def invalidate(self, asset: str) -> bool:
         """
         Invalidate (remove) cache entry
-        
+
         Args:
             asset: Asset symbol to invalidate
-            
+
         Returns:
             True if entry was removed, False if not found
         """
@@ -282,15 +282,15 @@ class BalanceCache:
                 self._stats['cache_invalidations'] += count
                 logger.info(f"[BALANCE_CACHE] Cleared {count} entries")
 
-    def get_all_sync(self) -> Dict[str, BalanceCacheEntry]:
+    def get_all_sync(self) -> dict[str, BalanceCacheEntry]:
         """
         Get all cache entries (synchronous)
-        
+
         Returns:
             Dictionary of all non-expired cache entries
         """
         with self._lock:
-            current_time = time.time()
+            time.time()
             valid_entries = {}
             expired_assets = []
 
@@ -308,17 +308,17 @@ class BalanceCache:
 
             return valid_entries
 
-    async def get_all(self) -> Dict[str, BalanceCacheEntry]:
+    async def get_all(self) -> dict[str, BalanceCacheEntry]:
         """
         Get all cache entries (async)
-        
+
         Returns:
             Dictionary of all non-expired cache entries
         """
         async with self._async_lock:
             return self.get_all_sync()
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get cache statistics"""
         with self._lock:
             total_requests = self._stats['cache_hits'] + self._stats['cache_misses']
@@ -369,7 +369,7 @@ class BalanceCache:
         """Remove expired cache entries"""
         async with self._async_lock:
             with self._lock:
-                current_time = time.time()
+                time.time()
                 expired_assets = []
 
                 for asset, entry in self._cache.items():
@@ -389,7 +389,7 @@ class BalanceCache:
     def register_callback(self, event_type: str, callback: Callable):
         """
         Register callback for cache events
-        
+
         Args:
             event_type: Type of event ('hit', 'miss', 'eviction', 'expiration', 'invalidation', 'update')
             callback: Async callback function

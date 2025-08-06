@@ -8,7 +8,7 @@ import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,9 +45,9 @@ class PerformanceDashboard:
     def __init__(self, swarm_id: str, neural_model_id: str):
         self.swarm_id = swarm_id
         self.neural_model_id = neural_model_id
-        self.metrics_history: List[PerformanceMetrics] = []
-        self.agent_performance: Dict[str, AgentPerformance] = {}
-        self.alerts: List[Dict[str, Any]] = []
+        self.metrics_history: list[PerformanceMetrics] = []
+        self.agent_performance: dict[str, AgentPerformance] = {}
+        self.alerts: list[dict[str, Any]] = []
         self.monitoring_active = False
 
         # Performance thresholds
@@ -133,7 +133,7 @@ class PerformanceDashboard:
         except Exception as e:
             logger.error(f"[DASHBOARD] Error collecting metrics: {e}")
 
-    async def _get_neural_performance(self) -> Dict[str, Any]:
+    async def _get_neural_performance(self) -> dict[str, Any]:
         """Get neural model performance metrics"""
         try:
             # Simulate neural performance query
@@ -147,7 +147,7 @@ class PerformanceDashboard:
             logger.error(f"[DASHBOARD] Neural performance query failed: {e}")
             return {'accuracy': 0.68, 'training_epochs': 0}
 
-    async def _get_swarm_metrics(self) -> Dict[str, Any]:
+    async def _get_swarm_metrics(self) -> dict[str, Any]:
         """Get swarm performance metrics"""
         try:
             # Simulate swarm metrics query
@@ -162,7 +162,7 @@ class PerformanceDashboard:
             logger.error(f"[DASHBOARD] Swarm metrics query failed: {e}")
             return {'avg_execution_time': 6.0, 'success_rate': 0.81}
 
-    async def _get_trading_performance(self) -> Dict[str, Any]:
+    async def _get_trading_performance(self) -> dict[str, Any]:
         """Get trading performance metrics"""
         try:
             # Simulate trading performance query
@@ -344,7 +344,7 @@ class PerformanceDashboard:
         except Exception as e:
             logger.error(f"[DASHBOARD] Error checking alerts: {e}")
 
-    def get_dashboard_summary(self) -> Dict[str, Any]:
+    def get_dashboard_summary(self) -> dict[str, Any]:
         """Get dashboard summary"""
         try:
             if not self.metrics_history:
@@ -386,7 +386,7 @@ class PerformanceDashboard:
             logger.error(f"[DASHBOARD] Error getting dashboard summary: {e}")
             return {'status': 'error', 'message': str(e)}
 
-    def _calculate_trends(self) -> Dict[str, str]:
+    def _calculate_trends(self) -> dict[str, str]:
         """Calculate performance trends"""
         try:
             if len(self.metrics_history) < 10:

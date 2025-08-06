@@ -168,7 +168,7 @@ async def test_error_handling(client: KrakenRestClient):
         start_time = asyncio.get_event_loop().time()
 
         tasks = []
-        for i in range(10):
+        for _i in range(10):
             task = client.get_server_time()
             tasks.append(task)
 

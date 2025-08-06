@@ -19,7 +19,7 @@ import time
 from collections import deque
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class TradingSignal:
     profit_target: float
     stop_loss: float
     timestamp: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
     priority: int = 0  # Higher priority for better opportunities
 
 
@@ -50,7 +50,7 @@ class ExecutionResult:
 class HFTController:
     """High-frequency trading controller for micro-scalping"""
 
-    def __init__(self, bot, config: Dict[str, Any]):
+    def __init__(self, bot, config: dict[str, Any]):
         """Initialize HFT controller"""
         self.bot = bot
         self.config = config
@@ -69,8 +69,8 @@ class HFTController:
 
         # Signal queue with priority
         self.signal_queue = asyncio.PriorityQueue(maxsize=50)
-        self.active_positions: Set[str] = set()
-        self.position_entry_times: Dict[str, float] = {}
+        self.active_positions: set[str] = set()
+        self.position_entry_times: dict[str, float] = {}
 
         # Execution control
         self.is_running = False
@@ -126,7 +126,7 @@ class HFTController:
 
         logger.info("[HFT_CONTROLLER] Stopped")
 
-    async def process_signals(self, signals: List[Dict[str, Any]]):
+    async def process_signals(self, signals: list[dict[str, Any]]):
         """Process incoming signals for high-frequency execution"""
         try:
             self.signals_processed += len(signals)
@@ -159,7 +159,7 @@ class HFTController:
         except Exception as e:
             logger.error(f"[HFT_CONTROLLER] Error processing signals: {e}")
 
-    async def _prioritize_signals(self, signals: List[Dict[str, Any]]) -> List[tuple]:
+    async def _prioritize_signals(self, signals: list[dict[str, Any]]) -> list[tuple]:
         """Prioritize signals for execution"""
         prioritized = []
 
@@ -474,7 +474,7 @@ class HFTController:
                 logger.error(f"[HFT_CONTROLLER] Performance monitor error: {e}")
                 await asyncio.sleep(60)
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get current HFT metrics"""
         return {
             **self.metrics,

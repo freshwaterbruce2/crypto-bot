@@ -7,7 +7,7 @@ for all authentication operations in the trading bot.
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from .credential_manager import CredentialManager
 from .kraken_auth import KrakenAuth
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 class AuthService:
     """
     High-level authentication service for the trading bot.
-    
+
     Provides a unified interface for authentication operations,
     credential management, and authentication status monitoring.
     """
@@ -32,7 +32,7 @@ class AuthService:
     async def initialize(self) -> bool:
         """
         Initialize the authentication service with REST API credentials.
-        
+
         Returns:
             True if initialization successful, False otherwise
         """
@@ -70,14 +70,14 @@ class AuthService:
         """Check if the service is properly initialized"""
         return self._initialized and self.kraken_auth is not None
 
-    def get_auth_headers(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+    def get_auth_headers(self, endpoint: str, params: Optional[dict[str, Any]] = None) -> dict[str, str]:
         """
         Get authentication headers for an API request.
-        
+
         Args:
             endpoint: API endpoint path
             params: Request parameters
-            
+
         Returns:
             Dictionary of authentication headers
         """
@@ -86,14 +86,14 @@ class AuthService:
 
         return self.kraken_auth.get_auth_headers(endpoint, params or {})
 
-    async def get_auth_headers_async(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, str]:
+    async def get_auth_headers_async(self, endpoint: str, params: Optional[dict[str, Any]] = None) -> dict[str, str]:
         """
         Get authentication headers asynchronously.
-        
+
         Args:
             endpoint: API endpoint path
             params: Request parameters
-            
+
         Returns:
             Dictionary of authentication headers
         """
@@ -102,10 +102,10 @@ class AuthService:
 
         return await self.kraken_auth.get_auth_headers_async(endpoint, params or {})
 
-    def get_service_status(self) -> Dict[str, Any]:
+    def get_service_status(self) -> dict[str, Any]:
         """
         Get comprehensive status of the authentication service.
-        
+
         Returns:
             Dictionary with service status information
         """
@@ -127,7 +127,7 @@ class AuthService:
     async def test_authentication(self) -> bool:
         """
         Test authentication by generating headers for a test endpoint.
-        
+
         Returns:
             True if authentication test passes
         """

@@ -13,7 +13,7 @@ import asyncio
 import logging
 import time
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 try:
     import ccxt
@@ -36,7 +36,7 @@ class TradingTier(Enum):
 class SmartMinimumManager:
     """
     Smart minimum order management focused on portfolio pairs.
-    
+
     Features:
     - Tier-based classification for optimization
     - Dynamic minimum updates from multiple sources
@@ -79,7 +79,7 @@ class SmartMinimumManager:
     def __init__(self, exchange = None):
         """
         Initialize the smart minimum manager.
-        
+
         Args:
             exchange: CCXT exchange instance for live data
         """
@@ -119,7 +119,7 @@ class SmartMinimumManager:
 
         self._initialization_complete = True
 
-    async def _fetch_and_cache_minimum(self, symbol: str) -> Tuple[float, float]:
+    async def _fetch_and_cache_minimum(self, symbol: str) -> tuple[float, float]:
         """Fetch and cache minimum for a symbol."""
         try:
             # First try our existing minimum provider
@@ -166,10 +166,10 @@ class SmartMinimumManager:
             return False
         return (time.time() - self._cache_timestamps[symbol]) < self._cache_duration
 
-    async def get_minimum_for_pair(self, symbol: str) -> Dict[str, float]:
+    async def get_minimum_for_pair(self, symbol: str) -> dict[str, float]:
         """
         Get minimum requirements for a trading pair.
-        
+
         Returns:
             Dict with 'volume' and 'cost' minimums
         """
@@ -194,15 +194,15 @@ class SmartMinimumManager:
         return {"volume": vol_min, "cost": cost_min}
 
     async def calculate_optimal_volume(self, symbol: str, available_balance: float,
-                                     current_price: float) -> Tuple[float, str]:
+                                     current_price: float) -> tuple[float, str]:
         """
         Calculate optimal trading volume based on tier, balance, and minimums.
-        
+
         Args:
             symbol: Trading pair
             available_balance: Available USDT balance
             current_price: Current price of the asset
-            
+
         Returns:
             Tuple of (volume, reason)
         """
@@ -239,7 +239,7 @@ class SmartMinimumManager:
         """Check if a pair is in our portfolio."""
         return symbol in self.PORTFOLIO_PAIRS
 
-    def get_portfolio_pairs_by_tier(self, tier: TradingTier) -> List[str]:
+    def get_portfolio_pairs_by_tier(self, tier: TradingTier) -> list[str]:
         """Get all pairs of a specific tier."""
         return [pair for pair, pair_tier in self.PORTFOLIO_PAIRS.items() if pair_tier == tier]
 
@@ -247,13 +247,13 @@ class SmartMinimumManager:
                                     attempted_volume: float, attempted_price: float) -> bool:
         """
         Update minimums based on trade error (integration with learning system).
-        
+
         Args:
             symbol: Trading pair
             error_message: Error message from exchange
             attempted_volume: Volume that was attempted
             attempted_price: Price used in attempt
-            
+
         Returns:
             bool: True if learning was successful
         """
@@ -271,7 +271,7 @@ class SmartMinimumManager:
 
         return success
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get manager statistics."""
         return {
             **self.stats,
@@ -283,10 +283,10 @@ class SmartMinimumManager:
             }
         }
 
-    async def bulk_update_minimums(self) -> Dict[str, Dict[str, float]]:
+    async def bulk_update_minimums(self) -> dict[str, dict[str, float]]:
         """
         Bulk update minimums for all portfolio pairs.
-        
+
         Returns:
             Dict mapping symbols to their minimums
         """
@@ -311,13 +311,13 @@ class SmartMinimumManager:
         logger.info(f"[SMART_MINIMUM] Updated {len(updated)}/{len(self.PORTFOLIO_PAIRS)} pairs")
         return updated
 
-    def get_recommended_pairs(self, available_balance: float) -> List[Tuple[str, str]]:
+    def get_recommended_pairs(self, available_balance: float) -> list[tuple[str, str]]:
         """
         Get recommended pairs to trade based on balance and tier.
-        
+
         Args:
             available_balance: Available USDT balance
-            
+
         Returns:
             List of (symbol, reason) tuples
         """
@@ -348,13 +348,13 @@ def get_smart_minimum_manager(exchange = None) -> SmartMinimumManager:
     return _smart_minimum_manager
 
 
-async def get_portfolio_minimum(symbol: str) -> Dict[str, float]:
+async def get_portfolio_minimum(symbol: str) -> dict[str, float]:
     """Get minimum requirements for a portfolio pair."""
     manager = get_smart_minimum_manager()
     return await manager.get_minimum_for_pair(symbol)
 
 
-async def calculate_portfolio_volume(symbol: str, balance: float, price: float) -> Tuple[float, str]:
+async def calculate_portfolio_volume(symbol: str, balance: float, price: float) -> tuple[float, str]:
     """Calculate optimal volume for a portfolio pair."""
     manager = get_smart_minimum_manager()
     return await manager.calculate_optimal_volume(symbol, balance, price)

@@ -7,7 +7,7 @@ import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ class PaperTradingConfig:
             track_performance=os.getenv('PAPER_TRACK_PERFORMANCE', 'true').lower() == 'true'
         )
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
         return {
             'enabled': self.enabled,

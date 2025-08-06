@@ -99,7 +99,7 @@ class OrchestratedTradingBot:
             await self.websocket_auth_manager.start()
 
             # Get initial token
-            token = await self.websocket_auth_manager.get_token()
+            await self.websocket_auth_manager.get_token()
             logger.info("WebSocket authentication token generated successfully")
 
         except Exception as e:

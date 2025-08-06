@@ -7,7 +7,7 @@ Demonstrates breaking large kraken_exchange.py into focused modules.
 import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class OptimizedConfig:
 class KrakenConfigManager:
     """
     INTELLIGENT CONFIGURATION MANAGER
-    
+
     Demonstrates modular approach with intelligent optimization.
     """
 
@@ -71,7 +71,7 @@ class KrakenConfigManager:
 
         return config
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         """Get current optimized configuration."""
         return {
             "tier": self.tier.value,
@@ -114,7 +114,7 @@ class KrakenConfigManager:
             self.config.base_position_percent *= 0.9
             logger.info(f"[AUTO_OPT] Win rate {win_rate:.1%} -> decreased position to {self.config.base_position_percent:.1f}%")
 
-    def get_symbol_config(self, symbol: str) -> Dict[str, Any]:
+    def get_symbol_config(self, symbol: str) -> dict[str, Any]:
         """Get symbol-specific configuration with intelligent defaults."""
         # Extract currencies
         base_currency = symbol.split('/')[0] if '/' in symbol else symbol

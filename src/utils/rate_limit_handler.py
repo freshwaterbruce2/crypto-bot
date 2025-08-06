@@ -7,7 +7,7 @@ import asyncio
 import logging
 import time
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -52,17 +52,17 @@ def rate_limit_retry(max_retries: int = 3, base_delay: float = 1.0):
 async def safe_exchange_call(func: Callable, *args, rate_limiter=None, method_name: str = "DEFAULT", **kwargs) -> Any:
     """
     Safely execute exchange API call with rate limiting
-    
+
     Args:
         func: The function to call
         *args: Arguments for the function
         rate_limiter: Optional rate limiter instance
         method_name: Name of the API method for rate limiting
         **kwargs: Keyword arguments for the function
-    
+
     Returns:
         Result of the function call
-    
+
     Raises:
         RateLimitError: If rate limit is exceeded
         Exception: Original exception from function
@@ -135,7 +135,7 @@ async def safe_exchange_call(func: Callable, *args, rate_limiter=None, method_na
 async def safe_api_call(api_func: Callable, *args, rate_limiter=None, method_name: str = "DEFAULT", **kwargs) -> Any:
     """
     High-level safe API call with automatic retry on rate limits
-    
+
     This combines safe_exchange_call with retry logic
     """
     return await safe_exchange_call(api_func, *args, rate_limiter=rate_limiter, method_name=method_name, **kwargs)
@@ -159,7 +159,7 @@ class RateLimitManager:
 
     def __init__(self):
         """Initialize rate limit manager"""
-        self.limiters: Dict[str, Any] = {}
+        self.limiters: dict[str, Any] = {}
 
     def add_limiter(self, name: str, limiter: Any):
         """Add a rate limiter"""
@@ -170,7 +170,7 @@ class RateLimitManager:
         """Get rate limiter by name"""
         return self.limiters.get(name)
 
-    def get_status(self) -> Dict[str, Dict[str, Any]]:
+    def get_status(self) -> dict[str, dict[str, Any]]:
         """Get status of all rate limiters"""
         status = {}
         for name, limiter in self.limiters.items():

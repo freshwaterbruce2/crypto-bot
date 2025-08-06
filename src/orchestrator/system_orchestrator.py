@@ -8,7 +8,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Type
+from typing import Any
 
 # Import system components - fixed paths
 from ..api.simple_kraken_rest import SimpleKrakenREST as RestAPIClient
@@ -45,7 +45,7 @@ class SystemOrchestrator:
         self.startup = StartupSequence()
 
         # Component references
-        self.components: Dict[str, Any] = {}
+        self.components: dict[str, Any] = {}
 
         # System state
         self.is_initialized = False
@@ -178,11 +178,9 @@ class SystemOrchestrator:
         try:
             # Get account tier from config (pro for Kraken Pro)
             import os
-            tier = os.getenv('KRAKEN_TIER', 'pro').upper()
+            os.getenv('KRAKEN_TIER', 'pro').upper()
 
             # Map tier to AccountTier enum
-            from ..rate_limiting.kraken_rate_limiter import AccountTier
-            account_tier = AccountTier.PRO if tier == 'PRO' else AccountTier.INTERMEDIATE
 
             # Create simple REST client with working authentication
             # It will automatically load credentials from environment variables
@@ -597,7 +595,7 @@ class SystemOrchestrator:
 
         # Could implement additional alert handling (notifications, etc.)
 
-    async def get_component(self, component_type: Type) -> Any:
+    async def get_component(self, component_type: type) -> Any:
         """Get a component instance"""
         return await self.injector.resolve(component_type)
 
@@ -626,7 +624,7 @@ class SystemOrchestrator:
 
         logger.info("System Orchestrator shutdown complete")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get system status"""
         return {
             'initialized': self.is_initialized,
@@ -640,7 +638,7 @@ class SystemOrchestrator:
             }
         }
 
-    def get_diagnostics(self) -> Dict[str, Any]:
+    def get_diagnostics(self) -> dict[str, Any]:
         """Get comprehensive system diagnostics"""
         return {
             'status': self.get_status(),
@@ -665,7 +663,7 @@ class SystemOrchestrator:
 
         logger.info(f"Diagnostics exported to: {path}")
 
-    async def run_health_check(self) -> Dict[str, Any]:
+    async def run_health_check(self) -> dict[str, Any]:
         """Run immediate health check"""
         await self.health._perform_health_checks()
         return self.health.get_all_health()

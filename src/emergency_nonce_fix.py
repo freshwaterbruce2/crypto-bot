@@ -128,7 +128,6 @@ class EmergencyNonceFix:
             with open(file_path, encoding='utf-8') as f:
                 content = f.read()
 
-            original_content = content
             fixes_applied = 0
 
             # Apply import fixes
@@ -181,7 +180,7 @@ class EmergencyNonceFix:
                         warning = '''# DEPRECATED - DO NOT USE THIS NONCE MANAGER
 # This file has been temporarily disabled to prevent nonce conflicts.
 # All nonce operations should use src/utils/consolidated_nonce_manager.py
-# 
+#
 # If you see import errors, update your imports to use ConsolidatedNonceManager
 #
 # Emergency fix applied: 2025-08-03
@@ -293,7 +292,7 @@ for backup_file in backup_dir.glob("*.py"):
             if potential_path.parent.exists():
                 original_file = potential_path
                 break
-    
+
     if original_file.parent.exists():
         shutil.copy2(backup_file, original_file)
         print(f"✅ Restored: {{backup_file.name}}")

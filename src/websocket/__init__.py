@@ -20,18 +20,18 @@ Main Components:
 Usage:
     from src.websocket import WebSocketV2Manager, WebSocketV2Config
     from src.data import UnifiedDataFeed
-    
+
     # Initialize WebSocket V2 manager
     config = WebSocketV2Config()
     ws_manager = WebSocketV2Manager(exchange_client, api_key, private_key, config)
-    
+
     # Start WebSocket manager
     await ws_manager.start()
-    
+
     # Subscribe to channels
     await ws_manager.subscribe_channel('ticker', {'symbol': ['BTC/USDT']})
     await ws_manager.subscribe_channel('balances', private=True)
-    
+
     # Or use unified data feed
     data_feed = UnifiedDataFeed(exchange_client, symbols)
     await data_feed.start()

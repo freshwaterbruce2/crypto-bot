@@ -8,13 +8,13 @@ for accessing API credentials stored as Windows system environment variables.
 
 Usage:
     from src.utils.windows_env_bridge import get_windows_env_var, load_windows_env_vars
-    
+
     # Get a single Windows environment variable
     api_key = get_windows_env_var('KRAKEN_KEY')
-    
+
     # Load all Windows environment variables matching a pattern
     kraken_vars = load_windows_env_vars('KRAKEN_*')
-    
+
     # Apply Windows environment variables to current environment
     apply_windows_env_vars(['KRAKEN_KEY', 'KRAKEN_SECRET'])
 """
@@ -24,7 +24,7 @@ import os
 import re
 import subprocess
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +90,10 @@ class WindowsEnvBridge:
     def _sanitize_env_var_name(self, var_name: str) -> bool:
         """
         Validate environment variable name to prevent command injection.
-        
+
         Args:
             var_name: Environment variable name to validate
-            
+
         Returns:
             True if safe, False if potentially malicious
         """
@@ -122,10 +122,10 @@ class WindowsEnvBridge:
     def get_windows_env_var(self, var_name: str) -> Optional[str]:
         """
         Get a Windows environment variable by name with security validation.
-        
+
         Args:
             var_name: Name of the environment variable
-            
+
         Returns:
             Value of the environment variable or None if not found
         """
@@ -186,10 +186,10 @@ class WindowsEnvBridge:
     def _sanitize_pattern(self, pattern: str) -> bool:
         """
         Validate pattern string to prevent command injection.
-        
+
         Args:
             pattern: Pattern string to validate
-            
+
         Returns:
             True if safe, False if potentially malicious
         """
@@ -208,13 +208,13 @@ class WindowsEnvBridge:
 
         return True
 
-    def load_windows_env_vars(self, pattern: str = "*") -> Dict[str, str]:
+    def load_windows_env_vars(self, pattern: str = "*") -> dict[str, str]:
         """
         Load Windows environment variables matching a pattern.
-        
+
         Args:
             pattern: Wildcard pattern to match variable names (e.g., 'KRAKEN_*')
-            
+
         Returns:
             Dictionary of environment variables
         """
@@ -242,7 +242,7 @@ class WindowsEnvBridge:
                 $vars = @{{}}
                 $user_vars = [Environment]::GetEnvironmentVariables('User')
                 $machine_vars = [Environment]::GetEnvironmentVariables('Machine')
-                
+
                 # Combine user and machine variables (user takes precedence)
                 foreach ($kv in $machine_vars.GetEnumerator()) {{
                     if ($kv.Key -match '^{ps_pattern}$') {{
@@ -254,7 +254,7 @@ class WindowsEnvBridge:
                         $vars[$kv.Key] = $kv.Value
                     }}
                 }}
-                
+
                 # Output as key=value pairs
                 foreach ($kv in $vars.GetEnumerator()) {{
                     Write-Output "$($kv.Key)=$($kv.Value)"
@@ -290,13 +290,13 @@ class WindowsEnvBridge:
             logger.error(f"Error loading Windows environment variables: {e}")
             return {}
 
-    def apply_to_current_environment(self, var_names: List[str]) -> Dict[str, bool]:
+    def apply_to_current_environment(self, var_names: list[str]) -> dict[str, bool]:
         """
         Apply Windows environment variables to the current process environment.
-        
+
         Args:
             var_names: List of environment variable names to apply
-            
+
         Returns:
             Dictionary showing which variables were successfully applied
         """
@@ -314,10 +314,10 @@ class WindowsEnvBridge:
 
         return results
 
-    def get_credential_status(self) -> Dict[str, Any]:
+    def get_credential_status(self) -> dict[str, Any]:
         """
         Get status of Windows credential access.
-        
+
         Returns:
             Dictionary with credential access status
         """
@@ -375,36 +375,36 @@ _windows_env_bridge = WindowsEnvBridge()
 def get_windows_env_var(var_name: str) -> Optional[str]:
     """
     Convenience function to get a Windows environment variable.
-    
+
     Args:
         var_name: Name of the environment variable
-        
+
     Returns:
         Value of the environment variable or None if not found
     """
     return _windows_env_bridge.get_windows_env_var(var_name)
 
 
-def load_windows_env_vars(pattern: str = "*") -> Dict[str, str]:
+def load_windows_env_vars(pattern: str = "*") -> dict[str, str]:
     """
     Convenience function to load Windows environment variables.
-    
+
     Args:
         pattern: Wildcard pattern to match variable names
-        
+
     Returns:
         Dictionary of environment variables
     """
     return _windows_env_bridge.load_windows_env_vars(pattern)
 
 
-def apply_windows_env_vars(var_names: List[str]) -> Dict[str, bool]:
+def apply_windows_env_vars(var_names: list[str]) -> dict[str, bool]:
     """
     Convenience function to apply Windows environment variables to current environment.
-    
+
     Args:
         var_names: List of environment variable names to apply
-        
+
     Returns:
         Dictionary showing which variables were successfully applied
     """
@@ -414,7 +414,7 @@ def apply_windows_env_vars(var_names: List[str]) -> Dict[str, bool]:
 def setup_kraken_credentials() -> bool:
     """
     Setup Kraken API credentials from Windows environment variables.
-    
+
     Returns:
         True if credentials were successfully loaded and applied
     """
@@ -454,10 +454,10 @@ def setup_kraken_credentials() -> bool:
         return False
 
 
-def get_windows_credential_status() -> Dict[str, Any]:
+def get_windows_credential_status() -> dict[str, Any]:
     """
     Get status of Windows credential access.
-    
+
     Returns:
         Dictionary with credential access status
     """

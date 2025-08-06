@@ -4,7 +4,7 @@ Handles configuration validation and auto-fixing
 """
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -37,10 +37,10 @@ class ConfigValidator:
 
         logger.info("Config validator initialized with default values")
 
-    def validate_config(self, config: Dict[str, Any]) -> Tuple[bool, List[str], List[str]]:
+    def validate_config(self, config: dict[str, Any]) -> tuple[bool, list[str], list[str]]:
         """
         Validate complete configuration
-        
+
         Returns:
             Tuple of (is_valid, errors, fixes_applied)
         """
@@ -68,7 +68,7 @@ class ConfigValidator:
         is_valid = len(errors) == 0
         return is_valid, errors, fixes
 
-    def _validate_core_config(self, config: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+    def _validate_core_config(self, config: dict[str, Any]) -> tuple[list[str], list[str]]:
         """Validate core configuration"""
         errors = []
         fixes = []
@@ -85,7 +85,7 @@ class ConfigValidator:
 
         return errors, fixes
 
-    def _validate_trading_config(self, config: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+    def _validate_trading_config(self, config: dict[str, Any]) -> tuple[list[str], list[str]]:
         """Validate trading configuration"""
         errors = []
         fixes = []
@@ -101,7 +101,7 @@ class ConfigValidator:
 
         return errors, fixes
 
-    def _validate_risk_config(self, config: Dict[str, Any]) -> Tuple[List[str], List[str]]:
+    def _validate_risk_config(self, config: dict[str, Any]) -> tuple[list[str], list[str]]:
         """Validate risk configuration"""
         errors = []
         fixes = []
@@ -118,7 +118,7 @@ class ConfigValidator:
 
         return errors, fixes
 
-    def apply_defaults(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def apply_defaults(self, config: dict[str, Any]) -> dict[str, Any]:
         """Apply default values to missing configuration keys"""
         complete_config = self.default_config.copy()
 
@@ -134,7 +134,7 @@ class ConfigValidator:
 
         return complete_config
 
-    def sanitize_config(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def sanitize_config(self, config: dict[str, Any]) -> dict[str, Any]:
         """Sanitize configuration values to safe ranges"""
         sanitized = config.copy()
 
@@ -156,7 +156,7 @@ class ConfigValidator:
 
         return sanitized
 
-    def get_validation_summary(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def get_validation_summary(self, config: dict[str, Any]) -> dict[str, Any]:
         """Get comprehensive validation summary"""
         is_valid, errors, fixes = self.validate_config(config)
 

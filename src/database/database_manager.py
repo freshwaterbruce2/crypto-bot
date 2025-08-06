@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 @dataclass
@@ -63,7 +63,7 @@ class BalanceRecord:
 class DatabaseManager:
     """High-performance database manager for crypto trading bot"""
 
-    def __init__(self, db_path: str, config: Optional[Dict] = None):
+    def __init__(self, db_path: str, config: Optional[dict] = None):
         self.db_path = db_path
         self.config = config or {}
         self.logger = logging.getLogger(__name__)
@@ -156,28 +156,28 @@ class DatabaseManager:
             self.logger.info(f"Inserted trade {trade_id}: {trade.side} {trade.amount} {trade.symbol} @ {trade.price}")
             return trade_id
 
-    def get_trades(self, symbol: Optional[str] = None, limit: int = 100) -> List[Dict]:
+    def get_trades(self, symbol: Optional[str] = None, limit: int = 100) -> list[dict]:
         """Get trade records with optional filtering"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
             if symbol:
                 cursor.execute("""
-                    SELECT * FROM trades 
-                    WHERE symbol = ? 
-                    ORDER BY timestamp DESC 
+                    SELECT * FROM trades
+                    WHERE symbol = ?
+                    ORDER BY timestamp DESC
                     LIMIT ?
                 """, (symbol, limit))
             else:
                 cursor.execute("""
-                    SELECT * FROM trades 
-                    ORDER BY timestamp DESC 
+                    SELECT * FROM trades
+                    ORDER BY timestamp DESC
                     LIMIT ?
                 """, (limit,))
 
             return [dict(row) for row in cursor.fetchall()]
 
-    def calculate_pnl(self, symbol: Optional[str] = None) -> Dict[str, float]:
+    def calculate_pnl(self, symbol: Optional[str] = None) -> dict[str, float]:
         """Calculate profit and loss metrics"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -186,7 +186,7 @@ class DatabaseManager:
             params = [symbol] if symbol else []
 
             cursor.execute(f"""
-                SELECT 
+                SELECT
                     COUNT(*) as total_trades,
                     SUM(CASE WHEN profit_loss > 0 THEN 1 ELSE 0 END) as winning_trades,
                     SUM(CASE WHEN profit_loss < 0 THEN 1 ELSE 0 END) as losing_trades,
@@ -194,7 +194,7 @@ class DatabaseManager:
                     AVG(profit_loss) as avg_pnl,
                     MAX(profit_loss) as max_win,
                     MIN(profit_loss) as max_loss
-                FROM trades 
+                FROM trades
                 {where_clause}
                 AND profit_loss IS NOT NULL
             """, params)
@@ -258,7 +258,7 @@ class DatabaseManager:
             params.append(order_id)
 
             cursor.execute(f"""
-                UPDATE crypto_orders 
+                UPDATE crypto_orders
                 SET {', '.join(update_fields)}
                 WHERE order_id = ?
             """, params)
@@ -298,14 +298,14 @@ class DatabaseManager:
 
             conn.commit()
 
-    def get_balances(self, exchange: str = "kraken") -> List[Dict]:
+    def get_balances(self, exchange: str = "kraken") -> list[dict]:
         """Get current wallet balances"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
 
             cursor.execute("""
-                SELECT * FROM wallets 
-                WHERE exchange = ? 
+                SELECT * FROM wallets
+                WHERE exchange = ?
                 AND total_balance > 0
                 ORDER BY usd_value DESC NULLS LAST
             """, (exchange,))
@@ -313,7 +313,7 @@ class DatabaseManager:
             return [dict(row) for row in cursor.fetchall()]
 
     # Market Data Operations
-    def insert_market_data(self, symbol: str, timeframe: str, ohlcv_data: List[Dict]):
+    def insert_market_data(self, symbol: str, timeframe: str, ohlcv_data: list[dict]):
         """Insert OHLCV market data"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -334,7 +334,7 @@ class DatabaseManager:
             self.logger.debug(f"Inserted {len(ohlcv_data)} {timeframe} candles for {symbol}")
 
     # Performance Metrics
-    def update_daily_performance(self, date: str, metrics: Dict[str, Any]):
+    def update_daily_performance(self, date: str, metrics: dict[str, Any]):
         """Update daily performance metrics"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -359,7 +359,7 @@ class DatabaseManager:
     # Logging Operations
     def log_event(self, level: str, message: str, module: Optional[str] = None,
                   strategy: Optional[str] = None, exchange: Optional[str] = None,
-                  symbol: Optional[str] = None, metadata: Optional[Dict] = None):
+                  symbol: Optional[str] = None, metadata: Optional[dict] = None):
         """Log bot events to database"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -380,7 +380,7 @@ class DatabaseManager:
             conn.commit()
 
     # Utility Methods
-    def get_database_stats(self) -> Dict[str, Any]:
+    def get_database_stats(self) -> dict[str, Any]:
         """Get database statistics and health metrics"""
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -408,7 +408,7 @@ class DatabaseManager:
 
             # Recent activity
             cursor.execute("""
-                SELECT COUNT(*) FROM trades 
+                SELECT COUNT(*) FROM trades
                 WHERE timestamp > strftime('%s', 'now', '-24 hours')
             """)
             stats['trades_last_24h'] = cursor.fetchone()[0]
@@ -425,22 +425,22 @@ class DatabaseManager:
             # Clean old debug logs
             debug_days = retention_config.get('debug_logs_days', 30)
             cursor.execute(f"""
-                DELETE FROM bot_logs 
-                WHERE level = 'DEBUG' 
+                DELETE FROM bot_logs
+                WHERE level = 'DEBUG'
                 AND timestamp < strftime('%s', 'now', '-{debug_days} days')
             """)
 
             # Clean old market data
             market_days = retention_config.get('market_data_days', 365)
             cursor.execute(f"""
-                DELETE FROM market_data 
+                DELETE FROM market_data
                 WHERE timestamp < strftime('%s', 'now', '-{market_days} days')
             """)
 
             # Clean old balance history
             balance_days = retention_config.get('balance_history_days', 730)
             cursor.execute(f"""
-                DELETE FROM balance_history 
+                DELETE FROM balance_history
                 WHERE timestamp < strftime('%s', 'now', '-{balance_days} days')
             """)
 

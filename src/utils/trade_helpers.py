@@ -5,7 +5,7 @@ Trading calculation utilities and trade record management
 
 import logging
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def calculate_snowball_position_size(current_balance: float, base_size: float = 
 
 
 def calculate_micro_scalp_targets(entry_price: float, amount: float,
-                                target_profit_pct: float = 0.5) -> Dict[str, float]:
+                                target_profit_pct: float = 0.5) -> dict[str, float]:
     """Calculate micro-scalping targets"""
     target_price = entry_price * (1 + target_profit_pct / 100)
     profit_usd = (target_price - entry_price) * amount

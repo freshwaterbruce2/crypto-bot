@@ -4,7 +4,7 @@ Interactive Documentation Manager - User-Controlled System
 =========================================================
 
 Addresses user concerns:
-1. Sometimes AI gets cut off or overlooks something  
+1. Sometimes AI gets cut off or overlooks something
 2. User wants option to add to or take away from documentation
 3. Need visible feedback when scripts run
 
@@ -245,7 +245,7 @@ class InteractiveDocManager:
 
         lesson_template = f"""
 ### **{title}**
-**Date Fixed:** {date_fixed}  
+**Date Fixed:** {date_fixed}
 **File:** `{file_modified}`
 
 #### **🚨 The Problem:**
@@ -293,7 +293,7 @@ class InteractiveDocManager:
 
 ### **✅ ALWAYS: {always_do}**
 ```python
-# CORRECT - Example of proper approach  
+# CORRECT - Example of proper approach
 # Add code example here
 ```
 

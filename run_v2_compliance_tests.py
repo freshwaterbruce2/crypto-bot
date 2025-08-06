@@ -14,7 +14,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -35,17 +35,17 @@ class TestResult:
     passed: bool
     execution_time_ms: float
     error_message: Optional[str] = None
-    details: Dict[str, Any] = None
+    details: dict[str, Any] = None
 
 
 class V2ComplianceTestRunner:
     """Standalone compliance test runner"""
 
     def __init__(self):
-        self.test_results: List[TestResult] = []
+        self.test_results: list[TestResult] = []
         self.sample_v2_messages = self._create_sample_messages()
 
-    def _create_sample_messages(self) -> Dict[str, Dict[str, Any]]:
+    def _create_sample_messages(self) -> dict[str, dict[str, Any]]:
         """Create sample V2 messages for testing"""
         return {
             'balance_update_v2': {
@@ -216,7 +216,7 @@ class V2ComplianceTestRunner:
         try:
             # Test all messages have req_id
             success = True
-            for msg_type, message in self.sample_v2_messages.items():
+            for _msg_type, message in self.sample_v2_messages.items():
                 if 'req_id' not in message:
                     success = False
                     break
@@ -246,7 +246,7 @@ class V2ComplianceTestRunner:
             test_message = json.dumps(self.sample_v2_messages['balance_update_v2'])
 
             for _ in range(1000):
-                parsed = json.loads(test_message)
+                json.loads(test_message)
 
             parsing_time = (time.perf_counter() - parse_start) * 1000
             success = parsing_time < 200  # Should parse 1000 messages in under 200ms
@@ -382,7 +382,7 @@ class V2ComplianceTestRunner:
             duration = (time.perf_counter() - start_time) * 1000
             self._record_test_result("Integration_Scenarios", False, duration, str(e))
 
-    def run_all_tests(self) -> Dict[str, Any]:
+    def run_all_tests(self) -> dict[str, Any]:
         """Run all compliance tests"""
         logger.info("🚀 Starting Kraken V2 Compliance Validation Tests...")
         logger.info("=" * 60)
@@ -437,7 +437,7 @@ class V2ComplianceTestRunner:
 
         return report
 
-    def _generate_compliance_status(self) -> Dict[str, Any]:
+    def _generate_compliance_status(self) -> dict[str, Any]:
         """Generate compliance status"""
         categories = {}
 
@@ -461,7 +461,7 @@ class V2ComplianceTestRunner:
 
         return compliance_status
 
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate recommendations"""
         recommendations = []
 

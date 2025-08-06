@@ -18,7 +18,6 @@ This single module eliminates scattered hard-coded minimums across the codebase.
 from __future__ import annotations
 
 import logging
-from typing import Dict, Tuple
 
 # Lazy imports to avoid circular dependencies
 try:
@@ -38,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 # Static Kraken fallback table (USDT pairs only per project requirements)
 # Updated to include all 12 portfolio pairs
-_STATIC_KRAKEN_MINIMUMS: Dict[str, Dict[str, float]] = {
+_STATIC_KRAKEN_MINIMUMS: dict[str, dict[str, float]] = {
     # Core portfolio pairs with known minimums
     "BTC/USDT": {"volume": 0.00001, "cost": 1.0},
     "ETH/USDT": {"volume": 0.0001, "cost": 1.0},
@@ -67,7 +66,7 @@ _ABSOLUTE_MIN_VOLUME = 0.000001
 _ABSOLUTE_MIN_COST = 0.01
 
 
-def _from_autonomous_learning(symbol: str) -> Tuple[float | None, float | None]:
+def _from_autonomous_learning(symbol: str) -> tuple[float | None, float | None]:
     if minimum_discovery_learning is None:
         return None, None
     try:
@@ -79,7 +78,7 @@ def _from_autonomous_learning(symbol: str) -> Tuple[float | None, float | None]:
     return None, None
 
 
-def _from_asset_pair_store(symbol: str) -> Tuple[float | None, float | None]:
+def _from_asset_pair_store(symbol: str) -> tuple[float | None, float | None]:
     if _asset_pair_store is None:
         return None, None
     try:
@@ -91,14 +90,14 @@ def _from_asset_pair_store(symbol: str) -> Tuple[float | None, float | None]:
     return None, None
 
 
-def _from_static_table(symbol: str) -> Tuple[float | None, float | None]:
+def _from_static_table(symbol: str) -> tuple[float | None, float | None]:
     data = _STATIC_KRAKEN_MINIMUMS.get(symbol)
     if data:
         return data["volume"], data["cost"]
     return None, None
 
 
-def get_dynamic_minimums(symbol: str) -> Tuple[float, float]:
+def get_dynamic_minimums(symbol: str) -> tuple[float, float]:
     """Return (min_volume, min_cost) for symbol.
 
     Order of precedence:

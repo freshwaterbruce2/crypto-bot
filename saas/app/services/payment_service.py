@@ -9,7 +9,7 @@ Integrates with Stripe and cryptocurrency payment providers.
 import logging
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import stripe
 from sqlalchemy import and_, func, select
@@ -44,8 +44,8 @@ class PaymentService:
         currency: str = "USD",
         payment_type: str = "subscription",
         reference_id: str = None,
-        metadata: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+        metadata: dict[str, Any] = None
+    ) -> dict[str, Any]:
         """Create Stripe payment intent"""
         if not self.stripe_enabled:
             raise ValueError("Stripe is not configured")
@@ -149,7 +149,7 @@ class PaymentService:
         crypto_currency: str = "BTC",
         payment_type: str = "subscription",
         reference_id: str = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create cryptocurrency payment"""
         if not self.crypto_enabled:
             raise ValueError("Cryptocurrency payments are not enabled")
@@ -202,7 +202,7 @@ class PaymentService:
                 "expires_at": crypto_payment.expires_at.isoformat()
             }
 
-    async def process_webhook(self, payload: bytes, signature: str) -> Dict[str, Any]:
+    async def process_webhook(self, payload: bytes, signature: str) -> dict[str, Any]:
         """Process Stripe webhook"""
         if not self.stripe_enabled:
             return {"status": "ignored", "reason": "Stripe not configured"}
@@ -300,7 +300,7 @@ class PaymentService:
         status: str = None,
         payment_type: str = None,
         limit: int = 50
-    ) -> List[Payment]:
+    ) -> list[Payment]:
         """Get user's payment history"""
         async with get_db_session() as session:
             stmt = select(Payment).where(Payment.user_id == user_id)
@@ -319,7 +319,7 @@ class PaymentService:
     async def generate_invoice(
         self,
         user_id: int,
-        line_items: List[Dict[str, Any]],
+        line_items: list[dict[str, Any]],
         due_days: int = 30
     ) -> Invoice:
         """Generate invoice for user"""
@@ -353,7 +353,7 @@ class PaymentService:
             await session.commit()
             return invoice
 
-    async def get_revenue_stats(self, days: int = 30) -> Dict[str, Any]:
+    async def get_revenue_stats(self, days: int = 30) -> dict[str, Any]:
         """Get revenue statistics"""
         async with get_db_session() as session:
             since_date = datetime.utcnow() - timedelta(days=days)

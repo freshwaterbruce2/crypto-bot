@@ -28,7 +28,7 @@ def cleanup_logs():
 
         # Create backup with timestamp
         backup_name = f"kraken_infinity_bot_backup_{datetime.now().strftime('%Y%m%d_%H%M')}.log"
-        backup_path = Path(backup_name)
+        Path(backup_name)
 
         # Read last N lines
         with open(log_file, encoding='utf-8', errors='ignore') as f:

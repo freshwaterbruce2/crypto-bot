@@ -9,7 +9,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 # Add src to path so we can import our modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
@@ -26,7 +26,7 @@ class GitHubIntegrationAutomation:
         self.bridge = get_agent_bridge(str(self.project_root))
         self.config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """Load GitHub configuration"""
         config_path = self.project_root / '.env'
         config = {
@@ -49,7 +49,7 @@ class GitHubIntegrationAutomation:
 
         return config
 
-    def check_git_status(self) -> Dict[str, Any]:
+    def check_git_status(self) -> dict[str, Any]:
         """Check current git status"""
         result = self.bridge.execute_tool('github_status')
 
@@ -91,7 +91,7 @@ class GitHubIntegrationAutomation:
             'error': result.get('error', 'Failed to check git status')
         }
 
-    def auto_commit_changes(self, message: str = None) -> Dict[str, Any]:
+    def auto_commit_changes(self, message: str = None) -> dict[str, Any]:
         """Automatically commit changes if auto_commit is enabled"""
         if not self.config.get('auto_commit', False):
             return {'success': False, 'reason': 'Auto-commit disabled'}
@@ -133,7 +133,7 @@ class GitHubIntegrationAutomation:
             'returncode': result['result']['returncode']
         }
 
-    def auto_push_changes(self, branch: str = None) -> Dict[str, Any]:
+    def auto_push_changes(self, branch: str = None) -> dict[str, Any]:
         """Automatically push changes if auto_push is enabled"""
         if not self.config.get('auto_push', False):
             return {'success': False, 'reason': 'Auto-push disabled'}
@@ -153,7 +153,7 @@ class GitHubIntegrationAutomation:
             'returncode': result['result']['returncode']
         }
 
-    def sync_with_remote(self, commit_message: str = None) -> Dict[str, Any]:
+    def sync_with_remote(self, commit_message: str = None) -> dict[str, Any]:
         """Complete sync workflow: commit and push"""
         results = {
             'timestamp': datetime.now().isoformat(),
@@ -185,14 +185,14 @@ class GitHubIntegrationAutomation:
 
         return results
 
-    def create_automated_backup(self) -> Dict[str, Any]:
+    def create_automated_backup(self) -> dict[str, Any]:
         """Create an automated backup commit"""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         commit_message = f"Automated backup - {timestamp}"
 
         return self.sync_with_remote(commit_message)
 
-    def log_automation_event(self, event_type: str, details: Dict[str, Any]):
+    def log_automation_event(self, event_type: str, details: dict[str, Any]):
         """Log automation events"""
         log_file = self.project_root / 'automation.log'
 

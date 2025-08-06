@@ -27,7 +27,7 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from threading import RLock
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 import aiosqlite
 
@@ -84,8 +84,8 @@ class ConnectionPool:
 
     def __init__(self, config: DatabaseConfig):
         self.config = config
-        self._pool: List[aiosqlite.Connection] = []
-        self._pool_sync: List[sqlite3.Connection] = []
+        self._pool: list[aiosqlite.Connection] = []
+        self._pool_sync: list[sqlite3.Connection] = []
         self._lock = asyncio.Lock()
         self._sync_lock = RLock()
         self._created_connections = 0
@@ -343,7 +343,7 @@ class ConnectionPool:
             self._created_connections = 0
             self._active_connections = 0
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get connection pool statistics"""
         return {
             'pool_size': len(self._pool),
@@ -370,7 +370,7 @@ class DatabaseManager:
         self._lock = asyncio.Lock()
 
         # Query cache
-        self._query_cache: Dict[str, Tuple[Any, float]] = {}
+        self._query_cache: dict[str, tuple[Any, float]] = {}
         self._cache_lock = RLock()
 
         # Performance monitoring
@@ -478,17 +478,17 @@ class DatabaseManager:
         finally:
             self.pool.return_sync_connection(conn)
 
-    async def execute_query(self, query: str, parameters: Tuple = (),
-                          use_cache: bool = False, cache_timeout: int = None) -> List[Dict[str, Any]]:
+    async def execute_query(self, query: str, parameters: tuple = (),
+                          use_cache: bool = False, cache_timeout: int = None) -> list[dict[str, Any]]:
         """
         Execute SELECT query with optional caching
-        
+
         Args:
             query: SQL query string
             parameters: Query parameters
             use_cache: Enable query result caching
             cache_timeout: Cache timeout in seconds (uses config default if None)
-            
+
         Returns:
             List of result dictionaries
         """
@@ -530,16 +530,16 @@ class DatabaseManager:
             logger.error(f"[DATABASE_MANAGER] Query failed: {e}")
             raise
 
-    async def execute_write(self, query: str, parameters: Tuple = (),
+    async def execute_write(self, query: str, parameters: tuple = (),
                           commit: bool = True) -> int:
         """
         Execute INSERT/UPDATE/DELETE query
-        
+
         Args:
             query: SQL query string
             parameters: Query parameters
             commit: Auto-commit transaction
-            
+
         Returns:
             Number of affected rows
         """
@@ -566,16 +566,16 @@ class DatabaseManager:
             logger.error(f"[DATABASE_MANAGER] Write query failed: {e}")
             raise
 
-    async def execute_batch(self, query: str, parameter_list: List[Tuple],
+    async def execute_batch(self, query: str, parameter_list: list[tuple],
                           commit: bool = True) -> int:
         """
         Execute batch operation for better performance
-        
+
         Args:
             query: SQL query string
             parameter_list: List of parameter tuples
             commit: Auto-commit transaction
-            
+
         Returns:
             Total number of affected rows
         """
@@ -615,13 +615,13 @@ class DatabaseManager:
             logger.error(f"[DATABASE_MANAGER] Batch query failed: {e}")
             raise
 
-    async def execute_transaction(self, operations: List[Tuple[str, Tuple]]) -> bool:
+    async def execute_transaction(self, operations: list[tuple[str, tuple]]) -> bool:
         """
         Execute multiple operations in a single transaction
-        
+
         Args:
             operations: List of (query, parameters) tuples
-            
+
         Returns:
             True if transaction successful
         """
@@ -657,7 +657,7 @@ class DatabaseManager:
             logger.error(f"[DATABASE_MANAGER] Transaction failed: {e}")
             return False
 
-    def _get_cached_result(self, cache_key: str) -> Optional[List[Dict[str, Any]]]:
+    def _get_cached_result(self, cache_key: str) -> Optional[list[dict[str, Any]]]:
         """Get cached query result"""
         with self._cache_lock:
             if cache_key in self._query_cache:
@@ -672,7 +672,7 @@ class DatabaseManager:
 
         return None
 
-    def _cache_result(self, cache_key: str, result: List[Dict[str, Any]], timeout: int):
+    def _cache_result(self, cache_key: str, result: list[dict[str, Any]], timeout: int):
         """Cache query result"""
         with self._cache_lock:
             self._query_cache[cache_key] = (result, time.time())
@@ -755,7 +755,7 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"[DATABASE_MANAGER] Database vacuum failed: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get database manager status"""
         return {
             'initialized': self._initialized,

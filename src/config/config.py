@@ -5,7 +5,7 @@ Configuration management for the crypto trading bot.
 import logging
 import os
 from dataclasses import dataclass, field
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class Config:
         if not self.api_key or not self.api_secret:
             logger.warning("API credentials not found in environment variables")
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
             'exchange_name': self.exchange_name,
@@ -91,7 +91,7 @@ class Config:
         }
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any]) -> 'Config':
+    def from_dict(cls, config_dict: dict[str, Any]) -> 'Config':
         """Create configuration from dictionary."""
         return cls(**config_dict)
 

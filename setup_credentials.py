@@ -16,7 +16,7 @@ Features:
 
 Usage:
     python setup_credentials.py
-    
+
 Requirements:
     - Kraken account with API access
     - API keys generated from Kraken security settings

@@ -12,7 +12,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Generic, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -39,12 +39,12 @@ class BatchConfig:
 @dataclass
 class MessageBatch:
     """A batch of messages to process"""
-    messages: List[Dict[str, Any]] = field(default_factory=list)
+    messages: list[dict[str, Any]] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
     total_size_bytes: int = 0
-    message_types: Dict[str, int] = field(default_factory=dict)
+    message_types: dict[str, int] = field(default_factory=dict)
 
-    def add_message(self, message: Dict[str, Any], size_bytes: int = 0):
+    def add_message(self, message: dict[str, Any], size_bytes: int = 0):
         """Add message to batch"""
         self.messages.append(message)
         self.total_size_bytes += size_bytes
@@ -76,13 +76,13 @@ class BatchProcessor(Generic[T]):
     """High-performance batch processor for WebSocket messages"""
 
     def __init__(self,
-                 processor_func: Callable[[List[Dict[str, Any]]], None],
+                 processor_func: Callable[[list[dict[str, Any]]], None],
                  config: BatchConfig = None):
 
         self.processor_func = processor_func
         self.config = config or BatchConfig()
 
-        self.pending_batches: Dict[str, MessageBatch] = {}
+        self.pending_batches: dict[str, MessageBatch] = {}
         self.processing_queue = asyncio.Queue()
         self.flush_task: Optional[asyncio.Task] = None
         self.processor_task: Optional[asyncio.Task] = None
@@ -132,7 +132,7 @@ class BatchProcessor(Generic[T]):
 
         logger.info("[BATCH] Processor stopped")
 
-    def add_message(self, message: Dict[str, Any], batch_key: str = "default"):
+    def add_message(self, message: dict[str, Any], batch_key: str = "default"):
         """Add message to batch"""
         self.messages_received += 1
 
@@ -253,7 +253,7 @@ class BatchProcessor(Generic[T]):
             return
 
         avg_processing_time = sum(self.recent_processing_times) / len(self.recent_processing_times)
-        avg_batch_size = sum(self.recent_batch_sizes) / len(self.recent_batch_sizes)
+        sum(self.recent_batch_sizes) / len(self.recent_batch_sizes)
 
         # If processing is fast, we can batch more aggressively
         if avg_processing_time < 0.01:  # Less than 10ms processing time
@@ -271,7 +271,7 @@ class BatchProcessor(Generic[T]):
             )
             self.config.max_batch_size = max(self.config.max_batch_size - 10, 10)
 
-    def _estimate_message_size(self, message: Dict[str, Any]) -> int:
+    def _estimate_message_size(self, message: dict[str, Any]) -> int:
         """Estimate message size in bytes"""
         try:
             import sys
@@ -280,7 +280,7 @@ class BatchProcessor(Generic[T]):
             # Fallback estimation
             return len(str(message)) * 2
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get processor statistics"""
         avg_processing_time = (
             self.total_processing_time / max(self.batches_processed, 1)
@@ -341,7 +341,7 @@ class TradingMessageProcessor:
         await self.balance_processor.stop()
         await self.trade_processor.stop()
 
-    def process_message(self, message: Dict[str, Any]):
+    def process_message(self, message: dict[str, Any]):
         """Route message to appropriate batch processor"""
         channel = message.get('channel', '')
 
@@ -355,7 +355,7 @@ class TradingMessageProcessor:
             # Default to ticker processor
             self.ticker_processor.add_message(message, 'other')
 
-    async def _process_ticker_batch(self, messages: List[Dict[str, Any]]):
+    async def _process_ticker_batch(self, messages: list[dict[str, Any]]):
         """Process batch of ticker messages"""
         # Group by symbol for efficient processing
         ticker_updates = {}
@@ -376,7 +376,7 @@ class TradingMessageProcessor:
             except Exception as e:
                 logger.error(f"[BATCH] Error processing ticker for {symbol}: {e}")
 
-    async def _process_balance_batch(self, messages: List[Dict[str, Any]]):
+    async def _process_balance_batch(self, messages: list[dict[str, Any]]):
         """Process batch of balance messages"""
         # Aggregate balance updates
         balance_updates = {}
@@ -401,7 +401,7 @@ class TradingMessageProcessor:
             except Exception as e:
                 logger.error(f"[BATCH] Error processing balance batch: {e}")
 
-    async def _process_trade_batch(self, messages: List[Dict[str, Any]]):
+    async def _process_trade_batch(self, messages: list[dict[str, Any]]):
         """Process batch of trade messages"""
         trades_by_symbol = defaultdict(list)
 
@@ -424,7 +424,7 @@ class TradingMessageProcessor:
             except Exception as e:
                 logger.error(f"[BATCH] Error processing trades for {symbol}: {e}")
 
-    def get_all_stats(self) -> Dict[str, Any]:
+    def get_all_stats(self) -> dict[str, Any]:
         """Get statistics for all processors"""
         return {
             "ticker_processor": self.ticker_processor.get_stats(),

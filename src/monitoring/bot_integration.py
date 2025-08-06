@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class ProductionMonitorIntegration:
     """
     Integration layer for production monitoring with trading bot
-    
+
     Provides seamless integration without modifying existing bot code,
     using composition and event-driven architecture.
     """
@@ -39,7 +39,7 @@ class ProductionMonitorIntegration:
     def __init__(self, bot_instance, monitor_config: Optional[dict] = None):
         """
         Initialize monitoring integration
-        
+
         Args:
             bot_instance: Instance of KrakenTradingBot
             monitor_config: Optional monitoring configuration
@@ -220,14 +220,14 @@ class ProductionMonitorIntegration:
 def add_monitoring_to_bot(bot_instance, config: Optional[dict] = None) -> ProductionMonitorIntegration:
     """
     Add production monitoring to an existing bot instance
-    
+
     Args:
         bot_instance: KrakenTradingBot instance
         config: Optional monitoring configuration
-        
+
     Returns:
         ProductionMonitorIntegration instance
-        
+
     Example:
         >>> bot = KrakenTradingBot()
         >>> monitoring = add_monitoring_to_bot(bot, {
@@ -247,7 +247,7 @@ def add_monitoring_to_bot(bot_instance, config: Optional[dict] = None) -> Produc
 class MonitoringMixin:
     """
     Mixin class to add monitoring capabilities to trading bot
-    
+
     Can be mixed into KrakenTradingBot class for built-in monitoring.
     """
 
@@ -290,14 +290,14 @@ class MonitoringMixin:
 class MonitoredKrakenTradingBot:
     """
     Enhanced KrakenTradingBot with built-in production monitoring
-    
+
     This is a wrapper that adds monitoring capabilities to any existing bot.
     """
 
     def __init__(self, bot_instance, monitoring_config: Optional[dict] = None):
         """
         Initialize monitored bot wrapper
-        
+
         Args:
             bot_instance: Existing KrakenTradingBot instance
             monitoring_config: Monitoring configuration
@@ -356,12 +356,12 @@ class MonitoringBootstrap:
     async def create_monitored_bot(bot_class, bot_config: dict, monitoring_config: dict):
         """
         Create a bot instance with monitoring pre-configured
-        
+
         Args:
             bot_class: KrakenTradingBot class
             bot_config: Bot configuration
             monitoring_config: Monitoring configuration
-            
+
         Returns:
             MonitoredKrakenTradingBot instance
         """

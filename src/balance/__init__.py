@@ -19,16 +19,16 @@ Main Components:
 
 Usage:
     from src.balance import BalanceManager
-    
+
     manager = BalanceManager(websocket_client, rest_client)
     await manager.initialize()
-    
+
     # Get current balance
     usdt_balance = await manager.get_balance("USDT")
-    
+
     # Get all balances
     balances = await manager.get_all_balances()
-    
+
     # Register for balance updates
     manager.register_callback(my_balance_callback)
 """

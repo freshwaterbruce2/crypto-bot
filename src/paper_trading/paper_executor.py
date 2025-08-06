@@ -8,7 +8,7 @@ import logging
 import random
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..trading.enhanced_trade_executor_with_assistants import TradeRequest
 from .paper_balance_manager import PaperBalanceManager
@@ -36,7 +36,7 @@ class PaperTradeExecutor:
 
         logger.info("🧪 Paper Trade Executor initialized")
 
-    async def execute(self, request: TradeRequest) -> Dict[str, Any]:
+    async def execute(self, request: TradeRequest) -> dict[str, Any]:
         """Execute paper trade with realistic simulation"""
 
         # Get current market price (use real price if available)
@@ -114,7 +114,7 @@ class PaperTradeExecutor:
         """Determine if this trade should simulate a failure"""
         return random.random() < self.config.order_failure_rate
 
-    async def _execute_paper_trade(self, request: TradeRequest, price: float) -> Dict[str, Any]:
+    async def _execute_paper_trade(self, request: TradeRequest, price: float) -> dict[str, Any]:
         """Execute the actual paper trade"""
         try:
             # Calculate trade details
@@ -167,7 +167,7 @@ class PaperTradeExecutor:
                 'paper_trade': True
             }
 
-    async def _execute_buy(self, symbol: str, amount: float, price: float, fee: float) -> Dict[str, Any]:
+    async def _execute_buy(self, symbol: str, amount: float, price: float, fee: float) -> dict[str, Any]:
         """Execute paper buy order"""
         total_cost = amount * price + fee
 
@@ -206,7 +206,7 @@ class PaperTradeExecutor:
             'paper_trade': True
         }
 
-    async def _execute_sell(self, symbol: str, amount: float, price: float, fee: float) -> Dict[str, Any]:
+    async def _execute_sell(self, symbol: str, amount: float, price: float, fee: float) -> dict[str, Any]:
         """Execute paper sell order"""
         base_asset = symbol.split('/')[0]
         base_balance = await self.paper_balance_manager.get_balance_for_asset(base_asset)
@@ -253,7 +253,7 @@ class PaperTradeExecutor:
             'paper_trade': True
         }
 
-    async def _save_trade_record(self, trade_record: Dict[str, Any]):
+    async def _save_trade_record(self, trade_record: dict[str, Any]):
         """Save trade record to file"""
         try:
             import json
@@ -275,7 +275,7 @@ class PaperTradeExecutor:
         except Exception as e:
             logger.error(f"Error saving trade record: {e}")
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance summary"""
         success_rate = (self.successful_trades / self.total_trades * 100) if self.total_trades > 0 else 0
 

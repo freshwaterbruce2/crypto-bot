@@ -36,7 +36,7 @@ import time
 import urllib.parse
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Optional, Union
 
 import aiohttp
 from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector
@@ -87,8 +87,8 @@ class RetryConfig:
     max_delay: float = 60.0
     backoff_multiplier: float = 2.0
     jitter: bool = True
-    retryable_status_codes: List[int] = field(default_factory=lambda: [429, 500, 502, 503, 504])
-    retryable_exceptions: List[type] = field(default_factory=lambda: [
+    retryable_status_codes: list[int] = field(default_factory=lambda: [429, 500, 502, 503, 504])
+    retryable_exceptions: list[type] = field(default_factory=lambda: [
         NetworkError, RateLimitError, aiohttp.ClientError
     ])
 
@@ -106,7 +106,7 @@ class ClientMetrics:
     network_errors: int = 0
     avg_response_time: float = 0.0
     total_response_time: float = 0.0
-    endpoint_stats: Dict[str, Dict[str, Any]] = field(default_factory=lambda: defaultdict(dict))
+    endpoint_stats: dict[str, dict[str, Any]] = field(default_factory=lambda: defaultdict(dict))
 
     def update_request_stats(self, endpoint: str, success: bool, response_time: float, error_type: Optional[str] = None):
         """Update request statistics."""
@@ -166,7 +166,7 @@ class ClientMetrics:
 class KrakenRestClient:
     """
     Production-ready async REST API client for Kraken.
-    
+
     Provides comprehensive API access with authentication, rate limiting,
     circuit breaker protection, retry logic, and performance monitoring.
     """
@@ -187,7 +187,7 @@ class KrakenRestClient:
     ):
         """
         Initialize Kraken REST client.
-        
+
         Args:
             api_key: Kraken API key (from KRAKEN_KEY or legacy KRAKEN_API_KEY). If None, will load from environment.
             private_key: Kraken private key (base64 encoded, from KRAKEN_SECRET or legacy KRAKEN_API_SECRET). If None, will load from environment.
@@ -336,14 +336,14 @@ class KrakenRestClient:
 
         logger.info("Kraken REST client started")
 
-    def _load_credentials_from_environment(self) -> Tuple[Optional[str], Optional[str]]:
+    def _load_credentials_from_environment(self) -> tuple[Optional[str], Optional[str]]:
         """
         Load credentials from environment variables.
-        
+
         Priority order:
         1. KRAKEN_KEY / KRAKEN_SECRET (primary)
         2. KRAKEN_API_KEY / KRAKEN_API_SECRET (fallback)
-        
+
         Returns:
             Tuple of (api_key, private_key) or (None, None) if not found
         """
@@ -406,20 +406,20 @@ class KrakenRestClient:
     async def _make_request(
         self,
         endpoint_name: str,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         config: Optional[RequestConfig] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Make authenticated API request with full protection.
-        
+
         Args:
             endpoint_name: Name of the API endpoint
             params: Request parameters
             config: Request configuration
-            
+
         Returns:
             Response data dictionary
-            
+
         Raises:
             KrakenAPIError: For API-specific errors
             NetworkError: For network/connectivity issues
@@ -552,17 +552,17 @@ class KrakenRestClient:
     async def _execute_http_request(
         self,
         endpoint: EndpointDefinition,
-        params: Optional[Dict[str, Any]] = None,
+        params: Optional[dict[str, Any]] = None,
         config: Optional[RequestConfig] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Execute the actual HTTP request.
-        
+
         Args:
             endpoint: Endpoint definition
             params: Request parameters
             config: Request configuration
-            
+
         Returns:
             Response data dictionary
         """
@@ -687,12 +687,12 @@ class KrakenRestClient:
     ) -> bool:
         """
         Determine if request should be retried.
-        
+
         Args:
             error: Exception that occurred
             attempt: Current attempt number (0-based)
             config: Request configuration
-            
+
         Returns:
             True if request should be retried
         """
@@ -715,11 +715,11 @@ class KrakenRestClient:
     def _calculate_retry_delay(self, error: Exception, attempt: int) -> float:
         """
         Calculate delay before retry attempt.
-        
+
         Args:
             error: Exception that occurred
             attempt: Current attempt number (0-based)
-            
+
         Returns:
             Delay in seconds
         """
@@ -743,18 +743,18 @@ class KrakenRestClient:
 
     # ====== PUBLIC API METHODS ======
 
-    async def get_server_time(self) -> Dict[str, Any]:
+    async def get_server_time(self) -> dict[str, Any]:
         """Get server time."""
         return await self._make_request('ServerTime')
 
-    async def get_system_status(self) -> Dict[str, Any]:
+    async def get_system_status(self) -> dict[str, Any]:
         """Get system status."""
         return await self._make_request('SystemStatus')
 
-    async def get_asset_info(self, asset: Optional[str] = None) -> Dict[str, Any]:
+    async def get_asset_info(self, asset: Optional[str] = None) -> dict[str, Any]:
         """
         Get asset information.
-        
+
         Args:
             asset: Comma delimited list of assets to get info on
         """
@@ -764,10 +764,10 @@ class KrakenRestClient:
 
         return await self._make_request('AssetInfo', params)
 
-    async def get_asset_pairs(self, pair: Optional[str] = None, info: str = "info") -> Dict[str, Any]:
+    async def get_asset_pairs(self, pair: Optional[str] = None, info: str = "info") -> dict[str, Any]:
         """
         Get tradable asset pairs.
-        
+
         Args:
             pair: Comma delimited list of asset pairs
             info: Info to retrieve (info, leverage, fees, margin)
@@ -778,10 +778,10 @@ class KrakenRestClient:
 
         return await self._make_request('AssetPairs', params)
 
-    async def get_ticker_information(self, pair: str) -> Dict[str, Any]:
+    async def get_ticker_information(self, pair: str) -> dict[str, Any]:
         """
         Get ticker information.
-        
+
         Args:
             pair: Comma delimited list of asset pairs
         """
@@ -792,10 +792,10 @@ class KrakenRestClient:
         pair: str,
         interval: int = 1,
         since: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get OHLC data.
-        
+
         Args:
             pair: Asset pair
             interval: Time frame interval in minutes
@@ -807,20 +807,20 @@ class KrakenRestClient:
 
         return await self._make_request('OHLC', params)
 
-    async def get_order_book(self, pair: str, count: int = 100) -> Dict[str, Any]:
+    async def get_order_book(self, pair: str, count: int = 100) -> dict[str, Any]:
         """
         Get order book.
-        
+
         Args:
             pair: Asset pair
             count: Maximum number of asks/bids
         """
         return await self._make_request('OrderBook', {'pair': pair, 'count': count})
 
-    async def get_recent_trades(self, pair: str, since: Optional[str] = None) -> Dict[str, Any]:
+    async def get_recent_trades(self, pair: str, since: Optional[str] = None) -> dict[str, Any]:
         """
         Get recent trades.
-        
+
         Args:
             pair: Asset pair
             since: Return trade data since given ID
@@ -833,14 +833,14 @@ class KrakenRestClient:
 
     # ====== PRIVATE API METHODS ======
 
-    async def get_account_balance(self) -> Dict[str, Any]:
+    async def get_account_balance(self) -> dict[str, Any]:
         """Get account balance."""
         return await self._make_request('Balance')
 
-    async def get_trade_balance(self, asset: str = "ZUSD") -> Dict[str, Any]:
+    async def get_trade_balance(self, asset: str = "ZUSD") -> dict[str, Any]:
         """
         Get trade balance.
-        
+
         Args:
             asset: Base asset used to determine balance
         """
@@ -850,10 +850,10 @@ class KrakenRestClient:
         self,
         trades: bool = False,
         userref: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get open orders.
-        
+
         Args:
             trades: Whether to include trades related to position in output
             userref: Restrict results to given user reference id
@@ -872,10 +872,10 @@ class KrakenRestClient:
         end: Optional[int] = None,
         ofs: Optional[int] = None,
         closetime: str = "both"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get closed orders.
-        
+
         Args:
             trades: Whether to include trades related to position in output
             userref: Restrict results to given user reference id
@@ -901,10 +901,10 @@ class KrakenRestClient:
         txid: str,
         trades: bool = False,
         userref: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Query orders info.
-        
+
         Args:
             txid: Comma delimited list of transaction IDs to query info about
             trades: Whether to include trades related to position in output
@@ -923,10 +923,10 @@ class KrakenRestClient:
         start: Optional[int] = None,
         end: Optional[int] = None,
         ofs: Optional[int] = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Get trades history.
-        
+
         Args:
             type: Type of trade
             trades: Whether to include trades related to position in output
@@ -960,11 +960,11 @@ class KrakenRestClient:
         expiretm: Optional[str] = None,
         userref: Optional[int] = None,
         validate: bool = False,
-        close: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        close: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Add standard order.
-        
+
         Args:
             pair: Asset pair
             type: Order direction (buy/sell)
@@ -1018,10 +1018,10 @@ class KrakenRestClient:
         oflags: Optional[str] = None,
         newuserref: Optional[int] = None,
         validate: bool = False
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Edit an order.
-        
+
         Args:
             txid: Transaction ID of order to edit
             pair: Asset pair
@@ -1049,23 +1049,23 @@ class KrakenRestClient:
 
         return await self._make_request('EditOrder', params)
 
-    async def cancel_order(self, txid: str) -> Dict[str, Any]:
+    async def cancel_order(self, txid: str) -> dict[str, Any]:
         """
         Cancel open order.
-        
+
         Args:
             txid: Transaction ID of order to cancel
         """
         return await self._make_request('CancelOrder', {'txid': txid})
 
-    async def cancel_all_orders(self) -> Dict[str, Any]:
+    async def cancel_all_orders(self) -> dict[str, Any]:
         """Cancel all open orders."""
         return await self._make_request('CancelAllOrders')
 
-    async def cancel_all_orders_after(self, timeout: int) -> Dict[str, Any]:
+    async def cancel_all_orders_after(self, timeout: int) -> dict[str, Any]:
         """
         Cancel all orders after X seconds.
-        
+
         Args:
             timeout: Duration (in seconds) to set/extend the timer by
         """
@@ -1073,13 +1073,13 @@ class KrakenRestClient:
 
     # ====== WEBSOCKET TOKEN METHOD ======
 
-    async def get_websockets_token(self) -> Dict[str, Any]:
+    async def get_websockets_token(self) -> dict[str, Any]:
         """Get WebSocket authentication token."""
         return await self._make_request('GetWebSocketsToken')
 
     # ====== UTILITY METHODS ======
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get client performance metrics."""
         uptime = time.time() - self._start_time
 
@@ -1101,7 +1101,7 @@ class KrakenRestClient:
             'circuit_breaker_status': self.circuit_breaker.get_status() if self.circuit_breaker else None
         }
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get comprehensive client status."""
         return {
             'client_info': {
@@ -1121,10 +1121,10 @@ class KrakenRestClient:
             'recent_requests': list(self._request_history)[-10:]  # Last 10 requests
         }
 
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """
         Perform comprehensive health check.
-        
+
         Returns:
             Health check results
         """
@@ -1206,7 +1206,7 @@ class KrakenRestClient:
     async def test_connectivity(self) -> bool:
         """
         Test basic API connectivity.
-        
+
         Returns:
             True if API is reachable
         """
@@ -1220,7 +1220,7 @@ class KrakenRestClient:
     async def test_authentication(self) -> bool:
         """
         Test API authentication.
-        
+
         Returns:
             True if authentication is working
         """
@@ -1236,7 +1236,7 @@ class KrakenRestClient:
     async def test_connection(self) -> bool:
         """
         Test complete API connection (connectivity + authentication).
-        
+
         Returns:
             True if both connectivity and authentication work
         """

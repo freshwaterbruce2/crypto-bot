@@ -10,7 +10,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from src.utils.decimal_precision_fix import safe_decimal
 
@@ -44,8 +44,8 @@ class PositionDashboard:
         self.logger = logging.getLogger(self.__class__.__name__)
 
         # Position tracking
-        self.positions: Dict[str, PositionMetrics] = {}
-        self.position_history: List[Dict[str, Any]] = []
+        self.positions: dict[str, PositionMetrics] = {}
+        self.position_history: list[dict[str, Any]] = []
 
         # Portfolio metrics
         self.total_value = Decimal('0')
@@ -82,7 +82,7 @@ class PositionDashboard:
 
         self.logger.info("[POSITION_DASHBOARD] Position tracking stopped")
 
-    async def scan_positions(self) -> Dict[str, PositionMetrics]:
+    async def scan_positions(self) -> dict[str, PositionMetrics]:
         """Scan all current positions from balance manager"""
         try:
             if not hasattr(self.bot, 'balance_manager') or not self.bot.balance_manager:
@@ -203,7 +203,7 @@ class PositionDashboard:
         if self.total_value > 0:
             self.total_pnl_percent = float(self.total_pnl / self.total_value * 100)
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get dashboard summary"""
         return {
             'positions_count': len(self.positions),

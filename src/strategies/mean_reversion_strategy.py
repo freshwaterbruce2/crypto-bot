@@ -5,7 +5,7 @@ Statistical mean reversion trading using Bollinger Bands and price deviation
 
 import logging
 import statistics
-from typing import Any, Dict
+from typing import Any
 
 from .base_strategy import BaseStrategy
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class MeanReversionStrategy(BaseStrategy):
     """Mean reversion strategy using statistical analysis"""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         """Initialize mean reversion strategy"""
         super().__init__("mean_reversion", config)
 
@@ -33,7 +33,7 @@ class MeanReversionStrategy(BaseStrategy):
 
         logger.info(f"[MEAN_REV] Strategy initialized with {self.window} period window")
 
-    async def analyze(self, symbol: str, timeframe: str = '1m') -> Dict[str, Any]:
+    async def analyze(self, symbol: str, timeframe: str = '1m') -> dict[str, Any]:
         """Analyze symbol for mean reversion opportunities"""
         try:
             # Get current ticker
@@ -114,7 +114,7 @@ class MeanReversionStrategy(BaseStrategy):
             logger.error(f"[MEAN_REV] Error analyzing {symbol}: {e}")
             return {'action': 'HOLD', 'confidence': 0, 'reason': f'Analysis error: {e}'}
 
-    async def should_buy(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_buy(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Check if should buy based on mean reversion"""
         try:
             if analysis.get('action') != 'BUY':
@@ -144,7 +144,7 @@ class MeanReversionStrategy(BaseStrategy):
             logger.error(f"[MEAN_REV] Error in buy decision for {symbol}: {e}")
             return False
 
-    async def should_sell(self, symbol: str, analysis: Dict[str, Any]) -> bool:
+    async def should_sell(self, symbol: str, analysis: dict[str, Any]) -> bool:
         """Check if should sell based on mean reversion"""
         try:
             if analysis.get('action') != 'SELL':
@@ -186,7 +186,7 @@ class MeanReversionStrategy(BaseStrategy):
         if len(self.price_history[symbol]) > self.max_history:
             self.price_history[symbol] = self.price_history[symbol][-self.max_history:]
 
-    def get_strategy_info(self) -> Dict[str, Any]:
+    def get_strategy_info(self) -> dict[str, Any]:
         """Get strategy information"""
         return {
             'name': 'MeanReversionStrategy',

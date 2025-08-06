@@ -5,7 +5,7 @@ Handles safe module imports with fallbacks and error handling
 
 import importlib
 import logging
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -15,8 +15,8 @@ class SafeImporter:
 
     def __init__(self):
         """Initialize safe importer"""
-        self.fallbacks: Dict[str, Any] = {}
-        self.repair_callbacks: Dict[str, Callable] = {}
+        self.fallbacks: dict[str, Any] = {}
+        self.repair_callbacks: dict[str, Callable] = {}
 
     def register_fallback(self, module_name: str, fallback: Any):
         """Register fallback for module"""
@@ -78,7 +78,7 @@ def register_repair_callback(module_name: str, callback: Callable):
     _safe_importer.register_repair_callback(module_name, callback)
 
 
-def validate_dependencies(required_modules: list) -> Dict[str, bool]:
+def validate_dependencies(required_modules: list) -> dict[str, bool]:
     """Validate that required modules are available"""
     results = {}
     for module_name in required_modules:

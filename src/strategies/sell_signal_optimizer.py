@@ -8,7 +8,7 @@ Provides real-time market condition analysis and execution timing optimization.
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class MarketCondition:
 @dataclass
 class OptimizedSellSignal:
     """Optimized sell signal with execution recommendations"""
-    original_signal: Dict[str, Any]
+    original_signal: dict[str, Any]
     optimized_amount: float
     optimized_price: Optional[float]
     order_type: str
@@ -37,7 +37,7 @@ class OptimizedSellSignal:
     confidence_boost: float
     execution_window_seconds: int
     market_conditions: MarketCondition
-    optimization_reasons: List[str]
+    optimization_reasons: list[str]
 
 
 class SellSignalOptimizer:
@@ -46,7 +46,7 @@ class SellSignalOptimizer:
     Analyzes market conditions and optimizes execution parameters.
     """
 
-    def __init__(self, config: Dict[str, Any], exchange=None, websocket_manager=None):
+    def __init__(self, config: dict[str, Any], exchange=None, websocket_manager=None):
         """Initialize sell signal optimizer"""
         self.config = config
         self.exchange = exchange
@@ -70,15 +70,15 @@ class SellSignalOptimizer:
 
         logger.info("[SELL_OPTIMIZER] Signal optimizer initialized")
 
-    async def optimize_sell_signal(self, sell_signal: Dict[str, Any],
-                                 position_data: Dict[str, Any]) -> OptimizedSellSignal:
+    async def optimize_sell_signal(self, sell_signal: dict[str, Any],
+                                 position_data: dict[str, Any]) -> OptimizedSellSignal:
         """
         Optimize sell signal for maximum profit and minimal slippage.
-        
+
         Args:
             sell_signal: Original sell signal from sell logic
             position_data: Current position and market data
-            
+
         Returns:
             OptimizedSellSignal with execution recommendations
         """
@@ -86,7 +86,7 @@ class SellSignalOptimizer:
             symbol = sell_signal.get('symbol', '')
             profit_pct = sell_signal.get('metadata', {}).get('profit_pct', 0)
             confidence = sell_signal.get('confidence', 0.5)
-            urgency = sell_signal.get('urgency', 'medium')
+            sell_signal.get('urgency', 'medium')
 
             # Analyze current market conditions
             market_conditions = await self._analyze_market_conditions(symbol)
@@ -232,8 +232,8 @@ class SellSignalOptimizer:
                 optimal_order_type='market'
             )
 
-    async def _optimize_sell_amount(self, sell_signal: Dict[str, Any],
-                                  position_data: Dict[str, Any],
+    async def _optimize_sell_amount(self, sell_signal: dict[str, Any],
+                                  position_data: dict[str, Any],
                                   market_conditions: MarketCondition) -> float:
         """Optimize the sell amount based on market conditions"""
         original_amount = sell_signal.get('amount', position_data.get('amount', 0))
@@ -256,9 +256,9 @@ class SellSignalOptimizer:
 
         return max(base_amount, min_viable_amount)
 
-    async def _optimize_price_and_order_type(self, sell_signal: Dict[str, Any],
+    async def _optimize_price_and_order_type(self, sell_signal: dict[str, Any],
                                            market_conditions: MarketCondition,
-                                           profit_pct: float) -> Tuple[Optional[float], str]:
+                                           profit_pct: float) -> tuple[Optional[float], str]:
         """Optimize price and order type for execution"""
         symbol = sell_signal.get('symbol', '')
         urgency = sell_signal.get('urgency', 'medium')
@@ -301,9 +301,9 @@ class SellSignalOptimizer:
         # Default to aggressive limit for medium conditions
         return None, market_conditions.optimal_order_type
 
-    def _calculate_execution_urgency(self, sell_signal: Dict[str, Any],
+    def _calculate_execution_urgency(self, sell_signal: dict[str, Any],
                                    market_conditions: MarketCondition,
-                                   profit_pct: float) -> Tuple[int, int]:
+                                   profit_pct: float) -> tuple[int, int]:
         """Calculate execution urgency level and time window"""
         base_urgency = {
             'low': 3,
@@ -393,9 +393,9 @@ class SellSignalOptimizer:
 
         return min(boost, 0.25)  # Cap boost at 0.25
 
-    def _generate_optimization_reasons(self, sell_signal: Dict[str, Any],
+    def _generate_optimization_reasons(self, sell_signal: dict[str, Any],
                                      market_conditions: MarketCondition,
-                                     order_type: str, confidence_boost: float) -> List[str]:
+                                     order_type: str, confidence_boost: float) -> list[str]:
         """Generate human-readable optimization reasons"""
         reasons = []
 
@@ -427,7 +427,7 @@ class SellSignalOptimizer:
 
         return reasons if reasons else ["Standard optimization applied"]
 
-    def get_optimization_stats(self) -> Dict[str, Any]:
+    def get_optimization_stats(self) -> dict[str, Any]:
         """Get optimization performance statistics"""
         if not self.optimization_history:
             return {'message': 'No optimization history available'}
@@ -462,7 +462,7 @@ class SellSignalOptimizer:
             }
         }
 
-    async def _calculate_price_momentum(self, symbol: str, ticker_data: Dict[str, Any]) -> float:
+    async def _calculate_price_momentum(self, symbol: str, ticker_data: dict[str, Any]) -> float:
         """
         Calculate price momentum based on recent price action.
         Returns positive value for upward momentum, negative for downward.

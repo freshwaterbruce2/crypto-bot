@@ -16,7 +16,7 @@ import json
 import os
 import time
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 # Fixed import to prevent relative import errors
 try:
@@ -148,7 +148,7 @@ class LoggingAnalyticsAssistant:
             "[ANALYTICS_ASSISTANT] Initialized with existing performance system integration"
         )
 
-    async def track_trade_execution(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def track_trade_execution(self, trade_data: dict[str, Any]) -> dict[str, Any]:
         """
         Comprehensive trade execution tracking with performance analytics.
 
@@ -165,10 +165,10 @@ class LoggingAnalyticsAssistant:
 
             # Extract key execution metrics
             symbol = trade_data.get("symbol", "")
-            execution_time = trade_data.get("execution_time", 0.0)
-            success = trade_data.get("success", False)
-            amount = trade_data.get("amount", 0.0)
-            profit_loss = trade_data.get("profit_loss", 0.0)
+            trade_data.get("execution_time", 0.0)
+            trade_data.get("success", False)
+            trade_data.get("amount", 0.0)
+            trade_data.get("profit_loss", 0.0)
 
             # Enhance trade data with analytics
             enhanced_trade_data = {
@@ -242,7 +242,7 @@ class LoggingAnalyticsAssistant:
 
     async def generate_performance_analytics(
         self, analysis_type: str, time_period: str = "24h"
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Generate comprehensive performance analytics with intelligent insights.
 
@@ -339,8 +339,8 @@ class LoggingAnalyticsAssistant:
             }
 
     async def create_intelligent_report(
-        self, report_type: str, custom_params: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, report_type: str, custom_params: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
         """
         Create intelligent reports with automated insights and recommendations.
 
@@ -470,7 +470,7 @@ class LoggingAnalyticsAssistant:
                 "generation_time": time.time() - report_start,
             }
 
-    async def monitor_real_time_performance(self) -> Dict[str, Any]:
+    async def monitor_real_time_performance(self) -> dict[str, Any]:
         """
         Real-time performance monitoring with intelligent alerting.
 
@@ -568,7 +568,7 @@ class LoggingAnalyticsAssistant:
 
     # CRITICAL METHODS REQUIRED BY ENHANCED TRADE EXECUTOR
 
-    async def prepare_trade_analytics(self, signal) -> Dict[str, Any]:
+    async def prepare_trade_analytics(self, signal) -> dict[str, Any]:
         """
         CRITICAL: Method expected by enhanced trade executor.
         Prepares analytics for trade execution tracking.
@@ -610,7 +610,7 @@ class LoggingAnalyticsAssistant:
             }
 
     async def record_trade_execution(
-        self, execution_result: Dict[str, Any], coordination_result
+        self, execution_result: dict[str, Any], coordination_result
     ) -> None:
         """
         CRITICAL: Method expected by enhanced trade executor.
@@ -648,7 +648,7 @@ class LoggingAnalyticsAssistant:
 
     # HELPER METHODS FOR ANALYTICS OPERATIONS
 
-    def _analyze_execution_performance(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _analyze_execution_performance(self, trade_data: dict[str, Any]) -> dict[str, Any]:
         """Analyze individual trade execution performance."""
         try:
             execution_time = trade_data.get("execution_time", 0.0)
@@ -671,7 +671,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             return {"error": str(e), "performance_rating": "unknown"}
 
-    def _calculate_profit_metrics(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
+    def _calculate_profit_metrics(self, trade_data: dict[str, Any]) -> dict[str, Any]:
         """Calculate profit-related metrics for trade."""
         try:
             profit_loss = trade_data.get("profit_loss", 0.0)
@@ -690,7 +690,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             return {"error": str(e), "profit_category": "unknown"}
 
-    async def _capture_system_context(self) -> Dict[str, Any]:
+    async def _capture_system_context(self) -> dict[str, Any]:
         """Capture current system context for analytics."""
         try:
             return {
@@ -703,7 +703,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             return {"error": str(e)}
 
-    def _calculate_time_range(self, time_period: str) -> Dict[str, float]:
+    def _calculate_time_range(self, time_period: str) -> dict[str, float]:
         """Calculate time range for analytics queries."""
         now = time.time()
 
@@ -723,7 +723,7 @@ class LoggingAnalyticsAssistant:
             "duration_seconds": duration,
         }
 
-    async def _update_real_time_metrics(self, metric_type: str, data: Dict[str, Any]) -> None:
+    async def _update_real_time_metrics(self, metric_type: str, data: dict[str, Any]) -> None:
         """
         Update real-time trading metrics with error handling.
 
@@ -756,7 +756,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[DATA] Error updating real-time metrics: {e}")
 
-    def _update_trade_execution_metrics(self, trade_data: Dict[str, Any]) -> None:
+    def _update_trade_execution_metrics(self, trade_data: dict[str, Any]) -> None:
         """Update trade execution specific metrics."""
         try:
             self.real_time_metrics["total_trades"] += 1
@@ -807,7 +807,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[DATA] Error updating trade execution metrics: {e}")
 
-    def _update_signal_generation_metrics(self, signal_data: Dict[str, Any]) -> None:
+    def _update_signal_generation_metrics(self, signal_data: dict[str, Any]) -> None:
         """Update signal generation specific metrics."""
         try:
             self.real_time_metrics["signal_metrics"]["total_signals"] += 1
@@ -831,7 +831,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[DATA] Error updating signal generation metrics: {e}")
 
-    def _update_system_performance_metrics(self, system_data: Dict[str, Any]) -> None:
+    def _update_system_performance_metrics(self, system_data: dict[str, Any]) -> None:
         """Update system performance specific metrics."""
         try:
             # Update system metrics based on provided data
@@ -844,7 +844,7 @@ class LoggingAnalyticsAssistant:
 
     # LEARNING MANAGER INTEGRATION METHODS
 
-    async def _record_trade_execution_event(self, trade_data: Dict[str, Any]):
+    async def _record_trade_execution_event(self, trade_data: dict[str, Any]):
         """Record trade execution event with learning manager."""
         try:
             if self.learning_manager and hasattr(self.learning_manager, "record_event"):
@@ -874,7 +874,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error recording trade execution event: {e}")
 
-    async def _record_analytics_generation(self, analysis_type: str, analytics: Dict[str, Any]):
+    async def _record_analytics_generation(self, analysis_type: str, analytics: dict[str, Any]):
         """Record analytics generation with learning manager."""
         try:
             if self.learning_manager and hasattr(self.learning_manager, "record_event"):
@@ -921,7 +921,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error recording analytics error: {e}")
 
-    async def _record_report_generation(self, report_type: str, report: Dict[str, Any]):
+    async def _record_report_generation(self, report_type: str, report: dict[str, Any]):
         """Record report generation with learning manager."""
         try:
             if self.learning_manager and hasattr(self.learning_manager, "record_event"):
@@ -947,7 +947,7 @@ class LoggingAnalyticsAssistant:
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error recording report generation: {e}")
 
-    async def _record_performance_monitoring(self, performance_data: Dict[str, Any]):
+    async def _record_performance_monitoring(self, performance_data: dict[str, Any]):
         """Record performance monitoring with learning manager."""
         try:
             if self.learning_manager and hasattr(self.learning_manager, "record_event"):
@@ -973,7 +973,7 @@ class LoggingAnalyticsAssistant:
 
     # PUBLIC METHODS FOR COMPONENT STATUS
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get comprehensive performance summary for the analytics assistant."""
         return {
             "assistant_type": "logging_analytics",
@@ -1002,7 +1002,7 @@ class LoggingAnalyticsAssistant:
             },
         }
 
-    def get_component_health(self) -> Dict[str, Any]:
+    def get_component_health(self) -> dict[str, Any]:
         """Get health metrics for this assistant component."""
         return {
             "status": "operational",
@@ -1020,7 +1020,7 @@ class LoggingAnalyticsAssistant:
 
     # FIXED IMPLEMENTATION FOR COMPLEX OPERATIONS (previously stub methods)
 
-    async def _collect_trade_data(self, time_range: Dict[str, float]) -> Dict[str, Any]:
+    async def _collect_trade_data(self, time_range: dict[str, float]) -> dict[str, Any]:
         """Collect trade data for analysis. Integrates with actual trade history systems."""
         try:
             # Collect from recent data buffers first
@@ -1077,7 +1077,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting trade data: {e}")
             return {"trades": [], "time_range": time_range, "error": str(e)}
 
-    async def _collect_system_data(self, time_range: Dict[str, float]) -> Dict[str, Any]:
+    async def _collect_system_data(self, time_range: dict[str, float]) -> dict[str, Any]:
         """Collect system performance data. Integrates with actual system monitoring."""
         try:
             # Collect from system metrics buffer
@@ -1122,7 +1122,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting system data: {e}")
             return {"system_metrics": [], "time_range": time_range, "error": str(e)}
 
-    async def _collect_learning_data(self, time_range: Dict[str, float]) -> Dict[str, Any]:
+    async def _collect_learning_data(self, time_range: dict[str, float]) -> dict[str, Any]:
         """Collect learning system data. Integrates with learning manager."""
         try:
             learning_events = []
@@ -1165,7 +1165,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting learning data: {e}")
             return {"learning_events": [], "time_range": time_range, "error": str(e)}
 
-    async def _check_execution_alerts(self, trade_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _check_execution_alerts(self, trade_data: dict[str, Any]) -> list[dict[str, Any]]:
         """Check for execution-related alerts."""
         alerts = []
 
@@ -1204,7 +1204,7 @@ class LoggingAnalyticsAssistant:
 
         return alerts
 
-    async def _store_trade_analytics(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _store_trade_analytics(self, trade_data: dict[str, Any]) -> dict[str, Any]:
         """Store trade analytics to persistent storage."""
         try:
             self.performance_metrics["storage_operations"] += 1
@@ -1247,7 +1247,7 @@ class LoggingAnalyticsAssistant:
                 "error": str(e)
             }
 
-    def _assess_data_quality(self, *data_sources) -> Dict[str, Any]:
+    def _assess_data_quality(self, *data_sources) -> dict[str, Any]:
         """Assess quality of collected data."""
         try:
             total_records = 0
@@ -1286,7 +1286,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error assessing data quality: {e}")
             return {"quality_score": 0.0, "completeness": 0.0, "accuracy": 0.0, "error": str(e)}
 
-    def _generate_actionable_insights(self, analytics: Dict[str, Any]) -> List[str]:
+    def _generate_actionable_insights(self, analytics: dict[str, Any]) -> list[str]:
         """Generate actionable insights from analytics."""
         insights = []
 
@@ -1322,7 +1322,7 @@ class LoggingAnalyticsAssistant:
         return insights
 
     # Additional implementation for complex analytics operations
-    async def _analyze_execution_performance_detailed(self, trade_data: Dict, time_range: Dict) -> Dict:
+    async def _analyze_execution_performance_detailed(self, trade_data: dict, time_range: dict) -> dict:
         """Detailed execution performance analysis."""
         try:
             trades = trade_data.get("trades", [])
@@ -1367,7 +1367,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in execution performance analysis: {e}")
             return {"performance_score": 0.0, "areas_for_improvement": [str(e)], "error": True}
 
-    async def _analyze_profit_optimization(self, trade_data: Dict, time_range: Dict) -> Dict:
+    async def _analyze_profit_optimization(self, trade_data: dict, time_range: dict) -> dict:
         """Profit optimization analysis."""
         try:
             trades = trade_data.get("trades", [])
@@ -1418,7 +1418,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in profit optimization analysis: {e}")
             return {"profit_efficiency": 0.0, "optimization_opportunities": [str(e)], "error": True}
 
-    async def _analyze_system_efficiency(self, system_data: Dict, time_range: Dict) -> Dict:
+    async def _analyze_system_efficiency(self, system_data: dict, time_range: dict) -> dict:
         """System efficiency analysis."""
         try:
             summary = system_data.get("summary", {})
@@ -1461,7 +1461,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in system efficiency analysis: {e}")
             return {"efficiency_score": 0.0, "bottlenecks": [str(e)], "error": True}
 
-    async def _analyze_learning_effectiveness(self, learning_data: Dict, time_range: Dict) -> Dict:
+    async def _analyze_learning_effectiveness(self, learning_data: dict, time_range: dict) -> dict:
         """Learning effectiveness analysis."""
         try:
             events = learning_data.get("learning_events", [])
@@ -1507,8 +1507,8 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in learning effectiveness analysis: {e}")
             return {"learning_rate": 0.0, "improvement_areas": [str(e)], "error": True}
 
-    async def _generate_comprehensive_analytics(self, trade_data: Dict, system_data: Dict,
-                                                learning_data: Dict, time_range: Dict) -> Dict:
+    async def _generate_comprehensive_analytics(self, trade_data: dict, system_data: dict,
+                                                learning_data: dict, time_range: dict) -> dict:
         """Comprehensive analytics generation combining all data sources."""
         try:
             # Run all analyses
@@ -1559,7 +1559,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in comprehensive analytics: {e}")
             return {"overall_health": 0.0, "key_metrics": {}, "error": str(e)}
 
-    async def _collect_report_data(self, report_type: str, custom_params: Dict) -> Dict:
+    async def _collect_report_data(self, report_type: str, custom_params: dict) -> dict:
         """Collect data for report generation."""
         try:
             # Determine time range based on report type
@@ -1588,7 +1588,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting report data: {e}")
             return {"error": str(e), "collection_timestamp": time.time()}
 
-    async def _generate_trade_analysis_section(self, report_data: Dict) -> Dict:
+    async def _generate_trade_analysis_section(self, report_data: dict) -> dict:
         """Generate trade analysis section for reports."""
         try:
             trade_data = report_data.get("trade_data", {})
@@ -1631,7 +1631,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating trade analysis: {e}")
             return {"total_trades": 0, "error": str(e)}
 
-    async def _generate_profit_loss_section(self, report_data: Dict) -> Dict:
+    async def _generate_profit_loss_section(self, report_data: dict) -> dict:
         """Generate profit/loss section for reports."""
         try:
             trade_data = report_data.get("trade_data", {})
@@ -1679,7 +1679,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating P&L section: {e}")
             return {"net_profit": 0.0, "error": str(e)}
 
-    async def _generate_win_rate_section(self, report_data: Dict) -> Dict:
+    async def _generate_win_rate_section(self, report_data: dict) -> dict:
         """Generate win rate analysis section."""
         try:
             trade_data = report_data.get("trade_data", {})
@@ -1730,7 +1730,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating win rate section: {e}")
             return {"overall_win_rate": 0.0, "error": str(e)}
 
-    async def _generate_system_health_section(self, report_data: Dict) -> Dict:
+    async def _generate_system_health_section(self, report_data: dict) -> dict:
         """Generate system health section."""
         try:
             system_data = report_data.get("system_data", {})
@@ -1777,7 +1777,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating system health section: {e}")
             return {"system_status": "error", "error": str(e)}
 
-    async def _generate_trend_analysis_section(self, report_data: Dict) -> Dict:
+    async def _generate_trend_analysis_section(self, report_data: dict) -> dict:
         """Generate trend analysis section."""
         try:
             trade_data = report_data.get("trade_data", {})
@@ -1841,7 +1841,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating trend analysis: {e}")
             return {"trending_up": [], "trending_down": [], "error": str(e)}
 
-    async def _generate_optimization_section(self, report_data: Dict) -> Dict:
+    async def _generate_optimization_section(self, report_data: dict) -> dict:
         """Generate optimization opportunities section."""
         try:
             # Analyze various aspects for optimization
@@ -1909,7 +1909,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating optimization section: {e}")
             return {"opportunities": [], "error": str(e)}
 
-    async def _generate_risk_analysis_section(self, report_data: Dict) -> Dict:
+    async def _generate_risk_analysis_section(self, report_data: dict) -> dict:
         """Generate risk analysis section."""
         try:
             trade_data = report_data.get("trade_data", {})
@@ -1977,7 +1977,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating risk analysis: {e}")
             return {"risk_level": "unknown", "error": str(e)}
 
-    async def _generate_real_time_metrics_section(self) -> Dict:
+    async def _generate_real_time_metrics_section(self) -> dict:
         """Generate real-time metrics section."""
         return {
             "current_metrics": self.real_time_metrics,
@@ -1985,7 +1985,7 @@ class LoggingAnalyticsAssistant:
             "update_age_seconds": time.time() - self.real_time_metrics["last_updated"]
         }
 
-    async def _generate_alerts_section(self) -> List[Dict]:
+    async def _generate_alerts_section(self) -> list[dict]:
         """Generate alerts section based on current conditions."""
         alerts = []
 
@@ -2031,7 +2031,7 @@ class LoggingAnalyticsAssistant:
 
         return alerts
 
-    async def _generate_system_status_section(self) -> Dict:
+    async def _generate_system_status_section(self) -> dict:
         """Generate current system status section."""
         try:
             # Determine overall status
@@ -2068,7 +2068,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating system status: {e}")
             return {"overall_status": "error", "components": {}, "error": str(e)}
 
-    async def _generate_executive_summary(self, report_sections: Dict) -> Dict:
+    async def _generate_executive_summary(self, report_sections: dict) -> dict:
         """Generate executive summary from all report sections."""
         try:
             key_findings = []
@@ -2113,7 +2113,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating executive summary: {e}")
             return {"key_findings": [], "overall_assessment": "error", "error": str(e)}
 
-    async def _generate_intelligent_recommendations(self, report_sections: Dict) -> List[Dict]:
+    async def _generate_intelligent_recommendations(self, report_sections: dict) -> list[dict]:
         """Generate intelligent recommendations based on report analysis."""
         recommendations = []
 
@@ -2183,7 +2183,7 @@ class LoggingAnalyticsAssistant:
 
         return recommendations[:5]  # Return top 5 recommendations
 
-    def _assess_report_data_quality(self, report_data: Dict) -> Dict:
+    def _assess_report_data_quality(self, report_data: dict) -> dict:
         """Assess quality of data used in report."""
         try:
             # Check data completeness
@@ -2214,7 +2214,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error assessing report data quality: {e}")
             return {"quality_score": 0.0, "assessment": "error", "error": str(e)}
 
-    def _suggest_next_actions(self, report_sections: Dict) -> List[str]:
+    def _suggest_next_actions(self, report_sections: dict) -> list[str]:
         """Suggest next actions based on report findings."""
         actions = []
 
@@ -2249,7 +2249,7 @@ class LoggingAnalyticsAssistant:
 
         return actions[:3]  # Return top 3 actions
 
-    async def _store_report(self, report: Dict) -> bool:
+    async def _store_report(self, report: dict) -> bool:
         """Store report to persistent storage."""
         try:
             self.performance_metrics["storage_operations"] += 1
@@ -2276,7 +2276,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error storing report: {e}")
             return False
 
-    async def _collect_assistant_metrics(self, assistant_type: str) -> Dict:
+    async def _collect_assistant_metrics(self, assistant_type: str) -> dict:
         """Collect metrics from specific assistant."""
         try:
             # Get metrics based on assistant type
@@ -2306,7 +2306,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting {assistant_type} metrics: {e}")
             return {"status": "error", "performance_score": 0.0, "error": str(e)}
 
-    async def _collect_system_wide_metrics(self) -> Dict:
+    async def _collect_system_wide_metrics(self) -> dict:
         """Collect system-wide performance metrics."""
         try:
             # Get real system metrics using psutil
@@ -2339,7 +2339,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting system metrics: {e}")
             return {"cpu_usage": 0.0, "memory_usage": 0.0, "error": str(e)}
 
-    async def _collect_trading_metrics(self) -> Dict:
+    async def _collect_trading_metrics(self) -> dict:
         """Collect current trading metrics."""
         try:
             # Get from real-time metrics
@@ -2356,7 +2356,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting trading metrics: {e}")
             return {"active_trades": 0, "daily_volume": 0.0, "error": str(e)}
 
-    async def _collect_learning_metrics(self) -> Dict:
+    async def _collect_learning_metrics(self) -> dict:
         """Collect learning system metrics."""
         try:
             if self.learning_manager and hasattr(self.learning_manager, "get_learning_stats"):
@@ -2374,7 +2374,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting learning metrics: {e}")
             return {"models_updated": 0, "accuracy": 0.0, "error": str(e)}
 
-    async def _analyze_performance_trends(self) -> Dict:
+    async def _analyze_performance_trends(self) -> dict:
         """Analyze performance trends over time."""
         try:
             # Simple trend analysis based on recent metrics
@@ -2405,7 +2405,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error analyzing trends: {e}")
             return {"overall_trend": "unknown", "improvement_rate": 0.0, "error": str(e)}
 
-    async def _check_performance_alerts(self, metrics: Dict) -> List[Dict]:
+    async def _check_performance_alerts(self, metrics: dict) -> list[dict]:
         """Check for performance-related alerts."""
         alerts = []
 
@@ -2445,7 +2445,7 @@ class LoggingAnalyticsAssistant:
 
         return alerts
 
-    def _calculate_overall_performance_score(self, performance_data: Dict) -> float:
+    def _calculate_overall_performance_score(self, performance_data: dict) -> float:
         """Calculate overall system performance score."""
         try:
             scores = []
@@ -2476,7 +2476,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error calculating performance score: {e}")
             return 50.0
 
-    def _determine_system_health_status(self, score: float, alerts: List) -> str:
+    def _determine_system_health_status(self, score: float, alerts: list) -> str:
         """Determine overall system health status."""
         try:
             # Check for critical alerts
@@ -2498,7 +2498,7 @@ class LoggingAnalyticsAssistant:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error determining health status: {e}")
             return "unknown"
 
-    async def _store_real_time_metrics(self, metrics: Dict) -> bool:
+    async def _store_real_time_metrics(self, metrics: dict) -> bool:
         """Store real-time metrics for historical tracking."""
         try:
             self.performance_metrics["storage_operations"] += 1
@@ -2520,7 +2520,7 @@ class LoggingAnalyticsAssistant:
             return False
 
     # Helper methods for calculations
-    def _deduplicate_trades(self, trades: List[Dict]) -> List[Dict]:
+    def _deduplicate_trades(self, trades: list[dict]) -> list[dict]:
         """Remove duplicate trades based on timestamp and symbol."""
         seen = set()
         unique_trades = []
@@ -2533,7 +2533,7 @@ class LoggingAnalyticsAssistant:
 
         return unique_trades
 
-    def _calculate_consecutive_wins(self, trades: List[Dict]) -> int:
+    def _calculate_consecutive_wins(self, trades: list[dict]) -> int:
         """Calculate maximum consecutive winning trades."""
         if not trades:
             return 0
@@ -2550,7 +2550,7 @@ class LoggingAnalyticsAssistant:
 
         return max_consecutive
 
-    def _calculate_consecutive_losses(self, trades: List[Dict]) -> int:
+    def _calculate_consecutive_losses(self, trades: list[dict]) -> int:
         """Calculate maximum consecutive losing trades."""
         if not trades:
             return 0
@@ -2567,7 +2567,7 @@ class LoggingAnalyticsAssistant:
 
         return max_consecutive
 
-    def _calculate_risk_reward_ratio(self, trades: List[Dict]) -> float:
+    def _calculate_risk_reward_ratio(self, trades: list[dict]) -> float:
         """Calculate average risk/reward ratio."""
         if not trades:
             return 0.0

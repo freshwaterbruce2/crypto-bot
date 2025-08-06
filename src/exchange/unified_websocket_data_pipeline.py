@@ -25,7 +25,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 from threading import RLock
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from ..utils.decimal_precision_fix import safe_decimal, safe_float
 from ..utils.performance_integration import PerformanceTracker
@@ -78,7 +78,7 @@ class PipelineMessage:
     """Internal message structure for pipeline processing"""
     channel: DataChannel
     priority: MessagePriority
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: float
     message_id: str
     source_symbol: Optional[str] = None
@@ -95,7 +95,7 @@ class ComponentRegistry:
         self._callbacks = defaultdict(list)
         self._lock = RLock()
 
-    def register_component(self, name: str, component: Any, channels: List[DataChannel]):
+    def register_component(self, name: str, component: Any, channels: list[DataChannel]):
         """Register a component for specific channels"""
         with self._lock:
             self._components[name] = weakref.ref(component)
@@ -113,7 +113,7 @@ class ComponentRegistry:
                     self._callbacks[channel] = [(n, ref) for n, ref in callbacks if n != name]
                 logger.info(f"[PIPELINE] Unregistered component '{name}'")
 
-    def get_components_for_channel(self, channel: DataChannel) -> List[Tuple[str, Any]]:
+    def get_components_for_channel(self, channel: DataChannel) -> list[tuple[str, Any]]:
         """Get active components for a channel"""
         active_components = []
         with self._lock:
@@ -131,7 +131,7 @@ class ComponentRegistry:
 class UnifiedWebSocketDataPipeline:
     """
     High-performance WebSocket V2 data pipeline with priority routing and real-time processing
-    
+
     Routes all WebSocket streams to appropriate components with configurable priorities,
     message queuing, and comprehensive error handling.
     """
@@ -142,7 +142,7 @@ class UnifiedWebSocketDataPipeline:
                  performance_config: Optional[PerformanceConfig] = None):
         """
         Initialize the unified data pipeline
-        
+
         Args:
             websocket_manager: WebSocket V2 manager instance
             queue_config: Queue configuration
@@ -232,7 +232,7 @@ class UnifiedWebSocketDataPipeline:
             [DataChannel.BALANCE, DataChannel.EXECUTION, DataChannel.TICKER]
         )
 
-    def register_custom_component(self, name: str, component: Any, channels: List[DataChannel]):
+    def register_custom_component(self, name: str, component: Any, channels: list[DataChannel]):
         """Register custom component for specific channels"""
         self.registry.register_component(name, component, channels)
 
@@ -303,13 +303,13 @@ class UnifiedWebSocketDataPipeline:
 
         logger.info("[PIPELINE] Stopped successfully")
 
-    async def process_raw_message(self, message: Dict[str, Any]) -> bool:
+    async def process_raw_message(self, message: dict[str, Any]) -> bool:
         """
         Process raw WebSocket message and route to appropriate components
-        
+
         Args:
             message: Raw WebSocket message
-            
+
         Returns:
             True if message was processed successfully
         """
@@ -367,23 +367,23 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error processing raw message: {e}")
             return False
 
-    async def route_balance_update(self, balance_data: Dict[str, Any]) -> bool:
+    async def route_balance_update(self, balance_data: dict[str, Any]) -> bool:
         """Route balance update to registered balance managers"""
         return await self._route_channel_data(DataChannel.BALANCE, balance_data)
 
-    async def route_execution_update(self, execution_data: Dict[str, Any]) -> bool:
+    async def route_execution_update(self, execution_data: dict[str, Any]) -> bool:
         """Route execution update to registered components"""
         return await self._route_channel_data(DataChannel.EXECUTION, execution_data)
 
-    async def route_ticker_update(self, ticker_data: Dict[str, Any]) -> bool:
+    async def route_ticker_update(self, ticker_data: dict[str, Any]) -> bool:
         """Route ticker update to registered components"""
         return await self._route_channel_data(DataChannel.TICKER, ticker_data)
 
-    async def route_orderbook_update(self, orderbook_data: Dict[str, Any]) -> bool:
+    async def route_orderbook_update(self, orderbook_data: dict[str, Any]) -> bool:
         """Route orderbook update to registered components"""
         return await self._route_channel_data(DataChannel.ORDERBOOK, orderbook_data)
 
-    async def _route_channel_data(self, channel: DataChannel, data: Dict[str, Any]) -> bool:
+    async def _route_channel_data(self, channel: DataChannel, data: dict[str, Any]) -> bool:
         """Generic method to route data to channel components"""
         # Create synthetic message for direct routing
         message = {
@@ -467,7 +467,7 @@ class UnifiedWebSocketDataPipeline:
             self.stats['errors']['process_message'] += 1
             logger.error(f"[PIPELINE] Error processing message: {e}")
 
-    async def _transform_message_data(self, message: PipelineMessage) -> Optional[Dict[str, Any]]:
+    async def _transform_message_data(self, message: PipelineMessage) -> Optional[dict[str, Any]]:
         """Transform raw message data using channel-specific transformers"""
         try:
             transformer = self._transformers.get(message.channel)
@@ -481,7 +481,7 @@ class UnifiedWebSocketDataPipeline:
             return None
 
     async def _route_to_component(self, component_name: str, component: Any,
-                                 channel: DataChannel, data: Dict[str, Any]):
+                                 channel: DataChannel, data: dict[str, Any]):
         """Route transformed data to a specific component"""
         try:
             # Balance managers
@@ -538,7 +538,7 @@ class UnifiedWebSocketDataPipeline:
             raise
 
     # Data transformation methods
-    async def _transform_balance_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_balance_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform balance data to standardized format"""
         try:
             # Handle WebSocket V2 balance format
@@ -570,7 +570,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming balance data: {e}")
             return {}
 
-    async def _transform_ticker_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_ticker_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform ticker data to standardized format"""
         try:
             ticker_data = {}
@@ -599,7 +599,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming ticker data: {e}")
             return {}
 
-    async def _transform_orderbook_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_orderbook_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform orderbook data to standardized format"""
         try:
             orderbook_data = {}
@@ -653,7 +653,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming orderbook data: {e}")
             return {}
 
-    async def _transform_execution_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_execution_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform execution data to standardized format"""
         try:
             executions = []
@@ -678,7 +678,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming execution data: {e}")
             return {}
 
-    async def _transform_ohlc_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_ohlc_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform OHLC data to standardized format"""
         try:
             ohlc_data = {}
@@ -705,7 +705,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming OHLC data: {e}")
             return {}
 
-    async def _transform_trade_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_trade_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform trade data to standardized format"""
         try:
             # Similar to ticker but for individual trades
@@ -714,7 +714,7 @@ class UnifiedWebSocketDataPipeline:
             logger.error(f"[PIPELINE] Error transforming trade data: {e}")
             return {}
 
-    async def _transform_heartbeat_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def _transform_heartbeat_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Transform heartbeat data to standardized format"""
         return {
             'type': 'heartbeat',
@@ -723,7 +723,7 @@ class UnifiedWebSocketDataPipeline:
         }
 
     # WebSocket callback handlers
-    async def _handle_ticker_callback(self, symbol: str, ticker_data: Dict[str, Any]):
+    async def _handle_ticker_callback(self, symbol: str, ticker_data: dict[str, Any]):
         """Handle ticker callback from WebSocket manager"""
         message = {
             'channel': 'ticker',
@@ -731,7 +731,7 @@ class UnifiedWebSocketDataPipeline:
         }
         await self.process_raw_message(message)
 
-    async def _handle_balance_callback(self, balance_data: Dict[str, Any]):
+    async def _handle_balance_callback(self, balance_data: dict[str, Any]):
         """Handle balance callback from WebSocket manager"""
         # Convert to array format expected by transformer
         if isinstance(balance_data, dict):
@@ -753,7 +753,7 @@ class UnifiedWebSocketDataPipeline:
             }
         await self.process_raw_message(message)
 
-    async def _handle_orderbook_callback(self, symbol: str, orderbook_data: Dict[str, Any]):
+    async def _handle_orderbook_callback(self, symbol: str, orderbook_data: dict[str, Any]):
         """Handle orderbook callback from WebSocket manager"""
         message = {
             'channel': 'book',
@@ -761,7 +761,7 @@ class UnifiedWebSocketDataPipeline:
         }
         await self.process_raw_message(message)
 
-    async def _handle_ohlc_callback(self, symbol: str, ohlc_data: Dict[str, Any]):
+    async def _handle_ohlc_callback(self, symbol: str, ohlc_data: dict[str, Any]):
         """Handle OHLC callback from WebSocket manager"""
         message = {
             'channel': 'ohlc',
@@ -769,7 +769,7 @@ class UnifiedWebSocketDataPipeline:
         }
         await self.process_raw_message(message)
 
-    async def _handle_trade_callback(self, trade_data: Dict[str, Any]):
+    async def _handle_trade_callback(self, trade_data: dict[str, Any]):
         """Handle trade callback from WebSocket manager"""
         message = {
             'channel': 'trade',
@@ -778,7 +778,7 @@ class UnifiedWebSocketDataPipeline:
         await self.process_raw_message(message)
 
     # Utility methods
-    def _identify_channel(self, message: Dict[str, Any]) -> Optional[DataChannel]:
+    def _identify_channel(self, message: dict[str, Any]) -> Optional[DataChannel]:
         """Identify the channel from a raw WebSocket message"""
         channel_str = message.get('channel', '').lower()
 
@@ -809,7 +809,7 @@ class UnifiedWebSocketDataPipeline:
 
         return priority_mapping.get(channel, MessagePriority.MEDIUM)
 
-    def _generate_message_id(self, message: Dict[str, Any], channel: DataChannel) -> str:
+    def _generate_message_id(self, message: dict[str, Any], channel: DataChannel) -> str:
         """Generate unique message ID for deduplication"""
         # Create hash based on channel, timestamp, and key data
         key_data = f"{channel.value}_{message.get('timestamp', time.time())}"
@@ -842,7 +842,7 @@ class UnifiedWebSocketDataPipeline:
         self._dedup_window[message_id] = current_time
         return False
 
-    def _extract_symbol(self, message: Dict[str, Any]) -> Optional[str]:
+    def _extract_symbol(self, message: dict[str, Any]) -> Optional[str]:
         """Extract symbol from message if available"""
         data_array = message.get('data', [])
         if isinstance(data_array, list) and data_array:
@@ -896,7 +896,7 @@ class UnifiedWebSocketDataPipeline:
             except Exception as e:
                 logger.error(f"[PIPELINE] Error in stats collector: {e}")
 
-    def get_pipeline_stats(self) -> Dict[str, Any]:
+    def get_pipeline_stats(self) -> dict[str, Any]:
         """Get current pipeline statistics"""
         return {
             'running': self._running,
@@ -912,7 +912,7 @@ class UnifiedWebSocketDataPipeline:
             'registered_components': len(self.registry._components)
         }
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         if not self.performance_tracker:
             return {}

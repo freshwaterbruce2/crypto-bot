@@ -15,7 +15,7 @@ import time
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any
 
 # Setup logging
 logging.basicConfig(
@@ -32,19 +32,19 @@ class IntegrationTestResult:
     success: bool
     duration_ms: float
     messages_processed: int
-    errors_encountered: List[str]
-    performance_metrics: Dict[str, float]
+    errors_encountered: list[str]
+    performance_metrics: dict[str, float]
 
 
 class WebSocketV2IntegrationTestRunner:
     """Standalone integration test runner for WebSocket V2 system"""
 
     def __init__(self):
-        self.test_results: List[IntegrationTestResult] = []
+        self.test_results: list[IntegrationTestResult] = []
         self.test_messages = self._create_test_message_sequence()
         logger.info("🧪 WebSocket V2 Integration Test Runner initialized")
 
-    def _create_test_message_sequence(self) -> List[Dict[str, Any]]:
+    def _create_test_message_sequence(self) -> list[dict[str, Any]]:
         """Create realistic message sequence for testing"""
         return [
             # Authentication success
@@ -146,7 +146,7 @@ class WebSocketV2IntegrationTestRunner:
             }
         ]
 
-    async def run_integration_tests(self) -> Dict[str, Any]:
+    async def run_integration_tests(self) -> dict[str, Any]:
         """Run complete integration test suite"""
         logger.info("🚀 Starting WebSocket V2 Integration Tests...")
         logger.info("=" * 60)
@@ -186,8 +186,7 @@ class WebSocketV2IntegrationTestRunner:
 
         try:
             # Simulate authentication process
-            api_key = "test_integration_auth_key"
-            private_key = base64.b64encode(b"test_integration_private_key").decode()
+            base64.b64encode(b"test_integration_private_key").decode()
 
             # Test API tier detection simulation
             api_tier = "Pro"  # Simulated detection
@@ -270,10 +269,10 @@ class WebSocketV2IntegrationTestRunner:
                             balance_data = data[0]
                             if 'wallets' in balance_data:
                                 wallets = balance_data['wallets']
-                                for wallet_type, wallet_balances in wallets.items():
+                                for _wallet_type, wallet_balances in wallets.items():
                                     for asset, balance_info in wallet_balances.items():
                                         if 'balance' in balance_info:
-                                            balance_decimal = Decimal(balance_info['balance'])
+                                            Decimal(balance_info['balance'])
                                             messages_processed += 1
                                         else:
                                             errors.append(f"Invalid balance format for {asset}")
@@ -375,7 +374,7 @@ class WebSocketV2IntegrationTestRunner:
                         }
 
                         try:
-                            balance_decimal = Decimal(balance_info['balance'])
+                            Decimal(balance_info['balance'])
                             messages_processed += 1
                         except Exception as e:
                             errors.append(f"Balance precision error: {e}")
@@ -426,7 +425,7 @@ class WebSocketV2IntegrationTestRunner:
                         expected = int(nonce_info['expected_minimum'])
 
                         if expected > provided:
-                            new_nonce = expected + 1
+                            expected + 1
                             messages_processed += 1
                         else:
                             errors.append("Invalid nonce recovery logic")
@@ -582,8 +581,8 @@ class WebSocketV2IntegrationTestRunner:
                     data = message.get('data', [{}])[0]
                     wallets = data.get('wallets', {})
 
-                    for wallet_type, wallet_balances in wallets.items():
-                        for asset, balance_info in wallet_balances.items():
+                    for _wallet_type, wallet_balances in wallets.items():
+                        for _asset, balance_info in wallet_balances.items():
                             balance = Decimal(balance_info['balance'])
                             result = balance * Decimal('1.001')
 
@@ -735,7 +734,7 @@ class WebSocketV2IntegrationTestRunner:
         )
         self.test_results.append(result)
 
-    def _generate_integration_report(self, total_time_ms: float) -> Dict[str, Any]:
+    def _generate_integration_report(self, total_time_ms: float) -> dict[str, Any]:
         """Generate comprehensive integration test report"""
         successful_tests = [r for r in self.test_results if r.success]
         failed_tests = [r for r in self.test_results if not r.success]
@@ -777,7 +776,7 @@ class WebSocketV2IntegrationTestRunner:
             'recommendations': self._generate_recommendations(failed_tests)
         }
 
-    def _generate_recommendations(self, failed_tests: List[IntegrationTestResult]) -> List[str]:
+    def _generate_recommendations(self, failed_tests: list[IntegrationTestResult]) -> list[str]:
         """Generate recommendations based on failed tests"""
         recommendations = []
 

@@ -8,7 +8,7 @@ Service layer for business analytics, metrics tracking, and reporting.
 import logging
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, desc, func, select
 from sqlalchemy.orm import selectinload
@@ -37,7 +37,7 @@ class AnalyticsService:
         user_id: Optional[int],
         event_type: str,
         event_category: str,
-        properties: Dict[str, Any] = None,
+        properties: dict[str, Any] = None,
         value: float = None,
         session_id: str = None,
         ip_address: str = None,
@@ -229,7 +229,7 @@ class AnalyticsService:
             await session.commit()
             return metrics
 
-    async def get_dashboard_metrics(self, days: int = 30) -> Dict[str, Any]:
+    async def get_dashboard_metrics(self, days: int = 30) -> dict[str, Any]:
         """Get dashboard metrics for the last N days"""
         async with get_db_session() as session:
             end_date = date.today()
@@ -257,8 +257,8 @@ class AnalyticsService:
             # Current period totals
             total_new_users = sum(m.new_users for m in metrics_list)
             total_revenue = sum(m.total_revenue for m in metrics_list)
-            total_api_requests = sum(m.api_requests for m in metrics_list)
-            total_strategy_purchases = sum(m.strategy_purchases for m in metrics_list)
+            sum(m.api_requests for m in metrics_list)
+            sum(m.strategy_purchases for m in metrics_list)
 
             # Calculate growth rates
             prev_new_users = sum(m.new_users for m in previous_period_metrics) if previous_period_metrics else 1
@@ -519,7 +519,7 @@ class AnalyticsService:
 
             return report
 
-    async def get_user_segmentation(self) -> Dict[str, Any]:
+    async def get_user_segmentation(self) -> dict[str, Any]:
         """Get user segmentation analysis"""
         async with get_db_session() as session:
             # Segment by subscription tier
@@ -572,7 +572,7 @@ class AnalyticsService:
                 ]
             }
 
-    def _get_empty_dashboard_metrics(self) -> Dict[str, Any]:
+    def _get_empty_dashboard_metrics(self) -> dict[str, Any]:
         """Return empty dashboard metrics structure"""
         return {
             "period_days": 30,
@@ -590,7 +590,7 @@ class AnalyticsService:
             "api_usage_stats": {}
         }
 
-    async def _get_subscription_breakdown(self) -> List[Dict[str, Any]]:
+    async def _get_subscription_breakdown(self) -> list[dict[str, Any]]:
         """Get current subscription tier breakdown"""
         async with get_db_session() as session:
             breakdown = await session.execute(
@@ -616,7 +616,7 @@ class AnalyticsService:
                 for row in breakdown
             ]
 
-    async def _get_top_strategies(self, limit: int = 5) -> List[Dict[str, Any]]:
+    async def _get_top_strategies(self, limit: int = 5) -> list[dict[str, Any]]:
         """Get top performing strategies"""
         async with get_db_session() as session:
             strategies = await session.execute(
@@ -640,7 +640,7 @@ class AnalyticsService:
                 for row in strategies
             ]
 
-    async def _get_api_usage_stats(self, days: int) -> Dict[str, Any]:
+    async def _get_api_usage_stats(self, days: int) -> dict[str, Any]:
         """Get API usage statistics"""
         async with get_db_session() as session:
             since_date = datetime.utcnow() - timedelta(days=days)

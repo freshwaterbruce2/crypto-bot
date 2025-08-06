@@ -20,7 +20,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from ..config.constants import PRO_ACCOUNT_OPTIMIZATIONS
 from .base_strategy import BaseStrategy
@@ -56,12 +56,12 @@ class MicroScalpSignal:
 class ProFeeFreeeMicroScalper(BaseStrategy):
     """
     Pro Account Fee-Free Micro Scalper
-    
+
     CRITICAL: This strategy only works with Kraken Pro accounts (0% fees)
     Standard accounts would lose money due to trading fees!
     """
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         super().__init__(config)
         self.strategy_name = "pro_fee_free_micro_scalper"
 
@@ -122,10 +122,10 @@ class ProFeeFreeeMicroScalper(BaseStrategy):
         logger.info(f"  - Capital velocity target: {self.capital_velocity_target}x daily")
         logger.info(f"  - Position multiplier: {self.position_multiplier}x")
 
-    async def analyze_symbol(self, symbol: str, market_data: Dict[str, Any]) -> Optional[MicroScalpSignal]:
+    async def analyze_symbol(self, symbol: str, market_data: dict[str, Any]) -> Optional[MicroScalpSignal]:
         """
         Analyze symbol for micro-scalping opportunities
-        
+
         CRITICAL: Only generates signals that are profitable with 0% fees
         """
         try:
@@ -285,10 +285,10 @@ class ProFeeFreeeMicroScalper(BaseStrategy):
 
         return True
 
-    async def generate_signals(self, symbols: List[str], market_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def generate_signals(self, symbols: list[str], market_data: dict[str, Any]) -> list[dict[str, Any]]:
         """
         Generate micro-scalping signals for multiple symbols
-        
+
         Returns standard trading signals compatible with the execution pipeline
         """
         signals = []
@@ -316,7 +316,7 @@ class ProFeeFreeeMicroScalper(BaseStrategy):
 
         return signals
 
-    def _convert_to_standard_signal(self, micro_signal: MicroScalpSignal) -> Dict[str, Any]:
+    def _convert_to_standard_signal(self, micro_signal: MicroScalpSignal) -> dict[str, Any]:
         """Convert micro-scalp signal to standard trading signal format"""
         return {
             'symbol': micro_signal.symbol,
@@ -349,7 +349,7 @@ class ProFeeFreeeMicroScalper(BaseStrategy):
         elif signal.signal_type == MicroScalpSignalType.MINI_SCALP:
             self.micro_scalp_stats['mini_scalp_trades'] += 1
 
-    def get_strategy_metrics(self) -> Dict[str, Any]:
+    def get_strategy_metrics(self) -> dict[str, Any]:
         """Get Pro account micro-scalping performance metrics"""
         total_trades = sum([
             self.micro_scalp_stats['ultra_micro_trades'],

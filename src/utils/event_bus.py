@@ -12,7 +12,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -64,11 +64,11 @@ class Event:
     """Event data structure"""
     type: EventType
     source: str  # Component that generated the event
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: datetime = field(default_factory=datetime.now)
     correlation_id: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert event to dictionary"""
         return {
             'type': self.type.value,
@@ -86,22 +86,22 @@ class Event:
 class EventBus:
     """
     Centralized event bus for component communication.
-    
+
     All components can publish events and subscribe to specific event types.
     The learning system can monitor all events for pattern detection.
     """
 
     def __init__(self):
-        self._subscribers: Dict[EventType, List[Callable]] = {}
-        self._event_history: List[Event] = []
+        self._subscribers: dict[EventType, list[Callable]] = {}
+        self._event_history: list[Event] = []
         self._max_history = 1000
         self._event_queue: asyncio.Queue = asyncio.Queue()
         self._processing = False
         self._processor_task = None
 
         # Event metrics
-        self._event_counts: Dict[EventType, int] = {}
-        self._error_patterns: Dict[str, int] = {}
+        self._event_counts: dict[EventType, int] = {}
+        self._error_patterns: dict[str, int] = {}
 
         logger.info("[EVENT_BUS] Unified event bus initialized")
 
@@ -126,7 +126,7 @@ class EventBus:
     def subscribe(self, event_type: EventType, callback: Callable):
         """
         Subscribe to a specific event type.
-        
+
         Args:
             event_type: Type of event to subscribe to
             callback: Async function to call when event occurs
@@ -145,7 +145,7 @@ class EventBus:
     async def publish(self, event: Event):
         """
         Publish an event to the bus.
-        
+
         Args:
             event: Event to publish
         """
@@ -243,15 +243,15 @@ class EventBus:
 
     def get_event_history(self, event_type: Optional[EventType] = None,
                          source: Optional[str] = None,
-                         limit: int = 100) -> List[Event]:
+                         limit: int = 100) -> list[Event]:
         """
         Get event history with optional filtering.
-        
+
         Args:
             event_type: Filter by event type
             source: Filter by source component
             limit: Maximum number of events to return
-            
+
         Returns:
             List of events matching the criteria
         """
@@ -265,7 +265,7 @@ class EventBus:
 
         return history[-limit:]
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get event bus metrics"""
         return {
             'total_events': sum(self._event_counts.values()),
@@ -291,7 +291,7 @@ def get_event_bus() -> EventBus:
 
 
 # Convenience functions
-async def publish_event(event_type: EventType, source: str, data: Dict[str, Any],
+async def publish_event(event_type: EventType, source: str, data: dict[str, Any],
                        correlation_id: Optional[str] = None):
     """Publish an event to the global event bus"""
     event = Event(

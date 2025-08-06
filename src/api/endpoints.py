@@ -15,7 +15,7 @@ Features:
 
 Usage:
     from src.api.endpoints import get_endpoint_definition, KRAKEN_ENDPOINTS
-    
+
     endpoint = get_endpoint_definition('Balance')
     print(f"Endpoint: {endpoint.path}, Method: {endpoint.method}")
 """
@@ -23,7 +23,7 @@ Usage:
 import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class ParameterType(Enum):
 class ParameterDefinition:
     """
     Definition of an API parameter.
-    
+
     Attributes:
         name: Parameter name
         param_type: Parameter type
@@ -76,15 +76,15 @@ class ParameterDefinition:
     required: bool = False
     description: str = ""
     default: Any = None
-    validation: Optional[Dict[str, Any]] = None
-    examples: List[str] = field(default_factory=list)
+    validation: Optional[dict[str, Any]] = None
+    examples: list[str] = field(default_factory=list)
 
 
 @dataclass
 class EndpointDefinition:
     """
     Complete definition of a Kraken API endpoint.
-    
+
     Attributes:
         name: Endpoint name (used as identifier)
         path: API path (without base URL)
@@ -106,13 +106,13 @@ class EndpointDefinition:
     method: HttpMethod
     endpoint_type: EndpointType
     description: str = ""
-    parameters: List[ParameterDefinition] = field(default_factory=list)
-    required_permissions: Set[str] = field(default_factory=set)
+    parameters: list[ParameterDefinition] = field(default_factory=list)
+    required_permissions: set[str] = field(default_factory=set)
     rate_limit_weight: int = 1
     penalty_points: int = 1
     has_age_penalty: bool = False
     response_format: str = "json"
-    examples: List[Dict[str, Any]] = field(default_factory=list)
+    examples: list[dict[str, Any]] = field(default_factory=list)
     deprecated: bool = False
     version: str = "0"
 
@@ -120,21 +120,21 @@ class EndpointDefinition:
         """Get full URL path for this endpoint."""
         return f"{base_url.rstrip('/')}/{self.version}/{self.path.lstrip('/')}"
 
-    def get_required_parameters(self) -> List[ParameterDefinition]:
+    def get_required_parameters(self) -> list[ParameterDefinition]:
         """Get list of required parameters."""
         return [param for param in self.parameters if param.required]
 
-    def get_optional_parameters(self) -> List[ParameterDefinition]:
+    def get_optional_parameters(self) -> list[ParameterDefinition]:
         """Get list of optional parameters."""
         return [param for param in self.parameters if not param.required]
 
-    def validate_parameters(self, params: Dict[str, Any]) -> List[str]:
+    def validate_parameters(self, params: dict[str, Any]) -> list[str]:
         """
         Validate parameters against endpoint definition.
-        
+
         Args:
             params: Parameters to validate
-            
+
         Returns:
             List of validation error messages
         """
@@ -165,11 +165,11 @@ class EndpointDefinition:
     def _validate_parameter_value(self, param_def: ParameterDefinition, value: Any) -> Optional[str]:
         """
         Validate a single parameter value.
-        
+
         Args:
             param_def: Parameter definition
             value: Value to validate
-            
+
         Returns:
             Error message if validation fails, None otherwise
         """
@@ -224,7 +224,7 @@ class EndpointDefinition:
 
 
 # Define all Kraken API endpoints
-KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
+KRAKEN_ENDPOINTS: dict[str, EndpointDefinition] = {
 
     # ====== PUBLIC ENDPOINTS ======
 
@@ -1215,17 +1215,17 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
 def get_endpoint_definition(endpoint_name: str) -> Optional[EndpointDefinition]:
     """
     Get endpoint definition by name.
-    
+
     Args:
         endpoint_name: Name of the endpoint
-        
+
     Returns:
         EndpointDefinition if found, None otherwise
     """
     return KRAKEN_ENDPOINTS.get(endpoint_name)
 
 
-def get_public_endpoints() -> Dict[str, EndpointDefinition]:
+def get_public_endpoints() -> dict[str, EndpointDefinition]:
     """Get all public endpoints."""
     return {
         name: endpoint for name, endpoint in KRAKEN_ENDPOINTS.items()
@@ -1233,7 +1233,7 @@ def get_public_endpoints() -> Dict[str, EndpointDefinition]:
     }
 
 
-def get_private_endpoints() -> Dict[str, EndpointDefinition]:
+def get_private_endpoints() -> dict[str, EndpointDefinition]:
     """Get all private endpoints."""
     return {
         name: endpoint for name, endpoint in KRAKEN_ENDPOINTS.items()
@@ -1241,7 +1241,7 @@ def get_private_endpoints() -> Dict[str, EndpointDefinition]:
     }
 
 
-def get_trading_endpoints() -> Dict[str, EndpointDefinition]:
+def get_trading_endpoints() -> dict[str, EndpointDefinition]:
     """Get trading-related endpoints."""
     trading_endpoint_names = {
         "AddOrder", "AddOrderBatch", "EditOrder", "CancelOrder",
@@ -1254,13 +1254,13 @@ def get_trading_endpoints() -> Dict[str, EndpointDefinition]:
     }
 
 
-def get_endpoints_by_permission(permission: str) -> Dict[str, EndpointDefinition]:
+def get_endpoints_by_permission(permission: str) -> dict[str, EndpointDefinition]:
     """
     Get endpoints that require specific permission.
-    
+
     Args:
         permission: Required permission (e.g., 'trade', 'query', 'withdraw')
-        
+
     Returns:
         Dictionary of endpoints requiring the permission
     """
@@ -1270,14 +1270,14 @@ def get_endpoints_by_permission(permission: str) -> Dict[str, EndpointDefinition
     }
 
 
-def validate_endpoint_parameters(endpoint_name: str, params: Dict[str, Any]) -> List[str]:
+def validate_endpoint_parameters(endpoint_name: str, params: dict[str, Any]) -> list[str]:
     """
     Validate parameters for a specific endpoint.
-    
+
     Args:
         endpoint_name: Name of the endpoint
         params: Parameters to validate
-        
+
     Returns:
         List of validation error messages
     """
@@ -1288,10 +1288,10 @@ def validate_endpoint_parameters(endpoint_name: str, params: Dict[str, Any]) -> 
     return endpoint.validate_parameters(params)
 
 
-def get_endpoint_summary() -> Dict[str, Any]:
+def get_endpoint_summary() -> dict[str, Any]:
     """
     Get summary statistics of all endpoints.
-    
+
     Returns:
         Summary statistics dictionary
     """

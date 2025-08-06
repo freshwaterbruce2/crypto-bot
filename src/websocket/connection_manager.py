@@ -12,7 +12,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import websockets
 from websockets.exceptions import ConnectionClosed
@@ -94,7 +94,7 @@ class ConnectionManager:
 
         # Message handling
         self.message_queue: asyncio.Queue = asyncio.Queue(maxsize=config.message_queue_size)
-        self.pending_messages: List[Dict[str, Any]] = []
+        self.pending_messages: list[dict[str, Any]] = []
 
         # Callbacks
         self.on_message: Optional[Callable] = None
@@ -116,10 +116,10 @@ class ConnectionManager:
     async def connect(self, auth_token: Optional[str] = None) -> bool:
         """
         Establish WebSocket connection with optional authentication
-        
+
         Args:
             auth_token: Authentication token for private channels
-            
+
         Returns:
             bool: True if connection successful
         """
@@ -243,13 +243,13 @@ class ConnectionManager:
 
         logger.info("[CONNECTION_MANAGER] Disconnected successfully")
 
-    async def send_message(self, message: Dict[str, Any]) -> bool:
+    async def send_message(self, message: dict[str, Any]) -> bool:
         """
         Send message to WebSocket with queuing for offline scenarios
-        
+
         Args:
             message: Message dictionary to send
-            
+
         Returns:
             bool: True if sent successfully
         """
@@ -488,7 +488,7 @@ class ConnectionManager:
         if self.pending_messages:
             logger.warning(f"[CONNECTION_MANAGER] {len(self.pending_messages)} messages remain queued")
 
-    async def get_queued_message(self) -> Optional[Dict[str, Any]]:
+    async def get_queued_message(self) -> Optional[dict[str, Any]]:
         """Get next queued message for processing"""
         try:
             return await asyncio.wait_for(self.message_queue.get(), timeout=1.0)
@@ -510,7 +510,7 @@ class ConnectionManager:
         else:
             logger.warning(f"[CONNECTION_MANAGER] Unknown callback type: {callback_type}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get detailed connection status"""
         return {
             'state': self.state.value,

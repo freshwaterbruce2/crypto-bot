@@ -2,7 +2,7 @@
 Balance Validator System
 =======================
 
-Comprehensive balance validation and consistency checking system for the crypto 
+Comprehensive balance validation and consistency checking system for the crypto
 trading bot. Ensures data integrity across different sources (WebSocket, REST API)
 and provides validation rules for balance data.
 
@@ -20,7 +20,7 @@ import time
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from ..utils.decimal_precision_fix import safe_decimal
 
@@ -66,7 +66,7 @@ class ValidationIssue:
         if self.expected_value is not None:
             self.expected_value = safe_decimal(self.expected_value)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'rule_name': self.rule_name,
@@ -83,7 +83,7 @@ class ValidationIssue:
 class BalanceValidationResult:
     """Result of balance validation"""
     is_valid: bool
-    issues: List[ValidationIssue] = field(default_factory=list)
+    issues: list[ValidationIssue] = field(default_factory=list)
     timestamp: float = field(default_factory=time.time)
     validation_duration_ms: float = 0.0
     total_assets_validated: int = 0
@@ -97,11 +97,11 @@ class BalanceValidationResult:
         """Check if there are any warning-level issues"""
         return any(issue.severity == ValidationSeverity.WARNING for issue in self.issues)
 
-    def get_issues_by_severity(self, severity: ValidationSeverity) -> List[ValidationIssue]:
+    def get_issues_by_severity(self, severity: ValidationSeverity) -> list[ValidationIssue]:
         """Get issues filtered by severity"""
         return [issue for issue in self.issues if issue.severity == severity]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary format"""
         return {
             'is_valid': self.is_valid,
@@ -128,8 +128,8 @@ class BalanceValidator:
 
     def __init__(self):
         """Initialize balance validator with default rules"""
-        self.rules: Dict[str, ValidationRule] = {}
-        self.validation_history: List[BalanceValidationResult] = []
+        self.rules: dict[str, ValidationRule] = {}
+        self.validation_history: list[BalanceValidationResult] = []
         self.max_history_size = 1000
 
         # Initialize default validation rules
@@ -235,14 +235,14 @@ class BalanceValidator:
                                timestamp: Optional[float] = None) -> BalanceValidationResult:
         """
         Validate a single balance entry
-        
+
         Args:
             asset: Asset symbol
             balance: Total balance
             hold_trade: Amount held in trades
             source: Source of balance data
             timestamp: Timestamp of balance data
-            
+
         Returns:
             Validation result
         """
@@ -291,13 +291,13 @@ class BalanceValidator:
         return result
 
     def validate_multiple_balances(self,
-                                  balances: Dict[str, Dict[str, Any]]) -> BalanceValidationResult:
+                                  balances: dict[str, dict[str, Any]]) -> BalanceValidationResult:
         """
         Validate multiple balance entries
-        
+
         Args:
             balances: Dictionary of balance data keyed by asset
-            
+
         Returns:
             Validation result
         """
@@ -356,19 +356,19 @@ class BalanceValidator:
         return result
 
     def compare_balance_sources(self,
-                               balances_a: Dict[str, Dict[str, Any]],
-                               balances_b: Dict[str, Dict[str, Any]],
+                               balances_a: dict[str, dict[str, Any]],
+                               balances_b: dict[str, dict[str, Any]],
                                source_a: str = 'source_a',
                                source_b: str = 'source_b') -> BalanceValidationResult:
         """
         Compare balances from two different sources
-        
+
         Args:
             balances_a: First set of balance data
             balances_b: Second set of balance data
             source_a: Name of first source
             source_b: Name of second source
-            
+
         Returns:
             Validation result
         """
@@ -457,7 +457,7 @@ class BalanceValidator:
 
         return result
 
-    def _validate_balance_values(self, asset: str, balance: Decimal, hold: Decimal, free: Decimal) -> List[ValidationIssue]:
+    def _validate_balance_values(self, asset: str, balance: Decimal, hold: Decimal, free: Decimal) -> list[ValidationIssue]:
         """Validate balance values for correctness"""
         issues = []
 
@@ -483,7 +483,7 @@ class BalanceValidator:
 
         return issues
 
-    def _validate_precision(self, asset: str, balance: Decimal, hold: Decimal) -> List[ValidationIssue]:
+    def _validate_precision(self, asset: str, balance: Decimal, hold: Decimal) -> list[ValidationIssue]:
         """Validate decimal precision"""
         issues = []
 
@@ -505,7 +505,7 @@ class BalanceValidator:
 
         return issues
 
-    def _validate_relationships(self, asset: str, balance: Decimal, hold: Decimal, free: Decimal) -> List[ValidationIssue]:
+    def _validate_relationships(self, asset: str, balance: Decimal, hold: Decimal, free: Decimal) -> list[ValidationIssue]:
         """Validate relationships between balance values"""
         issues = []
 
@@ -522,7 +522,7 @@ class BalanceValidator:
 
         return issues
 
-    def _validate_timestamp(self, asset: str, data_timestamp: float, current_time: float) -> List[ValidationIssue]:
+    def _validate_timestamp(self, asset: str, data_timestamp: float, current_time: float) -> list[ValidationIssue]:
         """Validate timestamp freshness"""
         issues = []
 
@@ -542,7 +542,7 @@ class BalanceValidator:
 
         return issues
 
-    def _validate_magnitude(self, asset: str, balance: Decimal) -> List[ValidationIssue]:
+    def _validate_magnitude(self, asset: str, balance: Decimal) -> list[ValidationIssue]:
         """Validate balance magnitude for reasonableness"""
         issues = []
 
@@ -561,7 +561,7 @@ class BalanceValidator:
 
         return issues
 
-    def _validate_cross_balance_consistency(self, balances: Dict[str, Dict[str, Any]]) -> List[ValidationIssue]:
+    def _validate_cross_balance_consistency(self, balances: dict[str, dict[str, Any]]) -> list[ValidationIssue]:
         """Validate consistency across all balances"""
         issues = []
 
@@ -595,7 +595,7 @@ class BalanceValidator:
             severity_counts = {sev.value: len(result.get_issues_by_severity(sev)) for sev in ValidationSeverity}
             logger.info(f"[BALANCE_VALIDATOR] Validation completed: {severity_counts}")
 
-    def get_validation_statistics(self) -> Dict[str, Any]:
+    def get_validation_statistics(self) -> dict[str, Any]:
         """Get validation statistics"""
         if not self.validation_history:
             return {'total_validations': 0}

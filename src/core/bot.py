@@ -10,7 +10,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from dotenv import load_dotenv
 
@@ -89,15 +89,15 @@ class KrakenTradingBot:
         'avoid': ['ADA/USDT', 'ALGO/USDT', 'APE/USDT', 'ATOM/USDT', 'AVAX/USDT', 'BCH/USDT', 'BNB/USDT', 'CRO/USDT', 'DOGE/USDT']  # 4.0+ volume minimums
     }
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         """
         Initialize the Kraken Trading Bot with comprehensive configuration and component setup.
-        
+
         This is the main entry point for the trading bot system. It sets up all core components
         including exchange connections, WebSocket managers, balance tracking, and trading systems.
         The bot uses a hierarchical tier system for crypto pairs and implements advanced risk
         management with self-healing capabilities.
-        
+
         Args:
             config (Optional[Dict[str, Any]]): Bot configuration dictionary. If None, loads
                 from config files. Should contain:
@@ -106,15 +106,15 @@ class KrakenTradingBot:
                 - kraken_api_tier: API tier level ('starter' or 'pro')
                 - trade_pairs: List of trading pairs to monitor
                 - Various timeouts and thresholds
-        
+
         Raises:
             Exception: If critical configuration is missing or invalid
-            
+
         Example:
             ```python
             # Use default configuration
             bot = KrakenTradingBot()
-            
+
             # Use custom configuration
             custom_config = {
                 'position_size_usdt': 2.0,
@@ -233,21 +233,21 @@ class KrakenTradingBot:
     async def initialize(self) -> bool:
         """
         Initialize all bot components with nonce collision prevention and coordinated startup.
-        
+
         This method performs a two-phase initialization:
         1. Basic component setup (no API calls)
         2. Coordinated startup with proper nonce sequencing
-        
+
         The startup coordinator ensures that all API calls are properly sequenced to prevent
         nonce collisions that can occur when multiple components try to authenticate simultaneously.
         This is critical for Kraken API compliance and system stability.
-        
+
         Returns:
             bool: True if initialization succeeded, False otherwise
-            
+
         Raises:
             Exception: Various exceptions during component initialization
-            
+
         Note:
             This method must be called before starting the trading loop. It sets up:
             - Exchange connection and authentication
@@ -255,7 +255,7 @@ class KrakenTradingBot:
             - Balance managers and portfolio tracking
             - Trading executors and strategy managers
             - Self-repair and error recovery systems
-            
+
         Example:
             ```python
             bot = KrakenTradingBot()
@@ -298,7 +298,7 @@ class KrakenTradingBot:
     async def _setup_basic_components(self):
         """
         Set up basic components that don't require API authentication.
-        
+
         This is Phase 1 of the initialization process. It sets up all components
         that can be initialized without making API calls to prevent nonce issues.
         Components initialized here include:
@@ -307,13 +307,13 @@ class KrakenTradingBot:
         - Exchange client instances (without authentication)
         - Symbol mapping utilities
         - WebSocket and balance manager preparation
-        
+
         This method is called before the coordinated startup phase to ensure
         a clean separation between API-independent and API-dependent initialization.
-        
+
         Raises:
             Exception: If critical components fail to initialize
-            
+
         Note:
             All API calls are deferred to the coordinated startup phase to prevent
             nonce collisions and ensure proper authentication sequencing.
@@ -641,7 +641,7 @@ class KrakenTradingBot:
 
         if recovery_result and recovery_result.get('success'):
             recovered_count = recovery_result.get('recovered', 0)
-            positions_dict = recovery_result.get('positions', {})
+            recovery_result.get('positions', {})
             total_value = recovery_result.get('total_usd_value', 0)
 
             if recovered_count > 0:
@@ -693,7 +693,7 @@ class KrakenTradingBot:
         self.logger.info("[INIT] All components initialized successfully!")
         return True
 
-    async def _validate_kraken_symbols(self) -> List[str]:
+    async def _validate_kraken_symbols(self) -> list[str]:
         """Fetch active USDT pairs from Kraken"""
         try:
             # Markets should already be loaded, but ensure they are
@@ -702,7 +702,7 @@ class KrakenTradingBot:
 
             # Filter for USDT pairs
             usdt_pairs = []
-            for symbol, market in self.exchange.markets.items():
+            for _symbol, market in self.exchange.markets.items():
                 if market.get('quote', '') == 'USDT' and market.get('active', False):
                     # Ensure proper format
                     base = market.get('base', '')
@@ -764,7 +764,7 @@ class KrakenTradingBot:
             # Fallback to configured single pair
             return ['SHIB/USDT']
 
-    async def _update_trade_pairs_from_portfolio(self, positions: List[Dict[str, Any]]) -> None:
+    async def _update_trade_pairs_from_portfolio(self, positions: list[dict[str, Any]]) -> None:
         """Update trade pairs with tier 1 optimization and dynamic limits"""
         try:
             # Get tier 1 optimization config
@@ -772,7 +772,7 @@ class KrakenTradingBot:
             dynamic_limits = tier_1_config.get('dynamic_pair_limits', {})
 
             # Dynamic limits per requirements: 10-14 total pairs
-            min_total_pairs = dynamic_limits.get('min_total_pairs', 10)
+            dynamic_limits.get('min_total_pairs', 10)
             max_total_pairs = dynamic_limits.get('max_total_pairs', 14)
             portfolio_threshold = dynamic_limits.get('portfolio_threshold', 2)
 
@@ -1308,7 +1308,7 @@ class KrakenTradingBot:
     async def run_once(self) -> None:
         """Single iteration of main loop - unified signal collection"""
         try:
-            iteration_start = time.time()
+            time.time()
             self.logger.debug("[BOT] Starting run_once iteration")
             # Collect signals from all sources
             all_signals = []
@@ -1678,7 +1678,7 @@ class KrakenTradingBot:
                 self.logger.error(f"[SIGNAL] Error processing signal: {e}")
 
 
-    async def _process_signal_batch(self, signals: List[Dict[str, Any]]) -> None:
+    async def _process_signal_batch(self, signals: list[dict[str, Any]]) -> None:
         """Process a batch of signals efficiently with reduced API calls"""
         if not signals:
             return
@@ -1735,13 +1735,13 @@ class KrakenTradingBot:
             for signal in sorted_signals:
                 await self.signal_queue.put(signal)
 
-    def _should_process_signal(self, signal: Dict[str, Any]) -> bool:
+    def _should_process_signal(self, signal: dict[str, Any]) -> bool:
         """
         Check if signal should be processed (deduplication).
-        
+
         Args:
             signal: Trading signal dictionary
-            
+
         Returns:
             True if signal should be processed, False if duplicate/too soon
         """
@@ -1780,7 +1780,7 @@ class KrakenTradingBot:
             self.logger.error(f"[SIGNAL_FILTER] Error in signal deduplication: {e}")
             return True  # Default to allowing signal on error
 
-    def _validate_signal(self, signal: Dict[str, Any]) -> bool:
+    def _validate_signal(self, signal: dict[str, Any]) -> bool:
         """Validate trading signal"""
         # First check deduplication
         if not self._should_process_signal(signal):
@@ -1877,7 +1877,7 @@ class KrakenTradingBot:
             self.logger.error(f"[TRADE_CHECK] Error checking trade capability: {e}")
             return False
 
-    async def _execute_signal(self, signal: Dict[str, Any]) -> None:
+    async def _execute_signal(self, signal: dict[str, Any]) -> None:
         """Execute trading signal directly"""
         try:
             # Validate signal
@@ -1974,7 +1974,7 @@ class KrakenTradingBot:
             import traceback
             self.logger.error(traceback.format_exc())
 
-    async def _handle_unified_ticker_update(self, symbol: str, ticker: Dict[str, Any], source=None) -> None:
+    async def _handle_unified_ticker_update(self, symbol: str, ticker: dict[str, Any], source=None) -> None:
         """Handle unified ticker updates from WebSocket or REST"""
         try:
             # Route through data coordinator for consistency
@@ -1992,7 +1992,7 @@ class KrakenTradingBot:
         except Exception as e:
             self.logger.error(f"[UNIFIED_DATA] Error processing ticker update for {symbol}: {e}")
 
-    async def _handle_unified_ohlc_data(self, symbol: str, ohlc: Dict[str, Any], source=None) -> None:
+    async def _handle_unified_ohlc_data(self, symbol: str, ohlc: dict[str, Any], source=None) -> None:
         """Handle unified OHLC updates from WebSocket or REST"""
         try:
             # Route through data coordinator for consistency
@@ -2010,7 +2010,7 @@ class KrakenTradingBot:
         except Exception as e:
             self.logger.error(f"[UNIFIED_DATA] Error processing OHLC update for {symbol}: {e}")
 
-    async def _handle_unified_balance_update(self, balances: Dict[str, Any], source=None) -> None:
+    async def _handle_unified_balance_update(self, balances: dict[str, Any], source=None) -> None:
         """Handle unified balance updates from WebSocket or REST with enhanced integration"""
         try:
             # Route through data coordinator for consistency
@@ -2050,7 +2050,7 @@ class KrakenTradingBot:
             import traceback
             self.logger.debug(traceback.format_exc())
 
-    async def _handle_unified_order_update(self, order_data: Dict[str, Any], source=None) -> None:
+    async def _handle_unified_order_update(self, order_data: dict[str, Any], source=None) -> None:
         """Handle unified order updates from WebSocket or REST"""
         try:
             # Route through data coordinator for consistency
@@ -2110,14 +2110,14 @@ class KrakenTradingBot:
                 self.logger.error(f"[HEALTH] Error in health monitor: {e}")
                 self.metrics['health_check_failures'] += 1
 
-    async def get_capital_deployment_status(self) -> Dict[str, Any]:
+    async def get_capital_deployment_status(self) -> dict[str, Any]:
         """
         Get comprehensive capital deployment status.
-        
+
         Returns:
             Dict with deployment information including:
             - fully_deployed: bool
-            - available_usdt: float  
+            - available_usdt: float
             - deployment_percentage: float
             - positions: list of current positions
             - total_value: float
@@ -2153,7 +2153,7 @@ class KrakenTradingBot:
                 'error': str(e)
             }
 
-    async def _check_all_components_health(self) -> Dict[str, Dict[str, Any]]:
+    async def _check_all_components_health(self) -> dict[str, dict[str, Any]]:
         """Check health of all bot components"""
         health_status = {}
 
@@ -2224,7 +2224,7 @@ class KrakenTradingBot:
 
         return health_status
 
-    def get_health_report(self) -> Dict[str, Any]:
+    def get_health_report(self) -> dict[str, Any]:
         """Get comprehensive health report of the bot"""
         uptime = time.time() - self.metrics['start_time']
         time_since_health_check = time.time() - self.metrics['last_health_check']
@@ -2409,11 +2409,11 @@ class KrakenTradingBot:
                 self.logger.error(f"[CAPITAL] Error in capital allocation monitor: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute before retrying
 
-    async def _track_capital_flow(self, symbol: str, side: str, amount: float, result: Dict[str, Any]) -> None:
+    async def _track_capital_flow(self, symbol: str, side: str, amount: float, result: dict[str, Any]) -> None:
         """Track capital flow for unified monitoring"""
         try:
             timestamp = time.time()
-            order = result.get('order', {})
+            result.get('order', {})
 
             if side == 'buy':
                 self.capital_flow['total_buys'] += 1
@@ -2466,7 +2466,7 @@ class KrakenTradingBot:
         except Exception as e:
             self.logger.error(f"[CAPITAL] Error tracking flow: {e}")
 
-    def get_capital_flow_summary(self) -> Dict[str, Any]:
+    def get_capital_flow_summary(self) -> dict[str, Any]:
         """Get comprehensive capital flow summary"""
         try:
             total_capital = self.capital_flow['current_usdt'] + self.capital_flow['deployed_capital']
@@ -2536,7 +2536,7 @@ class KrakenTradingBot:
     def handle_error_recovery(self, error: Exception, context: str = "unknown") -> bool:
         """
         Handle error recovery with circuit breaker pattern.
-        
+
         Returns:
             bool: True if operation should continue, False if circuit breaker is open
         """
@@ -2680,7 +2680,7 @@ class KrakenTradingBot:
             )
         )
 
-    async def _handle_websocket_circuit_breaker_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    async def _handle_websocket_circuit_breaker_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Handle circuit breaker events from WebSocket manager"""
         try:
             if event_type == 'circuit_open':
@@ -2942,7 +2942,7 @@ class KrakenTradingBot:
         self.logger.info("[BOT] Shutdown complete")
 
     async def place_order(self, symbol: str, side: str, size: float, order_type: str = 'market',
-                         price: float = None, metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+                         price: float = None, metadata: dict[str, Any] = None) -> dict[str, Any]:
         """Place order through fast router if available"""
         try:
             # Use fast order router for HFT if available
@@ -3016,7 +3016,7 @@ class KrakenTradingBot:
             self.logger.error(f"[BOT] Position close error: {e}")
             return False
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get bot status for orchestrator integration"""
         return {
             'status': 'running' if self.running else 'stopped',
@@ -3044,7 +3044,7 @@ class KrakenTradingBot:
         self.websocket_first_mode = enabled
         self.logger.info(f"WebSocket-first mode: {'enabled' if enabled else 'disabled'}")
 
-    def get_hft_metrics(self) -> Dict[str, Any]:
+    def get_hft_metrics(self) -> dict[str, Any]:
         """Get HFT performance metrics"""
         metrics = {}
 

@@ -36,7 +36,7 @@ def test_balance_access():
 
         # Initialize with existing config
         print("📋 Loading trading configuration...")
-        config = TradingConfig()
+        TradingConfig()
 
         print("📋 Initializing exchange singleton...")
         exchange = ExchangeSingleton.get_instance()

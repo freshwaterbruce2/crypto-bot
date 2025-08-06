@@ -181,19 +181,19 @@ def get_asset_minimum(asset: str) -> float:
 def calculate_minimum_cost(asset: str, price: float, api_tier: str = 'starter') -> float:
     """
     Calculate minimum order cost in USDT according to Kraken's requirements
-    
+
     CRITICAL: Kraken requirements:
     - Fiat pairs: 1 unit minimum (USD, EUR, etc.), 110 JPY
     - Crypto-to-crypto pairs: $1 USD equivalent minimum
     - TIER-1 pairs (SHIB/USDT, etc.): $2 USD minimum
     - BTC pairs: 0.0001 BTC minimum
     - ETH pairs: 0.01 ETH minimum
-    
+
     Args:
         asset: Asset symbol (e.g., 'SHIB', 'BTC')
         price: Current price of the asset
         api_tier: API tier ('starter', 'intermediate', 'pro')
-    
+
     Returns:
         Minimum order cost in USDT
     """

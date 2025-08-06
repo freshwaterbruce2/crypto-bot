@@ -96,7 +96,7 @@ class ComprehensiveStatusChecker:
         for name, module_path, class_name in components_to_check:
             try:
                 module = __import__(module_path, fromlist=[class_name])
-                cls = getattr(module, class_name)
+                getattr(module, class_name)
                 print(f"✅ {name}: Available")
                 self.status["components"][name] = {"status": "OK", "available": True}
             except ImportError as e:
@@ -205,7 +205,7 @@ class ComprehensiveStatusChecker:
             from src.storage.database_manager import DatabaseManager
 
             # Try to create instance
-            db = DatabaseManager()
+            DatabaseManager()
             print("✅ Database manager created")
 
             # Check if DB file exists

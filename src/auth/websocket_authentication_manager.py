@@ -26,7 +26,7 @@ import time
 from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 from ..utils.consolidated_nonce_manager import ConsolidatedNonceManager
 from .kraken_auth import KrakenAuth
@@ -80,7 +80,7 @@ class CircuitBreakerOpenError(WebSocketAuthenticationError):
 class WebSocketAuthenticationManager:
     """
     Enhanced WebSocket authentication manager with proactive token management.
-    
+
     Provides comprehensive authentication for Kraken WebSocket V2 connections
     with automatic token refresh, error recovery, and circuit breaker protection.
     """
@@ -96,7 +96,7 @@ class WebSocketAuthenticationManager:
     ):
         """
         Initialize WebSocket authentication manager.
-        
+
         Args:
             exchange_client: Kraken exchange client instance
             api_key: Kraken REST API key (for GetWebSocketsToken requests)
@@ -160,7 +160,7 @@ class WebSocketAuthenticationManager:
 
         # August 2025 API enhancements
         self.api_tier: Optional[str] = None  # Detected API tier (Starter/Intermediate/Pro)
-        self.rate_limit_info: Dict[str, Any] = {}  # Rate limit tier information
+        self.rate_limit_info: dict[str, Any] = {}  # Rate limit tier information
         self.derivatives_support: bool = False  # October 2025 derivatives readiness
 
         # Statistics
@@ -269,7 +269,7 @@ class WebSocketAuthenticationManager:
 
         logger.info(f"[WS_AUTH] Rate limits configured for {tier} tier: {config}")
 
-    def _parse_v2_error_message(self, error_message: str) -> Dict[str, Any]:
+    def _parse_v2_error_message(self, error_message: str) -> dict[str, Any]:
         """Parse V2 error format for enhanced error handling (August 2025)"""
         try:
             # V2 error format: {"error": {"code": "EAPI:Invalid nonce", "message": "...", "details": {...}}}
@@ -304,7 +304,7 @@ class WebSocketAuthenticationManager:
     async def start(self) -> bool:
         """
         Start the WebSocket authentication manager.
-        
+
         Returns:
             True if started successfully, False otherwise
         """
@@ -357,10 +357,10 @@ class WebSocketAuthenticationManager:
     async def get_websocket_token(self, force_refresh: bool = False) -> Optional[str]:
         """
         Get current WebSocket authentication token.
-        
+
         Args:
             force_refresh: Force token refresh even if current token is valid
-            
+
         Returns:
             WebSocket token string or None if failed
         """
@@ -385,7 +385,7 @@ class WebSocketAuthenticationManager:
     async def refresh_token_proactively(self) -> bool:
         """
         Proactively refresh the WebSocket token before expiry.
-        
+
         Returns:
             True if refresh successful, False otherwise
         """
@@ -417,7 +417,7 @@ class WebSocketAuthenticationManager:
     async def handle_token_expiry(self) -> Optional[str]:
         """
         Handle token expiry with immediate refresh.
-        
+
         Returns:
             New token string or None if failed
         """
@@ -446,10 +446,10 @@ class WebSocketAuthenticationManager:
     async def validate_token(self, token: str) -> bool:
         """
         Validate if a WebSocket token is still valid.
-        
+
         Args:
             token: Token string to validate
-            
+
         Returns:
             True if token is valid, False otherwise
         """
@@ -472,10 +472,10 @@ class WebSocketAuthenticationManager:
     async def handle_authentication_error(self, error_message: str) -> Optional[str]:
         """
         Handle WebSocket authentication error with V2 enhanced recovery.
-        
+
         Args:
             error_message: Error message from WebSocket connection
-            
+
         Returns:
             New authentication token or None if recovery failed
         """
@@ -487,7 +487,7 @@ class WebSocketAuthenticationManager:
             # Parse V2 error format for enhanced handling
             error_info = self._parse_v2_error_message(error_message)
             error_code = error_info['code']
-            error_details = error_info['details']
+            error_info['details']
 
             logger.info(f"[WS_AUTH] V2 Error analysis - Code: {error_code}, Format: {'V2' if error_info['is_v2_format'] else 'Legacy'}")
 
@@ -589,7 +589,7 @@ class WebSocketAuthenticationManager:
             return None
 
     # August 2025 V2 Enhanced Error Handlers
-    async def _handle_nonce_error_v2(self, error_message: str, error_info: Dict[str, Any]) -> Optional[str]:
+    async def _handle_nonce_error_v2(self, error_message: str, error_info: dict[str, Any]) -> Optional[str]:
         """Handle V2 nonce-related authentication errors with enhanced recovery"""
         logger.warning(f"[WS_AUTH] V2 Nonce error recovery - Code: {error_info['code']}")
 
@@ -615,7 +615,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] V2 Nonce error recovery failed: {e}")
             return None
 
-    async def _handle_token_error_v2(self, error_message: str, error_info: Dict[str, Any]) -> Optional[str]:
+    async def _handle_token_error_v2(self, error_message: str, error_info: dict[str, Any]) -> Optional[str]:
         """Handle V2 token-related authentication errors"""
         logger.warning(f"[WS_AUTH] V2 Token error recovery - Code: {error_info['code']}")
 
@@ -643,7 +643,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] V2 Token error recovery failed: {e}")
             return None
 
-    async def _handle_invalid_auth_error_v2(self, error_message: str, error_info: Dict[str, Any]) -> Optional[str]:
+    async def _handle_invalid_auth_error_v2(self, error_message: str, error_info: dict[str, Any]) -> Optional[str]:
         """Handle V2 invalid authentication errors"""
         logger.warning(f"[WS_AUTH] V2 Invalid auth error recovery - Code: {error_info['code']}")
 
@@ -672,7 +672,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] V2 Invalid auth error recovery failed: {e}")
             return None
 
-    async def _handle_rate_limit_error_v2(self, error_message: str, error_info: Dict[str, Any]) -> Optional[str]:
+    async def _handle_rate_limit_error_v2(self, error_message: str, error_info: dict[str, Any]) -> Optional[str]:
         """Handle V2 rate limit errors (August 2025 enhancement)"""
         logger.warning(f"[WS_AUTH] V2 Rate limit error - Code: {error_info['code']}")
 
@@ -710,7 +710,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] V2 Rate limit error recovery failed: {e}")
             return None
 
-    async def _handle_generic_auth_error_v2(self, error_message: str, error_info: Dict[str, Any]) -> Optional[str]:
+    async def _handle_generic_auth_error_v2(self, error_message: str, error_info: dict[str, Any]) -> Optional[str]:
         """Handle V2 generic authentication errors with enhanced context"""
         logger.warning(f"[WS_AUTH] V2 Generic auth error - Code: {error_info['code']}")
 
@@ -793,7 +793,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] Token refresh failed after {request_time_ms:.1f}ms: {e}")
             return False
 
-    async def _request_websocket_token(self) -> Optional[Dict[str, Any]]:
+    async def _request_websocket_token(self) -> Optional[dict[str, Any]]:
         """Make REST API request for WebSocket token"""
         try:
             # Use REST authentication to get WebSocket token
@@ -836,7 +836,7 @@ class WebSocketAuthenticationManager:
             logger.error(f"[WS_AUTH] WebSocket token request failed: {e}")
             return None
 
-    async def _request_websocket_token_enhanced(self) -> Optional[Dict[str, Any]]:
+    async def _request_websocket_token_enhanced(self) -> Optional[dict[str, Any]]:
         """Enhanced WebSocket token request with comprehensive error handling"""
         max_retries = 5
         base_delay = 1.0
@@ -1093,7 +1093,7 @@ class WebSocketAuthenticationManager:
         self._auth_failure_callback = callback
         logger.info("[WS_AUTH] Authentication failure callback registered")
 
-    def get_authentication_status(self) -> Dict[str, Any]:
+    def get_authentication_status(self) -> dict[str, Any]:
         """Get comprehensive authentication status with V2 enhancements"""
         current_time = time.time()
 
@@ -1129,7 +1129,7 @@ class WebSocketAuthenticationManager:
 
         return status
 
-    def get_token_info(self) -> Optional[Dict[str, Any]]:
+    def get_token_info(self) -> Optional[dict[str, Any]]:
         """Get current token information (without exposing token value)"""
         if not self._current_token:
             return None
@@ -1187,14 +1187,14 @@ async def create_websocket_auth_manager(
 ) -> WebSocketAuthenticationManager:
     """
     Factory function to create and start WebSocket authentication manager.
-    
+
     Args:
         exchange_client: Kraken exchange client
-        api_key: REST API key (for GetWebSocketsToken requests) 
+        api_key: REST API key (for GetWebSocketsToken requests)
         private_key: REST Private key
         credential_manager: CredentialManager instance for automatic credential retrieval
         **kwargs: Additional configuration options
-        
+
     Returns:
         Started WebSocketAuthenticationManager instance
     """
@@ -1223,7 +1223,7 @@ async def websocket_auth_context(
 ):
     """
     Async context manager for WebSocket authentication.
-    
+
     Usage:
         async with websocket_auth_context(exchange, credential_manager=cred_mgr) as auth_manager:
             token = await auth_manager.get_websocket_token()

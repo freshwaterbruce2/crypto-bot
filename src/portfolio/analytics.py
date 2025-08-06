@@ -23,7 +23,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 # Try to import pandas, provide fallback for memory issues
 try:
@@ -161,7 +161,7 @@ class PerformanceMetrics:
     var_99: float
     expected_shortfall: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
         data['period'] = self.period.value
@@ -175,11 +175,11 @@ class AttributionAnalysis:
     total_return: float
 
     # Asset attribution
-    asset_contributions: Dict[str, float]
-    sector_contributions: Dict[str, float]
+    asset_contributions: dict[str, float]
+    sector_contributions: dict[str, float]
 
     # Strategy attribution
-    strategy_contributions: Dict[str, float]
+    strategy_contributions: dict[str, float]
 
     # Factor attribution
     market_return: float
@@ -187,9 +187,9 @@ class AttributionAnalysis:
     interaction_return: float
 
     # Risk attribution
-    risk_contributions: Dict[str, float]
+    risk_contributions: dict[str, float]
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
         data['period'] = self.period.value
@@ -202,7 +202,7 @@ class AnalyticsConfig:
     # Calculation settings
     risk_free_rate: float = 0.02  # 2% annual risk-free rate
     benchmark_symbol: str = "BTC"  # Default benchmark
-    confidence_levels: List[float] = None  # VaR confidence levels
+    confidence_levels: list[float] = None  # VaR confidence levels
 
     # Performance calculation
     annualization_factor: int = 252  # Trading days per year
@@ -231,7 +231,7 @@ class PortfolioAnalytics:
                  data_path: str = "D:/trading_data"):
         """
         Initialize analytics system
-        
+
         Args:
             position_tracker: Position tracker instance
             risk_manager: Risk manager instance
@@ -252,8 +252,8 @@ class PortfolioAnalytics:
         self._daily_returns: deque = deque(maxlen=1000)
 
         # Cached calculations
-        self._cached_metrics: Dict[str, Tuple[PerformanceMetrics, float]] = {}
-        self._attribution_cache: Dict[str, Tuple[AttributionAnalysis, float]] = {}
+        self._cached_metrics: dict[str, tuple[PerformanceMetrics, float]] = {}
+        self._attribution_cache: dict[str, tuple[AttributionAnalysis, float]] = {}
 
         # Analytics state
         self._last_portfolio_value: float = 0.0
@@ -316,10 +316,10 @@ class PortfolioAnalytics:
     async def calculate_performance_metrics(self, period: MetricPeriod = MetricPeriod.INCEPTION) -> PerformanceMetrics:
         """
         Calculate comprehensive performance metrics
-        
+
         Args:
             period: Time period for calculation
-            
+
         Returns:
             PerformanceMetrics object
         """
@@ -419,10 +419,10 @@ class PortfolioAnalytics:
     async def calculate_attribution_analysis(self, period: MetricPeriod = MetricPeriod.MONTHLY) -> AttributionAnalysis:
         """
         Calculate performance attribution analysis
-        
+
         Args:
             period: Time period for analysis
-            
+
         Returns:
             AttributionAnalysis object
         """
@@ -479,13 +479,13 @@ class PortfolioAnalytics:
                 risk_contributions={}
             )
 
-    async def generate_performance_report(self, periods: List[MetricPeriod] = None) -> Dict[str, Any]:
+    async def generate_performance_report(self, periods: list[MetricPeriod] = None) -> dict[str, Any]:
         """
         Generate comprehensive performance report
-        
+
         Args:
             periods: List of periods to include (default: all common periods)
-            
+
         Returns:
             Dictionary with comprehensive performance data
         """
@@ -542,10 +542,10 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error generating performance report: {e}")
             return {'error': str(e), 'generated_at': time.time()}
 
-    async def get_dashboard_data(self) -> Dict[str, Any]:
+    async def get_dashboard_data(self) -> dict[str, Any]:
         """
         Get real-time dashboard data
-        
+
         Returns:
             Dictionary with dashboard-ready analytics data
         """
@@ -595,14 +595,14 @@ class PortfolioAnalytics:
             return {'error': str(e), 'timestamp': time.time()}
 
     async def export_analytics(self, format_type: str = None,
-                              periods: List[MetricPeriod] = None) -> str:
+                              periods: list[MetricPeriod] = None) -> str:
         """
         Export analytics data
-        
+
         Args:
             format_type: Export format ('json', 'csv', 'excel')
             periods: Periods to include
-            
+
         Returns:
             Path to exported file
         """
@@ -651,7 +651,7 @@ class PortfolioAnalytics:
 
     def record_portfolio_value(self, value: float) -> None:
         """Record portfolio value for analytics"""
-        current_time = time.time()
+        time.time()
         self._portfolio_values.append(value)
 
         # Calculate daily return if we have previous value
@@ -702,7 +702,7 @@ class PortfolioAnalytics:
         else:  # INCEPTION
             return self._inception_date
 
-    def _get_portfolio_values_for_period(self, start_time: float, end_time: float) -> List[float]:
+    def _get_portfolio_values_for_period(self, start_time: float, end_time: float) -> list[float]:
         """Get portfolio values for a time period"""
         # Simplified: return recent values (would filter by timestamp in real implementation)
         values = list(self._portfolio_values)
@@ -714,7 +714,7 @@ class PortfolioAnalytics:
 
         return values
 
-    def _calculate_returns(self, values: List[float]) -> List[float]:
+    def _calculate_returns(self, values: list[float]) -> list[float]:
         """Calculate returns from portfolio values"""
         if len(values) < 2:
             return []
@@ -741,14 +741,14 @@ class PortfolioAnalytics:
         annualized = (1 + total_return) ** (1 / years) - 1
         return annualized
 
-    def _calculate_volatility(self, returns: List[float]) -> float:
+    def _calculate_volatility(self, returns: list[float]) -> float:
         """Calculate annualized volatility"""
         if len(returns) < 2:
             return 0.0
 
         return float(np.std(returns) * np.sqrt(self.config.annualization_factor))
 
-    def _calculate_sharpe_ratio(self, returns: List[float], volatility: float) -> float:
+    def _calculate_sharpe_ratio(self, returns: list[float], volatility: float) -> float:
         """Calculate Sharpe ratio"""
         if len(returns) < 2 or volatility == 0:
             return 0.0
@@ -758,7 +758,7 @@ class PortfolioAnalytics:
 
         return (mean_excess_return * self.config.annualization_factor) / volatility
 
-    def _calculate_sortino_ratio(self, returns: List[float]) -> float:
+    def _calculate_sortino_ratio(self, returns: list[float]) -> float:
         """Calculate Sortino ratio"""
         if len(returns) < 2:
             return 0.0
@@ -776,7 +776,7 @@ class PortfolioAnalytics:
         mean_excess_return = np.mean(excess_returns)
         return (mean_excess_return * self.config.annualization_factor) / (downside_deviation * np.sqrt(self.config.annualization_factor))
 
-    def _calculate_calmar_ratio(self, returns: List[float], values: List[float]) -> float:
+    def _calculate_calmar_ratio(self, returns: list[float], values: list[float]) -> float:
         """Calculate Calmar ratio"""
         if len(returns) < 2 or len(values) < 2:
             return 0.0
@@ -789,7 +789,7 @@ class PortfolioAnalytics:
 
         return annual_return / max_drawdown
 
-    def _calculate_max_drawdown(self, values: List[float]) -> float:
+    def _calculate_max_drawdown(self, values: list[float]) -> float:
         """Calculate maximum drawdown as percentage"""
         if len(values) < 2:
             return 0.0
@@ -806,7 +806,7 @@ class PortfolioAnalytics:
 
         return max_dd
 
-    def _calculate_current_drawdown(self, values: List[float]) -> float:
+    def _calculate_current_drawdown(self, values: list[float]) -> float:
         """Calculate current drawdown from peak"""
         if len(values) < 2:
             return 0.0
@@ -819,7 +819,7 @@ class PortfolioAnalytics:
 
         return ((peak - current) / peak) * 100
 
-    async def _calculate_trade_metrics(self, start_time: float, end_time: float) -> Dict[str, Any]:
+    async def _calculate_trade_metrics(self, start_time: float, end_time: float) -> dict[str, Any]:
         """Calculate trade-related metrics"""
         try:
             # Get closed positions in the period
@@ -879,7 +879,7 @@ class PortfolioAnalytics:
                 'profit_factor': 0.0
             }
 
-    def _calculate_information_ratio(self, returns: List[float]) -> float:
+    def _calculate_information_ratio(self, returns: list[float]) -> float:
         """Calculate information ratio (simplified)"""
         if len(returns) < 2:
             return 0.0
@@ -893,7 +893,7 @@ class PortfolioAnalytics:
 
         return np.mean(excess_returns) / tracking_error * np.sqrt(self.config.annualization_factor)
 
-    def _calculate_tracking_error(self, returns: List[float]) -> float:
+    def _calculate_tracking_error(self, returns: list[float]) -> float:
         """Calculate tracking error"""
         if len(returns) < 2:
             return 0.0
@@ -902,8 +902,8 @@ class PortfolioAnalytics:
         excess_returns = returns
         return float(np.std(excess_returns) * np.sqrt(self.config.annualization_factor))
 
-    async def _calculate_beta_alpha(self, returns: List[float],
-                                  start_time: float, end_time: float) -> Tuple[float, float]:
+    async def _calculate_beta_alpha(self, returns: list[float],
+                                  start_time: float, end_time: float) -> tuple[float, float]:
         """Calculate beta and alpha vs benchmark"""
         try:
             # Get benchmark returns (simplified)
@@ -936,7 +936,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error calculating beta/alpha: {e}")
             return 0.0, 0.0
 
-    def _calculate_var(self, returns: List[float]) -> Tuple[float, float]:
+    def _calculate_var(self, returns: list[float]) -> tuple[float, float]:
         """Calculate Value at Risk at 95% and 99% confidence levels"""
         if len(returns) < 10:
             return 0.0, 0.0
@@ -947,7 +947,7 @@ class PortfolioAnalytics:
 
         return abs(var_95), abs(var_99)
 
-    def _calculate_expected_shortfall(self, returns: List[float]) -> float:
+    def _calculate_expected_shortfall(self, returns: list[float]) -> float:
         """Calculate Expected Shortfall (Conditional VaR)"""
         if len(returns) < 10:
             return 0.0
@@ -1023,11 +1023,11 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error getting cash balance: {e}")
             return 0.0
 
-    async def _calculate_asset_attribution(self, start_time: float, end_time: float) -> Dict[str, float]:
+    async def _calculate_asset_attribution(self, start_time: float, end_time: float) -> dict[str, float]:
         """Calculate performance attribution by asset"""
         try:
             portfolio_summary = self.position_tracker.get_portfolio_summary()
-            total_pnl = portfolio_summary['total_unrealized_pnl'] + portfolio_summary['total_realized_pnl']
+            portfolio_summary['total_unrealized_pnl'] + portfolio_summary['total_realized_pnl']
 
             asset_contributions = {}
             for symbol, data in portfolio_summary['symbol_breakdown'].items():
@@ -1040,7 +1040,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error calculating asset attribution: {e}")
             return {}
 
-    async def _calculate_strategy_attribution(self, start_time: float, end_time: float) -> Dict[str, float]:
+    async def _calculate_strategy_attribution(self, start_time: float, end_time: float) -> dict[str, float]:
         """Calculate performance attribution by strategy"""
         try:
             # Group positions by strategy
@@ -1063,7 +1063,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error calculating strategy attribution: {e}")
             return {}
 
-    async def _calculate_risk_attribution(self, start_time: float, end_time: float) -> Dict[str, float]:
+    async def _calculate_risk_attribution(self, start_time: float, end_time: float) -> dict[str, float]:
         """Calculate risk attribution"""
         try:
             # Simplified risk attribution
@@ -1085,14 +1085,14 @@ class PortfolioAnalytics:
         # In production, this would fetch actual benchmark data
         return 0.05  # 5% mock return
 
-    async def _get_benchmark_returns(self, start_time: float, end_time: float) -> List[float]:
+    async def _get_benchmark_returns(self, start_time: float, end_time: float) -> list[float]:
         """Get benchmark returns series (simplified)"""
         # Simplified: return mock benchmark returns
         # In production, this would fetch actual benchmark data
         days = int((end_time - start_time) / 86400)
         return [0.001] * min(days, 30)  # 0.1% daily mock returns
 
-    async def _calculate_benchmark_comparison(self) -> Dict[str, Any]:
+    async def _calculate_benchmark_comparison(self) -> dict[str, Any]:
         """Calculate comparison vs benchmark"""
         try:
             # Get portfolio metrics
@@ -1122,7 +1122,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error calculating benchmark comparison: {e}")
             return {}
 
-    async def _generate_trade_summary(self) -> Dict[str, Any]:
+    async def _generate_trade_summary(self) -> dict[str, Any]:
         """Generate comprehensive trade summary"""
         try:
             all_positions = self.position_tracker.get_closed_positions()
@@ -1164,7 +1164,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error generating trade summary: {e}")
             return {'total_trades': 0}
 
-    def _get_top_positions(self, portfolio_summary: Dict[str, Any], limit: int = 5) -> List[Dict[str, Any]]:
+    def _get_top_positions(self, portfolio_summary: dict[str, Any], limit: int = 5) -> list[dict[str, Any]]:
         """Get top positions by value"""
         try:
             positions = []
@@ -1184,7 +1184,7 @@ class PortfolioAnalytics:
             logger.error(f"[ANALYTICS] Error getting top positions: {e}")
             return []
 
-    async def _get_recent_trades(self, limit: int = 10) -> List[Dict[str, Any]]:
+    async def _get_recent_trades(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent trades"""
         try:
             closed_positions = self.position_tracker.get_closed_positions(limit=limit)

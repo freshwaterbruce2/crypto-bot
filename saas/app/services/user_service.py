@@ -7,7 +7,7 @@ Service layer for user operations, authentication, and profile management.
 
 import logging
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from sqlalchemy import and_, or_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -230,7 +230,7 @@ class UserService:
         message: str,
         type: str = "info",
         priority: str = "normal",
-        data: Dict[str, Any] = None,
+        data: dict[str, Any] = None,
         action_url: str = None,
         session: AsyncSession = None
     ) -> Notification:
@@ -260,13 +260,13 @@ class UserService:
         user_id: int,
         unread_only: bool = False,
         limit: int = 50
-    ) -> List[Notification]:
+    ) -> list[Notification]:
         """Get user notifications"""
         async with get_db_session() as session:
             stmt = select(Notification).where(Notification.user_id == user_id)
 
             if unread_only:
-                stmt = stmt.where(Notification.is_read == False)
+                stmt = stmt.where(not Notification.is_read)
 
             stmt = stmt.order_by(Notification.created_at.desc()).limit(limit)
 
@@ -297,7 +297,7 @@ class UserService:
         search: str = None,
         subscription_tier: str = None,
         is_active: bool = None
-    ) -> List[User]:
+    ) -> list[User]:
         """Get list of users with filtering"""
         async with get_db_session() as session:
             stmt = select(User).options(
@@ -329,7 +329,7 @@ class UserService:
             result = await session.execute(stmt)
             return result.scalars().all()
 
-    async def get_user_stats(self, user_id: int) -> Dict[str, Any]:
+    async def get_user_stats(self, user_id: int) -> dict[str, Any]:
         """Get user statistics"""
         async with get_db_session() as session:
             user = await session.get(User, user_id)
@@ -383,9 +383,9 @@ class UserService:
         self,
         user_id: int,
         action: str,
-        old_values: Dict[str, Any] = None,
-        new_values: Dict[str, Any] = None,
-        metadata: Dict[str, Any] = None,
+        old_values: dict[str, Any] = None,
+        new_values: dict[str, Any] = None,
+        metadata: dict[str, Any] = None,
         session: AsyncSession = None
     ):
         """Log user action to audit log"""

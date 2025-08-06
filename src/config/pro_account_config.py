@@ -22,7 +22,7 @@ This configuration optimizes for:
 """
 
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +34,10 @@ class ProAccountOptimizer:
         self.pro_features_enabled = False
         self.optimization_level = "maximum"  # conservative, moderate, maximum
 
-    def get_pro_optimized_config(self, base_config: Dict[str, Any]) -> Dict[str, Any]:
+    def get_pro_optimized_config(self, base_config: dict[str, Any]) -> dict[str, Any]:
         """
         Get Pro account optimized configuration
-        
+
         WARNING: Only use with Kraken Pro accounts (fee-free trading)
         """
 
@@ -182,7 +182,7 @@ class ProAccountOptimizer:
 
         return pro_config
 
-    def _get_pro_optimized_pairs(self) -> List[str]:
+    def _get_pro_optimized_pairs(self) -> list[str]:
         """Get all trading pairs optimized for Pro accounts"""
 
         # Pro accounts can trade ALL pairs due to fee-free advantage
@@ -205,13 +205,13 @@ class ProAccountOptimizer:
             "MKR/USDT", "SNX/USDT", "YFI/USDT", "SUSHI/USDT", "BAL/USDT"
         ]
 
-    def get_fee_savings_projection(self, daily_volume: float) -> Dict[str, float]:
+    def get_fee_savings_projection(self, daily_volume: float) -> dict[str, float]:
         """
         Calculate projected fee savings for Pro account
-        
+
         Args:
             daily_volume: Estimated daily trading volume in USDT
-            
+
         Returns:
             Dictionary with fee savings projections
         """
@@ -235,7 +235,7 @@ class ProAccountOptimizer:
             'break_even_volume': 100,  # Volume needed to justify Pro subscription
         }
 
-    def validate_pro_account_requirements(self, config: Dict[str, Any]) -> bool:
+    def validate_pro_account_requirements(self, config: dict[str, Any]) -> bool:
         """Validate that Pro account requirements are met"""
 
         required_settings = [
@@ -251,7 +251,7 @@ class ProAccountOptimizer:
         logger.info("[PRO_VALIDATOR] All Pro account requirements validated")
         return True
 
-    def get_optimization_summary(self) -> Dict[str, Any]:
+    def get_optimization_summary(self) -> dict[str, Any]:
         """Get summary of Pro account optimizations"""
 
         if not self.pro_features_enabled:
@@ -290,11 +290,11 @@ class ProAccountOptimizer:
 pro_optimizer = ProAccountOptimizer()
 
 
-def get_pro_optimized_config(base_config: Dict[str, Any]) -> Dict[str, Any]:
+def get_pro_optimized_config(base_config: dict[str, Any]) -> dict[str, Any]:
     """Get Pro account optimized configuration (convenience function)"""
     return pro_optimizer.get_pro_optimized_config(base_config)
 
 
-def validate_pro_account(config: Dict[str, Any]) -> bool:
+def validate_pro_account(config: dict[str, Any]) -> bool:
     """Validate Pro account configuration (convenience function)"""
     return pro_optimizer.validate_pro_account_requirements(config)

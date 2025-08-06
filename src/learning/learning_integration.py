@@ -9,7 +9,7 @@ Provides seamless integration with minimal disruption to existing code.
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from .advanced_memory_manager import AdvancedMemoryManager
 from .neural_pattern_engine import PatternFeatures, PatternRecognitionEngine
@@ -70,8 +70,8 @@ class LearningSystemIntegrator:
         except Exception as e:
             self.logger.error(f"[LEARNING_INTEGRATION] Error initializing: {e}")
 
-    async def enhance_buy_decision(self, symbol: str, market_data: Dict[str, Any],
-                                 original_decision: Dict[str, Any]) -> Dict[str, Any]:
+    async def enhance_buy_decision(self, symbol: str, market_data: dict[str, Any],
+                                 original_decision: dict[str, Any]) -> dict[str, Any]:
         """Enhance buy decision with neural learning"""
         try:
             if not self.neural_learning_enabled:
@@ -125,9 +125,9 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error enhancing buy decision: {e}")
             return original_decision
 
-    async def enhance_sell_decision(self, symbol: str, position_data: Dict[str, Any],
-                                  market_data: Dict[str, Any],
-                                  original_decision: Dict[str, Any]) -> Dict[str, Any]:
+    async def enhance_sell_decision(self, symbol: str, position_data: dict[str, Any],
+                                  market_data: dict[str, Any],
+                                  original_decision: dict[str, Any]) -> dict[str, Any]:
         """Enhance sell decision with neural learning"""
         try:
             if not self.neural_learning_enabled:
@@ -192,8 +192,8 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error enhancing sell decision: {e}")
             return original_decision
 
-    async def learn_from_trade_outcome(self, symbol: str, trade_data: Dict[str, Any],
-                                     outcome: Dict[str, Any]):
+    async def learn_from_trade_outcome(self, symbol: str, trade_data: dict[str, Any],
+                                     outcome: dict[str, Any]):
         """Learn from completed trade outcomes"""
         try:
             # Store trade outcome in advanced memory
@@ -229,7 +229,7 @@ class LearningSystemIntegrator:
         except Exception as e:
             self.logger.error(f"[LEARNING_INTEGRATION] Error learning from trade outcome: {e}")
 
-    async def get_market_regime_analysis(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def get_market_regime_analysis(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Get comprehensive market regime analysis"""
         try:
             if not self.neural_learning_enabled:
@@ -265,7 +265,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error in market regime analysis: {e}")
             return {'regime': 'neutral', 'confidence': 0.5, 'error': str(e)}
 
-    async def get_learning_insights(self, symbol: str = None) -> Dict[str, Any]:
+    async def get_learning_insights(self, symbol: str = None) -> dict[str, Any]:
         """Get comprehensive learning insights"""
         try:
             insights = {
@@ -298,7 +298,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error getting learning insights: {e}")
             return {'error': str(e)}
 
-    async def optimize_learning_system(self) -> Dict[str, Any]:
+    async def optimize_learning_system(self) -> dict[str, Any]:
         """Optimize the entire learning system"""
         try:
             optimization_results = {}
@@ -349,7 +349,7 @@ class LearningSystemIntegrator:
         except Exception as e:
             self.logger.error(f"[LEARNING_INTEGRATION] Error registering with assistants: {e}")
 
-    async def _get_historical_outcomes(self, symbol: str, decision_type: str) -> List[Dict[str, Any]]:
+    async def _get_historical_outcomes(self, symbol: str, decision_type: str) -> list[dict[str, Any]]:
         """Get historical outcomes for a symbol and decision type"""
         if not self.advanced_memory_enabled:
             return []
@@ -369,7 +369,7 @@ class LearningSystemIntegrator:
             return []
 
     async def _store_buy_decision(self, symbol: str, features: PatternFeatures,
-                                decision: Dict[str, Any], market_data: Dict[str, Any]):
+                                decision: dict[str, Any], market_data: dict[str, Any]):
         """Store buy decision for learning"""
         if not self.advanced_memory_enabled:
             return
@@ -392,7 +392,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error storing buy decision: {e}")
 
     async def _store_sell_decision(self, symbol: str, features: PatternFeatures,
-                                 decision: Dict[str, Any], position_data: Dict[str, Any]):
+                                 decision: dict[str, Any], position_data: dict[str, Any]):
         """Store sell decision for learning"""
         if not self.advanced_memory_enabled:
             return
@@ -414,7 +414,7 @@ class LearningSystemIntegrator:
         except Exception as e:
             self.logger.error(f"[LEARNING_INTEGRATION] Error storing sell decision: {e}")
 
-    def _calculate_trade_importance(self, outcome: Dict[str, Any]) -> float:
+    def _calculate_trade_importance(self, outcome: dict[str, Any]) -> float:
         """Calculate importance score for a trade outcome"""
         profit_pct = abs(outcome.get('profit_pct', 0))
         hold_time = outcome.get('hold_time_seconds', 3600)
@@ -425,8 +425,8 @@ class LearningSystemIntegrator:
 
         return (profit_score + time_score) / 2
 
-    async def _train_on_trade_outcome(self, symbol: str, trade_data: Dict[str, Any],
-                                    outcome: Dict[str, Any]):
+    async def _train_on_trade_outcome(self, symbol: str, trade_data: dict[str, Any],
+                                    outcome: dict[str, Any]):
         """Train neural networks on trade outcome"""
         try:
             # Get the original decision features
@@ -465,7 +465,7 @@ class LearningSystemIntegrator:
         except Exception as e:
             self.logger.error(f"[LEARNING_INTEGRATION] Error training on trade outcome: {e}")
 
-    async def _get_historical_market_data(self) -> List[Dict[str, Any]]:
+    async def _get_historical_market_data(self) -> list[dict[str, Any]]:
         """Get historical market data for regime analysis"""
         if not self.advanced_memory_enabled:
             return []
@@ -483,7 +483,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error getting historical market data: {e}")
             return []
 
-    async def _get_symbol_insights(self, symbol: str) -> Dict[str, Any]:
+    async def _get_symbol_insights(self, symbol: str) -> dict[str, Any]:
         """Get symbol-specific learning insights"""
         try:
             # Get symbol-specific trade history
@@ -525,7 +525,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error getting symbol insights: {e}")
             return {}
 
-    async def _optimize_neural_networks(self) -> Dict[str, Any]:
+    async def _optimize_neural_networks(self) -> dict[str, Any]:
         """Optimize neural networks with recent data"""
         try:
             optimization_results = {}
@@ -571,7 +571,7 @@ class LearningSystemIntegrator:
             self.logger.error(f"[LEARNING_INTEGRATION] Error optimizing neural networks: {e}")
             return {'error': str(e)}
 
-    async def _optimize_memory_system(self) -> Dict[str, Any]:
+    async def _optimize_memory_system(self) -> dict[str, Any]:
         """Optimize memory system performance"""
         try:
             # This would trigger memory cleanup and optimization
@@ -610,8 +610,8 @@ async def enhance_assistant_with_learning(assistant, learning_integrator: Learni
     assistant.learning_integrator = learning_integrator
 
 
-async def get_learning_enhanced_decision(assistant, decision_data: Dict[str, Any],
-                                       context: Dict[str, Any]) -> Dict[str, Any]:
+async def get_learning_enhanced_decision(assistant, decision_data: dict[str, Any],
+                                       context: dict[str, Any]) -> dict[str, Any]:
     """Get learning-enhanced decision from assistant"""
     if not hasattr(assistant, 'learning_integrator') or not assistant.learning_integrator:
         return decision_data

@@ -7,7 +7,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class Alert:
     category: AlertCategory
     message: str
     timestamp: float
-    data: Dict[str, Any] = None
+    data: dict[str, Any] = None
     resolved: bool = False
     resolution_time: Optional[float] = None
 
@@ -80,7 +80,7 @@ class AlertManager:
         logger.debug("[ALERT_MGR] Alert manager initialized")
 
     def add_alert(self, alert_type: AlertType, category: AlertCategory,
-                  message: str, data: Dict[str, Any] = None) -> bool:
+                  message: str, data: dict[str, Any] = None) -> bool:
         """Add new alert to the system"""
         try:
             # Check rate limiting
@@ -146,7 +146,7 @@ class AlertManager:
     def get_alerts(self, alert_type: Optional[AlertType] = None,
                    category: Optional[AlertCategory] = None,
                    unresolved_only: bool = False,
-                   limit: int = 100) -> List[Alert]:
+                   limit: int = 100) -> list[Alert]:
         """Get alerts with optional filtering"""
         filtered_alerts = []
 
@@ -166,7 +166,7 @@ class AlertManager:
 
         return filtered_alerts
 
-    def get_recent_alerts(self, minutes: int = 60) -> List[Alert]:
+    def get_recent_alerts(self, minutes: int = 60) -> list[Alert]:
         """Get alerts from the last N minutes"""
         cutoff_time = time.time() - (minutes * 60)
         return [alert for alert in self.alerts if alert.timestamp >= cutoff_time]
@@ -193,7 +193,7 @@ class AlertManager:
 
         return resolved_count
 
-    def get_alert_stats(self) -> Dict[str, Any]:
+    def get_alert_stats(self) -> dict[str, Any]:
         """Get alert statistics"""
         total_alerts = len(self.alerts)
         unresolved_alerts = sum(1 for alert in self.alerts if not alert.resolved)
@@ -280,23 +280,23 @@ class AlertManager:
             logger.debug(f"[ALERT_MGR] Cleaned up old alerts, keeping {self.max_alerts}")
 
     # Convenience methods for common alert types
-    def info(self, category: AlertCategory, message: str, data: Dict[str, Any] = None):
+    def info(self, category: AlertCategory, message: str, data: dict[str, Any] = None):
         """Add info alert"""
         return self.add_alert(AlertType.INFO, category, message, data)
 
-    def warning(self, category: AlertCategory, message: str, data: Dict[str, Any] = None):
+    def warning(self, category: AlertCategory, message: str, data: dict[str, Any] = None):
         """Add warning alert"""
         return self.add_alert(AlertType.WARNING, category, message, data)
 
-    def error(self, category: AlertCategory, message: str, data: Dict[str, Any] = None):
+    def error(self, category: AlertCategory, message: str, data: dict[str, Any] = None):
         """Add error alert"""
         return self.add_alert(AlertType.ERROR, category, message, data)
 
-    def critical(self, category: AlertCategory, message: str, data: Dict[str, Any] = None):
+    def critical(self, category: AlertCategory, message: str, data: dict[str, Any] = None):
         """Add critical alert"""
         return self.add_alert(AlertType.CRITICAL, category, message, data)
 
-    def success(self, category: AlertCategory, message: str, data: Dict[str, Any] = None):
+    def success(self, category: AlertCategory, message: str, data: dict[str, Any] = None):
         """Add success alert"""
         return self.add_alert(AlertType.SUCCESS, category, message, data)
 
@@ -313,26 +313,26 @@ def get_alert_manager() -> AlertManager:
     return _global_alert_manager
 
 
-def alert_info(category: AlertCategory, message: str, data: Dict[str, Any] = None):
+def alert_info(category: AlertCategory, message: str, data: dict[str, Any] = None):
     """Global function for info alerts"""
     return get_alert_manager().info(category, message, data)
 
 
-def alert_warning(category: AlertCategory, message: str, data: Dict[str, Any] = None):
+def alert_warning(category: AlertCategory, message: str, data: dict[str, Any] = None):
     """Global function for warning alerts"""
     return get_alert_manager().warning(category, message, data)
 
 
-def alert_error(category: AlertCategory, message: str, data: Dict[str, Any] = None):
+def alert_error(category: AlertCategory, message: str, data: dict[str, Any] = None):
     """Global function for error alerts"""
     return get_alert_manager().error(category, message, data)
 
 
-def alert_critical(category: AlertCategory, message: str, data: Dict[str, Any] = None):
+def alert_critical(category: AlertCategory, message: str, data: dict[str, Any] = None):
     """Global function for critical alerts"""
     return get_alert_manager().critical(category, message, data)
 
 
-def alert_success(category: AlertCategory, message: str, data: Dict[str, Any] = None):
+def alert_success(category: AlertCategory, message: str, data: dict[str, Any] = None):
     """Global function for success alerts"""
     return get_alert_manager().success(category, message, data)

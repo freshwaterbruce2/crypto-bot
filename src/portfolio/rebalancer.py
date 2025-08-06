@@ -22,7 +22,7 @@ import time
 from dataclasses import asdict, dataclass
 from enum import Enum
 from threading import RLock
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from .position_tracker import PositionStatus, PositionTracker
 from .risk_manager import RiskAction, RiskManager
@@ -72,7 +72,7 @@ class RebalanceResult:
     reason: RebalanceReason
     timestamp: float
 
-    targets: List[RebalanceTarget]
+    targets: list[RebalanceTarget]
     total_portfolio_value: float
     expected_cost: float
     expected_trades: int
@@ -85,7 +85,7 @@ class RebalanceResult:
     success: bool = True
     error_message: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
         data['strategy'] = self.strategy.value
@@ -122,7 +122,7 @@ class RebalanceConfig:
     dry_run: bool = False  # Dry run mode for testing
     execution_delay_seconds: float = 1.0  # Delay between trades
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return asdict(self)
 
@@ -138,7 +138,7 @@ class Rebalancer:
                  data_path: str = "D:/trading_data"):
         """
         Initialize rebalancer
-        
+
         Args:
             position_tracker: Position tracker instance
             risk_manager: Risk manager instance
@@ -160,17 +160,17 @@ class Rebalancer:
         self._running = False
 
         # Target allocations
-        self._target_allocations: Dict[str, float] = {}  # symbol -> target weight
+        self._target_allocations: dict[str, float] = {}  # symbol -> target weight
         self._last_rebalance_time: float = 0.0
         self._last_dca_time: float = 0.0
 
         # History tracking
-        self._rebalance_history: List[RebalanceResult] = []
-        self._portfolio_drift_history: List[Dict[str, Any]] = []
+        self._rebalance_history: list[RebalanceResult] = []
+        self._portfolio_drift_history: list[dict[str, Any]] = []
 
         # Grid trading state
-        self._grid_orders: Dict[str, List[Dict[str, Any]]] = {}  # symbol -> grid orders
-        self._grid_levels: Dict[str, List[float]] = {}  # symbol -> price levels
+        self._grid_orders: dict[str, list[dict[str, Any]]] = {}  # symbol -> grid orders
+        self._grid_levels: dict[str, list[float]] = {}  # symbol -> price levels
 
         # Files
         self.config_file = f"{data_path}/rebalance_config.json"
@@ -224,10 +224,10 @@ class Rebalancer:
 
         logger.info("[REBALANCER] Stopped rebalancing monitoring")
 
-    def set_target_allocations(self, targets: Dict[str, float]) -> None:
+    def set_target_allocations(self, targets: dict[str, float]) -> None:
         """
         Set target allocations for portfolio
-        
+
         Args:
             targets: Dict of symbol -> target weight (should sum to 1.0)
         """
@@ -246,7 +246,7 @@ class Rebalancer:
         # Save to file
         asyncio.create_task(self._save_target_allocations())
 
-    async def calculate_portfolio_drift(self) -> Dict[str, Any]:
+    async def calculate_portfolio_drift(self) -> dict[str, Any]:
         """Calculate current portfolio drift from targets"""
         async with self._async_lock:
             portfolio_summary = self.position_tracker.get_portfolio_summary()
@@ -302,15 +302,15 @@ class Rebalancer:
 
     async def create_rebalance_plan(self, strategy: RebalanceStrategy,
                                    reason: RebalanceReason = RebalanceReason.MANUAL,
-                                   custom_targets: Dict[str, float] = None) -> RebalanceResult:
+                                   custom_targets: dict[str, float] = None) -> RebalanceResult:
         """
         Create a rebalancing plan
-        
+
         Args:
             strategy: Rebalancing strategy to use
             reason: Reason for rebalancing
             custom_targets: Custom target allocations (overrides default)
-            
+
         Returns:
             RebalanceResult with the plan
         """
@@ -379,10 +379,10 @@ class Rebalancer:
     async def execute_rebalance_plan(self, plan: RebalanceResult) -> RebalanceResult:
         """
         Execute a rebalancing plan
-        
+
         Args:
             plan: RebalanceResult with the plan to execute
-            
+
         Returns:
             Updated RebalanceResult with execution details
         """
@@ -471,7 +471,7 @@ class Rebalancer:
     async def auto_rebalance(self) -> Optional[RebalanceResult]:
         """
         Perform automatic rebalancing based on current conditions
-        
+
         Returns:
             RebalanceResult if rebalancing was performed, None otherwise
         """
@@ -521,11 +521,11 @@ class Rebalancer:
     async def dca_rebalance(self, symbol: str, amount_usd: float) -> Optional[RebalanceResult]:
         """
         Perform Dollar Cost Averaging for a specific symbol
-        
+
         Args:
             symbol: Symbol to DCA into
             amount_usd: USD amount to invest
-            
+
         Returns:
             RebalanceResult if successful
         """
@@ -566,11 +566,11 @@ class Rebalancer:
     async def grid_rebalance(self, symbol: str, grid_range_pct: float = None) -> Optional[RebalanceResult]:
         """
         Set up or adjust grid trading for a symbol
-        
+
         Args:
             symbol: Symbol for grid trading
             grid_range_pct: Grid range as percentage (uses config default if None)
-            
+
         Returns:
             RebalanceResult if successful
         """
@@ -612,7 +612,7 @@ class Rebalancer:
             logger.error(f"[REBALANCER] Grid rebalance error: {e}")
             return None
 
-    def get_rebalance_history(self, limit: int = None) -> List[Dict[str, Any]]:
+    def get_rebalance_history(self, limit: int = None) -> list[dict[str, Any]]:
         """Get rebalancing history"""
         history = [result.to_dict() for result in self._rebalance_history]
 
@@ -621,11 +621,11 @@ class Rebalancer:
 
         return history
 
-    def get_target_allocations(self) -> Dict[str, float]:
+    def get_target_allocations(self) -> dict[str, float]:
         """Get current target allocations"""
         return dict(self._target_allocations)
 
-    def get_portfolio_drift_history(self, limit: int = None) -> List[Dict[str, Any]]:
+    def get_portfolio_drift_history(self, limit: int = None) -> list[dict[str, Any]]:
         """Get portfolio drift history"""
         history = list(self._portfolio_drift_history)
 
@@ -650,9 +650,9 @@ class Rebalancer:
                 logger.error(f"[REBALANCER] Monitoring loop error: {e}")
                 await asyncio.sleep(60)  # Wait 1 minute on error
 
-    async def _create_threshold_plan(self, targets: Dict[str, float],
+    async def _create_threshold_plan(self, targets: dict[str, float],
                                    current_value: float,
-                                   portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                                   portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create threshold-based rebalancing plan"""
         rebalance_targets = []
 
@@ -686,9 +686,9 @@ class Rebalancer:
 
         return rebalance_targets
 
-    async def _create_dca_plan(self, targets: Dict[str, float],
+    async def _create_dca_plan(self, targets: dict[str, float],
                              current_value: float,
-                             portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                             portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create DCA (Dollar Cost Averaging) plan"""
         rebalance_targets = []
 
@@ -723,9 +723,9 @@ class Rebalancer:
 
         return rebalance_targets
 
-    async def _create_grid_plan(self, targets: Dict[str, float],
+    async def _create_grid_plan(self, targets: dict[str, float],
                               current_value: float,
-                              portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                              portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create grid trading plan"""
         rebalance_targets = []
 
@@ -748,10 +748,10 @@ class Rebalancer:
 
             # Find closest grid levels
             lower_levels = [level for level in grid_levels if level < current_price]
-            upper_levels = [level for level in grid_levels if level > current_price]
+            [level for level in grid_levels if level > current_price]
 
             # Create buy orders for lower levels
-            for level in lower_levels[-2:]:  # Last 2 lower levels
+            for _level in lower_levels[-2:]:  # Last 2 lower levels
                 buy_size = (target_weight * current_value) / len(lower_levels)
                 if buy_size > self.config.min_trade_size_usd:
                     rebalance_targets.append(RebalanceTarget(
@@ -768,9 +768,9 @@ class Rebalancer:
 
         return rebalance_targets
 
-    async def _create_momentum_plan(self, targets: Dict[str, float],
+    async def _create_momentum_plan(self, targets: dict[str, float],
                                   current_value: float,
-                                  portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                                  portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create momentum-based rebalancing plan"""
         rebalance_targets = []
 
@@ -815,9 +815,9 @@ class Rebalancer:
 
         return rebalance_targets
 
-    async def _create_mean_reversion_plan(self, targets: Dict[str, float],
+    async def _create_mean_reversion_plan(self, targets: dict[str, float],
                                         current_value: float,
-                                        portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                                        portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create mean reversion rebalancing plan"""
         rebalance_targets = []
 
@@ -852,9 +852,9 @@ class Rebalancer:
 
         return rebalance_targets
 
-    async def _create_risk_parity_plan(self, targets: Dict[str, float],
+    async def _create_risk_parity_plan(self, targets: dict[str, float],
                                      current_value: float,
-                                     portfolio_summary: Dict[str, Any]) -> List[RebalanceTarget]:
+                                     portfolio_summary: dict[str, Any]) -> list[RebalanceTarget]:
         """Create risk parity rebalancing plan"""
         rebalance_targets = []
 
@@ -902,7 +902,7 @@ class Rebalancer:
 
         return rebalance_targets
 
-    def _calculate_execution_cost(self, targets: List[RebalanceTarget]) -> Tuple[float, int]:
+    def _calculate_execution_cost(self, targets: list[RebalanceTarget]) -> tuple[float, int]:
         """Calculate expected execution cost and number of trades"""
         total_cost = 0.0
         total_trades = 0
@@ -918,7 +918,7 @@ class Rebalancer:
 
         return total_cost, total_trades
 
-    async def _execute_buy_order(self, target: RebalanceTarget) -> Dict[str, Any]:
+    async def _execute_buy_order(self, target: RebalanceTarget) -> dict[str, Any]:
         """Execute a buy order for rebalancing"""
         try:
             if self.trade_executor and hasattr(self.trade_executor, 'execute_buy'):
@@ -937,7 +937,7 @@ class Rebalancer:
         except Exception as e:
             return {'success': False, 'error': str(e), 'cost': 0.0}
 
-    async def _execute_sell_order(self, target: RebalanceTarget) -> Dict[str, Any]:
+    async def _execute_sell_order(self, target: RebalanceTarget) -> dict[str, Any]:
         """Execute a sell order for rebalancing"""
         try:
             if self.trade_executor and hasattr(self.trade_executor, 'execute_sell'):
@@ -1002,7 +1002,7 @@ class Rebalancer:
         """Load rebalancing history from file"""
         try:
             with open(self.history_file) as f:
-                data = json.load(f)
+                json.load(f)
                 # Would reconstruct RebalanceResult objects from data
             logger.debug("[REBALANCER] History loaded")
         except FileNotFoundError:

@@ -15,7 +15,7 @@ import traceback
 from collections import defaultdict, deque
 from datetime import datetime
 from functools import wraps
-from typing import Any, Dict
+from typing import Any
 
 # Performance tracking
 _log_metrics = defaultdict(int)
@@ -343,7 +343,7 @@ def get_logger(name: str) -> TradingLogger:
     return TradingLogger(name)
 
 
-def get_logging_stats() -> Dict[str, Any]:
+def get_logging_stats() -> dict[str, Any]:
     """Get logging performance statistics"""
     with _metric_lock:
         total_logs = sum(_log_metrics.values())

@@ -11,7 +11,7 @@ import logging
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent
@@ -43,7 +43,7 @@ class PaperTradingMonitor:
         )
         self.logger = logging.getLogger(__name__)
 
-    def load_safety_verification(self) -> Optional[Dict[str, Any]]:
+    def load_safety_verification(self) -> Optional[dict[str, Any]]:
         """Load safety verification data"""
         try:
             safety_file = self.data_dir / "safety_verification.json"
@@ -55,7 +55,7 @@ class PaperTradingMonitor:
             self.logger.error(f"Error loading safety verification: {e}")
             return None
 
-    def load_performance_data(self) -> Optional[Dict[str, Any]]:
+    def load_performance_data(self) -> Optional[dict[str, Any]]:
         """Load current performance data"""
         try:
             perf_file = self.data_dir / "paper_performance.json"
@@ -67,7 +67,7 @@ class PaperTradingMonitor:
             self.logger.error(f"Error loading performance data: {e}")
             return None
 
-    def load_current_status(self) -> Optional[Dict[str, Any]]:
+    def load_current_status(self) -> Optional[dict[str, Any]]:
         """Load current bot status"""
         try:
             status_file = self.data_dir / "current_status.json"
@@ -79,7 +79,7 @@ class PaperTradingMonitor:
             self.logger.error(f"Error loading current status: {e}")
             return None
 
-    def check_safety_status(self) -> Dict[str, Any]:
+    def check_safety_status(self) -> dict[str, Any]:
         """Check safety status and paper trading mode"""
         safety_data = self.load_safety_verification()
 
@@ -107,7 +107,7 @@ class PaperTradingMonitor:
                 "paper_mode_verified": False
             }
 
-    def analyze_performance(self) -> Dict[str, Any]:
+    def analyze_performance(self) -> dict[str, Any]:
         """Analyze current performance metrics"""
         perf_data = self.load_performance_data()
 
@@ -149,7 +149,7 @@ class PaperTradingMonitor:
             "last_updated": perf_data.get("last_updated")
         }
 
-    def check_system_health(self) -> Dict[str, Any]:
+    def check_system_health(self) -> dict[str, Any]:
         """Check overall system health"""
         status_data = self.load_current_status()
 
@@ -185,7 +185,7 @@ class PaperTradingMonitor:
             "paper_mode_verified": status_data.get("paper_mode_verified", False)
         }
 
-    def generate_monitoring_report(self) -> Dict[str, Any]:
+    def generate_monitoring_report(self) -> dict[str, Any]:
         """Generate comprehensive monitoring report"""
         report_time = datetime.now()
 
@@ -249,7 +249,7 @@ class PaperTradingMonitor:
 
         return report
 
-    def save_report(self, report: Dict[str, Any]):
+    def save_report(self, report: dict[str, Any]):
         """Save monitoring report to file"""
         try:
             # Save to reports directory
@@ -272,7 +272,7 @@ class PaperTradingMonitor:
         except Exception as e:
             self.logger.error(f"Error saving report: {e}")
 
-    def display_status_summary(self, report: Dict[str, Any]):
+    def display_status_summary(self, report: dict[str, Any]):
         """Display formatted status summary"""
         print("\n" + "=" * 60)
         print("🧪 PAPER TRADING MONITOR - STATUS SUMMARY")

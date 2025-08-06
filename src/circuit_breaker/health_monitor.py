@@ -25,7 +25,7 @@ from collections import defaultdict, deque
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Optional
 
 import aiohttp
 
@@ -51,7 +51,7 @@ class AlertSeverity(Enum):
 class HealthMetrics:
     """
     Health metrics for a service or component.
-    
+
     Attributes:
         response_time_ms: Average response time in milliseconds
         success_rate: Success rate (0.0 to 1.0)
@@ -86,7 +86,7 @@ class HealthMetrics:
 class HealthCheckResult:
     """
     Result of a health check operation.
-    
+
     Attributes:
         service_name: Name of the service checked
         status: Health status
@@ -100,7 +100,7 @@ class HealthCheckResult:
     status: HealthStatus
     response_time_ms: float
     timestamp: float = field(default_factory=time.time)
-    details: Dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     error_message: Optional[str] = None
     metrics: Optional[HealthMetrics] = None
 
@@ -109,7 +109,7 @@ class HealthCheckResult:
 class ServiceHealth:
     """
     Health information for a service.
-    
+
     Attributes:
         name: Service name
         status: Current health status
@@ -128,7 +128,7 @@ class ServiceHealth:
     check_interval: float = 30.0
     failure_count: int = 0
     recovery_count: int = 0
-    alerts: List[Dict[str, Any]] = field(default_factory=list)
+    alerts: list[dict[str, Any]] = field(default_factory=list)
     history: deque = field(default_factory=lambda: deque(maxlen=100))
 
 
@@ -136,7 +136,7 @@ class ServiceHealth:
 class HealthAlert:
     """
     Health alert information.
-    
+
     Attributes:
         id: Unique alert ID
         service_name: Service that triggered the alert
@@ -156,13 +156,13 @@ class HealthAlert:
     acknowledged: bool = False
     resolved: bool = False
     resolution_time: Optional[float] = None
-    metadata: Dict[str, Any] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 class HealthMonitor:
     """
     Comprehensive health monitoring system.
-    
+
     Monitors the health of services and components, collects metrics,
     and generates alerts when health degrades.
     """
@@ -176,7 +176,7 @@ class HealthMonitor:
     ):
         """
         Initialize health monitor.
-        
+
         Args:
             check_interval: Default health check interval in seconds
             alert_threshold: Number of failures before alerting
@@ -189,13 +189,13 @@ class HealthMonitor:
         self.storage_path = Path(storage_path) if storage_path else None
 
         # Service tracking
-        self.services: Dict[str, ServiceHealth] = {}
-        self.health_checks: Dict[str, Callable] = {}
+        self.services: dict[str, ServiceHealth] = {}
+        self.health_checks: dict[str, Callable] = {}
 
         # Metrics and history
         self.global_metrics = HealthMetrics()
         self.metrics_history = deque(maxlen=1000)
-        self.alerts: Dict[str, HealthAlert] = {}
+        self.alerts: dict[str, HealthAlert] = {}
 
         # Monitoring control
         self._monitoring_active = False
@@ -261,7 +261,7 @@ class HealthMonitor:
     ) -> None:
         """
         Register a service for health monitoring.
-        
+
         Args:
             name: Service name
             health_check: Health check function (async or sync)
@@ -283,7 +283,7 @@ class HealthMonitor:
     def unregister_service(self, name: str) -> None:
         """
         Unregister a service from health monitoring.
-        
+
         Args:
             name: Service name
         """
@@ -307,14 +307,14 @@ class HealthMonitor:
         name: str,
         url: str,
         method: str = 'GET',
-        headers: Optional[Dict[str, str]] = None,
+        headers: Optional[dict[str, str]] = None,
         expected_status: int = 200,
         timeout: float = 5.0,
         check_interval: Optional[float] = None
     ) -> None:
         """
         Register an HTTP-based health check.
-        
+
         Args:
             name: Service name
             url: Health check URL
@@ -380,10 +380,10 @@ class HealthMonitor:
     async def check_service_health(self, name: str) -> HealthCheckResult:
         """
         Perform health check for a specific service.
-        
+
         Args:
             name: Service name
-            
+
         Returns:
             Health check result
         """
@@ -434,10 +434,10 @@ class HealthMonitor:
                 error_message=str(e)
             )
 
-    async def check_all_services(self) -> Dict[str, HealthCheckResult]:
+    async def check_all_services(self) -> dict[str, HealthCheckResult]:
         """
         Perform health checks for all registered services.
-        
+
         Returns:
             Dictionary of health check results
         """
@@ -474,7 +474,7 @@ class HealthMonitor:
     def update_service_health(self, result: HealthCheckResult) -> None:
         """
         Update service health based on check result.
-        
+
         Args:
             result: Health check result
         """
@@ -525,7 +525,7 @@ class HealthMonitor:
     def _check_alerts(self, service: ServiceHealth, old_status: HealthStatus) -> None:
         """
         Check if alerts should be generated for service health changes.
-        
+
         Args:
             service: Service health information
             old_status: Previous health status
@@ -618,30 +618,30 @@ class HealthMonitor:
     def get_service_health(self, name: str) -> Optional[ServiceHealth]:
         """
         Get health information for a specific service.
-        
+
         Args:
             name: Service name
-            
+
         Returns:
             Service health information or None if not found
         """
         with self._lock:
             return self.services.get(name)
 
-    def get_all_service_health(self) -> Dict[str, ServiceHealth]:
+    def get_all_service_health(self) -> dict[str, ServiceHealth]:
         """
         Get health information for all services.
-        
+
         Returns:
             Dictionary of service health information
         """
         with self._lock:
             return self.services.copy()
 
-    def get_global_health_status(self) -> Dict[str, Any]:
+    def get_global_health_status(self) -> dict[str, Any]:
         """
         Get global health status across all services.
-        
+
         Returns:
             Global health status information
         """
@@ -694,14 +694,14 @@ class HealthMonitor:
             'last_check': max(service.last_check for service in services) if services else 0.0
         }
 
-    def get_alerts(self, service_name: Optional[str] = None, active_only: bool = True) -> List[HealthAlert]:
+    def get_alerts(self, service_name: Optional[str] = None, active_only: bool = True) -> list[HealthAlert]:
         """
         Get health alerts.
-        
+
         Args:
             service_name: Filter by service name (None for all)
             active_only: Only return active (unresolved) alerts
-            
+
         Returns:
             List of health alerts
         """
@@ -718,10 +718,10 @@ class HealthMonitor:
     def acknowledge_alert(self, alert_id: str) -> bool:
         """
         Acknowledge a health alert.
-        
+
         Args:
             alert_id: Alert ID
-            
+
         Returns:
             True if alert was acknowledged, False if not found
         """
@@ -736,10 +736,10 @@ class HealthMonitor:
     def resolve_alert(self, alert_id: str) -> bool:
         """
         Resolve a health alert.
-        
+
         Args:
             alert_id: Alert ID
-            
+
         Returns:
             True if alert was resolved, False if not found
         """

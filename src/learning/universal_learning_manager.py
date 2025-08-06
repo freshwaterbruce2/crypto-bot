@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 from src.utils.event_bus import Event as BusEvent
 from src.utils.event_bus import EventType as BusEventType
@@ -86,7 +86,7 @@ class ErrorPattern:
     error_regex: str
     component: str
     fix_strategy: str
-    fix_params: Dict[str, Any]
+    fix_params: dict[str, Any]
     success_count: int = 0
     failure_count: int = 0
     last_seen: Optional[float] = None
@@ -112,11 +112,11 @@ class ErrorContext:
     error_type: str
     error_message: str
     stack_trace: str
-    system_state: Dict[str, Any]
+    system_state: dict[str, Any]
     fix_attempted: bool = False
     fix_successful: bool = False
-    fix_details: Optional[Dict[str, Any]] = None
-    learning_insights: List[str] = field(default_factory=list)
+    fix_details: Optional[dict[str, Any]] = None
+    learning_insights: list[str] = field(default_factory=list)
 
 
 class UniversalLearningManager:
@@ -172,7 +172,7 @@ class UniversalLearningManager:
         }
 
         # Error learning components
-        self.error_patterns_db: Dict[str, ErrorPattern] = {}
+        self.error_patterns_db: dict[str, ErrorPattern] = {}
         self.error_history = defaultdict(list)
         self.solution_effectiveness = defaultdict(dict)
         self.context_correlations = defaultdict(dict)
@@ -346,7 +346,7 @@ class UniversalLearningManager:
             self._adjust_rate_limit_strategy(event.data)
 
     def record_event(self, event_type: EventType, component: str, success: bool = True,
-                    details: Optional[Dict[str, Any]] = None, severity: str = "info"):
+                    details: Optional[dict[str, Any]] = None, severity: str = "info"):
         """Record a learning event."""
         event = {
             'timestamp': datetime.now().isoformat(),
@@ -377,7 +377,7 @@ class UniversalLearningManager:
         self._record_kraken_specific_patterns(event_type, component, success, details)
 
     def record_error(self, component: str, error_message: str,
-                    details: Optional[Dict[str, Any]] = None):
+                    details: Optional[dict[str, Any]] = None):
         """Record an error event for learning."""
         self.record_event(
             EventType.ERROR_DETECTED,
@@ -391,7 +391,7 @@ class UniversalLearningManager:
         )
 
     def _record_kraken_specific_patterns(self, event_type: EventType, component: str,
-                                       success: bool, details: Dict[str, Any]):
+                                       success: bool, details: dict[str, Any]):
         """Record Kraken-specific trading patterns for enhanced learning."""
         try:
             # WebSocket v2 specific patterns
@@ -413,7 +413,7 @@ class UniversalLearningManager:
         except Exception as e:
             self.logger.debug(f"[LEARNING] Kraken pattern recording error: {e}")
 
-    def _learn_rate_limit_pattern(self, data: Dict[str, Any]):
+    def _learn_rate_limit_pattern(self, data: dict[str, Any]):
         """Learn from rate limit occurrences"""
         endpoint = data.get('endpoint', 'unknown')
         pattern_name = f"rate_limit_{endpoint}"
@@ -434,7 +434,7 @@ class UniversalLearningManager:
             pattern['suggested_delay'] = min(pattern['suggested_delay'] * 1.5, 10.0)
             self.logger.info(f"[LEARNING] Increasing delay for {endpoint} to {pattern['suggested_delay']}s")
 
-    def _learn_balance_pattern(self, data: Dict[str, Any]):
+    def _learn_balance_pattern(self, data: dict[str, Any]):
         """Learn balance update patterns"""
         asset = data.get('asset')
         balance = data.get('balance')
@@ -460,7 +460,7 @@ class UniversalLearningManager:
             if pattern['updates']:
                 pattern['average_balance'] = sum(u['balance'] for u in pattern['updates']) / len(pattern['updates'])
 
-    async def _create_error_resolution_pattern(self, data: Dict[str, Any]):
+    async def _create_error_resolution_pattern(self, data: dict[str, Any]):
         """Create pattern for automatic error resolution"""
         error_key = data.get('error_key')
         source = data.get('source')
@@ -490,7 +490,7 @@ class UniversalLearningManager:
 
             self.logger.info(f"[LEARNING] Created error resolution pattern for {error_type}")
 
-    def _adjust_rate_limit_strategy(self, data: Dict[str, Any]):
+    def _adjust_rate_limit_strategy(self, data: dict[str, Any]):
         """Adjust strategy for rate limit avoidance"""
         count = data.get('count', 0)
 
@@ -506,7 +506,7 @@ class UniversalLearningManager:
                 'learned_at': datetime.now().isoformat()
             }
 
-    def _learn_websocket_patterns(self, event_type: EventType, success: bool, details: Dict[str, Any]):
+    def _learn_websocket_patterns(self, event_type: EventType, success: bool, details: dict[str, Any]):
         """Learn WebSocket v2 specific patterns for Kraken."""
         pattern_type = 'kraken_websocket_v2'
 
@@ -534,7 +534,7 @@ class UniversalLearningManager:
             reliability_score = pattern_data['success_count'] / total_attempts if total_attempts > 0 else 0
             pattern_data['reliability_score'] = reliability_score
 
-    def _learn_trade_execution_patterns(self, success: bool, details: Dict[str, Any]):
+    def _learn_trade_execution_patterns(self, success: bool, details: dict[str, Any]):
         """Learn trade execution patterns specific to Kraken."""
         pattern_type = 'kraken_execution'
 
@@ -591,7 +591,7 @@ class UniversalLearningManager:
                 pattern_data['successful_executions'] / total_executions if total_executions > 0 else 0
             )
 
-    def _learn_order_patterns(self, event_type: EventType, success: bool, details: Dict[str, Any]):
+    def _learn_order_patterns(self, event_type: EventType, success: bool, details: dict[str, Any]):
         """Learn order-specific patterns for Kraken rate limiting optimization."""
         pattern_type = 'kraken_orders'
         pattern_name = 'rate_limit_patterns'
@@ -621,7 +621,7 @@ class UniversalLearningManager:
         elif success:
             pattern_data['successful_orders'] += 1
 
-    def _learn_balance_patterns(self, success: bool, details: Dict[str, Any]):
+    def _learn_balance_patterns(self, success: bool, details: dict[str, Any]):
         """Learn balance and account management patterns."""
         pattern_type = 'kraken_balance'
 
@@ -662,7 +662,7 @@ class UniversalLearningManager:
             else:
                 pattern_data['failed_balance_checks'] += 1
 
-    def learn_pattern(self, pattern_type: str, pattern_name: str, pattern_data: Dict[str, Any]):
+    def learn_pattern(self, pattern_type: str, pattern_name: str, pattern_data: dict[str, Any]):
         """Learn and store a new pattern."""
         if pattern_type not in self.patterns:
             self.patterns[pattern_type] = {}
@@ -680,7 +680,7 @@ class UniversalLearningManager:
             {'pattern_type': pattern_type, 'pattern_name': pattern_name}
         )
 
-    def get_pattern(self, pattern_type: str, pattern_name: str) -> Optional[Dict[str, Any]]:
+    def get_pattern(self, pattern_type: str, pattern_name: str) -> Optional[dict[str, Any]]:
         """Retrieve a learned pattern."""
         if pattern_type in self.patterns and pattern_name in self.patterns[pattern_type]:
             pattern = self.patterns[pattern_type][pattern_name]
@@ -688,7 +688,7 @@ class UniversalLearningManager:
             return pattern['data']
         return None
 
-    def update_minimum_requirements(self, symbol: str, requirements: Dict[str, float]):
+    def update_minimum_requirements(self, symbol: str, requirements: dict[str, float]):
         """Update minimum trading requirements for a symbol."""
         self.patterns['minimum_requirements'][symbol] = {
             'min_cost': requirements.get('min_cost', 0),
@@ -703,7 +703,7 @@ class UniversalLearningManager:
             {'symbol': symbol, 'requirements': requirements}
         )
 
-    def get_minimum_requirements(self, symbol: str) -> Dict[str, float]:
+    def get_minimum_requirements(self, symbol: str) -> dict[str, float]:
         """Get minimum requirements for a symbol."""
         if symbol in self.patterns['minimum_requirements']:
             return self.patterns['minimum_requirements'][symbol]
@@ -731,7 +731,7 @@ class UniversalLearningManager:
             return pattern.get('success_rate', 0.5)
         return 0.5  # Default neutral success rate
 
-    def get_optimal_order_size_range(self, symbol: str) -> Dict[str, float]:
+    def get_optimal_order_size_range(self, symbol: str) -> dict[str, float]:
         """Get learned optimal order size range for a symbol."""
         pattern_type = 'kraken_execution'
         pattern_name = f"{symbol}_execution_success"
@@ -741,7 +741,7 @@ class UniversalLearningManager:
             return pattern['optimal_order_size_range']
         return {'min': None, 'max': None}
 
-    def get_rate_limit_insights(self) -> Dict[str, Any]:
+    def get_rate_limit_insights(self) -> dict[str, Any]:
         """Get insights about rate limiting patterns."""
         pattern_type = 'kraken_orders'
         pattern_name = 'rate_limit_patterns'
@@ -759,7 +759,7 @@ class UniversalLearningManager:
             }
         return {'rate_limit_frequency': 0, 'successful_orders': 0, 'peak_hours': {}, 'success_ratio': 1.0}
 
-    def get_balance_utilization_insights(self, currency: str) -> Dict[str, Any]:
+    def get_balance_utilization_insights(self, currency: str) -> dict[str, Any]:
         """Get balance utilization insights for a currency."""
         pattern_type = 'kraken_balance'
         pattern_name = f"{currency}_balance_optimization"
@@ -807,7 +807,7 @@ class UniversalLearningManager:
 
         return True
 
-    def get_kraken_optimization_recommendations(self) -> Dict[str, Any]:
+    def get_kraken_optimization_recommendations(self) -> dict[str, Any]:
         """Get optimization recommendations based on learned Kraken patterns."""
         recommendations = {
             'websocket': [],
@@ -868,7 +868,7 @@ class UniversalLearningManager:
         return recommendations
 
     def get_recent_events(self, event_type: Optional[str] = None,
-                         hours: int = 24) -> List[Dict[str, Any]]:
+                         hours: int = 24) -> list[dict[str, Any]]:
         """Get recent events of specified type."""
         cutoff_time = datetime.now() - timedelta(hours=hours)
 
@@ -882,7 +882,7 @@ class UniversalLearningManager:
 
         return recent_events
 
-    def get_performance_metrics(self) -> Dict[str, Any]:
+    def get_performance_metrics(self) -> dict[str, Any]:
         """Get current performance metrics."""
         total_trades = (self.performance_metrics['trades']['successful'] +
                        self.performance_metrics['trades']['failed'])
@@ -1114,7 +1114,7 @@ class UniversalLearningManager:
         for pattern in known_patterns:
             self.error_patterns_db[pattern.pattern_id] = pattern
 
-    async def handle_error(self, component: str, error: Exception, context: Dict[str, Any] = None) -> Tuple[bool, Optional[Dict[str, Any]]]:
+    async def handle_error(self, component: str, error: Exception, context: dict[str, Any] = None) -> tuple[bool, Optional[dict[str, Any]]]:
         """
         Handle an error with learning and automatic resolution.
         Replaces the old resolve_error method from error resolver.
@@ -1185,7 +1185,7 @@ class UniversalLearningManager:
         """Find the best matching error pattern"""
         matching_patterns = []
 
-        for pattern_id, pattern in self.error_patterns_db.items():
+        for _pattern_id, pattern in self.error_patterns_db.items():
             if pattern.error_type == error_context.error_type and pattern.matches(error_context.error_message):
                 matching_patterns.append(pattern)
 
@@ -1195,7 +1195,7 @@ class UniversalLearningManager:
 
         return None
 
-    async def _apply_error_fix(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _apply_error_fix(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Apply a fix strategy based on the error pattern"""
         fix_strategy = self.fix_strategies.get(pattern.fix_strategy)
 
@@ -1233,7 +1233,7 @@ class UniversalLearningManager:
 
     # Error fix strategy implementations
 
-    async def _fix_restart_component(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_restart_component(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Restart a specific component"""
         component_name = pattern.component
 
@@ -1262,7 +1262,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_update_parsing_strategy(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_update_parsing_strategy(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Update message parsing strategy for WebSocket"""
         try:
             if self.bot and hasattr(self.bot, 'websocket_manager'):
@@ -1284,7 +1284,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_unicode_logging(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_unicode_logging(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix Unicode logging errors by clearing Python cache"""
         try:
             # Clear Python bytecode cache
@@ -1294,7 +1294,7 @@ class UniversalLearningManager:
                 # Windows command to clear __pycache__ directories
                 cmd = 'for /d /r . %d in (__pycache__) do @if exist "%d" rd /s /q "%d"'
                 if self.bot:
-                    result = subprocess.run(cmd, shell=True, cwd=str(Path(self.bot.__module__).parent))
+                    subprocess.run(cmd, shell=True, cwd=str(Path(self.bot.__module__).parent))
 
                 self.logger.info("[LEARNING] Cleared Python cache to fix Unicode errors")
 
@@ -1305,7 +1305,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_balance_sync(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_balance_sync(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix balance synchronization issues"""
         try:
             if self.bot and hasattr(self.bot, 'balance_manager'):
@@ -1328,7 +1328,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_api_credentials(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_api_credentials(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix API credential issues"""
         try:
             import os
@@ -1353,7 +1353,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_balance_cache(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_balance_cache(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix balance cache mismatches"""
         try:
             if self.bot and hasattr(self.bot, 'balance_manager'):
@@ -1392,7 +1392,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_minimum_order(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_minimum_order(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix minimum order violations"""
         try:
             safety_buffer = pattern.fix_params.get('min_buffer', 2.5)
@@ -1423,7 +1423,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_rebalance_cooldown(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_rebalance_cooldown(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix emergency rebalance loop issues"""
         try:
             cooldown_hours = pattern.fix_params.get('cooldown_hours', 1.0)
@@ -1460,7 +1460,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_strategy_initialization(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_strategy_initialization(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix strategy initialization errors"""
         try:
             if self.bot and hasattr(self.bot, 'strategy_manager'):
@@ -1487,7 +1487,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_clear_cache(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_clear_cache(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Clear various caches"""
         cleared = []
 
@@ -1516,14 +1516,14 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e), 'cleared': cleared}
 
-    async def _fix_reconnect_websocket(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_reconnect_websocket(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Force WebSocket reconnection"""
         return await self._fix_restart_component(
             ErrorPattern(pattern_id='ws_restart', component='websocket', **pattern.__dict__),
             error_context
         )
 
-    async def _fix_reset_rate_limiter(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_reset_rate_limiter(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Reset rate limiter after waiting"""
         try:
             wait_time = pattern.fix_params.get('wait_time', 60)
@@ -1541,7 +1541,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_reload_config(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_reload_config(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Reload configuration"""
         try:
             from ..config import load_config
@@ -1559,7 +1559,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_adjust_parameters(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_adjust_parameters(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Adjust strategy or component parameters"""
         adjustments = pattern.fix_params.get('adjustments', {})
         adjusted = []
@@ -1583,7 +1583,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_fallback_mode(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_fallback_mode(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Enable fallback mode for component"""
         component = pattern.component
 
@@ -1597,12 +1597,12 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_apply_learned(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_apply_learned(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Apply a previously learned fix"""
         # This would apply more complex learned fixes
         return {'success': False, 'error': 'Complex learned fixes not yet implemented'}
 
-    async def _attempt_generic_fixes(self, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _attempt_generic_fixes(self, error_context: ErrorContext) -> dict[str, Any]:
         """Attempt generic fixes when no pattern matches"""
         fixes_tried = []
 
@@ -1639,7 +1639,7 @@ class UniversalLearningManager:
 
         return {'success': False, 'fixes_tried': fixes_tried}
 
-    async def _learn_from_error_resolution(self, pattern: ErrorPattern, error_context: ErrorContext, fix_result: Dict[str, Any]):
+    async def _learn_from_error_resolution(self, pattern: ErrorPattern, error_context: ErrorContext, fix_result: dict[str, Any]):
         """Learn from the error resolution outcome"""
         if fix_result['success']:
             # Successful fix - strengthen pattern confidence
@@ -1670,7 +1670,7 @@ class UniversalLearningManager:
         # Save learning data
         await self._save_error_learning_data(error_context)
 
-    async def _create_error_pattern_from_fix(self, error_context: ErrorContext, fix_result: Dict[str, Any]) -> Optional[ErrorPattern]:
+    async def _create_error_pattern_from_fix(self, error_context: ErrorContext, fix_result: dict[str, Any]) -> Optional[ErrorPattern]:
         """Create a new error pattern from a successful generic fix"""
         fix_type = fix_result.get('fix_type')
 
@@ -1714,7 +1714,7 @@ class UniversalLearningManager:
 
         return None
 
-    async def _capture_system_state(self) -> Dict[str, Any]:
+    async def _capture_system_state(self) -> dict[str, Any]:
         """Capture current system state for debugging"""
         state = {
             'timestamp': time.time(),
@@ -1753,7 +1753,7 @@ class UniversalLearningManager:
 
         return state
 
-    async def _fix_reconnect_websocket_with_ping(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_reconnect_websocket_with_ping(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Reconnect WebSocket with ping/pong enabled"""
         try:
             if self.bot and hasattr(self.bot, 'websocket_manager'):
@@ -1782,7 +1782,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_nonce_generation(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_nonce_generation(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix nonce generation issues"""
         try:
             if self.bot and hasattr(self.bot, 'exchange'):
@@ -1806,7 +1806,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_balance_aggregation(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_balance_aggregation(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix balance aggregation for USDT variants"""
         try:
             if self.bot and hasattr(self.bot, 'balance_manager'):
@@ -1841,7 +1841,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_decimal_conversion(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_decimal_conversion(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix MoneyDecimal conversion errors"""
         try:
             # This is more of a code fix that should be applied to the source
@@ -1865,7 +1865,7 @@ class UniversalLearningManager:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    async def _fix_connection_pool(self, pattern: ErrorPattern, error_context: ErrorContext) -> Dict[str, Any]:
+    async def _fix_connection_pool(self, pattern: ErrorPattern, error_context: ErrorContext) -> dict[str, Any]:
         """Fix connection pool exhaustion"""
         try:
             if self.bot and hasattr(self.bot, 'exchange'):
@@ -1918,7 +1918,7 @@ class UniversalLearningManager:
         except Exception as e:
             self.logger.error(f"[LEARNING] Failed to save error learning data: {e}")
 
-    async def record_kraken_specific_error(self, error_type: str, error_message: str, component: str, fix_applied: Dict[str, Any] = None):
+    async def record_kraken_specific_error(self, error_type: str, error_message: str, component: str, fix_applied: dict[str, Any] = None):
         """Record Kraken-specific errors for pattern learning"""
         # Create error context
         error_context = ErrorContext(
@@ -1957,7 +1957,7 @@ class UniversalLearningManager:
         # Save learning data
         self._save_learning_data()
 
-    def get_error_resolution_stats(self) -> Dict[str, Any]:
+    def get_error_resolution_stats(self) -> dict[str, Any]:
         """Get statistics about error resolution performance"""
         total_patterns = len(self.error_patterns_db)
         high_confidence_patterns = sum(1 for p in self.error_patterns_db.values() if p.confidence > 0.8)

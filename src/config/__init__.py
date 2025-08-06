@@ -1,13 +1,13 @@
 """
 Kraken-Compliant Intelligent Configuration Manager - Modular Architecture
 
-This package provides a chunked configuration management system optimized for 
+This package provides a chunked configuration management system optimized for
 profitable micro-scalping on Kraken exchange with fee-free trading advantage.
 
 Architecture:
 - core.py: Base configuration loading and validation
 - trading.py: Trading-specific parameters and optimization
-- risk.py: Risk management and circuit breaker settings  
+- risk.py: Risk management and circuit breaker settings
 - kraken.py: Kraken API compliance and rate limiting
 - learning.py: Intelligent learning and adaptation system
 - validator.py: Configuration validation and auto-fixing
@@ -52,7 +52,7 @@ class ConfigManager:
         # Validate complete configuration
         self._validate_config()
 
-    def get_complete_config(self) -> Dict[str, Any]:
+    def get_complete_config(self) -> dict[str, Any]:
         """Get complete configuration from all managers"""
         return {
             'core': self.core_manager.get_all_settings(),
@@ -79,7 +79,7 @@ class ConfigManager:
 
 
 # Convenience function for backward compatibility
-def load_config(config_path: str = "config.json") -> Dict[str, Any]:
+def load_config(config_path: str = "config.json") -> dict[str, Any]:
     """Load complete configuration (backward compatibility)"""
     config_manager = ConfigManager(config_path)
     return config_manager.get_complete_config()

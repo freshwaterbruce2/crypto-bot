@@ -14,7 +14,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +53,10 @@ class StopLossManager:
         self.risk_manager = risk_manager
 
         # Active stop loss orders
-        self.active_stops: Dict[str, StopLossOrder] = {}
+        self.active_stops: dict[str, StopLossOrder] = {}
 
         # Kraken order tracking
-        self.kraken_orders: Dict[str, str] = {}  # symbol -> kraken_order_id
+        self.kraken_orders: dict[str, str] = {}  # symbol -> kraken_order_id
 
         # Configuration
         self.config = {
@@ -99,14 +99,14 @@ class StopLossManager:
                             stop_price: Optional[float] = None, stop_type: StopLossType = StopLossType.FIXED) -> Optional[str]:
         """
         Place a stop loss order on Kraken
-        
+
         Args:
             symbol: Trading pair (e.g., 'BTC/USDT')
             position_size: Size of position to protect
             entry_price: Entry price of position
             stop_price: Stop trigger price (calculated if not provided)
             stop_type: Type of stop loss
-            
+
         Returns:
             Order ID if successful, None otherwise
         """
@@ -268,7 +268,7 @@ class StopLossManager:
                 except Exception as e:
                     logger.error(f"[STOP_LOSS] Error checking trailing stop for {symbol}: {e}")
 
-    async def get_active_stops(self) -> Dict[str, Dict[str, Any]]:
+    async def get_active_stops(self) -> dict[str, dict[str, Any]]:
         """Get all active stop loss orders"""
         async with self._lock:
             return {
@@ -331,7 +331,7 @@ class StopLossManager:
                 logger.error(f"[STOP_LOSS] Error checking stop status for {symbol}: {e}")
 
     def _format_kraken_stop_order(self, symbol: str, amount: float, stop_price: float,
-                                 stop_type: StopLossType) -> Dict[str, Any]:
+                                 stop_type: StopLossType) -> dict[str, Any]:
         """Format stop loss order for Kraken API"""
         order_params = {
             'pair': symbol.replace('/', ''),  # Kraken format: BTCUSDT
@@ -350,7 +350,7 @@ class StopLossManager:
 
         return order_params
 
-    async def _place_kraken_order(self, order_params: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    async def _place_kraken_order(self, order_params: dict[str, Any]) -> Optional[dict[str, Any]]:
         """Place order on Kraken"""
         try:
             if hasattr(self.exchange, 'create_order'):
@@ -390,7 +390,7 @@ class StopLossManager:
             logger.error(f"[STOP_LOSS] Error cancelling order {order_id}: {e}")
             return False
 
-    async def _get_kraken_order_status(self, order_id: str) -> Optional[Dict[str, Any]]:
+    async def _get_kraken_order_status(self, order_id: str) -> Optional[dict[str, Any]]:
         """Get order status from Kraken"""
         try:
             if hasattr(self.exchange, 'fetch_order'):

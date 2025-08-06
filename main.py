@@ -28,7 +28,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -104,7 +104,7 @@ class UnifiedLauncher:
             logging.basicConfig(level=logging.INFO)
             self.logger = logging.getLogger(__name__)
 
-    def check_environment(self) -> Dict[str, Any]:
+    def check_environment(self) -> dict[str, Any]:
         """Check environment and dependencies"""
         env_status = {
             "python_version": sys.version,
@@ -170,7 +170,7 @@ class UnifiedLauncher:
 
         return env_status
 
-    def display_environment_status(self, env_status: Dict[str, Any]):
+    def display_environment_status(self, env_status: dict[str, Any]):
         """Display current environment status"""
         print("\n" + "=" * 50)
         print("ENVIRONMENT STATUS")
@@ -411,7 +411,7 @@ class UnifiedLauncher:
         except Exception as e:
             self.logger.error(f"Status check failed: {e}")
 
-    def interactive_mode_selection(self, env_status: Dict[str, Any]):
+    def interactive_mode_selection(self, env_status: dict[str, Any]):
         """Interactive mode selection"""
         print("\n" + "=" * 50)
         print("SELECT LAUNCH MODE")

@@ -17,7 +17,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 from ..trading.enhanced_trade_executor_with_assistants import EnhancedTradeExecutor
 from ..trading.websocket_native_trading_engine import (
@@ -44,7 +44,7 @@ class WebSocketTradingConfig:
 class WebSocketTradingIntegration:
     """
     Integration manager for WebSocket trading capabilities.
-    
+
     Handles:
     - WebSocket trading engine initialization
     - Integration with existing trade execution pipeline
@@ -55,7 +55,7 @@ class WebSocketTradingIntegration:
     def __init__(self, bot_instance, config: WebSocketTradingConfig = None):
         """
         Initialize WebSocket trading integration.
-        
+
         Args:
             bot_instance: Main bot instance
             config: WebSocket trading configuration
@@ -94,7 +94,7 @@ class WebSocketTradingIntegration:
     async def initialize(self) -> bool:
         """
         Initialize WebSocket trading integration.
-        
+
         Returns:
             True if integration successful
         """
@@ -462,7 +462,7 @@ class WebSocketTradingIntegration:
         except Exception as e:
             logger.error(f"[WEBSOCKET_INTEGRATION] Error during shutdown: {e}")
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get integration status"""
         return {
             'integration_status': self.integration_status.copy(),
@@ -509,11 +509,11 @@ class WebSocketTradingIntegration:
 async def setup_websocket_trading(bot_instance, config: WebSocketTradingConfig = None) -> Optional[WebSocketTradingIntegration]:
     """
     Set up WebSocket trading integration for a bot instance.
-    
+
     Args:
         bot_instance: Main bot instance
         config: WebSocket trading configuration
-        
+
     Returns:
         WebSocketTradingIntegration instance if successful, None otherwise
     """
@@ -546,7 +546,7 @@ def create_websocket_trading_config(
 ) -> WebSocketTradingConfig:
     """
     Create WebSocket trading configuration.
-    
+
     Args:
         enabled: Enable WebSocket trading
         prefer_websocket: Prefer WebSocket over REST
@@ -554,7 +554,7 @@ def create_websocket_trading_config(
         order_timeout_seconds: Order timeout in seconds
         auto_fallback_on_failure: Auto fallback to REST on failures
         performance_monitoring: Enable performance monitoring
-        
+
     Returns:
         WebSocketTradingConfig instance
     """

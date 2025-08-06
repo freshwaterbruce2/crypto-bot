@@ -4,7 +4,7 @@ Implements subscription tiers, API access, and monetization features.
 """
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Optional
 
 import jwt
 from fastapi import HTTPException, status
@@ -37,7 +37,7 @@ class SubscriptionFeatures(BaseModel):
 
 
 # Define subscription tiers and their features
-SUBSCRIPTION_TIERS: Dict[SubscriptionTier, SubscriptionFeatures] = {
+SUBSCRIPTION_TIERS: dict[SubscriptionTier, SubscriptionFeatures] = {
     SubscriptionTier.FREE: SubscriptionFeatures(
         tier=SubscriptionTier.FREE,
         max_api_calls_per_month=1000,
@@ -122,7 +122,7 @@ class RevenueMetrics(BaseModel):
     arr: float  # Annual Recurring Revenue
     churn_rate: float
     ltv: float  # Lifetime Value
-    revenue_by_tier: Dict[SubscriptionTier, float]
+    revenue_by_tier: dict[SubscriptionTier, float]
 
 
 class SubscriptionManager:
@@ -143,7 +143,7 @@ class SubscriptionManager:
         }
         return jwt.encode(payload, self.secret_key, algorithm="HS256")
 
-    def verify_api_key(self, credentials: HTTPAuthorizationCredentials) -> Dict:
+    def verify_api_key(self, credentials: HTTPAuthorizationCredentials) -> dict:
         """Verify API key and return user info."""
         token = credentials.credentials
         try:
@@ -189,7 +189,7 @@ class SubscriptionManager:
 
         return user
 
-    def calculate_revenue_metrics(self, users: List[User]) -> RevenueMetrics:
+    def calculate_revenue_metrics(self, users: list[User]) -> RevenueMetrics:
         """Calculate revenue metrics."""
         total_users = len(users)
         paying_users = len([u for u in users if u.subscription_tier != SubscriptionTier.FREE])
@@ -218,7 +218,7 @@ class SubscriptionManager:
             revenue_by_tier=revenue_by_tier,
         )
 
-    def _calculate_churn_rate(self, users: List[User]) -> float:
+    def _calculate_churn_rate(self, users: list[User]) -> float:
         """Calculate monthly churn rate."""
         # Simplified calculation - in production, track actual cancellations
         return 0.05  # 5% monthly churn as baseline
@@ -245,7 +245,7 @@ class WebhookService:
     def __init__(self):
         self.webhook_subscriptions = {}
 
-    def create_webhook(self, user_id: str, url: str, events: List[str]) -> str:
+    def create_webhook(self, user_id: str, url: str, events: list[str]) -> str:
         """Create webhook subscription."""
         webhook_id = f"webhook_{user_id}_{datetime.utcnow().timestamp()}"
         self.webhook_subscriptions[webhook_id] = {
@@ -257,11 +257,11 @@ class WebhookService:
         }
         return webhook_id
 
-    async def send_webhook(self, event_type: str, data: Dict):
+    async def send_webhook(self, event_type: str, data: dict):
         """Send webhook notifications to subscribers."""
         import aiohttp
 
-        for webhook_id, config in self.webhook_subscriptions.items():
+        for _webhook_id, config in self.webhook_subscriptions.items():
             if event_type in config["events"] and config["active"]:
                 async with aiohttp.ClientSession() as session:
                     try:

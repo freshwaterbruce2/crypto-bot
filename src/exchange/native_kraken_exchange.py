@@ -11,7 +11,7 @@ import logging
 import socket
 import time
 import urllib.parse
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import aiohttp
 
@@ -205,7 +205,7 @@ class NativeKrakenExchange:
 
         logger.info("[KRAKEN] Connection closed and resources cleaned up")
 
-    async def load_markets(self) -> Dict[str, Any]:
+    async def load_markets(self) -> dict[str, Any]:
         """Load all trading pairs from Kraken"""
         if self._markets_loaded:
             return self.markets
@@ -293,7 +293,7 @@ class NativeKrakenExchange:
         }
         return mappings.get(currency, currency)
 
-    async def fetch_ticker(self, symbol: str) -> Dict[str, Any]:
+    async def fetch_ticker(self, symbol: str) -> dict[str, Any]:
         """Fetch current ticker data"""
         try:
             # Ensure markets are loaded
@@ -327,7 +327,7 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Error fetching ticker for {symbol}: {e}")
             return {}
 
-    async def fetch_ohlcv(self, symbol: str, timeframe: str = '1m', limit: int = 100) -> List[List]:
+    async def fetch_ohlcv(self, symbol: str, timeframe: str = '1m', limit: int = 100) -> list[list]:
         """Fetch OHLC data"""
         try:
             # Ensure markets are loaded
@@ -380,7 +380,7 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Error fetching OHLC for {symbol}: {e}")
             return []
 
-    async def fetch_balance_ex(self) -> Dict[str, Any]:
+    async def fetch_balance_ex(self) -> dict[str, Any]:
         """Fetch account balances using BalanceEx endpoint for accurate available balance"""
         try:
             logger.info("[KRAKEN_BALANCE] Fetching extended balance from Kraken BalanceEx API...")
@@ -480,7 +480,7 @@ class NativeKrakenExchange:
             logger.info("[KRAKEN_BALANCE] Falling back to standard Balance endpoint...")
             return await self.fetch_balance()
 
-    async def fetch_balance(self) -> Dict[str, Any]:
+    async def fetch_balance(self) -> dict[str, Any]:
         """Fetch account balances with enhanced USDT detection"""
         try:
             # Try BalanceEx first for more accurate data
@@ -569,7 +569,7 @@ class NativeKrakenExchange:
             return {}
 
     async def create_order(self, symbol: str, side: str, amount: float,
-                          order_type: str = 'market', price: Optional[float] = None) -> Dict[str, Any]:
+                          order_type: str = 'market', price: Optional[float] = None) -> dict[str, Any]:
         """Create a new order with full Kraken compliance"""
         try:
             # Ensure markets are loaded
@@ -674,7 +674,7 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Error canceling order {order_id}: {e}")
             return False
 
-    async def fetch_order(self, order_id: str) -> Dict[str, Any]:
+    async def fetch_order(self, order_id: str) -> dict[str, Any]:
         """Fetch order details"""
         try:
             result = await self._private_request('QueryOrders', {'txid': order_id})
@@ -700,7 +700,7 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Error fetching order {order_id}: {e}")
             return {}
 
-    async def fetch_open_orders(self, symbol: Optional[str] = None) -> List[Dict[str, Any]]:
+    async def fetch_open_orders(self, symbol: Optional[str] = None) -> list[dict[str, Any]]:
         """Fetch all open orders"""
         try:
             result = await self._private_request('OpenOrders')
@@ -757,11 +757,11 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Error getting WebSocket token: {e}")
             return ''
 
-    async def get_websockets_token(self) -> Dict[str, Any]:
+    async def get_websockets_token(self) -> dict[str, Any]:
         """
         Get WebSocket authentication token in the format expected by auth manager.
         Enhanced with better error handling for permission issues.
-        
+
         Returns:
             Dict with 'result' containing 'token' or error information
         """
@@ -867,7 +867,7 @@ class NativeKrakenExchange:
         self.api_counter += 1
         self.last_api_call_time = time.time()
 
-    async def _public_request_raw(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _public_request_raw(self, endpoint: str, params: Optional[dict] = None) -> dict[str, Any]:
         """Raw public API request without retry logic (for use with ResilientRequest)"""
         if not self.session:
             raise KrakenAPIError("Not connected")
@@ -904,7 +904,7 @@ class NativeKrakenExchange:
                 # Let the resilient request handle the retry
             raise
 
-    async def _public_request(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _public_request(self, endpoint: str, params: Optional[dict] = None) -> dict[str, Any]:
         """Make public API request with retry and error handling"""
         try:
             return await self.resilient_request.request(
@@ -920,7 +920,7 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Public request error after retries: {e}")
             raise
 
-    async def _private_request_raw(self, endpoint: str, params: Dict[str, Any], headers: Dict[str, str]) -> Dict[str, Any]:
+    async def _private_request_raw(self, endpoint: str, params: dict[str, Any], headers: dict[str, str]) -> dict[str, Any]:
         """Raw private API request without retry logic (for use with ResilientRequest)"""
         if not self.session:
             raise KrakenAPIError("Not connected")
@@ -1004,7 +1004,7 @@ class NativeKrakenExchange:
 
     # Removed complex nonce persistence - using simple millisecond timestamps instead
 
-    async def _private_request(self, endpoint: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+    async def _private_request(self, endpoint: str, params: Optional[dict] = None) -> dict[str, Any]:
         """Make authenticated private API request with retry and error handling"""
         if not self.api_key or not self.api_secret:
             raise KrakenAPIError("API credentials not set")
@@ -1093,7 +1093,7 @@ class NativeKrakenExchange:
         elif self.consecutive_failures >= 3:
             logger.warning(f"[KRAKEN] Exchange degraded with {self.consecutive_failures} consecutive failures")
 
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """Get detailed health status of the exchange connection"""
         time_since_success = time.time() - self.last_successful_request
 
@@ -1141,11 +1141,11 @@ class NativeKrakenExchange:
     async def _handle_circuit_breaker_error(self, error_message: str, endpoint: str) -> bool:
         """
         Handle circuit breaker errors by parsing wait time and managing delays
-        
+
         Args:
             error_message: Error message from API call
             endpoint: The endpoint that failed
-            
+
         Returns:
             bool: True if circuit breaker error was handled, False otherwise
         """
@@ -1204,14 +1204,14 @@ class NativeKrakenExchange:
 
         return SimpleProtection()
 
-    async def create_market_sell_order(self, symbol: str, amount: float) -> Dict[str, Any]:
+    async def create_market_sell_order(self, symbol: str, amount: float) -> dict[str, Any]:
         """
         Create a market sell order for liquidating assets.
-        
+
         Args:
             symbol: Trading pair (e.g., 'BTC/USDT')
             amount: Amount to sell in base currency
-            
+
         Returns:
             Order result dictionary
         """
@@ -1233,11 +1233,11 @@ class NativeKrakenExchange:
             logger.error(f"[KRAKEN] Failed to create market sell order for {symbol}: {e}")
             raise KrakenAPIError(f"Market sell order failed: {e}")
 
-    async def get_account_balance(self) -> Dict[str, Any]:
+    async def get_account_balance(self) -> dict[str, Any]:
         """
         Get account balance for compatibility with hybrid portfolio manager.
         This wraps the fetch_balance method to provide the expected interface.
-        
+
         Returns:
             Dict with 'result' containing balance data
         """

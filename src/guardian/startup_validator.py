@@ -25,7 +25,7 @@ import time
 import traceback
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -44,14 +44,14 @@ class SystemTest:
         self.kraken_compliant = False
         self.rate_limit_safe = True
 
-    def fail(self, error: str, details: Dict = None):
+    def fail(self, error: str, details: dict = None):
         """Mark test as failed with error details."""
         self.passed = False
         self.error = error
         if details:
             self.details.update(details)
 
-    def succeed(self, details: Dict = None):
+    def succeed(self, details: dict = None):
         """Mark test as passed with optional details."""
         self.passed = True
         self.error = None
@@ -114,7 +114,7 @@ class KrakenStartupValidator:
             ("Assistant Network", self._test_assistants, False),
         ]
 
-    def _load_learned_fixes(self) -> Dict[str, Dict]:
+    def _load_learned_fixes(self) -> dict[str, dict]:
         """Load previously learned fixes for automatic error resolution."""
         fixes_file = Path("trading_data/learned_fixes.json")
 
@@ -159,10 +159,10 @@ class KrakenStartupValidator:
             }
         }
 
-    async def validate_startup(self) -> Tuple[bool, str]:
+    async def validate_startup(self) -> tuple[bool, str]:
         """
         Perform comprehensive Kraken-compliant startup validation.
-        
+
         Returns:
             Tuple of (can_start, message) where can_start indicates if trading can begin
             and message provides details about the decision.
@@ -360,7 +360,7 @@ class KrakenStartupValidator:
             else:
                 test.fail(f"Exchange connection test failed: {error_msg}")
 
-    def _get_symbol_alternatives(self, base: str, quote: str) -> List[str]:
+    def _get_symbol_alternatives(self, base: str, quote: str) -> list[str]:
         """Get alternative symbol formats for Kraken compatibility."""
         alternatives = []
 
@@ -486,7 +486,7 @@ class KrakenStartupValidator:
             else:
                 test.fail(f"Balance manager test failed: {error_msg}")
 
-    def _get_usd_balance(self, balances: Dict[str, float]) -> float:
+    def _get_usd_balance(self, balances: dict[str, float]) -> float:
         """Extract USD balance handling Kraken's asset naming conventions."""
         usd_keys = ['USD', 'ZUSD', 'USDT', 'ZUSDT']
 
@@ -683,7 +683,7 @@ class KrakenStartupValidator:
         except Exception as e:
             test.fail(f"Profit harvester test failed: {str(e)}")
 
-    def _get_another_symbol_alternatives(self, base: str, quote: str) -> List[str]:
+    def _get_another_symbol_alternatives(self, base: str, quote: str) -> list[str]:
         """Get alternative symbol formats for Kraken compatibility."""
         alternatives = []
 
@@ -875,7 +875,7 @@ class KrakenStartupValidator:
             else:
                 test.fail(f"Balance manager test failed: {error_msg}")
 
-    def _get_usd_balance(self, balances: Dict[str, float]) -> float:
+    def _get_usd_balance(self, balances: dict[str, float]) -> float:
         """Extract USD balance handling Kraken's asset naming conventions."""
         usd_keys = ['USD', 'ZUSD', 'USDT', 'ZUSDT']
 
@@ -1403,7 +1403,7 @@ class KrakenStartupValidator:
 
         return all_critical_passed
 
-    def _verify_kraken_compliance(self) -> Dict[str, Any]:
+    def _verify_kraken_compliance(self) -> dict[str, Any]:
         """Verify overall Kraken compliance status."""
         compliance_status = {
             'compliant': True,
@@ -1433,7 +1433,7 @@ class KrakenStartupValidator:
 
         return compliance_status
 
-    def _make_startup_decision(self, all_tests_passed: bool, portfolio_ready: bool, compliance_status: Dict) -> Tuple[bool, str]:
+    def _make_startup_decision(self, all_tests_passed: bool, portfolio_ready: bool, compliance_status: dict) -> tuple[bool, str]:
         """Make the final decision about whether to start trading."""
         # Count test results
         total_tests = len(self.test_results)
@@ -1490,7 +1490,7 @@ class KrakenStartupValidator:
 
         return True, message
 
-    def _generate_error_report(self) -> Dict:
+    def _generate_error_report(self) -> dict:
         """Generate comprehensive error report for debugging."""
         report = {
             'timestamp': datetime.now().isoformat(),
@@ -1530,7 +1530,7 @@ class KrakenStartupValidator:
 
         return report
 
-    def _save_error_report(self, report: Dict):
+    def _save_error_report(self, report: dict):
         """Save error report to file for debugging."""
         try:
             report_file = Path("trading_data/startup_errors.json")

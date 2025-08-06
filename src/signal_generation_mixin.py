@@ -7,7 +7,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class TradingSignal:
     price: float
     timestamp: float
     reason: str
-    metadata: Dict[str, Any] = None
+    metadata: dict[str, Any] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -52,8 +52,8 @@ class SignalGenerationMixin:
 
         logger.debug("[SIGNAL_MIXIN] Signal generation mixin initialized")
 
-    def generate_momentum_signal(self, symbol: str, price_data: List[float],
-                                volume_data: Optional[List[float]] = None) -> Optional[TradingSignal]:
+    def generate_momentum_signal(self, symbol: str, price_data: list[float],
+                                volume_data: Optional[list[float]] = None) -> Optional[TradingSignal]:
         """Generate momentum-based trading signal"""
         try:
             if len(price_data) < 5:
@@ -107,7 +107,7 @@ class SignalGenerationMixin:
             logger.error(f"[SIGNAL_MIXIN] Error generating momentum signal for {symbol}: {e}")
             return None
 
-    def generate_mean_reversion_signal(self, symbol: str, price_data: List[float],
+    def generate_mean_reversion_signal(self, symbol: str, price_data: list[float],
                                      window: int = 20, std_dev: float = 2.0) -> Optional[TradingSignal]:
         """Generate mean reversion signal using Bollinger Bands logic"""
         try:
@@ -169,8 +169,8 @@ class SignalGenerationMixin:
             logger.error(f"[SIGNAL_MIXIN] Error generating mean reversion signal for {symbol}: {e}")
             return None
 
-    def generate_breakout_signal(self, symbol: str, price_data: List[float],
-                               volume_data: Optional[List[float]] = None) -> Optional[TradingSignal]:
+    def generate_breakout_signal(self, symbol: str, price_data: list[float],
+                               volume_data: Optional[list[float]] = None) -> Optional[TradingSignal]:
         """Generate breakout signal based on price action"""
         try:
             if len(price_data) < 10:
@@ -235,7 +235,7 @@ class SignalGenerationMixin:
             logger.error(f"[SIGNAL_MIXIN] Error generating breakout signal for {symbol}: {e}")
             return None
 
-    def generate_micro_scalping_signal(self, symbol: str, tick_data: List[float]) -> Optional[TradingSignal]:
+    def generate_micro_scalping_signal(self, symbol: str, tick_data: list[float]) -> Optional[TradingSignal]:
         """Generate micro-scalping signal for very short-term trades"""
         try:
             if len(tick_data) < 3:
@@ -312,7 +312,7 @@ class SignalGenerationMixin:
 
         logger.debug(f"[SIGNAL_MIXIN] Recorded {signal.signal_type.value} signal for {signal.symbol} (confidence: {signal.confidence:.3f})")
 
-    def get_signal_history(self, symbol: Optional[str] = None, limit: int = 100) -> List[TradingSignal]:
+    def get_signal_history(self, symbol: Optional[str] = None, limit: int = 100) -> list[TradingSignal]:
         """Get signal history, optionally filtered by symbol"""
         if symbol:
             filtered_signals = [s for s in self.signal_history if s.symbol == symbol]
@@ -321,7 +321,7 @@ class SignalGenerationMixin:
 
         return filtered_signals[-limit:] if limit else filtered_signals
 
-    def get_signal_stats(self) -> Dict[str, Any]:
+    def get_signal_stats(self) -> dict[str, Any]:
         """Get signal generation statistics"""
         if not self.signal_history:
             return {'total_signals': 0}

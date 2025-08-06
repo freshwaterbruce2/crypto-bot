@@ -13,7 +13,7 @@ existing bot architectures or for testing the pipeline functionality.
 import asyncio
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
 
 # Import pipeline components
 from src.exchange.unified_websocket_data_pipeline import (
@@ -56,7 +56,7 @@ class MockBalanceManager:
         self.circuit_breaker_active = False
         self.last_update = time.time()
 
-    async def process_websocket_update(self, balance_data: Dict[str, Any]):
+    async def process_websocket_update(self, balance_data: dict[str, Any]):
         """Process WebSocket balance update"""
         logger.info(f"[MOCK_BALANCE] Received update for {len(balance_data.get('balances', {}))} assets")
         for asset, balance_info in balance_data.get('balances', {}).items():
@@ -72,18 +72,18 @@ class MockTradingEngine:
         self.orderbook_updates = 0
         self.execution_updates = 0
 
-    async def update_ticker(self, symbol: str, ticker_data: Dict[str, Any]):
+    async def update_ticker(self, symbol: str, ticker_data: dict[str, Any]):
         """Process ticker update"""
         self.ticker_updates += 1
         logger.info(f"[MOCK_TRADING] Ticker update for {symbol}: ${ticker_data.get('last', 0):.6f}")
 
-    async def update_orderbook(self, symbol: str, orderbook_data: Dict[str, Any]):
+    async def update_orderbook(self, symbol: str, orderbook_data: dict[str, Any]):
         """Process orderbook update"""
         self.orderbook_updates += 1
         spread = orderbook_data.get('spread', 0)
         logger.info(f"[MOCK_TRADING] Orderbook update for {symbol}: {spread:.4%} spread")
 
-    async def process_execution(self, execution_data: Dict[str, Any]):
+    async def process_execution(self, execution_data: dict[str, Any]):
         """Process execution update"""
         self.execution_updates += 1
         logger.info(f"[MOCK_TRADING] Execution update: {execution_data}")
@@ -242,11 +242,11 @@ async def example_custom_component_integration():
             self.ticker_count = 0
             self.balance_count = 0
 
-        async def on_ticker_update(self, data: Dict[str, Any]):
+        async def on_ticker_update(self, data: dict[str, Any]):
             self.ticker_count += 1
             logger.info(f"[CUSTOM] Ticker analysis #{self.ticker_count}")
 
-        async def on_balances_update(self, data: Dict[str, Any]):
+        async def on_balances_update(self, data: dict[str, Any]):
             self.balance_count += 1
             logger.info(f"[CUSTOM] Balance analysis #{self.balance_count}")
 

@@ -6,7 +6,7 @@ Loads and manages asset-specific configuration and trading parameters
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class AssetConfigLoader:
             logger.error(f"[ASSET_CONFIG] Error loading configurations: {e}")
             return False
 
-    async def get_asset_config(self, symbol: str) -> Dict[str, Any]:
+    async def get_asset_config(self, symbol: str) -> dict[str, Any]:
         """Get configuration for specific asset"""
         try:
             # Check cache first
@@ -108,7 +108,7 @@ class AssetConfigLoader:
             logger.error(f"[ASSET_CONFIG] Error getting config for {symbol}: {e}")
             return self.default_asset_config.copy()
 
-    async def get_enabled_assets(self) -> List[str]:
+    async def get_enabled_assets(self) -> list[str]:
         """Get list of enabled assets"""
         try:
             enabled = []
@@ -123,7 +123,7 @@ class AssetConfigLoader:
             logger.error(f"[ASSET_CONFIG] Error getting enabled assets: {e}")
             return []
 
-    async def update_asset_config(self, asset: str, config_updates: Dict[str, Any]) -> bool:
+    async def update_asset_config(self, asset: str, config_updates: dict[str, Any]) -> bool:
         """Update configuration for specific asset"""
         try:
             if asset not in self.asset_configs:
@@ -145,7 +145,7 @@ class AssetConfigLoader:
             logger.error(f"[ASSET_CONFIG] Error updating config for {asset}: {e}")
             return False
 
-    async def create_default_configs(self, symbols: List[str]) -> bool:
+    async def create_default_configs(self, symbols: list[str]) -> bool:
         """Create default configurations for list of symbols"""
         try:
             created_count = 0
@@ -248,7 +248,7 @@ class AssetConfigLoader:
         except Exception as e:
             logger.error(f"[ASSET_CONFIG] Error saving config for {asset}: {e}")
 
-    def _merge_configs(self, base_config: Dict[str, Any], override_config: Dict[str, Any]) -> Dict[str, Any]:
+    def _merge_configs(self, base_config: dict[str, Any], override_config: dict[str, Any]) -> dict[str, Any]:
         """Merge two configuration dictionaries"""
         merged = base_config.copy()
 
@@ -260,7 +260,7 @@ class AssetConfigLoader:
 
         return merged
 
-    def _adjust_config_for_asset(self, asset: str, config: Dict[str, Any]) -> Dict[str, Any]:
+    def _adjust_config_for_asset(self, asset: str, config: dict[str, Any]) -> dict[str, Any]:
         """Adjust configuration based on asset characteristics"""
         try:
             # Asset-specific adjustments
@@ -303,7 +303,7 @@ class AssetConfigLoader:
         for symbol in symbols_to_clear:
             del self.config_cache[symbol]
 
-    def get_loader_stats(self) -> Dict[str, Any]:
+    def get_loader_stats(self) -> dict[str, Any]:
         """Get asset config loader statistics"""
         return {
             'total_configs': len(self.asset_configs),
@@ -326,7 +326,7 @@ def get_asset_config_loader() -> AssetConfigLoader:
     return _global_asset_loader
 
 
-async def load_asset_config(symbol: str) -> Dict[str, Any]:
+async def load_asset_config(symbol: str) -> dict[str, Any]:
     """Global function to load asset config"""
     loader = get_asset_config_loader()
     return await loader.get_asset_config(symbol)
