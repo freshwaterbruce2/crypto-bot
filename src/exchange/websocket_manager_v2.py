@@ -90,6 +90,10 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2] Disconnect failed: {e}")
             return False
+    
+    async def close(self):
+        """Alias for disconnect - for compatibility"""
+        return await self.disconnect()
 
     async def subscribe_to_balance_updates(self, callback: Callable = None):
         """Subscribe to balance updates using direct implementation"""

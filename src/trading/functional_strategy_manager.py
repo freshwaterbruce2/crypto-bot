@@ -885,9 +885,9 @@ class FunctionalStrategyManager:
             }
 
             # Get portfolio positions
-            if self.bot and hasattr(self.bot, 'portfolio_tracker'):
-                positions = self.bot.portfolio_tracker.get_open_positions()
-                context['total_positions'] = len(positions)
+            if self.bot and hasattr(self.bot, 'portfolio_manager'):
+                positions = await self.bot.portfolio_manager.get_open_positions()
+                context['total_positions'] = len(positions) if positions else 0
 
                 for pos in positions:
                     symbol = pos.get('symbol')
@@ -902,10 +902,11 @@ class FunctionalStrategyManager:
             # Get available balance
             if self.bot and hasattr(self.bot, 'balance_manager'):
                 balance = await self.bot.balance_manager.get_balance_for_asset('USDT')
-                context['available_usdt'] = balance
+                # Convert to float to avoid Decimal/float mixing
+                context['available_usdt'] = float(balance) if balance is not None else 0.0
 
                 # Calculate deployment percentage
-                total_capital = context['total_value_usdt'] + balance
+                total_capital = context['total_value_usdt'] + context['available_usdt']
                 if total_capital > 0:
                     context['deployment_pct'] = (context['total_value_usdt'] / total_capital) * 100
 
