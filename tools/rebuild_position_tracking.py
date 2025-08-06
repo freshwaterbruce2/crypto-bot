@@ -17,30 +17,29 @@ import asyncio
 import json
 import os
 import sys
-from pathlib import Path
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
+from pathlib import Path
+from typing import Any, Dict, List
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from src.portfolio_tracker import PortfolioTracker
-from src.bot import KrakenTradingBot
-from src.config import load_config
 import ccxt
+
+from src.config import load_config
 
 
 async def get_recent_trades(exchange, hours=24) -> List[Dict[str, Any]]:
     """Fetch recent trades from exchange."""
     print(f"\n[SCAN] Fetching trades from last {hours} hours...")
-    
+
     try:
         # Calculate time range
         since = int((datetime.now() - timedelta(hours=hours)).timestamp() * 1000)
-        
+
         # Fetch all trades
         all_trades = []
-        for symbol in ['BTC/USD', 'BTC/USDT', 'ETH/USD', 'ETH/USDT', 
+        for symbol in ['BTC/USD', 'BTC/USDT', 'ETH/USD', 'ETH/USDT',
                       'ADA/USD', 'ADA/USDT', 'SOL/USD', 'SOL/USDT',
                       'DOGE/USD', 'DOGE/USDT', 'SHIB/USD', 'SHIB/USDT']:
             try:
@@ -49,7 +48,7 @@ async def get_recent_trades(exchange, hours=24) -> List[Dict[str, Any]]:
                 print(f"  - {symbol}: Found {len(trades)} trades")
             except Exception as e:
                 print(f"  - {symbol}: Error fetching trades: {e}")
-        
+
         return all_trades
     except Exception as e:
         print(f"[ERROR] Failed to fetch trades: {e}")
@@ -59,17 +58,17 @@ async def get_recent_trades(exchange, hours=24) -> List[Dict[str, Any]]:
 async def get_current_balances(exchange) -> Dict[str, float]:
     """Get current non-zero balances."""
     print("\n[SCAN] Fetching current balances...")
-    
+
     try:
         balance = await exchange.fetch_balance()
-        
+
         # Filter for non-zero balances
         holdings = {}
         for currency, amount in balance['total'].items():
             if amount > 0 and currency not in ['USD', 'USDT']:
                 holdings[currency] = amount
                 print(f"  - {currency}: {amount:.8f}")
-        
+
         return holdings
     except Exception as e:
         print(f"[ERROR] Failed to fetch balances: {e}")
@@ -79,9 +78,9 @@ async def get_current_balances(exchange) -> Dict[str, float]:
 async def match_trades_to_holdings(trades: List[Dict], holdings: Dict[str, float]) -> Dict[str, Dict]:
     """Match buy trades to current holdings to determine entry prices."""
     print("\n[MATCH] Analyzing trades to determine entry prices...")
-    
+
     positions = {}
-    
+
     # Group trades by base currency
     trades_by_currency = {}
     for trade in trades:
@@ -90,28 +89,28 @@ async def match_trades_to_holdings(trades: List[Dict], holdings: Dict[str, float
             if base not in trades_by_currency:
                 trades_by_currency[base] = []
             trades_by_currency[base].append(trade)
-    
+
     # For each holding, find matching buy trades
     for currency, amount in holdings.items():
         if currency in trades_by_currency:
-            currency_trades = sorted(trades_by_currency[currency], 
-                                   key=lambda x: x['timestamp'], 
+            currency_trades = sorted(trades_by_currency[currency],
+                                   key=lambda x: x['timestamp'],
                                    reverse=True)
-            
+
             # Calculate weighted average entry price
             total_amount = 0
             total_cost = 0
-            
+
             for trade in currency_trades:
                 if total_amount < amount:
                     trade_amount = min(trade['amount'], amount - total_amount)
                     total_amount += trade_amount
                     total_cost += trade_amount * trade['price']
-                    
+
                     # Check if we've matched enough
                     if total_amount >= amount * 0.95:  # 95% match is good enough
                         break
-            
+
             if total_amount > 0:
                 avg_price = total_cost / total_amount
                 positions[currency] = {
@@ -124,7 +123,7 @@ async def match_trades_to_holdings(trades: List[Dict], holdings: Dict[str, float
                 print(f"  - {currency}: Entry price ${avg_price:.4f} "
                       f"(matched {total_amount:.8f}/{amount:.8f} = "
                       f"{positions[currency]['match_percentage']:.1f}%)")
-    
+
     return positions
 
 
@@ -133,7 +132,7 @@ async def rebuild_position_tracking():
     print("=" * 60)
     print("POSITION TRACKING REBUILDER")
     print("=" * 60)
-    
+
     # Load config and create exchange
     config = load_config()
     exchange = ccxt.kraken({
@@ -141,27 +140,27 @@ async def rebuild_position_tracking():
         'secret': os.getenv('KRAKEN_API_SECRET'),
         'enableRateLimit': True
     })
-    
+
     # Make it async
     exchange = ccxt.async_support.kraken({
         'apiKey': os.getenv('KRAKEN_API_KEY'),
         'secret': os.getenv('KRAKEN_API_SECRET'),
         'enableRateLimit': True
     })
-    
+
     try:
         # 1. Get recent trades
         trades = await get_recent_trades(exchange, hours=48)  # Look back 48 hours
         print(f"\n[TOTAL] Found {len(trades)} total trades")
-        
+
         # 2. Get current balances
         holdings = await get_current_balances(exchange)
         print(f"\n[TOTAL] Found {len(holdings)} non-zero holdings")
-        
+
         # 3. Match trades to holdings
         positions = await match_trades_to_holdings(trades, holdings)
         print(f"\n[TOTAL] Matched {len(positions)} positions with entry prices")
-        
+
         # 4. Get current prices
         print("\n[PRICE] Fetching current prices...")
         for currency, position in positions.items():
@@ -184,11 +183,11 @@ async def rebuild_position_tracking():
                         continue
             except Exception as e:
                 print(f"  - {currency}: Error fetching price: {e}")
-        
+
         # 5. Save to portfolio state file
         portfolio_file = Path("D:/trading_bot_data/trading_data/portfolio_state.json")
         portfolio_file.parent.mkdir(parents=True, exist_ok=True)
-        
+
         # Convert positions to portfolio format
         portfolio_data = {}
         for currency, position in positions.items():
@@ -206,31 +205,31 @@ async def rebuild_position_tracking():
                         'profit_percentage': position['profit_percentage'],
                         'last_updated': datetime.now().isoformat()
                     }
-        
+
         # Save portfolio state
         with open(portfolio_file, 'w') as f:
             json.dump(portfolio_data, f, indent=2)
         print(f"\n[SAVE] Portfolio state saved to {portfolio_file}")
-        
+
         # 6. Summary
         print("\n" + "=" * 60)
         print("POSITION TRACKING REBUILT SUCCESSFULLY")
         print("=" * 60)
         print(f"\nTotal Positions: {len(portfolio_data)}")
-        
+
         total_value = sum(p.get('current_value', 0) for p in positions.values())
         total_pl = sum(p.get('profit_loss', 0) for p in positions.values())
-        
+
         print(f"Total Value: ${total_value:.2f}")
         print(f"Total P/L: ${total_pl:.2f}")
-        
+
         if len(positions) > 0:
             print("\nPositions Ready for Profit Taking:")
             for currency, position in positions.items():
                 if position.get('profit_percentage', 0) > 0.01:  # Any profit
                     print(f"  - {currency}: {position['profit_percentage']:.2f}% profit "
                           f"(${position.get('profit_loss', 0):.2f})")
-        
+
     finally:
         await exchange.close()
 

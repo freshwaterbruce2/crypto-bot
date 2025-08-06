@@ -6,14 +6,13 @@ Real-time monitoring and optimization of sell logic performance.
 Tracks execution speed, profit capture efficiency, and decision accuracy.
 """
 
-import asyncio
 import logging
+import statistics
 import time
-from typing import Dict, Any, List, Optional
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from collections import deque
-import statistics
+from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
@@ -55,21 +54,21 @@ class SellPerformanceMonitor:
     Real-time performance monitoring for sell logic optimization.
     Tracks speed, accuracy, and profitability of sell decisions.
     """
-    
+
     def __init__(self, max_history: int = 1000):
         """Initialize performance monitor"""
         self.max_history = max_history
         self.execution_history = deque(maxlen=max_history)
-        
+
         # Real-time metrics
         self.active_decisions = {}  # Track ongoing decisions
         self.performance_alerts = deque(maxlen=100)
-        
+
         # Speed benchmarks (milliseconds)
         self.target_decision_time_ms = 50  # 50ms decision target
         self.target_execution_time_ms = 500  # 500ms execution target
         self.critical_decision_time_ms = 200  # 200ms critical threshold
-        
+
         # Profit tracking
         self.hourly_profits = deque(maxlen=24)  # 24 hours of data
         self.daily_targets = {
@@ -77,9 +76,9 @@ class SellPerformanceMonitor:
             'min_success_rate': 0.85,  # 85% success rate
             'max_avg_decision_time': 100  # 100ms average decision time
         }
-        
+
         logger.info("[SELL_MONITOR] Performance monitor initialized")
-    
+
     def start_decision_timing(self, symbol: str, decision_id: str) -> None:
         """Start timing a sell decision"""
         self.active_decisions[decision_id] = {
@@ -87,16 +86,16 @@ class SellPerformanceMonitor:
             'start_time': time.time(),
             'decision_started': True
         }
-    
+
     def record_decision_complete(self, decision_id: str, sell_signal: Dict[str, Any]) -> None:
         """Record completion of sell decision"""
         if decision_id not in self.active_decisions:
             logger.warning(f"[SELL_MONITOR] Unknown decision ID: {decision_id}")
             return
-        
+
         decision_data = self.active_decisions[decision_id]
         decision_time_ms = (time.time() - decision_data['start_time']) * 1000
-        
+
         # Update decision data
         decision_data.update({
             'decision_time_ms': decision_time_ms,
@@ -104,27 +103,27 @@ class SellPerformanceMonitor:
             'sell_signal': sell_signal,
             'execution_start_time': time.time()
         })
-        
+
         # Performance alert for slow decisions
         if decision_time_ms > self.critical_decision_time_ms:
             self._add_performance_alert(
                 f"SLOW_DECISION: {decision_data['symbol']} took {decision_time_ms:.1f}ms",
                 'warning'
             )
-    
+
     def record_execution_complete(self, decision_id: str, execution_result: Dict[str, Any]) -> None:
         """Record completion of sell execution"""
         if decision_id not in self.active_decisions:
             logger.warning(f"[SELL_MONITOR] Unknown decision ID for execution: {decision_id}")
             return
-        
+
         decision_data = self.active_decisions[decision_id]
         if 'execution_start_time' not in decision_data:
             logger.warning(f"[SELL_MONITOR] No execution start time for {decision_id}")
             return
-        
+
         execution_time_ms = (time.time() - decision_data['execution_start_time']) * 1000
-        
+
         # Create execution metrics
         sell_signal = decision_data.get('sell_signal', {})
         metrics = SellExecutionMetrics(
@@ -141,50 +140,50 @@ class SellPerformanceMonitor:
             slippage_pct=execution_result.get('slippage_pct', 0),
             market_impact_pct=execution_result.get('market_impact_pct', 0)
         )
-        
+
         # Add to history
         self.execution_history.append(metrics)
-        
+
         # Performance alerts
         if execution_time_ms > self.target_execution_time_ms:
             self._add_performance_alert(
                 f"SLOW_EXECUTION: {decision_data['symbol']} took {execution_time_ms:.1f}ms",
                 'warning'
             )
-        
+
         if metrics.success and metrics.profit_pct > 0:
             self._add_performance_alert(
                 f"PROFIT_CAPTURED: {decision_data['symbol']} +{metrics.profit_pct:.3f}% (${metrics.profit_usd:.2f})",
                 'success'
             )
-        
+
         # Clean up
         del self.active_decisions[decision_id]
-        
+
         logger.info(f"[SELL_MONITOR] Recorded: {decision_data['symbol']} - "
                    f"Decision: {decision_data.get('decision_time_ms', 0):.1f}ms, "
                    f"Execution: {execution_time_ms:.1f}ms, "
                    f"Profit: {metrics.profit_pct:.3f}%")
-    
+
     def get_performance_stats(self, time_window_hours: int = 1) -> SellPerformanceStats:
         """Get performance statistics for specified time window"""
         cutoff_time = datetime.now() - timedelta(hours=time_window_hours)
         recent_executions = [
-            m for m in self.execution_history 
+            m for m in self.execution_history
             if m.timestamp >= cutoff_time
         ]
-        
+
         if not recent_executions:
             return SellPerformanceStats()
-        
+
         # Calculate statistics
         total_sells = len(recent_executions)
         successful_sells = sum(1 for m in recent_executions if m.success)
-        
+
         decision_times = [m.decision_time_ms for m in recent_executions if m.decision_time_ms > 0]
         execution_times = [m.execution_time_ms for m in recent_executions if m.execution_time_ms > 0]
         profits = [m.profit_pct for m in recent_executions if m.success]
-        
+
         stats = SellPerformanceStats(
             total_sells=total_sells,
             successful_sells=successful_sells,
@@ -195,7 +194,7 @@ class SellPerformanceMonitor:
             total_profit_usd=sum(m.profit_usd for m in recent_executions if m.success),
             avg_confidence=statistics.mean(m.confidence for m in recent_executions)
         )
-        
+
         # Speed percentiles
         if decision_times:
             stats.speed_percentiles = {
@@ -203,7 +202,7 @@ class SellPerformanceMonitor:
                 'p95_decision_ms': statistics.quantiles(decision_times, n=20)[18] if len(decision_times) > 10 else max(decision_times),
                 'p99_decision_ms': statistics.quantiles(decision_times, n=100)[98] if len(decision_times) > 50 else max(decision_times)
             }
-        
+
         # Profit distribution
         profit_ranges = {
             'ultra_micro': (0.1, 0.3),
@@ -212,41 +211,41 @@ class SellPerformanceMonitor:
             'medium': (1.0, 2.0),
             'large': (2.0, float('inf'))
         }
-        
+
         stats.profit_distribution = {}
         for range_name, (min_pct, max_pct) in profit_ranges.items():
             count = sum(1 for p in profits if min_pct <= p < max_pct)
             stats.profit_distribution[range_name] = count
-        
+
         return stats
-    
+
     def get_real_time_metrics(self) -> Dict[str, Any]:
         """Get real-time performance metrics"""
         stats_1h = self.get_performance_stats(1)
         stats_24h = self.get_performance_stats(24)
-        
+
         # Performance grades
         decision_speed_grade = self._grade_performance(
-            stats_1h.avg_decision_time_ms, 
-            self.target_decision_time_ms, 
+            stats_1h.avg_decision_time_ms,
+            self.target_decision_time_ms,
             self.critical_decision_time_ms,
             lower_is_better=True
         )
-        
+
         success_rate_grade = self._grade_performance(
             stats_1h.success_rate,
             self.daily_targets['min_success_rate'],
             0.7,
             lower_is_better=False
         )
-        
+
         profit_rate_grade = self._grade_performance(
             stats_1h.avg_profit_pct,
             self.daily_targets['min_profit_rate'],
             0.2,
             lower_is_better=False
         )
-        
+
         return {
             'timestamp': datetime.now().isoformat(),
             'active_decisions': len(self.active_decisions),
@@ -273,12 +272,12 @@ class SellPerformanceMonitor:
             'speed_percentiles': stats_1h.speed_percentiles,
             'profit_distribution': stats_1h.profit_distribution
         }
-    
+
     def get_optimization_recommendations(self) -> List[Dict[str, Any]]:
         """Get optimization recommendations based on performance analysis"""
         recommendations = []
         stats = self.get_performance_stats(4)  # 4-hour window
-        
+
         # Decision speed optimization
         if stats.avg_decision_time_ms > self.target_decision_time_ms:
             recommendations.append({
@@ -288,7 +287,7 @@ class SellPerformanceMonitor:
                 'recommendation': 'Enable batch processing and parallel validation in sell logic',
                 'implementation': 'Set batch_processing=True and parallel_validation=True in config'
             })
-        
+
         # Success rate optimization
         if stats.success_rate < self.daily_targets['min_success_rate']:
             recommendations.append({
@@ -298,7 +297,7 @@ class SellPerformanceMonitor:
                 'recommendation': 'Adjust confidence thresholds and market order usage',
                 'implementation': 'Lower min_sell_confidence and use market orders for urgent sells'
             })
-        
+
         # Profit optimization
         if stats.avg_profit_pct < self.daily_targets['min_profit_rate']:
             recommendations.append({
@@ -308,12 +307,12 @@ class SellPerformanceMonitor:
                 'recommendation': 'Optimize profit taking levels for micro-profits',
                 'implementation': 'Adjust take_profit_levels to [0.001, 0.002, 0.003, 0.005]'
             })
-        
+
         # Ultra-fast execution opportunities
-        fast_profits = sum(1 for m in self.execution_history 
+        fast_profits = sum(1 for m in self.execution_history
                           if m.decision_time_ms + m.execution_time_ms < 200 and m.profit_pct > 0.1)
         total_recent = len([m for m in self.execution_history if m.timestamp >= datetime.now() - timedelta(hours=2)])
-        
+
         if fast_profits / max(total_recent, 1) > 0.3:  # 30% are fast profitable
             recommendations.append({
                 'type': 'ultra_fast_mode',
@@ -322,9 +321,9 @@ class SellPerformanceMonitor:
                 'recommendation': 'Enable ultra-fast mode for micro-profit captures',
                 'implementation': 'Reduce max_hold_time_minutes to 2 and enable rapid_fire_mode'
             })
-        
+
         return recommendations
-    
+
     def _add_performance_alert(self, message: str, level: str) -> None:
         """Add performance alert"""
         alert = {
@@ -333,13 +332,13 @@ class SellPerformanceMonitor:
             'message': message
         }
         self.performance_alerts.append(alert)
-        
+
         if level in ['warning', 'error']:
             logger.warning(f"[SELL_MONITOR] {level.upper()}: {message}")
         else:
             logger.info(f"[SELL_MONITOR] {level.upper()}: {message}")
-    
-    def _grade_performance(self, value: float, target: float, critical: float, 
+
+    def _grade_performance(self, value: float, target: float, critical: float,
                           lower_is_better: bool = True) -> str:
         """Grade performance metric"""
         if lower_is_better:
@@ -360,7 +359,7 @@ class SellPerformanceMonitor:
                 return 'C'
             else:
                 return 'F'
-    
+
     def export_performance_data(self, hours: int = 24) -> Dict[str, Any]:
         """Export performance data for analysis"""
         cutoff_time = datetime.now() - timedelta(hours=hours)
@@ -378,10 +377,10 @@ class SellPerformanceMonitor:
                 'success': m.success,
                 'slippage_pct': m.slippage_pct
             }
-            for m in self.execution_history 
+            for m in self.execution_history
             if m.timestamp >= cutoff_time
         ]
-        
+
         return {
             'export_timestamp': datetime.now().isoformat(),
             'time_window_hours': hours,

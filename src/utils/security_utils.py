@@ -6,11 +6,11 @@ Provides security utilities for safe error handling, input validation,
 and prevention of information disclosure vulnerabilities.
 """
 
-import re
-import logging
-from typing import Any, Dict, List, Optional, Union
-import traceback
 import hashlib
+import logging
+import re
+import traceback
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class InformationDisclosureError(SecurityError):
 
 class SecurityValidator:
     """Security validation utilities"""
-    
+
     # Patterns that might indicate sensitive information
     SENSITIVE_PATTERNS = [
         r'api[_-]?key\s*[:=]\s*["\']?[a-zA-Z0-9+/=]{20,}["\']?',
@@ -40,7 +40,7 @@ class SecurityValidator:
         r'authorization\s*:\s*["\']?bearer\s+[a-zA-Z0-9_\-\.]{20,}["\']?',
         r'x-api-key\s*:\s*["\']?[a-zA-Z0-9+/=]{20,}["\']?'
     ]
-    
+
     # File paths that might contain sensitive data
     SENSITIVE_PATHS = [
         r'.*\.env.*',
@@ -51,7 +51,7 @@ class SecurityValidator:
         r'.*\.pem$',
         r'.*\.p12$'
     ]
-    
+
     @classmethod
     def contains_sensitive_data(cls, text: str) -> bool:
         """
@@ -65,16 +65,16 @@ class SecurityValidator:
         """
         if not isinstance(text, str):
             text = str(text)
-        
+
         text_lower = text.lower()
-        
+
         # Check for sensitive patterns
         for pattern in cls.SENSITIVE_PATTERNS:
             if re.search(pattern, text_lower, re.IGNORECASE):
                 return True
-        
+
         return False
-    
+
     @classmethod
     def sanitize_for_logging(cls, text: str) -> str:
         """
@@ -88,20 +88,20 @@ class SecurityValidator:
         """
         if not isinstance(text, str):
             text = str(text)
-        
+
         sanitized = text
-        
+
         # Replace sensitive patterns with masked versions
         for pattern in cls.SENSITIVE_PATTERNS:
             sanitized = re.sub(
-                pattern, 
-                '[REDACTED_SENSITIVE_DATA]', 
-                sanitized, 
+                pattern,
+                '[REDACTED_SENSITIVE_DATA]',
+                sanitized,
                 flags=re.IGNORECASE
             )
-        
+
         return sanitized
-    
+
     @classmethod
     def validate_input_safe(cls, user_input: str, max_length: int = 1000) -> bool:
         """
@@ -116,11 +116,11 @@ class SecurityValidator:
         """
         if not isinstance(user_input, str):
             return False
-        
+
         # Check length
         if len(user_input) > max_length:
             return False
-        
+
         # Check for dangerous patterns
         dangerous_patterns = [
             r'<script[^>]*>.*?</script>',  # XSS
@@ -133,18 +133,18 @@ class SecurityValidator:
             r'\.\./.*',                  # Path traversal
             r'\.\.\\.*',                 # Path traversal (Windows)
         ]
-        
+
         user_input_lower = user_input.lower()
         for pattern in dangerous_patterns:
             if re.search(pattern, user_input_lower, re.IGNORECASE):
                 return False
-        
+
         return True
 
 
 class SecureErrorHandler:
     """Secure error handling utilities"""
-    
+
     def __init__(self, log_sensitive_details: bool = False):
         """
         Initialize secure error handler
@@ -153,7 +153,7 @@ class SecureErrorHandler:
             log_sensitive_details: Whether to log sensitive details (dev only)
         """
         self.log_sensitive_details = log_sensitive_details
-        
+
     def safe_error_message(self, error: Exception, context: str = "") -> str:
         """
         Generate safe error message that doesn't leak sensitive information
@@ -168,15 +168,15 @@ class SecureErrorHandler:
         # Create a generic error message
         error_type = type(error).__name__
         safe_message = f"An error occurred during {context}" if context else "An error occurred"
-        
+
         # Create error hash for tracking
         error_hash = hashlib.sha256(str(error).encode()).hexdigest()[:8]
-        
+
         return f"{safe_message} (Error ID: {error_hash})"
-    
+
     def log_error_securely(
-        self, 
-        error: Exception, 
+        self,
+        error: Exception,
         context: str = "",
         additional_info: Optional[Dict[str, Any]] = None
     ) -> str:
@@ -193,10 +193,10 @@ class SecureErrorHandler:
         """
         # Create error ID for tracking
         error_id = hashlib.sha256(f"{str(error)}{context}".encode()).hexdigest()[:12]
-        
+
         # Sanitize context and additional info
         safe_context = SecurityValidator.sanitize_for_logging(context)
-        
+
         if additional_info:
             safe_additional_info = {
                 key: SecurityValidator.sanitize_for_logging(str(value))
@@ -204,7 +204,7 @@ class SecureErrorHandler:
             }
         else:
             safe_additional_info = {}
-        
+
         # Log based on configuration
         if self.log_sensitive_details:
             # Development logging with more details
@@ -212,7 +212,7 @@ class SecureErrorHandler:
                 f"[ERROR_ID: {error_id}] {type(error).__name__}: {str(error)} "
                 f"Context: {safe_context} Additional: {safe_additional_info}"
             )
-            
+
             # Log stack trace securely
             stack_trace = traceback.format_exc()
             safe_stack_trace = SecurityValidator.sanitize_for_logging(stack_trace)
@@ -222,9 +222,9 @@ class SecureErrorHandler:
             logger.error(
                 f"[ERROR_ID: {error_id}] {type(error).__name__} in {safe_context}"
             )
-        
+
         return error_id
-    
+
     def handle_authentication_error(self, error: Exception) -> Dict[str, Any]:
         """
         Handle authentication errors securely
@@ -236,7 +236,7 @@ class SecureErrorHandler:
             Safe error response
         """
         error_id = self.log_error_securely(error, "authentication")
-        
+
         # Don't reveal specific authentication failure reasons
         return {
             'success': False,
@@ -244,7 +244,7 @@ class SecureErrorHandler:
             'error_id': error_id,
             'error_type': 'authentication_error'
         }
-    
+
     def handle_api_error(self, error: Exception, api_endpoint: str) -> Dict[str, Any]:
         """
         Handle API errors securely
@@ -258,7 +258,7 @@ class SecureErrorHandler:
         """
         safe_endpoint = SecurityValidator.sanitize_for_logging(api_endpoint)
         error_id = self.log_error_securely(error, f"API call to {safe_endpoint}")
-        
+
         return {
             'success': False,
             'error': 'API request failed',
@@ -269,7 +269,7 @@ class SecureErrorHandler:
 
 class SecureConfig:
     """Secure configuration utilities"""
-    
+
     @staticmethod
     def validate_config_value(key: str, value: Any) -> bool:
         """
@@ -284,18 +284,18 @@ class SecureConfig:
         """
         if not isinstance(key, str) or not key:
             return False
-        
+
         # Check for suspicious configuration keys
         suspicious_keys = [
             'exec', 'eval', 'system', 'shell', 'command',
             'script', 'code', 'function', 'import'
         ]
-        
+
         key_lower = key.lower()
         if any(suspicious in key_lower for suspicious in suspicious_keys):
             logger.warning(f"[SECURITY] Suspicious configuration key detected: {key}")
             return False
-        
+
         # Validate value based on type
         if isinstance(value, str):
             return SecurityValidator.validate_input_safe(value)
@@ -304,9 +304,9 @@ class SecureConfig:
         elif isinstance(value, (list, dict)):
             # Basic validation for complex types
             return len(str(value)) < 10000  # Prevent huge config values
-        
+
         return True
-    
+
     @staticmethod
     def mask_sensitive_config(config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -319,18 +319,18 @@ class SecureConfig:
             Configuration with sensitive values masked
         """
         masked_config = {}
-        
+
         sensitive_keys = [
             'key', 'secret', 'password', 'token', 'credential',
             'api_key', 'api_secret', 'private_key', 'auth'
         ]
-        
+
         for key, value in config.items():
             key_lower = key.lower()
-            
+
             # Check if key contains sensitive information
             is_sensitive = any(sensitive in key_lower for sensitive in sensitive_keys)
-            
+
             if is_sensitive:
                 if isinstance(value, str) and len(value) > 8:
                     masked_config[key] = f"{value[:4]}***{value[-4:]}"
@@ -344,7 +344,7 @@ class SecureConfig:
                     masked_config[key] = SecureConfig.mask_sensitive_config(value)
                 else:
                     masked_config[key] = value
-        
+
         return masked_config
 
 
@@ -355,10 +355,10 @@ _global_error_handler: Optional[SecureErrorHandler] = None
 def get_secure_error_handler(log_sensitive_details: bool = False) -> SecureErrorHandler:
     """Get global secure error handler instance"""
     global _global_error_handler
-    
+
     if _global_error_handler is None:
         _global_error_handler = SecureErrorHandler(log_sensitive_details)
-    
+
     return _global_error_handler
 
 
@@ -372,7 +372,7 @@ def safe_error_response(error: Exception, context: str = "") -> Dict[str, Any]:
     """Convenience function for safe error responses"""
     handler = get_secure_error_handler()
     error_id = handler.log_error_securely(error, context)
-    
+
     return {
         'success': False,
         'error': 'An error occurred',
@@ -383,7 +383,7 @@ def safe_error_response(error: Exception, context: str = "") -> Dict[str, Any]:
 # Export main utilities
 __all__ = [
     'SecurityValidator',
-    'SecureErrorHandler', 
+    'SecureErrorHandler',
     'SecureConfig',
     'SecurityError',
     'InformationDisclosureError',

@@ -3,31 +3,31 @@ Safe Import System
 Handles safe module imports with fallbacks and error handling
 """
 
-import logging
 import importlib
-from typing import Any, Optional, Callable, Dict
+import logging
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class SafeImporter:
     """Safe module importer with fallback handling"""
-    
+
     def __init__(self):
         """Initialize safe importer"""
         self.fallbacks: Dict[str, Any] = {}
         self.repair_callbacks: Dict[str, Callable] = {}
-    
+
     def register_fallback(self, module_name: str, fallback: Any):
         """Register fallback for module"""
         self.fallbacks[module_name] = fallback
         logger.debug(f"[SAFE_IMPORT] Registered fallback for {module_name}")
-    
+
     def register_repair_callback(self, module_name: str, callback: Callable):
         """Register repair callback for module"""
         self.repair_callbacks[module_name] = callback
         logger.debug(f"[SAFE_IMPORT] Registered repair callback for {module_name}")
-    
+
     def safe_import(self, module_name: str, fallback: Optional[Any] = None) -> Any:
         """Safely import module with fallback"""
         try:
@@ -36,7 +36,7 @@ class SafeImporter:
             return module
         except ImportError as e:
             logger.warning(f"[SAFE_IMPORT] Failed to import {module_name}: {e}")
-            
+
             # Try repair callback first
             if module_name in self.repair_callbacks:
                 try:
@@ -46,7 +46,7 @@ class SafeImporter:
                     return module
                 except Exception as repair_error:
                     logger.error(f"[SAFE_IMPORT] Repair failed for {module_name}: {repair_error}")
-            
+
             # Use fallback
             if fallback is not None:
                 logger.info(f"[SAFE_IMPORT] Using provided fallback for {module_name}")

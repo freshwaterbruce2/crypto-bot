@@ -12,11 +12,11 @@ This assistant coordinates with your existing analytics infrastructure:
 [OK] Coordinates with Enhanced Trade Executor for execution performance insights
 """
 
-import time
-import os
 import json
+import os
+import time
+from datetime import datetime
 from typing import Any, Dict, List, Optional
-from datetime import datetime, timedelta
 
 # Fixed import to prevent relative import errors
 try:
@@ -112,7 +112,7 @@ class LoggingAnalyticsAssistant:
                 "format": "json",
             },
         }
-        
+
         # Initialize real-time metrics tracking
         self.real_time_metrics = {
             "total_trades": 0,
@@ -593,7 +593,7 @@ class LoggingAnalyticsAssistant:
                 symbol = ''
                 confidence = 0.0
                 side = ''
-            
+
             return {
                 'analytics_prepared': True,
                 'symbol': symbol,
@@ -623,11 +623,11 @@ class LoggingAnalyticsAssistant:
         try:
             symbol = execution_result.get('symbol', '')
             success = execution_result.get('success', False)
-            
+
             # Track the execution
             if success:
                 logger.info(f"[DATA] {symbol}: Trade execution recorded successfully")
-                
+
                 # Update our real-time metrics
                 await self._update_real_time_metrics('trade_execution', {
                     'tracking_success': True,
@@ -636,13 +636,13 @@ class LoggingAnalyticsAssistant:
                 })
             else:
                 logger.info(f"[DATA] {symbol}: Failed trade execution recorded")
-                
+
                 # Update failure metrics
                 await self._update_real_time_metrics('trade_execution', {
                     'tracking_success': False,
                     'enhanced_data': execution_result
                 })
-                
+
         except Exception as e:
             logger.debug(f"[DATA] Error recording trade execution: {e}")
 
@@ -1029,19 +1029,19 @@ class LoggingAnalyticsAssistant:
                 trade_time = trade.get("tracking_timestamp", 0)
                 if time_range["start_time"] <= trade_time <= time_range["end_time"]:
                     buffer_trades.append(trade)
-            
+
             # Get from learning manager if available
             learning_trades = []
             if self.learning_manager and hasattr(self.learning_manager, "get_recent_events"):
                 events = self.learning_manager.get_recent_events(
-                    event_type="trade", 
+                    event_type="trade",
                     start_time=time_range["start_time"],
                     end_time=time_range["end_time"]
                 )
                 for event in events:
                     if event.get("details", {}).get("trade_data"):
                         learning_trades.append(event["details"]["trade_data"])
-            
+
             # Get from execution assistant if available
             exec_trades = []
             if self.execution_assistant and hasattr(self.execution_assistant, "get_trade_history"):
@@ -1049,17 +1049,17 @@ class LoggingAnalyticsAssistant:
                     start_time=time_range["start_time"],
                     end_time=time_range["end_time"]
                 )
-            
+
             # Combine all sources and deduplicate
             all_trades = buffer_trades + learning_trades + exec_trades
             unique_trades = self._deduplicate_trades(all_trades)
-            
+
             # Calculate statistics
             total_volume = sum(t.get("amount", 0) for t in unique_trades)
             total_profit = sum(t.get("profit_loss", 0) for t in unique_trades)
             wins = sum(1 for t in unique_trades if t.get("profit_loss", 0) > 0)
             losses = sum(1 for t in unique_trades if t.get("profit_loss", 0) < 0)
-            
+
             return {
                 "trades": unique_trades,
                 "time_range": time_range,
@@ -1072,7 +1072,7 @@ class LoggingAnalyticsAssistant:
                     "win_rate": (wins / len(unique_trades) * 100) if unique_trades else 0
                 }
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting trade data: {e}")
             return {"trades": [], "time_range": time_range, "error": str(e)}
@@ -1086,7 +1086,7 @@ class LoggingAnalyticsAssistant:
                 metric_time = metric.get("timestamp", 0)
                 if time_range["start_time"] <= metric_time <= time_range["end_time"]:
                     buffer_metrics.append(metric)
-            
+
             # Get current system snapshot
             current_metrics = {
                 "cpu_usage": 0.0,  # Would get from psutil or system monitor
@@ -1095,7 +1095,7 @@ class LoggingAnalyticsAssistant:
                 "errors": self.real_time_metrics["system_metrics"]["errors"],
                 "uptime": time.time() - (self.bot.start_time if hasattr(self.bot, "start_time") else time.time())
             }
-            
+
             # Calculate averages from buffer
             if buffer_metrics:
                 avg_cpu = sum(m.get("cpu_usage", 0) for m in buffer_metrics) / len(buffer_metrics)
@@ -1105,7 +1105,7 @@ class LoggingAnalyticsAssistant:
                 avg_cpu = current_metrics["cpu_usage"]
                 avg_memory = current_metrics["memory_usage"]
                 total_errors = current_metrics["errors"]
-            
+
             return {
                 "system_metrics": buffer_metrics,
                 "current_snapshot": current_metrics,
@@ -1117,7 +1117,7 @@ class LoggingAnalyticsAssistant:
                     "uptime_hours": current_metrics["uptime"] / 3600
                 }
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting system data: {e}")
             return {"system_metrics": [], "time_range": time_range, "error": str(e)}
@@ -1126,7 +1126,7 @@ class LoggingAnalyticsAssistant:
         """Collect learning system data. Integrates with learning manager."""
         try:
             learning_events = []
-            
+
             if self.learning_manager:
                 # Get all learning events in time range
                 if hasattr(self.learning_manager, "get_recent_events"):
@@ -1134,13 +1134,13 @@ class LoggingAnalyticsAssistant:
                         start_time=time_range["start_time"],
                         end_time=time_range["end_time"]
                     )
-                
+
                 # Get learning performance metrics
                 if hasattr(self.learning_manager, "get_performance_metrics"):
                     learning_metrics = self.learning_manager.get_performance_metrics()
                 else:
                     learning_metrics = {}
-            
+
             # Categorize learning events
             events_by_type = {}
             for event in learning_events:
@@ -1148,7 +1148,7 @@ class LoggingAnalyticsAssistant:
                 if event_type not in events_by_type:
                     events_by_type[event_type] = []
                 events_by_type[event_type].append(event)
-            
+
             return {
                 "learning_events": learning_events,
                 "events_by_type": events_by_type,
@@ -1160,7 +1160,7 @@ class LoggingAnalyticsAssistant:
                     "learning_cycles": self.performance_metrics["learning_cycles"]
                 }
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting learning data: {e}")
             return {"learning_events": [], "time_range": time_range, "error": str(e)}
@@ -1168,7 +1168,7 @@ class LoggingAnalyticsAssistant:
     async def _check_execution_alerts(self, trade_data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Check for execution-related alerts."""
         alerts = []
-        
+
         try:
             # Check execution time
             exec_time = trade_data.get("execution_time", 0)
@@ -1179,7 +1179,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"Execution time {exec_time:.2f}s exceeds threshold",
                     "threshold": self.analytics_config["performance_tracking"]["execution_time_threshold"]
                 })
-            
+
             # Check for failed trades
             if not trade_data.get("success", True):
                 alerts.append({
@@ -1188,7 +1188,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"Trade execution failed for {trade_data.get('symbol', 'unknown')}",
                     "details": trade_data.get("error", "Unknown error")
                 })
-            
+
             # Check for large losses
             profit_loss = trade_data.get("profit_loss", 0)
             if profit_loss < 0 and abs(profit_loss) > 50:  # $50 loss threshold
@@ -1198,48 +1198,48 @@ class LoggingAnalyticsAssistant:
                     "message": f"Large loss detected: ${abs(profit_loss):.2f}",
                     "amount": profit_loss
                 })
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error checking execution alerts: {e}")
-        
+
         return alerts
 
     async def _store_trade_analytics(self, trade_data: Dict[str, Any]) -> Dict[str, Any]:
         """Store trade analytics to persistent storage."""
         try:
             self.performance_metrics["storage_operations"] += 1
-            
+
             # Create storage directory if needed
             storage_path = self.analytics_config["storage_path"]
             os.makedirs(storage_path, exist_ok=True)
-            
+
             # Create filename with date
             date_str = datetime.now().strftime("%Y%m%d")
             filename = f"trade_analytics_{date_str}.json"
             filepath = os.path.join(storage_path, filename)
-            
+
             # Load existing data if file exists
             existing_data = []
             if os.path.exists(filepath):
                 try:
-                    with open(filepath, 'r') as f:
+                    with open(filepath) as f:
                         existing_data = json.load(f)
                 except:
                     existing_data = []
-            
+
             # Append new trade data
             existing_data.append(trade_data)
-            
+
             # Save updated data
             with open(filepath, 'w') as f:
                 json.dump(existing_data, f, indent=2)
-            
+
             return {
                 "stored": True,
                 "storage_path": filepath,
                 "total_records": len(existing_data)
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error storing trade analytics: {e}")
             return {
@@ -1252,7 +1252,7 @@ class LoggingAnalyticsAssistant:
         try:
             total_records = 0
             missing_fields = 0
-            
+
             for source in data_sources:
                 if isinstance(source, dict):
                     # Count records
@@ -1262,17 +1262,17 @@ class LoggingAnalyticsAssistant:
                         for trade in source["trades"]:
                             if not trade.get("symbol") or not trade.get("amount"):
                                 missing_fields += 1
-                    
+
                     if "system_metrics" in source:
                         total_records += len(source["system_metrics"])
-                    
+
                     if "learning_events" in source:
                         total_records += len(source["learning_events"])
-            
+
             # Calculate quality metrics
             completeness = ((total_records - missing_fields) / total_records * 100) if total_records > 0 else 0
             quality_score = min(completeness, 95.0)  # Cap at 95%
-            
+
             return {
                 "quality_score": quality_score,
                 "completeness": completeness,
@@ -1281,7 +1281,7 @@ class LoggingAnalyticsAssistant:
                 "missing_fields": missing_fields,
                 "assessment": "good" if quality_score > 80 else "fair" if quality_score > 60 else "poor"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error assessing data quality: {e}")
             return {"quality_score": 0.0, "completeness": 0.0, "accuracy": 0.0, "error": str(e)}
@@ -1289,36 +1289,36 @@ class LoggingAnalyticsAssistant:
     def _generate_actionable_insights(self, analytics: Dict[str, Any]) -> List[str]:
         """Generate actionable insights from analytics."""
         insights = []
-        
+
         try:
             # Check for performance insights
             if "performance_score" in analytics and analytics["performance_score"] < 70:
                 insights.append("Performance below optimal - consider optimizing signal generation algorithms")
-            
+
             # Check for profit insights
             if "profit_efficiency" in analytics and analytics["profit_efficiency"] < 60:
                 insights.append("Profit efficiency low - review take-profit and stop-loss settings")
-            
+
             # Check for win rate
             if "win_rate" in analytics and analytics["win_rate"] < 45:
                 insights.append(f"Win rate at {analytics['win_rate']:.1f}% - consider adjusting entry criteria")
-            
+
             # Check for volatility
             if "volatility_alerts" in analytics and analytics["volatility_alerts"] > 5:
                 insights.append("High volatility detected - reduce position sizes temporarily")
-            
+
             # Check execution time
             if "avg_execution_time" in analytics and analytics["avg_execution_time"] > 2.0:
                 insights.append("Slow execution times - check API rate limits and network latency")
-            
+
             # If no specific issues, provide positive insight
             if not insights:
                 insights.append("System performing well - maintain current strategy parameters")
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating insights: {e}")
             insights.append("Unable to generate insights due to data error")
-        
+
         return insights
 
     # Additional implementation for complex analytics operations
@@ -1328,22 +1328,22 @@ class LoggingAnalyticsAssistant:
             trades = trade_data.get("trades", [])
             if not trades:
                 return {"performance_score": 0.0, "areas_for_improvement": ["No trades to analyze"]}
-            
+
             # Calculate detailed metrics
             total_exec_time = sum(t.get("execution_time", 0) for t in trades)
             avg_exec_time = total_exec_time / len(trades) if trades else 0
-            
+
             failed_trades = sum(1 for t in trades if not t.get("success", True))
             success_rate = ((len(trades) - failed_trades) / len(trades) * 100) if trades else 0
-            
+
             # Identify slow trades
             slow_trades = [t for t in trades if t.get("execution_time", 0) > 2.0]
-            
+
             # Calculate performance score
             time_score = max(0, 100 - (avg_exec_time * 20))
             success_score = success_rate
             performance_score = (time_score + success_score) / 2
-            
+
             # Identify areas for improvement
             areas_for_improvement = []
             if avg_exec_time > 1.5:
@@ -1352,7 +1352,7 @@ class LoggingAnalyticsAssistant:
                 areas_for_improvement.append(f"Success rate {success_rate:.1f}% needs improvement")
             if slow_trades:
                 areas_for_improvement.append(f"{len(slow_trades)} trades exceeded 2s execution time")
-            
+
             return {
                 "performance_score": performance_score,
                 "avg_execution_time": avg_exec_time,
@@ -1362,7 +1362,7 @@ class LoggingAnalyticsAssistant:
                 "areas_for_improvement": areas_for_improvement,
                 "time_range": time_range
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in execution performance analysis: {e}")
             return {"performance_score": 0.0, "areas_for_improvement": [str(e)], "error": True}
@@ -1372,37 +1372,37 @@ class LoggingAnalyticsAssistant:
         try:
             trades = trade_data.get("trades", [])
             statistics = trade_data.get("statistics", {})
-            
+
             # Calculate profit metrics
             total_profit = statistics.get("total_profit", 0)
             winning_trades = [t for t in trades if t.get("profit_loss", 0) > 0]
             losing_trades = [t for t in trades if t.get("profit_loss", 0) < 0]
-            
+
             avg_win = sum(t.get("profit_loss", 0) for t in winning_trades) / len(winning_trades) if winning_trades else 0
             avg_loss = sum(t.get("profit_loss", 0) for t in losing_trades) / len(losing_trades) if losing_trades else 0
-            
+
             # Calculate profit factor
             total_wins = sum(t.get("profit_loss", 0) for t in winning_trades)
             total_losses = abs(sum(t.get("profit_loss", 0) for t in losing_trades))
             profit_factor = (total_wins / total_losses) if total_losses > 0 else total_wins
-            
+
             # Identify optimization opportunities
             opportunities = []
-            
+
             if avg_win < abs(avg_loss) * 1.5:
                 opportunities.append("Increase take-profit targets - wins should be 1.5x larger than losses")
-            
+
             if statistics.get("win_rate", 0) < 50 and profit_factor < 1.5:
                 opportunities.append("Low win rate requires larger profit targets")
-            
+
             # Check for micro-profit potential
             small_wins = [t for t in winning_trades if 0 < t.get("profit_loss", 0) < 1.0]
             if len(small_wins) > len(winning_trades) * 0.3:
                 opportunities.append(f"{len(small_wins)} micro-profits detected - perfect for fee-free strategy")
-            
+
             # Calculate efficiency score
             profit_efficiency = min(100, profit_factor * 20) if trades else 0
-            
+
             return {
                 "profit_efficiency": profit_efficiency,
                 "total_profit": total_profit,
@@ -1413,7 +1413,7 @@ class LoggingAnalyticsAssistant:
                 "micro_profits_count": len(small_wins),
                 "time_range": time_range
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in profit optimization analysis: {e}")
             return {"profit_efficiency": 0.0, "optimization_opportunities": [str(e)], "error": True}
@@ -1423,30 +1423,30 @@ class LoggingAnalyticsAssistant:
         try:
             summary = system_data.get("summary", {})
             current = system_data.get("current_snapshot", {})
-            
+
             # Calculate efficiency metrics
             cpu_efficiency = 100 - summary.get("avg_cpu_usage", 0)
             memory_efficiency = 100 - summary.get("avg_memory_usage", 0)
             error_rate = (summary.get("total_errors", 0) / (current.get("api_calls", 1))) * 100
-            
+
             # Overall efficiency score
             efficiency_score = (cpu_efficiency + memory_efficiency + max(0, 100 - error_rate * 10)) / 3
-            
+
             # Identify bottlenecks
             bottlenecks = []
-            
+
             if summary.get("avg_cpu_usage", 0) > 70:
                 bottlenecks.append("High CPU usage - consider optimizing algorithms")
-            
+
             if summary.get("avg_memory_usage", 0) > 80:
                 bottlenecks.append("High memory usage - check for memory leaks")
-            
+
             if error_rate > 5:
                 bottlenecks.append(f"Error rate {error_rate:.1f}% is too high")
-            
+
             if current.get("api_calls", 0) > 1000:
                 bottlenecks.append("High API call volume - implement better caching")
-            
+
             return {
                 "efficiency_score": efficiency_score,
                 "cpu_efficiency": cpu_efficiency,
@@ -1456,7 +1456,7 @@ class LoggingAnalyticsAssistant:
                 "system_health": "good" if efficiency_score > 80 else "fair" if efficiency_score > 60 else "poor",
                 "time_range": time_range
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in system efficiency analysis: {e}")
             return {"efficiency_score": 0.0, "bottlenecks": [str(e)], "error": True}
@@ -1466,34 +1466,34 @@ class LoggingAnalyticsAssistant:
         try:
             events = learning_data.get("learning_events", [])
             events_by_type = learning_data.get("events_by_type", {})
-            
+
             # Calculate learning metrics
             total_events = len(events)
             successful_events = sum(1 for e in events if e.get("success", False))
             learning_rate = (successful_events / total_events) if total_events > 0 else 0
-            
+
             # Analyze event patterns
             trade_events = events_by_type.get("trade", [])
             strategy_events = events_by_type.get("strategy", [])
-            
+
             # Identify improvement areas
             improvement_areas = []
-            
+
             if learning_rate < 0.7:
                 improvement_areas.append("Low learning success rate - review learning parameters")
-            
+
             if len(trade_events) < 10:
                 improvement_areas.append("Insufficient trade data for effective learning")
-            
+
             if not strategy_events:
                 improvement_areas.append("No strategy optimization events detected")
-            
+
             # Check for learning convergence
             if events:
                 recent_success_rate = sum(1 for e in events[-10:] if e.get("success", False)) / min(10, len(events))
                 if recent_success_rate > learning_rate:
                     improvement_areas.append("Learning system is improving - positive trend detected")
-            
+
             return {
                 "learning_rate": learning_rate,
                 "total_learning_events": total_events,
@@ -1502,12 +1502,12 @@ class LoggingAnalyticsAssistant:
                 "learning_trend": "improving" if events and recent_success_rate > learning_rate else "stable",
                 "time_range": time_range
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in learning effectiveness analysis: {e}")
             return {"learning_rate": 0.0, "improvement_areas": [str(e)], "error": True}
 
-    async def _generate_comprehensive_analytics(self, trade_data: Dict, system_data: Dict, 
+    async def _generate_comprehensive_analytics(self, trade_data: Dict, system_data: Dict,
                                                 learning_data: Dict, time_range: Dict) -> Dict:
         """Comprehensive analytics generation combining all data sources."""
         try:
@@ -1516,7 +1516,7 @@ class LoggingAnalyticsAssistant:
             profit_analysis = await self._analyze_profit_optimization(trade_data, time_range)
             system_analysis = await self._analyze_system_efficiency(system_data, time_range)
             learning_analysis = await self._analyze_learning_effectiveness(learning_data, time_range)
-            
+
             # Calculate overall health score
             overall_health = (
                 exec_analysis.get("performance_score", 0) * 0.3 +
@@ -1524,7 +1524,7 @@ class LoggingAnalyticsAssistant:
                 system_analysis.get("efficiency_score", 0) * 0.2 +
                 learning_analysis.get("learning_rate", 0) * 100 * 0.2
             )
-            
+
             # Compile key metrics
             key_metrics = {
                 "execution_performance": exec_analysis.get("performance_score", 0),
@@ -1535,14 +1535,14 @@ class LoggingAnalyticsAssistant:
                 "win_rate": trade_data.get("statistics", {}).get("win_rate", 0),
                 "total_trades": trade_data.get("statistics", {}).get("total_trades", 0)
             }
-            
+
             # Generate comprehensive insights
             all_insights = []
             all_insights.extend(exec_analysis.get("areas_for_improvement", []))
             all_insights.extend(profit_analysis.get("optimization_opportunities", []))
             all_insights.extend(system_analysis.get("bottlenecks", []))
             all_insights.extend(learning_analysis.get("improvement_areas", []))
-            
+
             return {
                 "overall_health": overall_health,
                 "key_metrics": key_metrics,
@@ -1554,7 +1554,7 @@ class LoggingAnalyticsAssistant:
                 "time_range": time_range,
                 "health_status": "excellent" if overall_health > 85 else "good" if overall_health > 70 else "needs_attention"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error in comprehensive analytics: {e}")
             return {"overall_health": 0.0, "key_metrics": {}, "error": str(e)}
@@ -1569,9 +1569,9 @@ class LoggingAnalyticsAssistant:
                 time_period = "7d"
             else:
                 time_period = custom_params.get("time_period", "24h")
-            
+
             time_range = self._calculate_time_range(time_period)
-            
+
             # Collect all relevant data
             report_data = {
                 "trade_data": await self._collect_trade_data(time_range),
@@ -1581,9 +1581,9 @@ class LoggingAnalyticsAssistant:
                 "report_type": report_type,
                 "custom_params": custom_params
             }
-            
+
             return report_data
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting report data: {e}")
             return {"error": str(e), "collection_timestamp": time.time()}
@@ -1594,7 +1594,7 @@ class LoggingAnalyticsAssistant:
             trade_data = report_data.get("trade_data", {})
             trades = trade_data.get("trades", [])
             stats = trade_data.get("statistics", {})
-            
+
             # Group trades by symbol
             trades_by_symbol = {}
             for trade in trades:
@@ -1602,13 +1602,13 @@ class LoggingAnalyticsAssistant:
                 if symbol not in trades_by_symbol:
                     trades_by_symbol[symbol] = []
                 trades_by_symbol[symbol].append(trade)
-            
+
             # Calculate per-symbol statistics
             symbol_stats = {}
             for symbol, symbol_trades in trades_by_symbol.items():
                 wins = sum(1 for t in symbol_trades if t.get("profit_loss", 0) > 0)
                 total_profit = sum(t.get("profit_loss", 0) for t in symbol_trades)
-                
+
                 symbol_stats[symbol] = {
                     "trades": len(symbol_trades),
                     "wins": wins,
@@ -1616,7 +1616,7 @@ class LoggingAnalyticsAssistant:
                     "win_rate": (wins / len(symbol_trades) * 100) if symbol_trades else 0,
                     "total_profit": total_profit
                 }
-            
+
             return {
                 "total_trades": stats.get("total_trades", 0),
                 "overall_win_rate": stats.get("win_rate", 0),
@@ -1626,7 +1626,7 @@ class LoggingAnalyticsAssistant:
                 "most_traded": max(symbol_stats.items(), key=lambda x: x[1]["trades"])[0] if symbol_stats else "none",
                 "most_profitable": max(symbol_stats.items(), key=lambda x: x[1]["total_profit"])[0] if symbol_stats else "none"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating trade analysis: {e}")
             return {"total_trades": 0, "error": str(e)}
@@ -1636,26 +1636,26 @@ class LoggingAnalyticsAssistant:
         try:
             trade_data = report_data.get("trade_data", {})
             trades = trade_data.get("trades", [])
-            
+
             # Calculate P&L metrics
             profits = [t.get("profit_loss", 0) for t in trades if t.get("profit_loss", 0) > 0]
             losses = [t.get("profit_loss", 0) for t in trades if t.get("profit_loss", 0) < 0]
-            
+
             total_profit = sum(profits)
             total_loss = sum(losses)
             net_profit = total_profit + total_loss
-            
+
             # Calculate averages
             avg_profit = (total_profit / len(profits)) if profits else 0
             avg_loss = (total_loss / len(losses)) if losses else 0
-            
+
             # Identify best and worst trades
             best_trade = max(trades, key=lambda x: x.get("profit_loss", 0)) if trades else None
             worst_trade = min(trades, key=lambda x: x.get("profit_loss", 0)) if trades else None
-            
+
             # Calculate profit factor
             profit_factor = (total_profit / abs(total_loss)) if total_loss != 0 else total_profit
-            
+
             return {
                 "net_profit": net_profit,
                 "total_profit": total_profit,
@@ -1674,7 +1674,7 @@ class LoggingAnalyticsAssistant:
                 } if worst_trade else None,
                 "expectancy": (net_profit / len(trades)) if trades else 0
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating P&L section: {e}")
             return {"net_profit": 0.0, "error": str(e)}
@@ -1684,14 +1684,14 @@ class LoggingAnalyticsAssistant:
         try:
             trade_data = report_data.get("trade_data", {})
             trades = trade_data.get("trades", [])
-            
+
             # Overall win rate
             wins = sum(1 for t in trades if t.get("profit_loss", 0) > 0)
             losses = sum(1 for t in trades if t.get("profit_loss", 0) < 0)
             breakeven = len(trades) - wins - losses
-            
+
             overall_win_rate = (wins / len(trades) * 100) if trades else 0
-            
+
             # Win rate by time of day
             trades_by_hour = {}
             for trade in trades:
@@ -1701,18 +1701,18 @@ class LoggingAnalyticsAssistant:
                 trades_by_hour[hour]["total"] += 1
                 if trade.get("profit_loss", 0) > 0:
                     trades_by_hour[hour]["wins"] += 1
-            
+
             # Calculate hourly win rates
             hourly_win_rates = {}
             for hour, data in trades_by_hour.items():
                 hourly_win_rates[hour] = (data["wins"] / data["total"] * 100) if data["total"] > 0 else 0
-            
+
             # Find best trading hours
             best_hour = max(hourly_win_rates.items(), key=lambda x: x[1])[0] if hourly_win_rates else None
-            
+
             # Win rate by strategy (if available)
             strategy_win_rates = {}  # Would populate from strategy data if available
-            
+
             return {
                 "overall_win_rate": overall_win_rate,
                 "total_wins": wins,
@@ -1725,7 +1725,7 @@ class LoggingAnalyticsAssistant:
                 "consecutive_wins_record": self._calculate_consecutive_wins(trades),
                 "consecutive_losses_record": self._calculate_consecutive_losses(trades)
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating win rate section: {e}")
             return {"overall_win_rate": 0.0, "error": str(e)}
@@ -1736,22 +1736,22 @@ class LoggingAnalyticsAssistant:
             system_data = report_data.get("system_data", {})
             current = system_data.get("current_snapshot", {})
             summary = system_data.get("summary", {})
-            
+
             # Determine system status
             cpu_usage = summary.get("avg_cpu_usage", 0)
             memory_usage = summary.get("avg_memory_usage", 0)
             error_count = summary.get("total_errors", 0)
-            
+
             if cpu_usage > 80 or memory_usage > 85 or error_count > 100:
                 system_status = "degraded"
             elif cpu_usage > 60 or memory_usage > 70 or error_count > 50:
                 system_status = "warning"
             else:
                 system_status = "operational"
-            
+
             # Calculate uptime percentage (assume 99.9% for now)
             uptime_percentage = 99.9 if error_count < 10 else 99.0 if error_count < 50 else 95.0
-            
+
             return {
                 "system_status": system_status,
                 "uptime_percentage": uptime_percentage,
@@ -1772,7 +1772,7 @@ class LoggingAnalyticsAssistant:
                 },
                 "health_score": 100 - (cpu_usage * 0.3 + memory_usage * 0.3 + min(40, error_count * 0.4))
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating system health section: {e}")
             return {"system_status": "error", "error": str(e)}
@@ -1782,42 +1782,42 @@ class LoggingAnalyticsAssistant:
         try:
             trade_data = report_data.get("trade_data", {})
             trades = trade_data.get("trades", [])
-            
+
             # Sort trades by time
             sorted_trades = sorted(trades, key=lambda x: x.get("tracking_timestamp", 0))
-            
+
             # Calculate rolling metrics
             window_size = 10
             rolling_profits = []
             rolling_win_rates = []
-            
+
             for i in range(window_size, len(sorted_trades) + 1):
                 window_trades = sorted_trades[i-window_size:i]
                 window_profit = sum(t.get("profit_loss", 0) for t in window_trades)
                 window_wins = sum(1 for t in window_trades if t.get("profit_loss", 0) > 0)
                 window_win_rate = (window_wins / len(window_trades) * 100) if window_trades else 0
-                
+
                 rolling_profits.append(window_profit)
                 rolling_win_rates.append(window_win_rate)
-            
+
             # Identify trends
             trending_up = []
             trending_down = []
-            
+
             if rolling_profits:
                 profit_trend = "up" if rolling_profits[-1] > rolling_profits[0] else "down"
                 if profit_trend == "up":
                     trending_up.append("Profit trend improving")
                 else:
                     trending_down.append("Profit trend declining")
-            
+
             if rolling_win_rates:
                 win_rate_trend = "up" if rolling_win_rates[-1] > rolling_win_rates[0] else "down"
                 if win_rate_trend == "up":
                     trending_up.append("Win rate improving")
                 else:
                     trending_down.append("Win rate declining")
-            
+
             # Volume trend
             if len(trades) >= 2:
                 recent_volume = sum(t.get("amount", 0) for t in sorted_trades[-10:])
@@ -1826,7 +1826,7 @@ class LoggingAnalyticsAssistant:
                     trending_up.append("Trading volume increasing")
                 elif recent_volume < older_volume * 0.8:
                     trending_down.append("Trading volume decreasing")
-            
+
             return {
                 "trending_up": trending_up,
                 "trending_down": trending_down,
@@ -1836,7 +1836,7 @@ class LoggingAnalyticsAssistant:
                 "trend_strength": abs(len(trending_up) - len(trending_down)),
                 "recommendation": "Maintain current strategy" if len(trending_up) > len(trending_down) else "Consider strategy adjustments"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating trend analysis: {e}")
             return {"trending_up": [], "trending_down": [], "error": str(e)}
@@ -1847,10 +1847,10 @@ class LoggingAnalyticsAssistant:
             # Analyze various aspects for optimization
             trade_data = report_data.get("trade_data", {})
             system_data = report_data.get("system_data", {})
-            
+
             opportunities = []
             potential_improvement = 0.0
-            
+
             # Check win rate
             win_rate = trade_data.get("statistics", {}).get("win_rate", 0)
             if win_rate < 50:
@@ -1861,7 +1861,7 @@ class LoggingAnalyticsAssistant:
                     "potential_gain": 10.0
                 })
                 potential_improvement += 10.0
-            
+
             # Check execution time
             trades = trade_data.get("trades", [])
             if trades:
@@ -1874,7 +1874,7 @@ class LoggingAnalyticsAssistant:
                         "potential_gain": 5.0
                     })
                     potential_improvement += 5.0
-            
+
             # Check for micro-profit opportunities
             small_profits = [t for t in trades if 0 < t.get("profit_loss", 0) < 2.0]
             if len(small_profits) < len(trades) * 0.2:
@@ -1885,7 +1885,7 @@ class LoggingAnalyticsAssistant:
                     "potential_gain": 15.0
                 })
                 potential_improvement += 15.0
-            
+
             # Check system efficiency
             cpu_usage = system_data.get("summary", {}).get("avg_cpu_usage", 0)
             if cpu_usage > 50:
@@ -1896,7 +1896,7 @@ class LoggingAnalyticsAssistant:
                     "potential_gain": 3.0
                 })
                 potential_improvement += 3.0
-            
+
             return {
                 "opportunities": opportunities[:5],  # Top 5 opportunities
                 "total_opportunities": len(opportunities),
@@ -1904,7 +1904,7 @@ class LoggingAnalyticsAssistant:
                 "priority_action": opportunities[0]["action"] if opportunities else "System performing optimally",
                 "estimated_profit_increase": f"{potential_improvement:.1f}%"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating optimization section: {e}")
             return {"opportunities": [], "error": str(e)}
@@ -1914,21 +1914,21 @@ class LoggingAnalyticsAssistant:
         try:
             trade_data = report_data.get("trade_data", {})
             trades = trade_data.get("trades", [])
-            
+
             # Calculate risk metrics
             losses = [t.get("profit_loss", 0) for t in trades if t.get("profit_loss", 0) < 0]
             max_loss = min(losses) if losses else 0
-            
+
             # Calculate consecutive losses
             max_consecutive_losses = self._calculate_consecutive_losses(trades)
-            
+
             # Calculate drawdown
             cumulative_pnl = []
             running_total = 0
             for trade in sorted(trades, key=lambda x: x.get("tracking_timestamp", 0)):
                 running_total += trade.get("profit_loss", 0)
                 cumulative_pnl.append(running_total)
-            
+
             max_drawdown = 0
             if cumulative_pnl:
                 peak = cumulative_pnl[0]
@@ -1937,22 +1937,22 @@ class LoggingAnalyticsAssistant:
                         peak = value
                     drawdown = (peak - value) / peak * 100 if peak > 0 else 0
                     max_drawdown = max(max_drawdown, drawdown)
-            
+
             # Risk assessment
             risk_level = "low"
             risk_factors = []
-            
+
             if max_consecutive_losses > 5:
                 risk_level = "medium"
                 risk_factors.append(f"High consecutive losses: {max_consecutive_losses}")
-            
+
             if max_drawdown > 10:
                 risk_level = "high" if max_drawdown > 20 else "medium"
                 risk_factors.append(f"Significant drawdown: {max_drawdown:.1f}%")
-            
+
             if abs(max_loss) > 50:
                 risk_factors.append(f"Large single loss: ${abs(max_loss):.2f}")
-            
+
             # Risk mitigation recommendations
             mitigation = []
             if max_consecutive_losses > 3:
@@ -1961,7 +1961,7 @@ class LoggingAnalyticsAssistant:
                 mitigation.append("Reduce position sizes during drawdowns")
             if abs(max_loss) > 20:
                 mitigation.append("Tighten stop-loss levels")
-            
+
             return {
                 "risk_level": risk_level,
                 "risk_factors": risk_factors,
@@ -1972,7 +1972,7 @@ class LoggingAnalyticsAssistant:
                 "mitigation_recommendations": mitigation,
                 "risk_score": min(100, max_drawdown * 2 + max_consecutive_losses * 5)
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating risk analysis: {e}")
             return {"risk_level": "unknown", "error": str(e)}
@@ -1988,7 +1988,7 @@ class LoggingAnalyticsAssistant:
     async def _generate_alerts_section(self) -> List[Dict]:
         """Generate alerts section based on current conditions."""
         alerts = []
-        
+
         try:
             # Check win rate
             if self.real_time_metrics["success_rate"] < 40:
@@ -1998,7 +1998,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"Win rate {self.real_time_metrics['success_rate']:.1f}% below threshold",
                     "action": "Review and adjust trading strategy"
                 })
-            
+
             # Check for recent errors
             if self.real_time_metrics["system_metrics"]["errors"] > 10:
                 alerts.append({
@@ -2007,7 +2007,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"{self.real_time_metrics['system_metrics']['errors']} errors detected",
                     "action": "Check system logs for error patterns"
                 })
-            
+
             # Check daily profit
             if self.real_time_metrics["daily_metrics"]["profit_today"] < -50:
                 alerts.append({
@@ -2016,7 +2016,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"Daily loss ${abs(self.real_time_metrics['daily_metrics']['profit_today']):.2f}",
                     "action": "Consider halting trading for risk management"
                 })
-            
+
             # Check execution time
             if self.real_time_metrics["avg_execution_time"] > 3.0:
                 alerts.append({
@@ -2025,10 +2025,10 @@ class LoggingAnalyticsAssistant:
                     "message": f"Average execution time {self.real_time_metrics['avg_execution_time']:.2f}s is high",
                     "action": "Optimize execution pipeline"
                 })
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating alerts: {e}")
-        
+
         return alerts
 
     async def _generate_system_status_section(self) -> Dict:
@@ -2037,14 +2037,14 @@ class LoggingAnalyticsAssistant:
             # Determine overall status
             errors = self.real_time_metrics["system_metrics"]["errors"]
             uptime = self.real_time_metrics["system_metrics"]["uptime"]
-            
+
             if errors > 50 or uptime < 3600:  # High errors or less than 1 hour uptime
                 status = "degraded"
             elif errors > 10:
                 status = "warning"
             else:
                 status = "operational"
-            
+
             # Component statuses
             components = {
                 "trading_engine": "operational" if self.real_time_metrics["total_trades"] > 0 else "idle",
@@ -2053,7 +2053,7 @@ class LoggingAnalyticsAssistant:
                 "risk_management": "operational" if hasattr(self.bot, "circuit_breaker") else "disabled",
                 "data_collection": "operational" if len(self.data_buffers["trade_executions"]) > 0 else "no_data"
             }
-            
+
             return {
                 "overall_status": status,
                 "components": components,
@@ -2063,7 +2063,7 @@ class LoggingAnalyticsAssistant:
                 ).isoformat() if self.data_buffers["trade_executions"] else None,
                 "active_connections": sum(1 for v in components.values() if v == "operational")
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating system status: {e}")
             return {"overall_status": "error", "components": {}, "error": str(e)}
@@ -2072,27 +2072,27 @@ class LoggingAnalyticsAssistant:
         """Generate executive summary from all report sections."""
         try:
             key_findings = []
-            
+
             # Extract key findings from each section
             if "trade_analysis" in report_sections:
                 total_trades = report_sections["trade_analysis"].get("total_trades", 0)
                 win_rate = report_sections["trade_analysis"].get("overall_win_rate", 0)
                 key_findings.append(f"Executed {total_trades} trades with {win_rate:.1f}% win rate")
-            
+
             if "profit_loss_analysis" in report_sections:
                 net_profit = report_sections["profit_loss_analysis"].get("net_profit", 0)
                 profit_factor = report_sections["profit_loss_analysis"].get("profit_factor", 0)
                 key_findings.append(f"Generated ${net_profit:.2f} profit with {profit_factor:.2f} profit factor")
-            
+
             if "system_health" in report_sections:
                 health_score = report_sections["system_health"].get("health_score", 0)
                 key_findings.append(f"System health score: {health_score:.1f}/100")
-            
+
             if "risk_analysis" in report_sections:
                 risk_level = report_sections["risk_analysis"].get("risk_level", "unknown")
                 max_drawdown = report_sections["risk_analysis"].get("max_drawdown", 0)
                 key_findings.append(f"Risk level: {risk_level} with {max_drawdown:.1f}% max drawdown")
-            
+
             # Overall assessment
             overall_assessment = "performing well"
             if "profit_loss_analysis" in report_sections:
@@ -2101,14 +2101,14 @@ class LoggingAnalyticsAssistant:
             if "system_health" in report_sections:
                 if report_sections["system_health"].get("health_score", 0) < 70:
                     overall_assessment = "requires attention"
-            
+
             return {
                 "key_findings": key_findings[:5],  # Top 5 findings
                 "overall_assessment": overall_assessment,
                 "report_period": "Last 24 hours",  # Would be dynamic based on report type
                 "generated_at": datetime.now().isoformat()
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating executive summary: {e}")
             return {"key_findings": [], "overall_assessment": "error", "error": str(e)}
@@ -2116,7 +2116,7 @@ class LoggingAnalyticsAssistant:
     async def _generate_intelligent_recommendations(self, report_sections: Dict) -> List[Dict]:
         """Generate intelligent recommendations based on report analysis."""
         recommendations = []
-        
+
         try:
             # Based on trade performance
             if "trade_analysis" in report_sections:
@@ -2128,7 +2128,7 @@ class LoggingAnalyticsAssistant:
                         "priority": "high",
                         "expected_impact": "Increase win rate by 10-15%"
                     })
-            
+
             # Based on profit analysis
             if "profit_loss_analysis" in report_sections:
                 avg_win = report_sections["profit_loss_analysis"].get("average_winning_trade", 0)
@@ -2140,7 +2140,7 @@ class LoggingAnalyticsAssistant:
                         "priority": "high",
                         "expected_impact": "Improve profitability by 20%"
                     })
-            
+
             # Based on optimization opportunities
             if "optimization_opportunities" in report_sections:
                 opps = report_sections["optimization_opportunities"].get("opportunities", [])
@@ -2151,7 +2151,7 @@ class LoggingAnalyticsAssistant:
                         "priority": "medium",
                         "expected_impact": f"{opps[0]['potential_gain']:.1f}% improvement"
                     })
-            
+
             # Based on risk analysis
             if "risk_analysis" in report_sections:
                 max_drawdown = report_sections["risk_analysis"].get("max_drawdown", 0)
@@ -2162,7 +2162,7 @@ class LoggingAnalyticsAssistant:
                         "priority": "high",
                         "expected_impact": "Reduce max drawdown by 30-40%"
                     })
-            
+
             # Always include a positive recommendation
             if not recommendations or all(r["priority"] == "high" for r in recommendations):
                 recommendations.append({
@@ -2171,7 +2171,7 @@ class LoggingAnalyticsAssistant:
                     "priority": "low",
                     "expected_impact": "Maintain consistent performance"
                 })
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error generating recommendations: {e}")
             recommendations.append({
@@ -2180,7 +2180,7 @@ class LoggingAnalyticsAssistant:
                 "priority": "medium",
                 "expected_impact": "Improve system stability"
             })
-        
+
         return recommendations[:5]  # Return top 5 recommendations
 
     def _assess_report_data_quality(self, report_data: Dict) -> Dict:
@@ -2190,18 +2190,18 @@ class LoggingAnalyticsAssistant:
             has_trade_data = "trade_data" in report_data and report_data["trade_data"].get("trades")
             has_system_data = "system_data" in report_data and report_data["system_data"].get("system_metrics")
             has_learning_data = "learning_data" in report_data
-            
+
             completeness = sum([has_trade_data, has_system_data, has_learning_data]) / 3 * 100
-            
+
             # Check data freshness
             collection_time = report_data.get("collection_timestamp", 0)
             data_age = time.time() - collection_time if collection_time > 0 else float('inf')
-            
+
             freshness = 100 if data_age < 60 else 80 if data_age < 300 else 50
-            
+
             # Overall quality score
             quality_score = (completeness + freshness) / 2
-            
+
             return {
                 "quality_score": quality_score,
                 "data_completeness": completeness,
@@ -2209,7 +2209,7 @@ class LoggingAnalyticsAssistant:
                 "data_age_seconds": data_age,
                 "assessment": "excellent" if quality_score > 90 else "good" if quality_score > 70 else "fair"
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error assessing report data quality: {e}")
             return {"quality_score": 0.0, "assessment": "error", "error": str(e)}
@@ -2217,61 +2217,61 @@ class LoggingAnalyticsAssistant:
     def _suggest_next_actions(self, report_sections: Dict) -> List[str]:
         """Suggest next actions based on report findings."""
         actions = []
-        
+
         try:
             # Based on alerts
             if "alerts" in report_sections and report_sections["alerts"]:
                 for alert in report_sections["alerts"][:2]:  # Top 2 alerts
                     if "action" in alert:
                         actions.append(alert["action"])
-            
+
             # Based on trends
             if "trend_analysis" in report_sections:
                 if report_sections["trend_analysis"].get("momentum") == "negative":
                     actions.append("Review and adjust strategy parameters")
-            
+
             # Based on optimization
             if "optimization_opportunities" in report_sections:
                 priority_action = report_sections["optimization_opportunities"].get("priority_action")
                 if priority_action and priority_action != "System performing optimally":
                     actions.append(priority_action)
-            
+
             # Default actions if none identified
             if not actions:
                 actions.extend([
                     "Continue monitoring system performance",
                     "Review trading logs for improvement opportunities"
                 ])
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error suggesting next actions: {e}")
             actions.append("Review system status and error logs")
-        
+
         return actions[:3]  # Return top 3 actions
 
     async def _store_report(self, report: Dict) -> bool:
         """Store report to persistent storage."""
         try:
             self.performance_metrics["storage_operations"] += 1
-            
+
             # Create storage directory
             storage_path = self.analytics_config["storage_path"]
             reports_dir = os.path.join(storage_path, "reports")
             os.makedirs(reports_dir, exist_ok=True)
-            
+
             # Create filename
             report_type = report["report_metadata"]["report_type"]
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"{report_type}_{timestamp}.json"
             filepath = os.path.join(reports_dir, filename)
-            
+
             # Save report
             with open(filepath, 'w') as f:
                 json.dump(report, f, indent=2, default=str)
-            
+
             logger.info(f"[ANALYTICS_ASSISTANT] Report saved to {filepath}")
             return True
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error storing report: {e}")
             return False
@@ -2283,17 +2283,17 @@ class LoggingAnalyticsAssistant:
             if assistant_type == "buy_logic" and self.execution_assistant:
                 if hasattr(self.execution_assistant, "buy_assistant"):
                     return self.execution_assistant.buy_assistant.get_performance_summary()
-            
+
             elif assistant_type == "sell_logic" and self.execution_assistant:
                 if hasattr(self.execution_assistant, "sell_assistant"):
                     return self.execution_assistant.sell_assistant.get_performance_summary()
-            
+
             elif assistant_type == "risk_management" and hasattr(self.bot, "risk_assistant"):
                 return self.bot.risk_assistant.get_performance_summary()
-            
+
             elif assistant_type == "symbol_mapping" and hasattr(self.bot, "symbol_assistant"):
                 return self.bot.symbol_assistant.get_performance_summary()
-            
+
             # Default metrics if assistant not found
             return {
                 "status": "operational",
@@ -2301,7 +2301,7 @@ class LoggingAnalyticsAssistant:
                 "metrics": {},
                 "assistant_type": assistant_type
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting {assistant_type} metrics: {e}")
             return {"status": "error", "performance_score": 0.0, "error": str(e)}
@@ -2310,18 +2310,19 @@ class LoggingAnalyticsAssistant:
         """Collect system-wide performance metrics."""
         try:
             # Get real system metrics using psutil
-            import psutil
             import threading
-            
+
+            import psutil
+
             # Basic system metrics
             cpu_usage = psutil.cpu_percent(interval=0.1)
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage('/')
-            
+
             # Network and threading info
             network_connections = len(psutil.net_connections())
             active_threads = threading.active_count()
-            
+
             return {
                 "cpu_usage": round(cpu_usage, 1),
                 "memory_usage": round(memory.percent, 1),
@@ -2333,7 +2334,7 @@ class LoggingAnalyticsAssistant:
                 "memory_available_gb": round(memory.available / (1024**3), 2),
                 "disk_free_gb": round(disk.free / (1024**3), 2)
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting system metrics: {e}")
             return {"cpu_usage": 0.0, "memory_usage": 0.0, "error": str(e)}
@@ -2350,7 +2351,7 @@ class LoggingAnalyticsAssistant:
                 "open_positions": 0,  # Would get from position tracker
                 "pending_orders": 0  # Would get from order manager
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting trading metrics: {e}")
             return {"active_trades": 0, "daily_volume": 0.0, "error": str(e)}
@@ -2360,7 +2361,7 @@ class LoggingAnalyticsAssistant:
         try:
             if self.learning_manager and hasattr(self.learning_manager, "get_learning_stats"):
                 return self.learning_manager.get_learning_stats()
-            
+
             # Default metrics
             return {
                 "models_updated": 3,
@@ -2368,7 +2369,7 @@ class LoggingAnalyticsAssistant:
                 "learning_events": self.performance_metrics["learning_cycles"],
                 "last_optimization": time.time() - 3600  # 1 hour ago
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error collecting learning metrics: {e}")
             return {"models_updated": 0, "accuracy": 0.0, "error": str(e)}
@@ -2379,17 +2380,17 @@ class LoggingAnalyticsAssistant:
             # Simple trend analysis based on recent metrics
             recent_trades = self.data_buffers["trade_executions"][-50:]
             older_trades = self.data_buffers["trade_executions"][-100:-50]
-            
+
             if recent_trades and older_trades:
                 recent_win_rate = sum(1 for t in recent_trades if t.get("profit_loss", 0) > 0) / len(recent_trades) * 100
                 older_win_rate = sum(1 for t in older_trades if t.get("profit_loss", 0) > 0) / len(older_trades) * 100
-                
+
                 trend = "improving" if recent_win_rate > older_win_rate else "declining"
                 rate = abs(recent_win_rate - older_win_rate) / 100
             else:
                 trend = "stable"
                 rate = 0.0
-            
+
             return {
                 "overall_trend": trend,
                 "improvement_rate": rate,
@@ -2399,7 +2400,7 @@ class LoggingAnalyticsAssistant:
                     "profit_factor": "improving" if rate > 0 else "stable"
                 }
             }
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error analyzing trends: {e}")
             return {"overall_trend": "unknown", "improvement_rate": 0.0, "error": str(e)}
@@ -2407,7 +2408,7 @@ class LoggingAnalyticsAssistant:
     async def _check_performance_alerts(self, metrics: Dict) -> List[Dict]:
         """Check for performance-related alerts."""
         alerts = []
-        
+
         try:
             # Check trading metrics
             trading = metrics.get("trading", {})
@@ -2418,7 +2419,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"Daily loss exceeds $100: ${abs(trading['daily_profit']):.2f}",
                     "timestamp": time.time()
                 })
-            
+
             # Check system metrics
             system = metrics.get("system", {})
             if system.get("cpu_usage", 0) > 80:
@@ -2428,7 +2429,7 @@ class LoggingAnalyticsAssistant:
                     "message": f"CPU usage at {system['cpu_usage']:.1f}%",
                     "timestamp": time.time()
                 })
-            
+
             # Check learning metrics
             learning = metrics.get("learning", {})
             if learning.get("accuracy", 100) < 70:
@@ -2438,39 +2439,39 @@ class LoggingAnalyticsAssistant:
                     "message": f"Learning accuracy at {learning['accuracy']:.1f}%",
                     "timestamp": time.time()
                 })
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error checking performance alerts: {e}")
-        
+
         return alerts
 
     def _calculate_overall_performance_score(self, performance_data: Dict) -> float:
         """Calculate overall system performance score."""
         try:
             scores = []
-            
+
             # Assistant performance scores
             for assistant in performance_data.get("assistant_performance", []):
                 if "performance_score" in assistant:
                     scores.append(assistant["performance_score"])
-            
+
             # System performance
             system = performance_data.get("system_performance", {})
             if system:
                 cpu_score = 100 - system.get("cpu_usage", 0)
                 memory_score = 100 - system.get("memory_usage", 0)
                 scores.extend([cpu_score, memory_score])
-            
+
             # Trading performance
             trading = performance_data.get("trading_performance", {})
             if trading.get("daily_profit", 0) > 0:
                 scores.append(90.0)  # Good if profitable
             else:
                 scores.append(50.0)  # Needs improvement if not
-            
+
             # Calculate weighted average
             return sum(scores) / len(scores) if scores else 50.0
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error calculating performance score: {e}")
             return 50.0
@@ -2482,7 +2483,7 @@ class LoggingAnalyticsAssistant:
             critical_alerts = [a for a in alerts if a.get("severity") == "critical"]
             if critical_alerts:
                 return "critical"
-            
+
             # Based on score
             if score >= 85:
                 return "excellent"
@@ -2492,7 +2493,7 @@ class LoggingAnalyticsAssistant:
                 return "fair"
             else:
                 return "poor"
-                
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error determining health status: {e}")
             return "unknown"
@@ -2501,19 +2502,19 @@ class LoggingAnalyticsAssistant:
         """Store real-time metrics for historical tracking."""
         try:
             self.performance_metrics["storage_operations"] += 1
-            
+
             # Add to performance snapshots buffer
             self.data_buffers["performance_snapshots"].append({
                 "timestamp": time.time(),
                 "metrics": metrics
             })
-            
+
             # Keep only last 1000 snapshots
             if len(self.data_buffers["performance_snapshots"]) > 1000:
                 self.data_buffers["performance_snapshots"] = self.data_buffers["performance_snapshots"][-1000:]
-            
+
             return True
-            
+
         except Exception as e:
             logger.warning(f"[ANALYTICS_ASSISTANT] Error storing real-time metrics: {e}")
             return False
@@ -2523,60 +2524,60 @@ class LoggingAnalyticsAssistant:
         """Remove duplicate trades based on timestamp and symbol."""
         seen = set()
         unique_trades = []
-        
+
         for trade in trades:
             key = (trade.get("symbol", ""), trade.get("tracking_timestamp", 0))
             if key not in seen:
                 seen.add(key)
                 unique_trades.append(trade)
-        
+
         return unique_trades
 
     def _calculate_consecutive_wins(self, trades: List[Dict]) -> int:
         """Calculate maximum consecutive winning trades."""
         if not trades:
             return 0
-        
+
         max_consecutive = 0
         current_consecutive = 0
-        
+
         for trade in sorted(trades, key=lambda x: x.get("tracking_timestamp", 0)):
             if trade.get("profit_loss", 0) > 0:
                 current_consecutive += 1
                 max_consecutive = max(max_consecutive, current_consecutive)
             else:
                 current_consecutive = 0
-        
+
         return max_consecutive
 
     def _calculate_consecutive_losses(self, trades: List[Dict]) -> int:
         """Calculate maximum consecutive losing trades."""
         if not trades:
             return 0
-        
+
         max_consecutive = 0
         current_consecutive = 0
-        
+
         for trade in sorted(trades, key=lambda x: x.get("tracking_timestamp", 0)):
             if trade.get("profit_loss", 0) < 0:
                 current_consecutive += 1
                 max_consecutive = max(max_consecutive, current_consecutive)
             else:
                 current_consecutive = 0
-        
+
         return max_consecutive
 
     def _calculate_risk_reward_ratio(self, trades: List[Dict]) -> float:
         """Calculate average risk/reward ratio."""
         if not trades:
             return 0.0
-        
+
         wins = [t.get("profit_loss", 0) for t in trades if t.get("profit_loss", 0) > 0]
         losses = [abs(t.get("profit_loss", 0)) for t in trades if t.get("profit_loss", 0) < 0]
-        
+
         avg_win = sum(wins) / len(wins) if wins else 0
         avg_loss = sum(losses) / len(losses) if losses else 1  # Avoid division by zero
-        
+
         return avg_win / avg_loss if avg_loss > 0 else avg_win
 
 

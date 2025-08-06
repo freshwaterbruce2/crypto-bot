@@ -18,14 +18,13 @@ Report Features:
 """
 
 import asyncio
-import time
-import logging
 import json
-import os
+import logging
 import statistics
-from datetime import datetime, timedelta
-from typing import Dict, List, Tuple, Any, Optional
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from typing import Any, Dict, List
+
 # Optional visualization dependencies
 try:
     import matplotlib.pyplot as plt
@@ -48,18 +47,18 @@ from pathlib import Path
 
 # Import other performance modules
 try:
-    from .benchmark_suite import HFTBenchmarkSuite, BenchmarkResult
-    from .load_testing import HFTLoadTester, LoadTestResult
+    from .benchmark_suite import BenchmarkResult, HFTBenchmarkSuite
     from .latency_analyzer import CriticalPathLatencyAnalyzer
+    from .load_testing import HFTLoadTester, LoadTestResult
     try:
         from .memory_profiler_simple import AdvancedMemoryProfiler
     except ImportError:
         from .memory_profiler import AdvancedMemoryProfiler
 except ImportError:
     # Fall back to direct imports if relative imports fail
-    from benchmark_suite import HFTBenchmarkSuite, BenchmarkResult
-    from load_testing import HFTLoadTester, LoadTestResult
+    from benchmark_suite import BenchmarkResult, HFTBenchmarkSuite
     from latency_analyzer import CriticalPathLatencyAnalyzer
+    from load_testing import HFTLoadTester, LoadTestResult
     try:
         from memory_profiler_simple import AdvancedMemoryProfiler
     except ImportError:
@@ -111,49 +110,49 @@ class ImplementationRoadmap:
 
 class PerformanceOptimizationReporter:
     """Comprehensive performance optimization reporter"""
-    
+
     def __init__(self, output_dir: str = None):
         """Initialize optimization reporter"""
         self.output_dir = Path(output_dir) if output_dir else Path(__file__).parent
         self.output_dir.mkdir(exist_ok=True)
-        
+
         # Historical data storage
         self.historical_reports: List[Dict] = []
         self.performance_trends: Dict[str, List[float]] = {}
-        
+
         # Optimization tracking
         self.opportunities: List[OptimizationOpportunity] = []
         self.regressions: List[PerformanceRegression] = []
         self.roadmap: List[ImplementationRoadmap] = []
-        
+
         logger.info(f"Performance Optimization Reporter initialized, output: {self.output_dir}")
-    
-    async def generate_comprehensive_report(self, 
+
+    async def generate_comprehensive_report(self,
                                           benchmark_results: Dict[str, Any] = None,
                                           load_test_results: Dict[str, Any] = None,
                                           memory_analysis: Dict[str, Any] = None,
                                           latency_analysis: Dict[str, Any] = None) -> Dict[str, Any]:
         """Generate comprehensive performance optimization report"""
-        
+
         logger.info("Generating comprehensive performance optimization report...")
-        
+
         # Run performance analysis if not provided
         if not any([benchmark_results, load_test_results, memory_analysis, latency_analysis]):
             logger.info("No performance data provided, running full analysis...")
-            
+
             # Run benchmark suite
             benchmark_suite = HFTBenchmarkSuite()
             benchmark_results = await benchmark_suite.run_all_benchmarks()
-            
+
             # Run load testing
             load_tester = HFTLoadTester()
             load_test_results = await load_tester.run_comprehensive_load_tests()
-            
+
             # Run memory profiling
             memory_profiler = AdvancedMemoryProfiler()
             await memory_profiler.start_profiling(duration=300)  # 5 minutes
             memory_analysis = memory_profiler.generate_comprehensive_report()
-            
+
             # Run latency analysis
             latency_analyzer = CriticalPathLatencyAnalyzer()
             latency_analyzer.start_monitoring()
@@ -161,19 +160,19 @@ class PerformanceOptimizationReporter:
             await latency_analyzer.analyze_critical_paths()
             latency_analysis = latency_analyzer.generate_latency_report()
             latency_analyzer.stop_monitoring()
-        
+
         # Analyze results and generate opportunities
         self._analyze_benchmark_results(benchmark_results)
         self._analyze_load_test_results(load_test_results)
         self._analyze_memory_results(memory_analysis)
         self._analyze_latency_results(latency_analysis)
-        
+
         # Generate optimization roadmap
         self._generate_optimization_roadmap()
-        
+
         # Detect performance regressions
         self._detect_performance_regressions(benchmark_results, load_test_results)
-        
+
         # Create comprehensive report
         report = {
             'metadata': {
@@ -199,34 +198,34 @@ class PerformanceOptimizationReporter:
             'cost_benefit_analysis': self._perform_cost_benefit_analysis(),
             'next_steps': self._generate_next_steps()
         }
-        
+
         # Save report
         await self._save_report(report)
-        
+
         # Generate visualizations
         await self._generate_visualizations(report)
-        
+
         return report
-    
+
     def _analyze_benchmark_results(self, results: Dict[str, Any]):
         """Analyze benchmark results for optimization opportunities"""
         if not results or 'detailed_results' not in results:
             return
-        
+
         for result_dict in results['detailed_results']:
             result = BenchmarkResult(**result_dict)
-            
+
             # Check if performance targets are not met
             if not result.passed:
                 severity = "CRITICAL" if result.avg_latency > result.target_latency * 3 else \
                           "HIGH" if result.avg_latency > result.target_latency * 2 else "MEDIUM"
-                
+
                 optimization = self._create_benchmark_optimization(result, severity)
                 self.opportunities.append(optimization)
-    
+
     def _create_benchmark_optimization(self, result: BenchmarkResult, severity: str) -> OptimizationOpportunity:
         """Create optimization opportunity from benchmark result"""
-        
+
         # Component-specific optimizations
         if result.component == "Authentication":
             return OptimizationOpportunity(
@@ -264,7 +263,7 @@ class PerformanceOptimizationReporter:
                     "https://docs.python.org/3/library/functools.html#functools.lru_cache"
                 ]
             )
-        
+
         elif result.component == "Rate Limiting":
             return OptimizationOpportunity(
                 category="Rate Limiting Performance",
@@ -305,14 +304,14 @@ class PerformanceOptimizationReporter:
                     "https://docs.python.org/3/library/threading.html#atomic-operations"
                 ]
             )
-        
+
         elif result.component == "WebSocket":
             return OptimizationOpportunity(
                 category="WebSocket Performance",
                 priority=severity,
                 component=result.component,
                 issue_description=f"WebSocket message processing taking {result.avg_latency:.2f}ms",
-                performance_impact=f"Message processing bottleneck affecting real-time data flow",
+                performance_impact="Message processing bottleneck affecting real-time data flow",
                 optimization_recommendation="Implement async message queues and batch processing",
                 implementation_effort="MEDIUM",
                 expected_improvement="Increase message throughput by 200-300%",
@@ -351,7 +350,7 @@ class PerformanceOptimizationReporter:
                     "https://docs.python.org/3/library/asyncio-queue.html"
                 ]
             )
-        
+
         # Default optimization for other components
         return OptimizationOpportunity(
             category="General Performance",
@@ -366,15 +365,15 @@ class PerformanceOptimizationReporter:
             code_examples=["# Profile and optimize critical sections"],
             references=[]
         )
-    
+
     def _analyze_load_test_results(self, results: Dict[str, Any]):
         """Analyze load test results for optimization opportunities"""
         if not results or 'scenario_results' not in results:
             return
-        
+
         for scenario_dict in results['scenario_results']:
             scenario = LoadTestResult(**scenario_dict)
-            
+
             # Check for performance issues
             issues = []
             if scenario.error_rate > 5.0:  # >5% error rate
@@ -385,14 +384,14 @@ class PerformanceOptimizationReporter:
                 issues.append("resource_exhaustion")
             if scenario.stability_score < 80:
                 issues.append("low_stability")
-            
+
             if issues:
                 optimization = self._create_load_test_optimization(scenario, issues)
                 self.opportunities.append(optimization)
-    
+
     def _create_load_test_optimization(self, scenario: LoadTestResult, issues: List[str]) -> OptimizationOpportunity:
         """Create optimization from load test issues"""
-        
+
         if "resource_exhaustion" in issues:
             return OptimizationOpportunity(
                 category="Resource Management",
@@ -431,7 +430,7 @@ class PerformanceOptimizationReporter:
                 ],
                 references=["https://docs.python.org/3/library/asyncio-queue.html"]
             )
-        
+
         elif "high_error_rate" in issues:
             return OptimizationOpportunity(
                 category="Error Handling",
@@ -464,7 +463,7 @@ class PerformanceOptimizationReporter:
                 ],
                 references=[]
             )
-        
+
         elif "high_latency" in issues:
             return OptimizationOpportunity(
                 category="Latency Optimization",
@@ -502,7 +501,7 @@ class PerformanceOptimizationReporter:
                 ],
                 references=[]
             )
-        
+
         # Default optimization
         return OptimizationOpportunity(
             category="Load Performance",
@@ -517,15 +516,15 @@ class PerformanceOptimizationReporter:
             code_examples=["# General performance optimizations"],
             references=[]
         )
-    
+
     def _analyze_memory_results(self, results: Dict[str, Any]):
         """Analyze memory profiling results"""
         if not results:
             return
-        
+
         memory_summary = results.get('memory_summary', {})
         detected_leaks = results.get('detected_leaks', [])
-        
+
         # Memory growth issues
         growth_rate = memory_summary.get('growth_rate_mb_per_minute', 0)
         if growth_rate > 5:  # >5MB/min
@@ -537,7 +536,7 @@ class PerformanceOptimizationReporter:
                 performance_impact="Potential memory exhaustion and system instability",
                 optimization_recommendation="Implement object pooling and optimize memory allocation patterns",
                 implementation_effort="HIGH",
-                expected_improvement=f"Reduce memory growth by 60-80%",
+                expected_improvement="Reduce memory growth by 60-80%",
                 cost_benefit_ratio=7.2,
                 code_examples=[
                     "# Object pooling for memory optimization",
@@ -566,7 +565,7 @@ class PerformanceOptimizationReporter:
                 ],
                 references=[]
             ))
-        
+
         # Memory leaks
         for leak in detected_leaks:
             if leak['severity'] in ['HIGH', 'CRITICAL']:
@@ -601,12 +600,12 @@ class PerformanceOptimizationReporter:
                     ],
                     references=[]
                 ))
-    
+
     def _analyze_latency_results(self, results: Dict[str, Any]):
         """Analyze latency analysis results"""
         if not results:
             return
-        
+
         # Critical path analysis
         critical_paths = results.get('critical_paths', [])
         for path in critical_paths:
@@ -632,14 +631,14 @@ class PerformanceOptimizationReporter:
                     ],
                     references=[]
                 ))
-        
+
         # Component latency issues
         component_stats = results.get('component_statistics', {})
         for key, stats in component_stats.items():
             if stats['mean_latency_ms'] > 50:  # >50ms component latency
                 component = stats['component']
                 operation = stats['operation']
-                
+
                 self.opportunities.append(OptimizationOpportunity(
                     category="Component Latency",
                     priority="MEDIUM",
@@ -660,10 +659,10 @@ class PerformanceOptimizationReporter:
                     ],
                     references=[]
                 ))
-    
+
     def _generate_optimization_roadmap(self):
         """Generate implementation roadmap for optimizations"""
-        
+
         # Sort opportunities by priority and impact
         sorted_opportunities = sorted(
             self.opportunities,
@@ -673,16 +672,16 @@ class PerformanceOptimizationReporter:
             ),
             reverse=True
         )
-        
+
         # Phase 1: Critical and High priority (2-4 weeks)
-        phase1_items = [opp for opp in sorted_opportunities[:5] 
+        phase1_items = [opp for opp in sorted_opportunities[:5]
                        if opp.priority in ['CRITICAL', 'HIGH']]
-        
+
         if phase1_items:
             self.roadmap.append(ImplementationRoadmap(
                 phase="Phase 1: Critical Performance Issues",
                 duration_weeks=4,
-                optimizations=[f"{opp.component}: {opp.optimization_recommendation}" 
+                optimizations=[f"{opp.component}: {opp.optimization_recommendation}"
                              for opp in phase1_items],
                 expected_improvements={
                     'latency_reduction': 40,  # 40% average
@@ -697,16 +696,16 @@ class PerformanceOptimizationReporter:
                     "Memory growth <2MB/min"
                 ]
             ))
-        
+
         # Phase 2: Medium priority optimizations (4-6 weeks)
-        phase2_items = [opp for opp in sorted_opportunities[5:10] 
+        phase2_items = [opp for opp in sorted_opportunities[5:10]
                        if opp.priority in ['MEDIUM']]
-        
+
         if phase2_items:
             self.roadmap.append(ImplementationRoadmap(
                 phase="Phase 2: Performance Enhancements",
                 duration_weeks=6,
-                optimizations=[f"{opp.component}: {opp.optimization_recommendation}" 
+                optimizations=[f"{opp.component}: {opp.optimization_recommendation}"
                              for opp in phase2_items],
                 expected_improvements={
                     'latency_reduction': 25,  # 25% average
@@ -721,15 +720,15 @@ class PerformanceOptimizationReporter:
                     "System stability >95%"
                 ]
             ))
-        
+
         # Phase 3: Long-term optimizations (6-8 weeks)
         phase3_items = sorted_opportunities[10:]
-        
+
         if phase3_items:
             self.roadmap.append(ImplementationRoadmap(
                 phase="Phase 3: Advanced Optimizations",
                 duration_weeks=8,
-                optimizations=[f"{opp.component}: {opp.optimization_recommendation}" 
+                optimizations=[f"{opp.component}: {opp.optimization_recommendation}"
                              for opp in phase3_items[:5]],
                 expected_improvements={
                     'system_efficiency': 20,  # 20% overall improvement
@@ -744,10 +743,10 @@ class PerformanceOptimizationReporter:
                     "Performance regression prevention"
                 ]
             ))
-    
+
     def _detect_performance_regressions(self, benchmark_results: Dict, load_test_results: Dict):
         """Detect performance regressions compared to baselines"""
-        
+
         # Load historical baselines (simplified)
         baselines = {
             'auth_signature_latency': 0.8,  # ms
@@ -757,24 +756,24 @@ class PerformanceOptimizationReporter:
             'average_error_rate': 1.0,  # %
             'peak_memory_usage': 1024  # MB
         }
-        
+
         current_time = datetime.now()
-        
+
         # Check benchmark regressions
         if benchmark_results and 'detailed_results' in benchmark_results:
             for result_dict in benchmark_results['detailed_results']:
                 result = BenchmarkResult(**result_dict)
-                
+
                 baseline_key = f"{result.component.lower()}_{result.test_name.lower().replace(' ', '_')}_latency"
                 if baseline_key in baselines:
                     baseline = baselines[baseline_key]
                     current = result.avg_latency
-                    
+
                     if current > baseline * 1.2:  # 20% regression threshold
                         regression_pct = ((current - baseline) / baseline) * 100
                         severity = "CRITICAL" if regression_pct > 100 else \
                                   "HIGH" if regression_pct > 50 else "MEDIUM"
-                        
+
                         self.regressions.append(PerformanceRegression(
                             component=result.component,
                             metric=result.test_name,
@@ -786,25 +785,25 @@ class PerformanceOptimizationReporter:
                             root_cause_analysis="Requires investigation - possible causes: "
                                               "code changes, increased load, resource constraints"
                         ))
-    
-    def _generate_executive_summary(self, benchmark_results, load_test_results, 
+
+    def _generate_executive_summary(self, benchmark_results, load_test_results,
                                   memory_analysis, latency_analysis) -> Dict[str, Any]:
         """Generate executive summary"""
-        
+
         # Calculate overall performance score
         performance_score = self._calculate_performance_score(
             benchmark_results, load_test_results, memory_analysis, latency_analysis
         )
-        
+
         # Count issues by severity
         critical_issues = len([opp for opp in self.opportunities if opp.priority == 'CRITICAL'])
         high_issues = len([opp for opp in self.opportunities if opp.priority == 'HIGH'])
         medium_issues = len([opp for opp in self.opportunities if opp.priority == 'MEDIUM'])
-        
+
         # Calculate potential improvements
         total_cost_benefit = sum(opp.cost_benefit_ratio for opp in self.opportunities)
         avg_cost_benefit = total_cost_benefit / len(self.opportunities) if self.opportunities else 0
-        
+
         return {
             'overall_performance_score': performance_score,
             'performance_grade': self._get_performance_grade(performance_score),
@@ -822,36 +821,36 @@ class PerformanceOptimizationReporter:
             'immediate_actions_required': critical_issues > 0 or high_issues > 3,
             'expected_performance_improvement': self._calculate_expected_improvement()
         }
-    
-    def _calculate_performance_score(self, benchmark_results, load_test_results, 
+
+    def _calculate_performance_score(self, benchmark_results, load_test_results,
                                    memory_analysis, latency_analysis) -> float:
         """Calculate overall performance score (0-100)"""
         scores = []
-        
+
         # Benchmark score
         if benchmark_results and 'summary' in benchmark_results:
             success_rate = benchmark_results['summary'].get('success_rate', 0)
             scores.append(success_rate)
-        
+
         # Load test score
         if load_test_results and 'summary' in load_test_results:
             success_rate = load_test_results['summary'].get('overall_success_rate', 0)
             scores.append(success_rate)
-        
+
         # Memory score (based on growth rate)
         if memory_analysis and 'memory_summary' in memory_analysis:
             growth_rate = memory_analysis['memory_summary'].get('growth_rate_mb_per_minute', 0)
             memory_score = max(0, 100 - (growth_rate * 5))  # Penalize high growth
             scores.append(memory_score)
-        
+
         # Latency score (based on regression count)
         if latency_analysis and 'detected_regressions' in latency_analysis:
             regression_count = len(latency_analysis['detected_regressions'])
             latency_score = max(0, 100 - (regression_count * 10))  # Penalize regressions
             scores.append(latency_score)
-        
+
         return sum(scores) / len(scores) if scores else 50  # Default to 50 if no data
-    
+
     def _get_performance_grade(self, score: float) -> str:
         """Convert performance score to letter grade"""
         if score >= 90:
@@ -864,39 +863,39 @@ class PerformanceOptimizationReporter:
             return "D"
         else:
             return "F"
-    
+
     def _generate_key_findings(self) -> List[str]:
         """Generate key findings from analysis"""
         findings = []
-        
+
         # High-impact opportunities
-        high_impact_opps = [opp for opp in self.opportunities 
+        high_impact_opps = [opp for opp in self.opportunities
                            if opp.cost_benefit_ratio > 8.0]
         if high_impact_opps:
             findings.append(f"Identified {len(high_impact_opps)} high-impact optimization opportunities "
                           f"with average ROI of {statistics.mean([opp.cost_benefit_ratio for opp in high_impact_opps]):.1f}x")
-        
+
         # Critical issues
         critical_opps = [opp for opp in self.opportunities if opp.priority == 'CRITICAL']
         if critical_opps:
             findings.append(f"{len(critical_opps)} critical performance issues require immediate attention")
-        
+
         # Memory issues
         memory_opps = [opp for opp in self.opportunities if 'Memory' in opp.category]
         if memory_opps:
             findings.append("Memory management optimizations could significantly improve system stability")
-        
+
         # Latency issues
         latency_opps = [opp for opp in self.opportunities if 'Latency' in opp.category]
         if latency_opps:
             findings.append("Latency optimizations are needed to meet high-frequency trading requirements")
-        
+
         # Regressions
         if self.regressions:
             findings.append(f"Detected {len(self.regressions)} performance regressions requiring investigation")
-        
+
         return findings
-    
+
     def _calculate_expected_improvement(self) -> Dict[str, float]:
         """Calculate expected performance improvements"""
         improvements = {
@@ -905,7 +904,7 @@ class PerformanceOptimizationReporter:
             'error_rate_reduction_percent': 0,
             'memory_efficiency_improvement_percent': 0
         }
-        
+
         # Estimate improvements based on optimization opportunities
         for opp in self.opportunities:
             if 'latency' in opp.issue_description.lower():
@@ -916,22 +915,22 @@ class PerformanceOptimizationReporter:
                 improvements['error_rate_reduction_percent'] += opp.cost_benefit_ratio * 5
             if 'memory' in opp.category.lower():
                 improvements['memory_efficiency_improvement_percent'] += opp.cost_benefit_ratio * 4
-        
+
         # Cap improvements at reasonable maximums
         for key in improvements:
             improvements[key] = min(improvements[key], 80)  # Max 80% improvement
-        
+
         return improvements
-    
+
     def _generate_recommendations(self) -> List[Dict[str, Any]]:
         """Generate actionable recommendations"""
         recommendations = []
-        
+
         # Top 5 recommendations by cost-benefit ratio
-        top_opportunities = sorted(self.opportunities, 
-                                 key=lambda x: x.cost_benefit_ratio, 
+        top_opportunities = sorted(self.opportunities,
+                                 key=lambda x: x.cost_benefit_ratio,
                                  reverse=True)[:5]
-        
+
         for i, opp in enumerate(top_opportunities, 1):
             recommendations.append({
                 'rank': i,
@@ -943,9 +942,9 @@ class PerformanceOptimizationReporter:
                 'cost_benefit_ratio': opp.cost_benefit_ratio,
                 'estimated_timeline': self._estimate_implementation_time(opp)
             })
-        
+
         return recommendations
-    
+
     def _estimate_implementation_time(self, opportunity: OptimizationOpportunity) -> str:
         """Estimate implementation time for an optimization"""
         effort_to_time = {
@@ -954,7 +953,7 @@ class PerformanceOptimizationReporter:
             'HIGH': '4-8 weeks'
         }
         return effort_to_time.get(opportunity.implementation_effort, '2-4 weeks')
-    
+
     def _analyze_performance_trends(self) -> Dict[str, Any]:
         """Analyze performance trends over time"""
         # This would analyze historical data in a real implementation
@@ -963,56 +962,57 @@ class PerformanceOptimizationReporter:
             'note': 'Historical trend analysis requires multiple report runs',
             'next_report_comparison': 'Enable by running reports regularly'
         }
-    
+
     def _perform_cost_benefit_analysis(self) -> Dict[str, Any]:
         """Perform cost-benefit analysis of optimizations"""
         if not self.opportunities:
             return {'analysis': 'No optimization opportunities identified'}
-        
+
         total_investment_weeks = sum(
             {'LOW': 2, 'MEDIUM': 4, 'HIGH': 8}[opp.implementation_effort]
             for opp in self.opportunities
         )
-        
+
         total_benefit_score = sum(opp.cost_benefit_ratio for opp in self.opportunities)
         avg_roi = total_benefit_score / len(self.opportunities)
-        
+
         return {
             'total_optimization_opportunities': len(self.opportunities),
             'estimated_total_investment_weeks': total_investment_weeks,
             'average_roi': avg_roi,
-            'high_roi_opportunities': len([opp for opp in self.opportunities 
+            'high_roi_opportunities': len([opp for opp in self.opportunities
                                          if opp.cost_benefit_ratio > 8.0]),
-            'quick_wins': len([opp for opp in self.opportunities 
+            'quick_wins': len([opp for opp in self.opportunities
                              if opp.implementation_effort == 'LOW' and opp.cost_benefit_ratio > 6.0]),
             'recommendation': 'HIGH' if avg_roi > 7.0 else 'MEDIUM' if avg_roi > 5.0 else 'LOW'
         }
-    
+
     def _generate_next_steps(self) -> List[str]:
         """Generate next steps for implementation"""
         next_steps = []
-        
+
         if self.regressions:
             next_steps.append("URGENT: Investigate and fix performance regressions")
-        
+
         critical_opps = [opp for opp in self.opportunities if opp.priority == 'CRITICAL']
         if critical_opps:
             next_steps.append("Immediately address critical performance issues")
-        
+
         next_steps.extend([
             "Set up continuous performance monitoring",
             "Establish performance baselines and SLAs",
             "Begin Phase 1 optimization implementation",
             "Schedule regular performance reviews"
         ])
-        
+
         return next_steps
-    
+
     def _get_environment_info(self) -> Dict[str, Any]:
         """Get environment information"""
         import platform
+
         import psutil
-        
+
         return {
             'python_version': platform.python_version(),
             'platform': platform.platform(),
@@ -1020,81 +1020,81 @@ class PerformanceOptimizationReporter:
             'memory_gb': round(psutil.virtual_memory().total / (1024**3), 1),
             'analysis_timestamp': datetime.now().isoformat()
         }
-    
+
     async def _save_report(self, report: Dict[str, Any]):
         """Save comprehensive report to files"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        
+
         # Save main report
         report_file = self.output_dir / f'performance_optimization_report_{timestamp}.json'
         with open(report_file, 'w') as f:
             json.dump(report, f, indent=2, default=str)
-        
+
         logger.info(f"Performance optimization report saved to {report_file}")
-        
+
         # Save executive summary as separate file
         summary_file = self.output_dir / f'executive_summary_{timestamp}.json'
         with open(summary_file, 'w') as f:
             json.dump(report['executive_summary'], f, indent=2, default=str)
-        
+
         # Save implementation roadmap
         roadmap_file = self.output_dir / f'implementation_roadmap_{timestamp}.json'
         with open(roadmap_file, 'w') as f:
             json.dump(report['implementation_roadmap'], f, indent=2, default=str)
-        
+
         logger.info(f"Additional reports saved: {summary_file}, {roadmap_file}")
-    
+
     async def _generate_visualizations(self, report: Dict[str, Any]):
         """Generate performance visualization charts"""
         if HAVE_MATPLOTLIB:
             try:
                 # Performance score visualization
                 self._create_performance_score_chart(report)
-                
+
                 # Optimization opportunities chart
                 self._create_optimization_opportunities_chart(report)
-                
+
                 # Implementation roadmap timeline
                 self._create_roadmap_timeline_chart(report)
-                
+
                 logger.info("Performance visualization charts generated")
-                
+
             except Exception as e:
                 logger.warning(f"Failed to generate visualizations: {e}")
         else:
             logger.info("Skipping visualization charts - matplotlib not available")
-    
+
     def _create_performance_score_chart(self, report: Dict[str, Any]):
         """Create performance score visualization"""
         executive_summary = report.get('executive_summary', {})
-        
+
         categories = ['Benchmarks', 'Load Tests', 'Memory', 'Latency']
         scores = [85, 78, 72, 80]  # Example scores
-        
+
         fig, ax = plt.subplots(figsize=(10, 6))
         bars = ax.bar(categories, scores, color=['green' if s >= 80 else 'orange' if s >= 60 else 'red' for s in scores])
-        
+
         ax.set_ylabel('Performance Score')
         ax.set_title('Performance Analysis Results')
         ax.set_ylim(0, 100)
-        
+
         # Add score labels on bars
         for bar, score in zip(bars, scores):
             height = bar.get_height()
             ax.text(bar.get_x() + bar.get_width()/2., height + 1,
                    f'{score}%', ha='center', va='bottom')
-        
+
         plt.tight_layout()
         plt.savefig(self.output_dir / 'performance_scores.png', dpi=300, bbox_inches='tight')
         plt.close()
-    
+
     def _create_optimization_opportunities_chart(self, report: Dict[str, Any]):
         """Create optimization opportunities visualization"""
         opportunities = report.get('optimization_opportunities', [])
-        
+
         if not opportunities:
             return
-        
+
         # Group by category
         categories = {}
         for opp in opportunities:
@@ -1102,66 +1102,66 @@ class PerformanceOptimizationReporter:
             if category not in categories:
                 categories[category] = {'critical': 0, 'high': 0, 'medium': 0, 'low': 0}
             categories[category][opp['priority'].lower()] += 1
-        
+
         # Create stacked bar chart
         fig, ax = plt.subplots(figsize=(12, 8))
-        
+
         category_names = list(categories.keys())
         critical_counts = [categories[cat]['critical'] for cat in category_names]
         high_counts = [categories[cat]['high'] for cat in category_names]
         medium_counts = [categories[cat]['medium'] for cat in category_names]
         low_counts = [categories[cat]['low'] for cat in category_names]
-        
+
         ax.bar(category_names, critical_counts, label='Critical', color='red')
         ax.bar(category_names, high_counts, bottom=critical_counts, label='High', color='orange')
-        ax.bar(category_names, medium_counts, 
-               bottom=[c + h for c, h in zip(critical_counts, high_counts)], 
+        ax.bar(category_names, medium_counts,
+               bottom=[c + h for c, h in zip(critical_counts, high_counts)],
                label='Medium', color='yellow')
         ax.bar(category_names, low_counts,
                bottom=[c + h + m for c, h, m in zip(critical_counts, high_counts, medium_counts)],
                label='Low', color='lightblue')
-        
+
         ax.set_ylabel('Number of Opportunities')
         ax.set_title('Optimization Opportunities by Category and Priority')
         ax.legend()
-        
+
         plt.xticks(rotation=45, ha='right')
         plt.tight_layout()
         plt.savefig(self.output_dir / 'optimization_opportunities.png', dpi=300, bbox_inches='tight')
         plt.close()
-    
+
     def _create_roadmap_timeline_chart(self, report: Dict[str, Any]):
         """Create implementation roadmap timeline"""
         roadmap = report.get('implementation_roadmap', [])
-        
+
         if not roadmap:
             return
-        
+
         fig, ax = plt.subplots(figsize=(14, 8))
-        
+
         phases = [phase['phase'] for phase in roadmap]
         durations = [phase['duration_weeks'] for phase in roadmap]
-        
+
         # Create Gantt-style chart
         start_weeks = [0]
         for i in range(1, len(durations)):
             start_weeks.append(start_weeks[i-1] + durations[i-1])
-        
+
         colors = ['red', 'orange', 'green']
         for i, (phase, duration, start) in enumerate(zip(phases, durations, start_weeks)):
-            ax.barh(i, duration, left=start, height=0.6, 
+            ax.barh(i, duration, left=start, height=0.6,
                    color=colors[i % len(colors)], alpha=0.7)
-            
+
             # Add phase labels
-            ax.text(start + duration/2, i, f'{duration}w', 
+            ax.text(start + duration/2, i, f'{duration}w',
                    ha='center', va='center', fontweight='bold')
-        
+
         ax.set_yticks(range(len(phases)))
         ax.set_yticklabels(phases)
         ax.set_xlabel('Timeline (Weeks)')
         ax.set_title('Performance Optimization Implementation Roadmap')
         ax.grid(axis='x', alpha=0.3)
-        
+
         plt.tight_layout()
         plt.savefig(self.output_dir / 'implementation_roadmap.png', dpi=300, bbox_inches='tight')
         plt.close()
@@ -1173,59 +1173,59 @@ async def main():
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Create output directory
     output_dir = Path(__file__).parent / 'reports'
     output_dir.mkdir(exist_ok=True)
-    
+
     # Create optimization reporter
     reporter = PerformanceOptimizationReporter(str(output_dir))
-    
+
     try:
         # Generate comprehensive report
         logger.info("Generating comprehensive performance optimization report...")
         report = await reporter.generate_comprehensive_report()
-        
+
         # Print summary
         print("\n" + "="*80)
         print("🚀 PERFORMANCE OPTIMIZATION REPORT GENERATED")
         print("="*80)
-        
+
         executive_summary = report['executive_summary']
-        
-        print(f"\n📊 EXECUTIVE SUMMARY:")
+
+        print("\n📊 EXECUTIVE SUMMARY:")
         print(f"   Performance Score: {executive_summary['overall_performance_score']:.1f}/100 (Grade: {executive_summary['performance_grade']})")
         print(f"   Optimization Opportunities: {executive_summary['total_optimization_opportunities']}")
         print(f"   Critical Issues: {executive_summary['issues_by_severity']['critical']}")
         print(f"   High Priority Issues: {executive_summary['issues_by_severity']['high']}")
         print(f"   Estimated Implementation: {executive_summary['estimated_implementation_time_weeks']} weeks")
         print(f"   Average ROI: {executive_summary['average_cost_benefit_ratio']:.1f}x")
-        
-        print(f"\n🎯 KEY FINDINGS:")
+
+        print("\n🎯 KEY FINDINGS:")
         for finding in executive_summary['key_findings']:
             print(f"   • {finding}")
-        
-        print(f"\n📈 EXPECTED IMPROVEMENTS:")
+
+        print("\n📈 EXPECTED IMPROVEMENTS:")
         improvements = executive_summary['expected_performance_improvement']
         for metric, value in improvements.items():
             print(f"   • {metric.replace('_', ' ').title()}: {value:.1f}%")
-        
+
         if executive_summary['immediate_actions_required']:
-            print(f"\n🚨 IMMEDIATE ACTION REQUIRED")
+            print("\n🚨 IMMEDIATE ACTION REQUIRED")
             print("   Critical performance issues need immediate attention!")
-        
-        print(f"\n📂 REPORT FILES:")
+
+        print("\n📂 REPORT FILES:")
         print(f"   Reports saved to: {output_dir}")
-        print(f"   • Main report: performance_optimization_report_*.json")
-        print(f"   • Executive summary: executive_summary_*.json")
-        print(f"   • Implementation plan: implementation_roadmap_*.json")
-        print(f"   • Visualizations: *.png charts")
-        
+        print("   • Main report: performance_optimization_report_*.json")
+        print("   • Executive summary: executive_summary_*.json")
+        print("   • Implementation plan: implementation_roadmap_*.json")
+        print("   • Visualizations: *.png charts")
+
         print("\n" + "="*80)
-        
+
         # Return success
         return 0
-        
+
     except Exception as e:
         logger.error(f"Report generation failed: {e}")
         import traceback

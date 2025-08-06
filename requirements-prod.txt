@@ -1,0 +1,62 @@
+# Production Dependencies Only
+# This file contains only the essential dependencies for running in production
+
+# Core dependencies
+aiohttp==3.9.1
+asyncio==3.4.3
+python-dateutil==2.8.2
+pytz==2023.3.post1
+typing-extensions==4.9.0
+
+# Exchange connectivity
+krakenex==2.2.0
+websockets==12.0
+orjson==3.9.10
+
+# Database
+asyncpg==0.29.0
+sqlalchemy==2.0.25
+alembic==1.13.1
+
+# Redis
+redis==5.0.1
+hiredis==2.3.2
+
+# API framework
+fastapi==0.108.0
+uvicorn[standard]==0.25.0
+pydantic==2.5.3
+
+# Monitoring and observability
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-exporter-prometheus==0.43b0
+
+# Logging
+structlog==24.1.0
+python-json-logger==2.0.7
+
+# Security
+cryptography==41.0.7
+pyjwt==2.8.0
+
+# Configuration
+python-dotenv==1.0.0
+pyyaml==6.0.1
+
+# Utilities
+tenacity==8.2.3
+backoff==2.2.1
+cachetools==5.3.2
+
+# Data processing
+numpy==1.26.3
+pandas==2.1.4
+
+# Error tracking (optional but recommended)
+sentry-sdk==1.39.2
+
+# Health checks
+py-healthcheck==1.10.1

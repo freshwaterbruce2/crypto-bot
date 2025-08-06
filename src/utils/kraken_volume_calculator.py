@@ -3,8 +3,8 @@ Kraken volume calculator with correct minimums
 Ensures all orders meet exchange requirements
 """
 
-from decimal import Decimal, ROUND_UP
-from typing import Dict, Tuple, Optional
+from decimal import Decimal
+from typing import Tuple
 
 # Kraken minimum order sizes by base currency
 KRAKEN_MINIMUMS = {
@@ -43,13 +43,13 @@ def calculate_order_volume(symbol: str, usdt_amount: float, price: float) -> Tup
     """
     # Extract base currency
     base_currency = symbol.split('/')[0]
-    
+
     # Get minimum volume for this currency
     min_volume = KRAKEN_MINIMUMS.get(base_currency, 1.0)
-    
+
     # Calculate desired volume
     desired_volume = Decimal(str(usdt_amount)) / Decimal(str(price))
-    
+
     # Ensure we meet minimum
     if desired_volume < Decimal(str(min_volume)):
         volume = min_volume
@@ -57,7 +57,7 @@ def calculate_order_volume(symbol: str, usdt_amount: float, price: float) -> Tup
     else:
         volume = float(desired_volume)
         actual_cost = usdt_amount
-    
+
     return volume, actual_cost
 
 def get_minimum_order_cost(symbol: str, price: float) -> float:

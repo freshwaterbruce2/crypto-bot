@@ -40,30 +40,30 @@ Usage:
 """
 
 # Enhanced WebSocket V2 components
-from .websocket_v2_manager import WebSocketV2Manager, WebSocketV2Config
-from .websocket_v2_channels import WebSocketV2ChannelProcessor
-from .websocket_v2_orders import WebSocketV2OrderManager, OrderRequest, OrderResponse
+from .connection_manager import ConnectionManager, ConnectionState
+
+# Data models
+from .data_models import (
+    BalanceUpdate,
+    ConnectionStatus,
+    OHLCUpdate,
+    OrderBookLevel,
+    OrderBookUpdate,
+    SubscriptionRequest,
+    SubscriptionResponse,
+    TickerUpdate,
+    TradeUpdate,
+    WebSocketMessage,
+)
 
 # New V2 message handler
 from .kraken_v2_message_handler import KrakenV2MessageHandler, create_kraken_v2_handler
 
 # Legacy components (maintained for backward compatibility)
 from .kraken_websocket_v2 import KrakenWebSocketV2
-from .connection_manager import ConnectionManager, ConnectionState
-
-# Data models
-from .data_models import (
-    WebSocketMessage,
-    BalanceUpdate,
-    TickerUpdate,
-    OrderBookUpdate,
-    OrderBookLevel,
-    TradeUpdate,
-    OHLCUpdate,
-    SubscriptionRequest,
-    SubscriptionResponse,
-    ConnectionStatus
-)
+from .websocket_v2_channels import WebSocketV2ChannelProcessor
+from .websocket_v2_manager import WebSocketV2Config, WebSocketV2Manager
+from .websocket_v2_orders import OrderRequest, OrderResponse, WebSocketV2OrderManager
 
 __all__ = [
     # Enhanced WebSocket V2 components
@@ -73,16 +73,16 @@ __all__ = [
     'WebSocketV2OrderManager',
     'OrderRequest',
     'OrderResponse',
-    
+
     # New V2 message handler
     'KrakenV2MessageHandler',
     'create_kraken_v2_handler',
-    
+
     # Legacy components
     'KrakenWebSocketV2',
     'ConnectionManager',
     'ConnectionState',
-    
+
     # Data models
     'WebSocketMessage',
     'BalanceUpdate',

@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python3
-import json
-import sys
 import asyncio
+import sys
+
 
 async def main():
     print('{"jsonrpc": "2.0", "id": 1, "result": {"name": "advanced-calculator", "version": "1.0.0"}}', flush=True)

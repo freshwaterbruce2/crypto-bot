@@ -1,0 +1,83 @@
+{
+  "timestamp": 1754427733.5027225,
+  "api_key_tests": {
+    "Generic Kraken Keys": {
+      "api_key_preview": "g2ZU0wUr...",
+      "status": "failed",
+      "endpoints_tested": {
+        "Balance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]"
+        },
+        "TradeBalance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: TradeBalance]"
+        },
+        "OpenOrders": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: OpenOrders]"
+        }
+      },
+      "error_details": null
+    },
+    "REST API Keys": {
+      "api_key_preview": "g2ZU0wUr...",
+      "status": "failed",
+      "endpoints_tested": {
+        "Balance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]"
+        },
+        "TradeBalance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: TradeBalance]"
+        },
+        "OpenOrders": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: OpenOrders]"
+        }
+      },
+      "error_details": null
+    },
+    "WebSocket API Keys": {
+      "api_key_preview": "2+5J8fTk...",
+      "status": "failed",
+      "endpoints_tested": {
+        "Balance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]"
+        },
+        "TradeBalance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: TradeBalance]"
+        },
+        "OpenOrders": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: OpenOrders]"
+        }
+      },
+      "error_details": null
+    },
+    "Legacy API Keys": {
+      "api_key_preview": "g2ZU0wUr...",
+      "status": "failed",
+      "endpoints_tested": {
+        "Balance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]"
+        },
+        "TradeBalance": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: TradeBalance]"
+        },
+        "OpenOrders": {
+          "status": "exception",
+          "error": "KrakenAPIError: EAPI:Invalid key [endpoint: OpenOrders]"
+        }
+      },
+      "error_details": null
+    }
+  },
+  "recommended_action": "manual_investigation",
+  "working_credentials": null
+}

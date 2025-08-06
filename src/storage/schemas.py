@@ -18,11 +18,9 @@ Features:
 """
 
 import logging
-import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Any, Union
-from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -46,25 +44,25 @@ class IndexConfig:
     unique: bool = False
     partial_condition: Optional[str] = None
     index_type: str = "BTREE"  # BTREE, HASH (SQLite uses BTREE)
-    
+
     def get_create_sql(self) -> str:
         """Generate CREATE INDEX SQL"""
         unique_clause = "UNIQUE " if self.unique else ""
         columns_clause = ", ".join(self.columns)
-        
+
         sql = f"CREATE {unique_clause}INDEX IF NOT EXISTS {self.name} ON {self.table} ({columns_clause})"
-        
+
         if self.partial_condition:
             sql += f" WHERE {self.partial_condition}"
-        
+
         return sql
 
 
 class BalanceHistorySchema:
     """Schema for balance history tracking with time-series optimization"""
-    
+
     TABLE_NAME = "balance_history"
-    
+
     @staticmethod
     def get_create_table_sql() -> str:
         """Get CREATE TABLE SQL for balance history"""
@@ -93,7 +91,7 @@ class BalanceHistorySchema:
             CHECK (timestamp_ms > 0)
         )
         """
-    
+
     @staticmethod
     def get_indexes() -> List[IndexConfig]:
         """Get optimized indexes for balance history queries"""
@@ -105,7 +103,7 @@ class BalanceHistorySchema:
                 columns=["asset", "timestamp_ms DESC"],
                 unique=False
             ),
-            
+
             # Index for balance change tracking
             IndexConfig(
                 name="idx_balance_changes",
@@ -114,7 +112,7 @@ class BalanceHistorySchema:
                 unique=False,
                 partial_condition="balance_change != 0"
             ),
-            
+
             # Index for source-based queries
             IndexConfig(
                 name="idx_balance_source_time",
@@ -122,7 +120,7 @@ class BalanceHistorySchema:
                 columns=["source", "timestamp_ms DESC"],
                 unique=False
             ),
-            
+
             # Index for validation status queries
             IndexConfig(
                 name="idx_balance_validation",
@@ -131,7 +129,7 @@ class BalanceHistorySchema:
                 unique=False,
                 partial_condition="validation_status != 'valid'"
             ),
-            
+
             # Composite index for analytics queries
             IndexConfig(
                 name="idx_balance_analytics",
@@ -140,7 +138,7 @@ class BalanceHistorySchema:
                 unique=False
             )
         ]
-    
+
     @staticmethod
     def get_partitioning_sql() -> List[str]:
         """Get partitioning SQL for historical data management"""
@@ -152,7 +150,7 @@ class BalanceHistorySchema:
             SELECT * FROM {BalanceHistorySchema.TABLE_NAME}
             WHERE timestamp_ms >= (strftime('%s', 'now') - 86400) * 1000  -- Last 24 hours
             """,
-            
+
             f"""
             CREATE VIEW IF NOT EXISTS {BalanceHistorySchema.TABLE_NAME}_daily AS
             SELECT 
@@ -172,9 +170,9 @@ class BalanceHistorySchema:
 
 class PositionSchema:
     """Schema for position tracking with real-time P&L calculation"""
-    
+
     TABLE_NAME = "positions"
-    
+
     @staticmethod
     def get_create_table_sql() -> str:
         """Get CREATE TABLE SQL for positions"""
@@ -224,7 +222,7 @@ class PositionSchema:
             CHECK (created_at > 0)
         )
         """
-    
+
     @staticmethod
     def get_indexes() -> List[IndexConfig]:
         """Get optimized indexes for position queries"""
@@ -236,7 +234,7 @@ class PositionSchema:
                 columns=["symbol", "status", "created_at DESC"],
                 unique=False
             ),
-            
+
             # Open positions query optimization
             IndexConfig(
                 name="idx_positions_open",
@@ -245,7 +243,7 @@ class PositionSchema:
                 unique=False,
                 partial_condition="status = 'OPEN'"
             ),
-            
+
             # P&L analysis queries
             IndexConfig(
                 name="idx_positions_pnl",
@@ -253,7 +251,7 @@ class PositionSchema:
                 columns=["symbol", "total_pnl DESC", "created_at DESC"],
                 unique=False
             ),
-            
+
             # Strategy-based queries
             IndexConfig(
                 name="idx_positions_strategy",
@@ -262,7 +260,7 @@ class PositionSchema:
                 unique=False,
                 partial_condition="strategy IS NOT NULL"
             ),
-            
+
             # Time-based queries for analytics
             IndexConfig(
                 name="idx_positions_time_analysis",
@@ -270,7 +268,7 @@ class PositionSchema:
                 columns=["created_at DESC", "status"],
                 unique=False
             ),
-            
+
             # Risk metrics queries
             IndexConfig(
                 name="idx_positions_risk",
@@ -279,7 +277,7 @@ class PositionSchema:
                 unique=False
             )
         ]
-    
+
     @staticmethod
     def get_triggers() -> List[str]:
         """Get triggers for automatic position updates"""
@@ -295,7 +293,7 @@ class PositionSchema:
                 WHERE position_id = NEW.position_id;
             END
             """,
-            
+
             # Auto-close position when size reaches zero
             f"""
             CREATE TRIGGER IF NOT EXISTS auto_close_position
@@ -316,9 +314,9 @@ class PositionSchema:
 
 class TradeHistorySchema:
     """Schema for comprehensive trade execution history"""
-    
+
     TABLE_NAME = "trade_history"
-    
+
     @staticmethod
     def get_create_table_sql() -> str:
         """Get CREATE TABLE SQL for trade history"""
@@ -378,7 +376,7 @@ class TradeHistorySchema:
             CHECK (created_at > 0)
         )
         """
-    
+
     @staticmethod
     def get_indexes() -> List[IndexConfig]:
         """Get optimized indexes for trade history queries"""
@@ -390,7 +388,7 @@ class TradeHistorySchema:
                 columns=["symbol", "execution_time DESC"],
                 unique=False
             ),
-            
+
             # Position-based queries
             IndexConfig(
                 name="idx_trades_position",
@@ -399,7 +397,7 @@ class TradeHistorySchema:
                 unique=False,
                 partial_condition="position_id IS NOT NULL"
             ),
-            
+
             # Status-based queries
             IndexConfig(
                 name="idx_trades_status_time",
@@ -407,7 +405,7 @@ class TradeHistorySchema:
                 columns=["status", "created_at DESC"],
                 unique=False
             ),
-            
+
             # Strategy analysis queries
             IndexConfig(
                 name="idx_trades_strategy_pnl",
@@ -416,7 +414,7 @@ class TradeHistorySchema:
                 unique=False,
                 partial_condition="strategy IS NOT NULL"
             ),
-            
+
             # P&L analysis queries
             IndexConfig(
                 name="idx_trades_pnl_analysis",
@@ -425,7 +423,7 @@ class TradeHistorySchema:
                 unique=False,
                 partial_condition="trade_pnl IS NOT NULL"
             ),
-            
+
             # Fee analysis queries
             IndexConfig(
                 name="idx_trades_fees",
@@ -438,9 +436,9 @@ class TradeHistorySchema:
 
 class PortfolioMetricsSchema:
     """Schema for portfolio-level metrics and analytics"""
-    
+
     TABLE_NAME = "portfolio_metrics"
-    
+
     @staticmethod
     def get_create_table_sql() -> str:
         """Get CREATE TABLE SQL for portfolio metrics"""
@@ -506,7 +504,7 @@ class PortfolioMetricsSchema:
             CHECK (short_positions >= 0)
         )
         """
-    
+
     @staticmethod
     def get_indexes() -> List[IndexConfig]:
         """Get optimized indexes for portfolio metrics queries"""
@@ -518,7 +516,7 @@ class PortfolioMetricsSchema:
                 columns=["timestamp_ms DESC"],
                 unique=False
             ),
-            
+
             # Performance analysis
             IndexConfig(
                 name="idx_portfolio_performance",
@@ -526,7 +524,7 @@ class PortfolioMetricsSchema:
                 columns=["daily_return_pct DESC", "timestamp_ms DESC"],
                 unique=False
             ),
-            
+
             # Risk analysis
             IndexConfig(
                 name="idx_portfolio_risk",
@@ -534,7 +532,7 @@ class PortfolioMetricsSchema:
                 columns=["max_drawdown_pct DESC", "volatility DESC", "timestamp_ms DESC"],
                 unique=False
             ),
-            
+
             # Trading activity analysis
             IndexConfig(
                 name="idx_portfolio_activity",
@@ -547,9 +545,9 @@ class PortfolioMetricsSchema:
 
 class PerformanceSchema:
     """Schema for detailed performance analytics and benchmarking"""
-    
+
     TABLE_NAME = "performance_analytics"
-    
+
     @staticmethod
     def get_create_table_sql() -> str:
         """Get CREATE TABLE SQL for performance analytics"""
@@ -631,7 +629,7 @@ class PerformanceSchema:
             CHECK (winning_trades + losing_trades <= total_trades)
         )
         """
-    
+
     @staticmethod
     def get_indexes() -> List[IndexConfig]:
         """Get optimized indexes for performance analytics queries"""
@@ -643,7 +641,7 @@ class PerformanceSchema:
                 columns=["period_type", "period_end DESC"],
                 unique=False
             ),
-            
+
             # Performance ranking queries
             IndexConfig(
                 name="idx_perf_returns",
@@ -651,7 +649,7 @@ class PerformanceSchema:
                 columns=["total_return_pct DESC", "period_end DESC"],
                 unique=False
             ),
-            
+
             # Risk-adjusted performance
             IndexConfig(
                 name="idx_perf_risk_adjusted",
@@ -659,7 +657,7 @@ class PerformanceSchema:
                 columns=["sharpe_ratio DESC", "period_type", "period_end DESC"],
                 unique=False
             ),
-            
+
             # Drawdown analysis
             IndexConfig(
                 name="idx_perf_drawdown",
@@ -667,7 +665,7 @@ class PerformanceSchema:
                 columns=["max_drawdown_pct DESC", "period_end DESC"],
                 unique=False
             ),
-            
+
             # Trading performance
             IndexConfig(
                 name="idx_perf_trading",
@@ -682,7 +680,7 @@ class SchemaManager:
     """
     Manages database schema creation, updates, and optimizations
     """
-    
+
     def __init__(self, database_manager):
         """Initialize schema manager"""
         self.db = database_manager
@@ -693,47 +691,47 @@ class SchemaManager:
             TableType.PORTFOLIO_METRICS: PortfolioMetricsSchema,
             TableType.PERFORMANCE_ANALYTICS: PerformanceSchema
         }
-        
+
         logger.info("[SCHEMA_MANAGER] Initialized schema management system")
-    
+
     async def create_all_tables(self) -> bool:
         """Create all database tables with optimized schemas"""
         try:
             logger.info("[SCHEMA_MANAGER] Creating all database tables...")
-            
+
             operations = []
-            
+
             # Create all tables
             for table_type, schema_class in self.schemas.items():
                 create_sql = schema_class.get_create_table_sql()
                 operations.append((create_sql, ()))
                 logger.debug(f"[SCHEMA_MANAGER] Prepared table creation: {table_type.value}")
-            
+
             # Execute table creation in transaction
             success = await self.db.execute_transaction(operations)
-            
+
             if success:
                 logger.info("[SCHEMA_MANAGER] All tables created successfully")
                 return True
             else:
                 logger.error("[SCHEMA_MANAGER] Failed to create tables")
                 return False
-                
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error creating tables: {e}")
             return False
-    
+
     async def create_all_indexes(self) -> bool:
         """Create all optimized indexes for high-performance queries"""
         try:
             logger.info("[SCHEMA_MANAGER] Creating optimized indexes...")
-            
+
             total_indexes = 0
-            
+
             for table_type, schema_class in self.schemas.items():
                 if hasattr(schema_class, 'get_indexes'):
                     indexes = schema_class.get_indexes()
-                    
+
                     for index_config in indexes:
                         try:
                             create_sql = index_config.get_create_sql()
@@ -742,25 +740,25 @@ class SchemaManager:
                             logger.debug(f"[SCHEMA_MANAGER] Created index: {index_config.name}")
                         except Exception as e:
                             logger.error(f"[SCHEMA_MANAGER] Failed to create index {index_config.name}: {e}")
-            
+
             logger.info(f"[SCHEMA_MANAGER] Created {total_indexes} optimized indexes")
             return True
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error creating indexes: {e}")
             return False
-    
+
     async def create_triggers(self) -> bool:
         """Create database triggers for automatic data management"""
         try:
             logger.info("[SCHEMA_MANAGER] Creating database triggers...")
-            
+
             total_triggers = 0
-            
+
             for table_type, schema_class in self.schemas.items():
                 if hasattr(schema_class, 'get_triggers'):
                     triggers = schema_class.get_triggers()
-                    
+
                     for trigger_sql in triggers:
                         try:
                             await self.db.execute_write(trigger_sql)
@@ -768,25 +766,25 @@ class SchemaManager:
                             logger.debug(f"[SCHEMA_MANAGER] Created trigger for {table_type.value}")
                         except Exception as e:
                             logger.error(f"[SCHEMA_MANAGER] Failed to create trigger: {e}")
-            
+
             logger.info(f"[SCHEMA_MANAGER] Created {total_triggers} database triggers")
             return True
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error creating triggers: {e}")
             return False
-    
+
     async def create_views(self) -> bool:
         """Create database views for common queries and analytics"""
         try:
             logger.info("[SCHEMA_MANAGER] Creating database views...")
-            
+
             total_views = 0
-            
+
             for table_type, schema_class in self.schemas.items():
                 if hasattr(schema_class, 'get_partitioning_sql'):
                     views = schema_class.get_partitioning_sql()
-                    
+
                     for view_sql in views:
                         try:
                             await self.db.execute_write(view_sql)
@@ -794,45 +792,45 @@ class SchemaManager:
                             logger.debug(f"[SCHEMA_MANAGER] Created view for {table_type.value}")
                         except Exception as e:
                             logger.error(f"[SCHEMA_MANAGER] Failed to create view: {e}")
-            
+
             logger.info(f"[SCHEMA_MANAGER] Created {total_views} database views")
             return True
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error creating views: {e}")
             return False
-    
+
     async def initialize_complete_schema(self) -> bool:
         """Initialize complete database schema with all optimizations"""
         try:
             logger.info("[SCHEMA_MANAGER] Initializing complete database schema...")
-            
+
             # Create tables
             if not await self.create_all_tables():
                 return False
-            
+
             # Create indexes
             if not await self.create_all_indexes():
                 return False
-            
+
             # Create triggers
             if not await self.create_triggers():
                 return False
-            
+
             # Create views
             if not await self.create_views():
                 return False
-            
+
             # Run analyze to update statistics
             await self.db.analyze_database()
-            
+
             logger.info("[SCHEMA_MANAGER] Complete database schema initialized successfully")
             return True
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error initializing schema: {e}")
             return False
-    
+
     async def get_schema_info(self) -> Dict[str, Any]:
         """Get comprehensive schema information"""
         try:
@@ -842,72 +840,72 @@ class SchemaManager:
                 'views': {},
                 'triggers': {}
             }
-            
+
             # Get table information
             tables_query = """
             SELECT name, sql FROM sqlite_master 
             WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
             ORDER BY name
             """
-            
+
             tables = await self.db.execute_query(tables_query)
             for table in tables:
                 schema_info['tables'][table['name']] = {
                     'sql': table['sql'],
                     'row_count': await self._get_table_row_count(table['name'])
                 }
-            
+
             # Get index information
             indexes_query = """
             SELECT name, tbl_name, sql FROM sqlite_master 
             WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
             ORDER BY tbl_name, name
             """
-            
+
             indexes = await self.db.execute_query(indexes_query)
             for index in indexes:
                 if index['tbl_name'] not in schema_info['indexes']:
                     schema_info['indexes'][index['tbl_name']] = []
-                
+
                 schema_info['indexes'][index['tbl_name']].append({
                     'name': index['name'],
                     'sql': index['sql']
                 })
-            
+
             # Get view information
             views_query = """
             SELECT name, sql FROM sqlite_master 
             WHERE type = 'view'
             ORDER BY name
             """
-            
+
             views = await self.db.execute_query(views_query)
             for view in views:
                 schema_info['views'][view['name']] = view['sql']
-            
+
             # Get trigger information
             triggers_query = """
             SELECT name, tbl_name, sql FROM sqlite_master 
             WHERE type = 'trigger'
             ORDER BY tbl_name, name
             """
-            
+
             triggers = await self.db.execute_query(triggers_query)
             for trigger in triggers:
                 if trigger['tbl_name'] not in schema_info['triggers']:
                     schema_info['triggers'][trigger['tbl_name']] = []
-                
+
                 schema_info['triggers'][trigger['tbl_name']].append({
                     'name': trigger['name'],
                     'sql': trigger['sql']
                 })
-            
+
             return schema_info
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error getting schema info: {e}")
             return {}
-    
+
     async def _get_table_row_count(self, table_name: str) -> int:
         """Get row count for a table"""
         try:
@@ -915,7 +913,7 @@ class SchemaManager:
             return result[0]['count'] if result else 0
         except Exception:
             return 0
-    
+
     async def validate_schema(self) -> Dict[str, Any]:
         """Validate database schema integrity"""
         try:
@@ -926,26 +924,26 @@ class SchemaManager:
                 'index_checks': {},
                 'foreign_key_checks': []
             }
-            
+
             # Check each table exists and has expected structure
             for table_type, schema_class in self.schemas.items():
                 table_name = table_type.value
-                
+
                 # Check if table exists
                 check_query = """
                 SELECT name FROM sqlite_master 
                 WHERE type = 'table' AND name = ?
                 """
-                
+
                 result = await self.db.execute_query(check_query, (table_name,))
-                
+
                 if not result:
                     validation_results['valid'] = False
                     validation_results['issues'].append(f"Missing table: {table_name}")
                     validation_results['table_checks'][table_name] = False
                 else:
                     validation_results['table_checks'][table_name] = True
-                    
+
                     # Check indexes for this table
                     if hasattr(schema_class, 'get_indexes'):
                         expected_indexes = schema_class.get_indexes()
@@ -954,60 +952,60 @@ class SchemaManager:
                             SELECT name FROM sqlite_master 
                             WHERE type = 'index' AND name = ?
                             """
-                            
+
                             index_result = await self.db.execute_query(index_check_query, (index_config.name,))
-                            
+
                             if not index_result:
                                 validation_results['valid'] = False
                                 validation_results['issues'].append(f"Missing index: {index_config.name}")
                                 validation_results['index_checks'][index_config.name] = False
                             else:
                                 validation_results['index_checks'][index_config.name] = True
-            
+
             # Check foreign key constraints
             foreign_key_check = await self.db.execute_query("PRAGMA foreign_key_check")
             if foreign_key_check:
                 validation_results['valid'] = False
                 validation_results['foreign_key_checks'] = foreign_key_check
                 validation_results['issues'].append("Foreign key constraint violations found")
-            
+
             logger.info(f"[SCHEMA_MANAGER] Schema validation complete: {'VALID' if validation_results['valid'] else 'INVALID'}")
-            
+
             return validation_results
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error validating schema: {e}")
             return {'valid': False, 'error': str(e)}
-    
+
     async def optimize_schema(self) -> bool:
         """Optimize database schema for better performance"""
         try:
             logger.info("[SCHEMA_MANAGER] Optimizing database schema...")
-            
+
             # Update table statistics
             await self.db.analyze_database()
-            
+
             # Reindex all indexes
             reindex_query = """
             SELECT name FROM sqlite_master 
             WHERE type = 'index' AND name NOT LIKE 'sqlite_%'
             """
-            
+
             indexes = await self.db.execute_query(reindex_query)
-            
+
             for index in indexes:
                 try:
                     await self.db.execute_write(f"REINDEX {index['name']}")
                     logger.debug(f"[SCHEMA_MANAGER] Reindexed: {index['name']}")
                 except Exception as e:
                     logger.warning(f"[SCHEMA_MANAGER] Failed to reindex {index['name']}: {e}")
-            
+
             # Vacuum database if needed
             await self.db.vacuum_database()
-            
+
             logger.info("[SCHEMA_MANAGER] Schema optimization complete")
             return True
-            
+
         except Exception as e:
             logger.error(f"[SCHEMA_MANAGER] Error optimizing schema: {e}")
             return False

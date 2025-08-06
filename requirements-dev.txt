@@ -1,0 +1,92 @@
+# Development and Testing Dependencies
+
+# Testing frameworks
+pytest==8.0.0
+pytest-asyncio==0.23.3
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+pytest-timeout==2.2.0
+pytest-xdist==3.5.0
+hypothesis==6.92.1
+faker==22.0.0
+
+# Code quality and linting
+black==23.12.1
+ruff==0.1.9
+mypy==1.8.0
+pylint==3.0.3
+bandit==1.7.6
+safety==3.0.1
+
+# Security scanning
+pip-audit==2.6.3
+semgrep==1.51.0
+detect-secrets==1.4.0
+
+# Performance testing
+locust==2.20.0
+memory-profiler==0.61.0
+py-spy==0.3.14
+
+# Documentation
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
+myst-parser==2.0.0
+
+# Development tools
+ipython==8.19.0
+ipdb==0.13.13
+pre-commit==3.6.0
+
+# Type stubs
+types-redis==4.6.0.11
+types-requests==2.31.0.10
+types-PyYAML==6.0.12.12
+types-python-dateutil==2.8.19.14
+
+# Mocking and fixtures
+responses==0.24.1
+freezegun==1.4.0
+factory-boy==3.3.0
+
+# Contract testing
+pact-python==2.1.1
+
+# Property-based testing
+atheris==2.3.0
+
+# Mutation testing
+mutmut==2.4.4
+
+# Load testing
+artillery==2.0.0
+
+# API testing
+httpx==0.25.2
+pytest-httpx==0.28.0
+
+# Database testing
+pytest-postgresql==5.0.0
+pytest-redis==3.0.2
+
+# Coverage
+coverage[toml]==7.4.0
+pytest-cov==4.1.0
+
+# Profiling
+line-profiler==4.1.2
+memory-profiler==0.61.0
+guppy3==3.1.4.post1
+
+# Debugging
+pdbpp==0.10.3
+pudb==2023.1
+
+# CI/CD tools
+tox==4.11.4
+nox==2023.4.22
+
+# Documentation generation
+pydoc-markdown==4.8.2
+mkdocs==1.5.3
+mkdocs-material==9.5.3

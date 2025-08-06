@@ -3,10 +3,9 @@
 Trading Bot Context MCP Server
 Provides trading bot context and information to Claude Desktop
 """
+import asyncio
 import json
 import sys
-import os
-import asyncio
 from pathlib import Path
 
 # Add project root to path
@@ -16,11 +15,11 @@ sys.path.insert(0, str(project_root))
 class TradingBotContextServer:
     def __init__(self):
         self.project_root = project_root
-        
+
     async def handle_request(self, request):
         """Handle incoming JSON-RPC requests"""
         method = request.get('method', '')
-        
+
         if method == 'initialize':
             return {
                 "jsonrpc": "2.0",
@@ -39,7 +38,7 @@ class TradingBotContextServer:
                     }
                 }
             }
-        
+
         elif method == 'tools/list':
             return {
                 "jsonrpc": "2.0",
@@ -73,10 +72,10 @@ class TradingBotContextServer:
                     ]
                 }
             }
-            
+
         elif method == 'tools/call':
             tool_name = request.get('params', {}).get('name')
-            
+
             if tool_name == 'get_bot_status':
                 return {
                     "jsonrpc": "2.0",
@@ -93,7 +92,7 @@ class TradingBotContextServer:
                         ]
                     }
                 }
-                
+
             elif tool_name == 'get_trading_config':
                 config_path = self.project_root / 'config.json'
                 if config_path.exists():
@@ -111,7 +110,7 @@ class TradingBotContextServer:
                             ]
                         }
                     }
-                    
+
             elif tool_name == 'get_project_info':
                 return {
                     "jsonrpc": "2.0",
@@ -131,7 +130,7 @@ class TradingBotContextServer:
                         ]
                     }
                 }
-        
+
         return {
             "jsonrpc": "2.0",
             "id": request.get('id'),
@@ -143,17 +142,17 @@ class TradingBotContextServer:
 
 async def main():
     server = TradingBotContextServer()
-    
+
     # Send initialization complete
     print('{"jsonrpc": "2.0", "method": "initialized"}', flush=True)
-    
+
     # Read from stdin
     while True:
         try:
             line = await asyncio.get_event_loop().run_in_executor(None, sys.stdin.readline)
             if not line:
                 break
-                
+
             try:
                 request = json.loads(line.strip())
                 response = await server.handle_request(request)
@@ -168,7 +167,7 @@ async def main():
                     }
                 }
                 print(json.dumps(error_response), flush=True)
-                
+
         except Exception as e:
             sys.stderr.write(f"Error: {e}\n")
             sys.stderr.flush()

@@ -6,6 +6,9 @@ echo ===============================================
 echo KRAKEN TRADING BOT - CACHE-FREE LAUNCHER
 echo ===============================================
 
+REM Change to correct directory
+cd /d "C:\dev\tools\crypto-trading-bot-2025"
+
 REM Set environment to prevent cache creation
 set PYTHONDONTWRITEBYTECODE=1
 set PYTHONUNBUFFERED=1
@@ -19,9 +22,19 @@ del /s /q *cpython-313* 2>nul
 
 echo [CACHE] Cache cleanup complete!
 
-REM Launch bot with cache disabled
-echo [LAUNCH] Starting bot with cache disabled...
-python -B scripts/live_launch.py
+REM Check if main.py exists
+if not exist "main.py" (
+    echo [ERROR] main.py not found in current directory
+    echo Current: %CD%
+    pause
+    exit /b 1
+)
+
+REM Launch bot with cache disabled using unified launcher
+echo [LAUNCH] Starting unified launcher with cache disabled...
+echo Available modes: --simple, --orchestrated, --paper, --test
+echo.
+python -B main.py --simple
 
 echo [DONE] Bot launcher finished
 pause

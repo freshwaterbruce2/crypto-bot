@@ -20,14 +20,14 @@ Features:
 - Async support
 """
 
-import hmac
-import hashlib
-import base64
-import logging
-from typing import Dict, Any, Optional, Union
-import urllib.parse
 import asyncio
+import base64
+import hashlib
+import hmac
+import logging
+import urllib.parse
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ class SignatureGenerator:
     Implements the exact signature algorithm required by Kraken with
     comprehensive error handling and debugging support.
     """
-    
+
     def __init__(self, private_key: str):
         """
         Initialize signature generator with Kraken private key.
@@ -60,13 +60,13 @@ class SignatureGenerator:
         """
         self.private_key = private_key
         self._private_key_bytes = self._decode_private_key(private_key)
-        
+
         # Performance tracking
         self._signature_count = 0
-        
+
         logger.debug(f"[SIGNATURE_2025] Initialized with private key length: "
                     f"{len(self._private_key_bytes)} bytes")
-    
+
     def _decode_private_key(self, private_key: str) -> bytes:
         """
         Decode Base64 private key with validation.
@@ -82,17 +82,17 @@ class SignatureGenerator:
         """
         try:
             decoded = base64.b64decode(private_key)
-            
+
             # Validate key length (Kraken private keys are typically 64 bytes)
             if len(decoded) < 32:
                 raise ValueError("Private key too short")
-            
+
             return decoded
-            
+
         except Exception as e:
             logger.error(f"[SIGNATURE_2025] Invalid private key: {e}")
             raise ValueError(f"Invalid private key format: {e}")
-    
+
     def _prepare_post_data(self, params: Dict[str, Any]) -> str:
         """
         Prepare POST data string from parameters.
@@ -105,10 +105,10 @@ class SignatureGenerator:
         """
         if not params:
             return ""
-        
+
         # Sort parameters for consistent signature generation
         sorted_params = sorted(params.items())
-        
+
         # URL encode parameters
         encoded_params = []
         for key, value in sorted_params:
@@ -117,9 +117,9 @@ class SignatureGenerator:
             encoded_key = urllib.parse.quote_plus(str(key))
             encoded_value = urllib.parse.quote_plus(str_value)
             encoded_params.append(f"{encoded_key}={encoded_value}")
-        
+
         return "&".join(encoded_params)
-    
+
     def generate_signature(
         self,
         uri_path: str,
@@ -143,40 +143,42 @@ class SignatureGenerator:
         try:
             # Step 1: Prepare POST data
             post_data = self._prepare_post_data(params or {})
-            
-            # Step 2: Create API-Post string (nonce + POST data)
-            api_post = f"nonce={nonce}"
-            if post_data:
-                api_post += f"&{post_data}"
-            
+
+            # Step 2: Create API-Post string (CORRECT krakenex format)
+            # Format: str(nonce) + postdata (NOT "nonce={nonce}&{postdata}")
+            params_with_nonce = params.copy() if params else {}
+            params_with_nonce['nonce'] = nonce
+            postdata = urllib.parse.urlencode(params_with_nonce)
+            api_post = str(nonce) + postdata
+
             # Step 3: Create SHA256 hash of API-Post
             sha256_hash = hashlib.sha256(api_post.encode('utf-8')).digest()
-            
+
             # Step 4: Create binary message (URI path + SHA256 hash)
             binary_message = uri_path.encode('utf-8') + sha256_hash
-            
+
             # Step 5: Generate HMAC-SHA512 signature
             hmac_signature = hmac.new(
                 self._private_key_bytes,
                 binary_message,
                 hashlib.sha512
             ).digest()
-            
+
             # Step 6: Encode as Base64
             signature = base64.b64encode(hmac_signature).decode('utf-8')
-            
+
             # Update counters
             self._signature_count += 1
-            
+
             logger.debug(f"[SIGNATURE_2025] Generated signature #{self._signature_count} "
                         f"for {uri_path} with nonce {nonce}")
-            
+
             return signature
-            
+
         except Exception as e:
             logger.error(f"[SIGNATURE_2025] Signature generation failed: {e}")
             raise ValueError(f"Failed to generate signature: {e}")
-    
+
     def generate_signature_with_debug(
         self,
         uri_path: str,
@@ -197,28 +199,29 @@ class SignatureGenerator:
         try:
             # Prepare POST data
             post_data = self._prepare_post_data(params or {})
-            
-            # Create API-Post string
-            api_post = f"nonce={nonce}"
-            if post_data:
-                api_post += f"&{post_data}"
-            
+
+            # Create API-Post string (CORRECT krakenex format)
+            params_with_nonce = params.copy() if params else {}
+            params_with_nonce['nonce'] = nonce
+            postdata = urllib.parse.urlencode(params_with_nonce)
+            api_post = str(nonce) + postdata
+
             # Create SHA256 hash
             sha256_hash = hashlib.sha256(api_post.encode('utf-8')).digest()
-            
+
             # Create binary message
             binary_message = uri_path.encode('utf-8') + sha256_hash
-            
+
             # Generate HMAC-SHA512 signature
             hmac_signature = hmac.new(
                 self._private_key_bytes,
                 binary_message,
                 hashlib.sha512
             ).digest()
-            
+
             # Encode as Base64
             signature = base64.b64encode(hmac_signature).decode('utf-8')
-            
+
             return SignatureComponents(
                 nonce=nonce,
                 post_data=post_data,
@@ -227,11 +230,11 @@ class SignatureGenerator:
                 binary_message=binary_message,
                 signature=signature
             )
-            
+
         except Exception as e:
             logger.error(f"[SIGNATURE_2025] Debug signature generation failed: {e}")
             raise ValueError(f"Failed to generate debug signature: {e}")
-    
+
     async def generate_signature_async(
         self,
         uri_path: str,
@@ -258,7 +261,7 @@ class SignatureGenerator:
             nonce,
             params
         )
-    
+
     def validate_signature_components(
         self,
         uri_path: str,
@@ -281,7 +284,7 @@ class SignatureGenerator:
         try:
             components = self.generate_signature_with_debug(uri_path, nonce, params)
             generated_signature = components.signature
-            
+
             result = {
                 'success': True,
                 'uri_path': uri_path,
@@ -294,13 +297,13 @@ class SignatureGenerator:
                 'signature_length': len(generated_signature),
                 'private_key_length': len(self._private_key_bytes)
             }
-            
+
             if expected_signature:
                 result['expected_signature'] = expected_signature
                 result['signatures_match'] = (generated_signature == expected_signature)
-            
+
             return result
-            
+
         except Exception as e:
             return {
                 'success': False,
@@ -308,7 +311,7 @@ class SignatureGenerator:
                 'uri_path': uri_path,
                 'nonce': nonce
             }
-    
+
     def get_statistics(self) -> Dict[str, Any]:
         """
         Get signature generator statistics.
@@ -321,7 +324,7 @@ class SignatureGenerator:
             'private_key_length': len(self._private_key_bytes),
             'private_key_valid': len(self._private_key_bytes) >= 32
         }
-    
+
     def test_signature_algorithm(self) -> Dict[str, Any]:
         """
         Test signature algorithm with known values for validation.
@@ -334,27 +337,27 @@ class SignatureGenerator:
             test_uri = "/0/private/Balance"
             test_nonce = "1234567890123456"
             test_params = {"test": "value"}
-            
+
             # Generate signature
             signature = self.generate_signature(test_uri, test_nonce, test_params)
-            
+
             # Validate components
             validation = self.validate_signature_components(test_uri, test_nonce, test_params)
-            
+
             return {
                 'success': True,
                 'test_signature': signature,
                 'validation': validation,
                 'algorithm_working': len(signature) > 0 and signature.endswith('=')
             }
-            
+
         except Exception as e:
             return {
                 'success': False,
                 'error': str(e),
                 'algorithm_working': False
             }
-    
+
     @staticmethod
     def create_from_credentials(api_key: str, private_key: str) -> 'SignatureGenerator':
         """
@@ -369,14 +372,14 @@ class SignatureGenerator:
         """
         logger.info(f"[SIGNATURE_2025] Creating signature generator for API key: "
                    f"{api_key[:8]}...")
-        
+
         return SignatureGenerator(private_key)
-    
+
     def __str__(self) -> str:
         """String representation for debugging"""
         return (f"SignatureGenerator(signatures_generated={self._signature_count}, "
                 f"key_length={len(self._private_key_bytes)})")
-    
+
     def __repr__(self) -> str:
         """Detailed representation for debugging"""
         return self.__str__()

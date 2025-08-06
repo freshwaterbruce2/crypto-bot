@@ -10,7 +10,7 @@ color 0A
 
 echo.
 echo ==========================================
-echo    🧪 PAPER TRADING BOT LAUNCHER
+echo    PAPER TRADING BOT LAUNCHER
 echo ==========================================
 echo.
 echo This will launch the crypto trading bot in
@@ -35,26 +35,27 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM Check if validation script exists
-if not exist "validate_paper_trading_setup.py" (
-    echo ❌ ERROR: Validation script not found
+REM Check if main.py exists
+if not exist "main.py" (
+    echo ❌ ERROR: main.py not found
     echo Please ensure you're in the correct directory
+    echo Current directory: %CD%
     pause
     exit /b 1
 )
 
-echo 🔍 Step 1: Validating paper trading setup...
+echo 🔍 Step 1: Checking paper trading availability...
 echo.
-python validate_paper_trading_setup.py
+python main.py --info | findstr "Paper Trading"
 if errorlevel 1 (
-    echo ❌ VALIDATION FAILED
-    echo Please fix the errors above before launching
+    echo ❌ PAPER TRADING NOT AVAILABLE
+    echo Please check your installation
     pause
     exit /b 1
 )
 
 echo.
-echo ✅ VALIDATION PASSED
+echo ✅ PAPER TRADING AVAILABLE
 echo.
 
 REM Ask for confirmation
@@ -91,8 +92,8 @@ set LIVE_TRADING_DISABLED=true
 set TRADING_MODE=paper
 set FORCE_PAPER_MODE=true
 
-REM Launch the paper trading bot
-python launch_paper_trading.py
+REM Launch the paper trading bot using unified launcher
+python main.py --paper
 
 if errorlevel 1 (
     echo.

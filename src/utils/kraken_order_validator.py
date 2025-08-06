@@ -4,25 +4,28 @@ Ensures all orders meet Kraken's precision and minimum requirements
 """
 
 import logging
-from typing import Dict, Any, Tuple, Optional
-from decimal import Decimal, ROUND_DOWN
+from typing import Any, Dict, Optional
+
 from ..config.kraken_precision_config import (
-    get_precision_config, format_price, format_volume, validate_order_params
+    format_price,
+    format_volume,
+    get_precision_config,
+    validate_order_params,
 )
 
 logger = logging.getLogger(__name__)
 
 class KrakenOrderValidator:
     """Validates and formats orders according to Kraken requirements"""
-    
+
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-    
+
     def validate_and_format_order(
-        self, 
-        symbol: str, 
-        side: str, 
-        amount: float, 
+        self,
+        symbol: str,
+        side: str,
+        amount: float,
         price: Optional[float] = None,
         order_type: str = 'market'
     ) -> Dict[str, Any]:
@@ -41,10 +44,10 @@ class KrakenOrderValidator:
         """
         try:
             self.logger.debug(f"[KRAKEN_VALIDATOR] Validating {side} order: {amount} {symbol}")
-            
+
             # Get Kraken precision configuration
             config = get_precision_config(symbol)
-            
+
             # Validate minimum volume
             if amount < config['min_volume']:
                 return {
@@ -53,10 +56,10 @@ class KrakenOrderValidator:
                     'min_required': config['min_volume'],
                     'provided': amount
                 }
-            
+
             # Format volume according to Kraken precision
             formatted_volume = format_volume(amount, symbol)
-            
+
             # For market orders, price validation is optional
             formatted_price = None
             if price is not None:
@@ -70,16 +73,16 @@ class KrakenOrderValidator:
                         'price': price,
                         'amount': amount
                     }
-                
+
                 formatted_price = format_price(price, symbol)
-            
+
             # Calculate order value for validation
             if price:
                 order_value = amount * price
             else:
                 # For market orders, we can't calculate exact value without current price
                 order_value = None
-            
+
             # Return formatted and validated order
             result = {
                 'valid': True,
@@ -91,15 +94,15 @@ class KrakenOrderValidator:
                 'precision_config': config,
                 'kraken_compliant': True
             }
-            
+
             if formatted_price:
                 result['price'] = formatted_price
                 result['price_float'] = float(formatted_price)
                 result['order_value'] = order_value
-            
+
             self.logger.info(f"[KRAKEN_VALIDATOR] ✅ Valid order: {formatted_volume} {symbol} @ {formatted_price or 'market'}")
             return result
-            
+
         except Exception as e:
             self.logger.error(f"[KRAKEN_VALIDATOR] Validation error: {e}")
             return {
@@ -109,11 +112,11 @@ class KrakenOrderValidator:
                 'side': side,
                 'amount': amount
             }
-    
+
     def get_minimum_order_info(self, symbol: str) -> Dict[str, Any]:
         """Get minimum order requirements for a symbol"""
         config = get_precision_config(symbol)
-        
+
         return {
             'symbol': symbol,
             'min_volume': config['min_volume'],
@@ -122,22 +125,22 @@ class KrakenOrderValidator:
             'quote_precision': config['quote_precision'],
             'example_min_order': f"{config['min_volume']} {symbol.split('/')[0]}"
         }
-    
+
     def format_for_kraken_api(self, validated_order: Dict[str, Any]) -> Dict[str, Any]:
         """Convert validated order to Kraken API format"""
         if not validated_order.get('valid'):
             raise ValueError(f"Cannot format invalid order: {validated_order.get('error')}")
-        
+
         api_params = {
             'pair': validated_order['symbol'].replace('/', ''),  # SHIBUSD format
             'type': validated_order['side'],
             'ordertype': validated_order['order_type'],
             'volume': validated_order['amount'],
         }
-        
+
         if 'price' in validated_order:
             api_params['price'] = validated_order['price']
-        
+
         return api_params
 
 # Global validator instance
@@ -173,7 +176,7 @@ VALIDATION_EXAMPLES = {
     },
     'AI16Z/USDT': {
         'min_order': '5 AI16Z',
-        'price_example': '0.1861',  # 4 decimals max  
+        'price_example': '0.1861',  # 4 decimals max
         'valid_order': "validate_ai16z_order('buy', 10, 0.1850)"
     },
     'BERA/USDT': {

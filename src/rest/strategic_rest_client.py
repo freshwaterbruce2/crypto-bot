@@ -25,15 +25,14 @@ Usage:
 import asyncio
 import logging
 import time
-from typing import Dict, List, Optional, Any, Set, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-import json
+from typing import Any, Dict, List, Optional
 
+from ..api.exceptions import NetworkError
 from ..api.kraken_rest_client import KrakenRestClient, RequestConfig
-from ..api.exceptions import KrakenAPIError, RateLimitError, NetworkError
-from ..utils.unified_kraken_nonce_manager import get_unified_nonce_manager
 from ..circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+from ..utils.consolidated_nonce_manager import get_nonce_manager
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +57,7 @@ class StrategicUsageStats:
     validation_requests: int = 0
     nonce_conflicts: int = 0
     websocket_fallbacks: int = 0
-    
+
     def log_summary(self):
         """Log usage summary."""
         logger.info(
@@ -79,7 +78,7 @@ class StrategicRestClient:
     4. Circuit breaker prevents cascade failures
     5. Strategic timing to avoid WebSocket conflicts
     """
-    
+
     def __init__(
         self,
         api_key: str,
@@ -106,19 +105,19 @@ class StrategicRestClient:
         self.max_batch_size = max_batch_size
         self.batch_timeout = batch_timeout
         self.emergency_only = emergency_only
-        
+
         # Core REST client (will be initialized later)
         self._rest_client: Optional[KrakenRestClient] = None
-        
+
         # Nonce coordination
-        self.nonce_manager = get_unified_nonce_manager()
+        self.nonce_manager = get_nonce_manager()
         self._nonce_prefix = "strategic_rest"
-        
+
         # Request batching
         self._pending_requests: List[BatchRequest] = []
         self._batch_lock = asyncio.Lock()
         self._batch_task: Optional[asyncio.Task] = None
-        
+
         # Circuit breaker for REST protection
         cb_config = CircuitBreakerConfig(
             failure_threshold=3,  # Fail fast
@@ -130,20 +129,20 @@ class StrategicRestClient:
             name="strategic_rest_client",
             config=cb_config
         )
-        
+
         # Usage tracking
         self.stats = StrategicUsageStats()
-        
+
         # Emergency endpoints (always allowed)
         self._emergency_endpoints = {
             'Balance',
-            'TradeBalance', 
+            'TradeBalance',
             'OpenOrders',
             'SystemStatus',
             'CancelOrder',
             'CancelAllOrders'
         }
-        
+
         # Historical endpoints (batch friendly)
         self._historical_endpoints = {
             'OHLC',
@@ -153,22 +152,22 @@ class StrategicRestClient:
             'AssetPairs',
             'AssetInfo'
         }
-        
+
         # State
         self._initialized = False
         self._last_request_time = 0.0
         self._minimum_interval = 1.0  # Minimum seconds between requests
-        
+
         logger.info(
             f"[STRATEGIC_REST] Initialized: emergency_only={emergency_only}, "
             f"max_batch_size={max_batch_size}"
         )
-    
+
     async def initialize(self) -> None:
         """Initialize the strategic REST client."""
         if self._initialized:
             return
-        
+
         # Create underlying REST client with conservative settings
         self._rest_client = KrakenRestClient(
             api_key=self.api_key,
@@ -179,20 +178,20 @@ class StrategicRestClient:
             enable_rate_limiting=True,
             enable_circuit_breaker=False  # We have our own
         )
-        
+
         await self._rest_client.start()
-        
+
         # Start batch processing task
         self._batch_task = asyncio.create_task(self._batch_processor())
-        
+
         self._initialized = True
         logger.info("[STRATEGIC_REST] Client initialized successfully")
-    
+
     async def shutdown(self) -> None:
         """Shutdown the strategic REST client."""
         if not self._initialized:
             return
-        
+
         # Cancel batch processor
         if self._batch_task and not self._batch_task.done():
             self._batch_task.cancel()
@@ -200,30 +199,30 @@ class StrategicRestClient:
                 await self._batch_task
             except asyncio.CancelledError:
                 pass
-        
+
         # Process any remaining requests
         await self._process_pending_batch()
-        
+
         # Close REST client
         if self._rest_client:
             await self._rest_client.close()
-        
+
         self._initialized = False
         self.stats.log_summary()
         logger.info("[STRATEGIC_REST] Client shutdown complete")
-    
+
     async def _ensure_minimum_interval(self) -> None:
         """Ensure minimum interval between requests."""
         current_time = time.time()
         elapsed = current_time - self._last_request_time
-        
+
         if elapsed < self._minimum_interval:
             wait_time = self._minimum_interval - elapsed
             logger.debug(f"[STRATEGIC_REST] Waiting {wait_time:.2f}s for minimum interval")
             await asyncio.sleep(wait_time)
-        
+
         self._last_request_time = time.time()
-    
+
     async def _execute_strategic_request(
         self,
         endpoint: str,
@@ -243,11 +242,11 @@ class StrategicRestClient:
         """
         if not self._initialized:
             await self.initialize()
-        
+
         # Check if request is allowed
         if self.emergency_only and endpoint not in self._emergency_endpoints:
             raise ValueError(f"Emergency-only mode: {endpoint} not allowed")
-        
+
         # Check circuit breaker
         if not self.circuit_breaker.can_execute():
             self.stats.nonce_conflicts += 1
@@ -256,17 +255,17 @@ class StrategicRestClient:
                 retry_after=60.0,
                 endpoint=endpoint
             )
-        
+
         # Ensure minimum interval
         await self._ensure_minimum_interval()
-        
+
         # Track request
         self.stats.total_requests += 1
         if priority == "emergency":
             self.stats.emergency_requests += 1
-        
+
         start_time = time.time()
-        
+
         try:
             # Configure request for strategic usage
             config = RequestConfig(
@@ -275,7 +274,7 @@ class StrategicRestClient:
                 priority=priority,
                 validate_response=True
             )
-            
+
             # Execute through circuit breaker
             response = await self.circuit_breaker.execute(
                 self._rest_client._make_request,
@@ -283,32 +282,32 @@ class StrategicRestClient:
                 params,
                 config
             )
-            
+
             # Record success
             response_time = time.time() - start_time
             logger.debug(
                 f"[STRATEGIC_REST] Success: {endpoint} in {response_time:.2f}s"
             )
-            
+
             return response
-            
+
         except Exception as e:
             response_time = time.time() - start_time
-            
+
             # Check for nonce conflicts
             if "nonce" in str(e).lower() or "invalid nonce" in str(e).lower():
                 self.stats.nonce_conflicts += 1
                 logger.warning(
                     f"[STRATEGIC_REST] Nonce conflict detected: {endpoint} - {e}"
                 )
-            
+
             logger.error(
                 f"[STRATEGIC_REST] Failed: {endpoint} in {response_time:.2f}s - {e}"
             )
             raise
-    
+
     # ====== EMERGENCY OPERATIONS ======
-    
+
     async def emergency_balance_check(self) -> Dict[str, Any]:
         """
         Emergency balance check when WebSocket fails.
@@ -321,7 +320,7 @@ class StrategicRestClient:
             'Balance',
             priority="emergency"
         )
-    
+
     async def emergency_open_orders(self) -> Dict[str, Any]:
         """
         Emergency check of open orders.
@@ -334,7 +333,7 @@ class StrategicRestClient:
             'OpenOrders',
             priority="emergency"
         )
-    
+
     async def emergency_cancel_order(self, txid: str) -> Dict[str, Any]:
         """
         Emergency order cancellation.
@@ -351,7 +350,7 @@ class StrategicRestClient:
             {'txid': txid},
             priority="emergency"
         )
-    
+
     async def emergency_system_status(self) -> Dict[str, Any]:
         """
         Emergency system status check.
@@ -363,9 +362,9 @@ class StrategicRestClient:
             'SystemStatus',
             priority="emergency"
         )
-    
+
     # ====== BATCH OPERATIONS ======
-    
+
     async def add_to_batch(
         self,
         endpoint: str,
@@ -386,7 +385,7 @@ class StrategicRestClient:
             logger.warning(
                 f"[STRATEGIC_REST] Endpoint {endpoint} not recommended for batching"
             )
-        
+
         async with self._batch_lock:
             request = BatchRequest(
                 endpoint=endpoint,
@@ -395,53 +394,53 @@ class StrategicRestClient:
                 callback=callback
             )
             self._pending_requests.append(request)
-            
+
             logger.debug(f"[STRATEGIC_REST] Added to batch: {endpoint}")
-    
+
     async def _batch_processor(self) -> None:
         """Background task to process batched requests."""
         while True:
             try:
                 # Wait for batch timeout or max size
                 await asyncio.sleep(self.batch_timeout)
-                
+
                 async with self._batch_lock:
                     if self._pending_requests:
                         await self._process_pending_batch()
-                        
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.error(f"[STRATEGIC_REST] Batch processor error: {e}")
                 await asyncio.sleep(1.0)
-    
+
     async def _process_pending_batch(self) -> None:
         """Process all pending batch requests."""
         if not self._pending_requests:
             return
-        
+
         # Sort by priority (highest first)
         self._pending_requests.sort(key=lambda r: r.priority, reverse=True)
-        
+
         # Process in batches
         while self._pending_requests:
             batch = self._pending_requests[:self.max_batch_size]
             self._pending_requests = self._pending_requests[self.max_batch_size:]
-            
+
             await self._execute_batch(batch)
-            
+
             # Small delay between batches
             if self._pending_requests:
                 await asyncio.sleep(0.5)
-    
+
     async def _execute_batch(self, batch: List[BatchRequest]) -> None:
         """Execute a batch of requests."""
         if not batch:
             return
-        
+
         logger.info(f"[STRATEGIC_REST] Processing batch of {len(batch)} requests")
         self.stats.batched_requests += len(batch)
-        
+
         # Execute requests with minimal delay
         results = []
         for request in batch:
@@ -452,25 +451,25 @@ class StrategicRestClient:
                     priority="batch"
                 )
                 results.append((request, result, None))
-                
+
                 # Call callback if provided
                 if request.callback:
                     try:
                         await request.callback(result)
                     except Exception as e:
                         logger.error(f"[STRATEGIC_REST] Callback error: {e}")
-                
+
                 # Small delay between batch requests
                 await asyncio.sleep(0.1)
-                
+
             except Exception as e:
                 results.append((request, None, e))
                 logger.error(f"[STRATEGIC_REST] Batch request failed: {request.endpoint} - {e}")
-        
+
         logger.info(f"[STRATEGIC_REST] Batch complete: {len(results)} processed")
-    
+
     # ====== HISTORICAL DATA OPERATIONS ======
-    
+
     async def batch_historical_query(
         self,
         pairs: List[str],
@@ -489,9 +488,9 @@ class StrategicRestClient:
             Combined historical data
         """
         since_timestamp = int((datetime.now() - timedelta(hours=max_age_hours)).timestamp())
-        
+
         results = {}
-        
+
         # Add all pairs to batch
         for pair in pairs:
             await self.add_to_batch(
@@ -503,16 +502,16 @@ class StrategicRestClient:
                 },
                 priority=2
             )
-        
+
         # Process batch immediately
         async with self._batch_lock:
             await self._process_pending_batch()
-        
+
         self.stats.historical_requests += len(pairs)
         logger.info(f"[STRATEGIC_REST] Historical data queued for {len(pairs)} pairs")
-        
+
         return results
-    
+
     async def get_ticker_snapshot(self, pairs: List[str]) -> Dict[str, Any]:
         """
         Get ticker snapshots for multiple pairs.
@@ -530,16 +529,16 @@ class StrategicRestClient:
                 {'pair': pair},
                 priority=3
             )
-        
+
         # Process immediately
         async with self._batch_lock:
             await self._process_pending_batch()
-        
+
         logger.info(f"[STRATEGIC_REST] Ticker snapshots queued for {len(pairs)} pairs")
         return {}
-    
+
     # ====== VALIDATION OPERATIONS ======
-    
+
     async def validate_order_book(self, pair: str, count: int = 10) -> Dict[str, Any]:
         """
         Validate order book data against WebSocket.
@@ -557,7 +556,7 @@ class StrategicRestClient:
             {'pair': pair, 'count': count},
             priority="normal"
         )
-    
+
     async def validate_balance_snapshot(self) -> Dict[str, Any]:
         """
         Validate balance against WebSocket data.
@@ -570,9 +569,9 @@ class StrategicRestClient:
             'Balance',
             priority="normal"
         )
-    
+
     # ====== STATUS AND MONITORING ======
-    
+
     def get_strategic_stats(self) -> Dict[str, Any]:
         """Get strategic REST usage statistics."""
         return {
@@ -592,7 +591,7 @@ class StrategicRestClient:
             'last_request_time': self._last_request_time,
             'minimum_interval': self._minimum_interval
         }
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """
         Perform strategic REST health check.
@@ -605,14 +604,14 @@ class StrategicRestClient:
             'status': 'healthy',
             'checks': {}
         }
-        
+
         # Check circuit breaker
         cb_status = self.circuit_breaker.get_status()
         health['checks']['circuit_breaker'] = {
             'status': 'healthy' if cb_status['can_execute'] else 'degraded',
             'state': cb_status['state']
         }
-        
+
         # Check underlying client
         if self._rest_client:
             try:
@@ -624,15 +623,15 @@ class StrategicRestClient:
                     'error': str(e)
                 }
                 health['status'] = 'degraded'
-        
+
         # Check batch processing
         health['checks']['batch_processor'] = {
             'status': 'healthy' if self._batch_task and not self._batch_task.done() else 'degraded',
             'pending_requests': len(self._pending_requests)
         }
-        
+
         return health
-    
+
     def set_emergency_mode(self, enabled: bool) -> None:
         """
         Enable or disable emergency-only mode.
@@ -642,7 +641,7 @@ class StrategicRestClient:
         """
         self.emergency_only = enabled
         logger.info(f"[STRATEGIC_REST] Emergency-only mode: {enabled}")
-    
+
     def set_minimum_interval(self, interval: float) -> None:
         """
         Set minimum interval between requests.
@@ -658,7 +657,7 @@ class StrategicRestClient:
 
 class RestWebSocketCoordinator:
     """Coordinates between REST and WebSocket to minimize conflicts."""
-    
+
     def __init__(self, strategic_client: StrategicRestClient):
         """
         Initialize coordinator.
@@ -669,7 +668,7 @@ class RestWebSocketCoordinator:
         self.strategic_client = strategic_client
         self._websocket_active = True
         self._last_websocket_data = time.time()
-        
+
     def websocket_status_update(self, active: bool) -> None:
         """
         Update WebSocket status.
@@ -686,7 +685,7 @@ class RestWebSocketCoordinator:
             # Enable emergency mode when WebSocket fails
             self.strategic_client.set_emergency_mode(True)
             logger.warning("[REST_WS_COORDINATOR] WebSocket inactive, enabling emergency mode")
-    
+
     def should_use_rest_fallback(self, data_age_seconds: float = 10.0) -> bool:
         """
         Determine if REST fallback should be used.
@@ -699,6 +698,6 @@ class RestWebSocketCoordinator:
         """
         if not self._websocket_active:
             return True
-        
+
         data_age = time.time() - self._last_websocket_data
         return data_age > data_age_seconds

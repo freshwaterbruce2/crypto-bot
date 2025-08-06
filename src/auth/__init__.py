@@ -18,26 +18,35 @@ Components:
 - CredentialManager: Secure credential storage and management
 """
 
+from .credential_manager import (
+    CredentialManager,
+    credential_manager,
+    get_kraken_credentials,
+    get_kraken_rest_credentials,
+    get_kraken_websocket_credentials,
+)
 from .kraken_auth import KrakenAuth
 from .signature_generator import SignatureGenerator
-from .credential_manager import CredentialManager, credential_manager, get_kraken_credentials
 from .websocket_authentication_manager import (
-    WebSocketAuthenticationManager,
-    WebSocketAuthenticationError,
-    TokenExpiredError,
-    NonceValidationError,
     CircuitBreakerOpenError,
+    NonceValidationError,
+    TokenExpiredError,
+    WebSocketAuthenticationError,
+    WebSocketAuthenticationManager,
+    create_websocket_auth_manager,
     websocket_auth_context,
-    create_websocket_auth_manager
 )
-# NonceManager is deprecated - use UnifiedKrakenNonceManager from utils.unified_kraken_nonce_manager
+
+# NonceManager is deprecated - use ConsolidatedNonceManager from utils.consolidated_nonce_manager
 
 __all__ = [
-    'KrakenAuth', 
-    'SignatureGenerator', 
-    'CredentialManager', 
-    'credential_manager', 
+    'KrakenAuth',
+    'SignatureGenerator',
+    'CredentialManager',
+    'credential_manager',
     'get_kraken_credentials',
+    'get_kraken_rest_credentials',
+    'get_kraken_websocket_credentials',
     'WebSocketAuthenticationManager',
     'WebSocketAuthenticationError',
     'TokenExpiredError',

@@ -1,0 +1,104 @@
+{
+  "integration_summary": {
+    "total_tests": 7,
+    "successful_tests": 7,
+    "failed_tests": 0,
+    "success_rate": 100.0,
+    "total_execution_time_ms": 5.422830581665039,
+    "total_messages_processed": 1043,
+    "total_errors_encountered": 0,
+    "overall_throughput_msg_per_sec": 192334.9778852495
+  },
+  "test_results": [
+    {
+      "test_name": "Authentication Flow Test",
+      "success": true,
+      "duration_ms": 0.02139899879693985,
+      "messages_processed": 3,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "auth_time_ms": 0.02139899879693985
+      }
+    },
+    {
+      "test_name": "Message Processing Pipeline Test",
+      "success": true,
+      "duration_ms": 0.045092005166225135,
+      "messages_processed": 12,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "processing_time_ms": 0.045092005166225135,
+        "messages_per_second": 266122.5633183475
+      }
+    },
+    {
+      "test_name": "Balance Streaming V2 Test",
+      "success": true,
+      "duration_ms": 0.011106996680609882,
+      "messages_processed": 7,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "balance_processing_ms": 0.011106996680609882,
+        "unique_balances_tracked": 2
+      }
+    },
+    {
+      "test_name": "Error Recovery Flow Test",
+      "success": true,
+      "duration_ms": 0.006239002686925232,
+      "messages_processed": 2,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "recovery_time_ms": 0.006239002686925232,
+        "errors_recovered": 2
+      }
+    },
+    {
+      "test_name": "Multi-Wallet Tracking Test",
+      "success": true,
+      "duration_ms": 0.8321029890794307,
+      "messages_processed": 10,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "wallet_processing_ms": 0.8321029890794307,
+        "wallet_types_tracked": 2,
+        "total_balance_updates": 10
+      }
+    },
+    {
+      "test_name": "Performance Under Load Test",
+      "success": true,
+      "duration_ms": 3.8305720081552863,
+      "messages_processed": 1000,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "load_test_duration_ms": 3.8305720081552863,
+        "messages_per_second": 261057.61694885264,
+        "avg_message_processing_ms": 0.0010266727913403884
+      }
+    },
+    {
+      "test_name": "End-to-End Data Flow Test",
+      "success": true,
+      "duration_ms": 0.031094008591026068,
+      "messages_processed": 9,
+      "errors_encountered": [],
+      "performance_metrics": {
+        "e2e_flow_duration_ms": 0.031094008591026068,
+        "data_pipeline_throughput": 289444.82901434135
+      }
+    }
+  ],
+  "integration_status": {
+    "authentication_flow": "PASS",
+    "message_processing": "PASS",
+    "balance_streaming": "PASS",
+    "error_recovery": "PASS",
+    "multi_wallet_tracking": "PASS",
+    "performance_load": "PASS",
+    "end_to_end_flow": "PASS"
+  },
+  "recommendations": [
+    "\ud83c\udf89 All integration tests passed! System is ready for production."
+  ]
+}

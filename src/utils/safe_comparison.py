@@ -14,7 +14,7 @@ def safe_greater_than(value, threshold):
             value = value['amount']
         else:
             return False
-    
+
     try:
         return float(value) > float(threshold)
     except (TypeError, ValueError):
@@ -31,7 +31,7 @@ def safe_less_than(value, threshold):
             value = value['amount']
         else:
             return False
-    
+
     try:
         return float(value) < float(threshold)
     except (TypeError, ValueError):

@@ -48,9 +48,9 @@ async def setup_memory_integration(bot: 'KrakenTradingBot') -> bool:
     """
     try:
         db_path = bot.config.get('memory', {}).get('vector_db_path', 'D:/trading_data/memory/vector_db')
-        
+
         memory_assistant = MemoryAssistant(db_path=db_path)
-        
+
         if memory_assistant.collection is None:
             logger.error("[MEMORY_BRIDGE] Failed to create MemoryAssistant. Collection is not available.")
             return False
@@ -58,7 +58,7 @@ async def setup_memory_integration(bot: 'KrakenTradingBot') -> bool:
         # Attach the memory assistant and this bridge to the bot instance
         bot.memory_assistant = memory_assistant
         bot.memory_bridge = sys.modules[__name__] # Allows calling other functions from this module
-        
+
         logger.info("[MEMORY_BRIDGE] MemoryAssistant successfully integrated with the bot.")
         return True
 

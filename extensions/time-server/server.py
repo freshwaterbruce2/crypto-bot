@@ -5,38 +5,32 @@ Provides time, timezone, and scheduling utilities for trading
 """
 
 import asyncio
-import json
-from datetime import datetime, timedelta, timezone
-import time
+from datetime import datetime, timedelta
+
 import pytz
-from typing import Any, Dict, List, Optional
-from mcp.server.models import InitializationOptions
-from mcp.server import NotificationOptions, Server
+from mcp.server import Server
 from mcp.server.models import (
-    CallToolRequestParams,
     CallToolResult,
-    EmptyResult,
     ListToolsResult,
     Tool,
     ToolMessage,
 )
 from mcp.types import (
     INVALID_PARAMS,
-    INTERNAL_ERROR,
-    JSONRPCError,
     McpError,
 )
 
+
 class TimeServer:
     """Time utilities server for trading operations"""
-    
+
     def __init__(self):
         self.server = Server("time-server")
         self.setup_handlers()
-    
+
     def setup_handlers(self):
         """Setup MCP server handlers"""
-        
+
         @self.server.list_tools()
         async def handle_list_tools() -> ListToolsResult:
             """List available time tools"""
@@ -111,7 +105,7 @@ class TimeServer:
                 )
             ]
             return ListToolsResult(tools=tools)
-        
+
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: dict) -> CallToolResult:
             """Handle tool calls"""
@@ -134,23 +128,23 @@ class TimeServer:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Error: {str(e)}", isError=True)]
                 )
-    
+
     async def get_current_time(self, args: dict) -> CallToolResult:
         """Get current time in various formats"""
         timezone_str = args.get("timezone", "UTC")
         format_type = args.get("format", "iso")
-        
+
         try:
             if timezone_str == "UTC":
                 tz = pytz.UTC
             else:
                 tz = pytz.timezone(timezone_str)
-            
+
             now = datetime.now(tz)
-            
-            output = f"=== CURRENT TIME ===\\n"
+
+            output = "=== CURRENT TIME ===\\n"
             output += f"Timezone: {timezone_str}\\n"
-            
+
             if format_type == "iso":
                 output += f"ISO Format: {now.isoformat()}\\n"
             elif format_type == "timestamp":
@@ -161,13 +155,13 @@ class TimeServer:
                 output += f"ISO Format: {now.isoformat()}\\n"
                 output += f"Unix Timestamp: {int(now.timestamp())}\\n"
                 output += f"Readable: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}\\n"
-            
-            output += f"\\nOther Timezones:\\n"
+
+            output += "\\nOther Timezones:\\n"
             output += f"UTC: {datetime.now(pytz.UTC).strftime('%H:%M:%S')}\\n"
             output += f"NY: {datetime.now(pytz.timezone('America/New_York')).strftime('%H:%M:%S')}\\n"
             output += f"London: {datetime.now(pytz.timezone('Europe/London')).strftime('%H:%M:%S')}\\n"
             output += f"Tokyo: {datetime.now(pytz.timezone('Asia/Tokyo')).strftime('%H:%M:%S')}"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -175,15 +169,15 @@ class TimeServer:
             return CallToolResult(
                 content=[ToolMessage(content=f"Time calculation failed: {str(e)}", isError=True)]
             )
-    
+
     async def market_hours(self, args: dict) -> CallToolResult:
         """Check market hours and status"""
         market = args.get("market", "crypto")
         timezone_str = args.get("timezone", "UTC")
-        
+
         try:
             now = datetime.now(pytz.UTC)
-            
+
             if market == "crypto":
                 is_open = True
                 status = "24/7 Trading"
@@ -206,7 +200,7 @@ class TimeServer:
                 # US Stock Market (9:30 AM - 4:00 PM ET)
                 et_tz = pytz.timezone('America/New_York')
                 now_et = now.astimezone(et_tz)
-                
+
                 if now_et.weekday() >= 5:  # Weekend
                     is_open = False
                     status = "Closed (Weekend)"
@@ -223,13 +217,13 @@ class TimeServer:
                 is_open = True
                 status = "Unknown market"
                 next_event = "Check specific market hours"
-            
+
             output = f"=== MARKET HOURS ({market.upper()}) ===\\n"
             output += f"Current Status: {'🟢 OPEN' if is_open else '🔴 CLOSED'}\\n"
             output += f"Details: {status}\\n"
             output += f"Next Event: {next_event}\\n"
             output += f"Current Time (UTC): {now.strftime('%Y-%m-%d %H:%M:%S')}"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -237,27 +231,27 @@ class TimeServer:
             return CallToolResult(
                 content=[ToolMessage(content=f"Market hours calculation failed: {str(e)}", isError=True)]
             )
-    
+
     async def candle_time_info(self, args: dict) -> CallToolResult:
         """Get candle timing information"""
         timeframe = args.get("timeframe", "15m")
         timezone_str = args.get("timezone", "UTC")
-        
+
         try:
             now = datetime.now(pytz.UTC)
-            
+
             # Convert timeframe to minutes
             timeframe_minutes = {
                 "1m": 1, "5m": 5, "15m": 15, "1h": 60, "4h": 240, "1d": 1440
             }
-            
+
             if timeframe not in timeframe_minutes:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Unknown timeframe: {timeframe}", isError=True)]
                 )
-            
+
             minutes = timeframe_minutes[timeframe]
-            
+
             # Calculate current candle start time
             if timeframe == "1d":
                 # Daily candles start at midnight UTC
@@ -268,14 +262,14 @@ class TimeServer:
                 minutes_since_midnight = now.hour * 60 + now.minute
                 candle_number = minutes_since_midnight // minutes
                 candle_start_minutes = candle_number * minutes
-                
+
                 candle_start = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(minutes=candle_start_minutes)
                 candle_end = candle_start + timedelta(minutes=minutes)
-            
+
             time_elapsed = now - candle_start
             time_remaining = candle_end - now
             progress_percent = (time_elapsed.total_seconds() / (minutes * 60)) * 100
-            
+
             output = f"=== CANDLE TIMING ({timeframe.upper()}) ===\\n"
             output += f"Current Time: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n"
             output += f"Candle Start: {candle_start.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n"
@@ -284,7 +278,7 @@ class TimeServer:
             output += f"Time Remaining: {str(time_remaining).split('.')[0]}\\n"
             output += f"Progress: {progress_percent:.1f}%\\n"
             output += f"Next Candle: {candle_end.strftime('%H:%M:%S UTC')}"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -292,29 +286,29 @@ class TimeServer:
             return CallToolResult(
                 content=[ToolMessage(content=f"Candle time calculation failed: {str(e)}", isError=True)]
             )
-    
+
     async def trading_session_info(self, args: dict) -> CallToolResult:
         """Get trading session information"""
         timezone_str = args.get("timezone", "UTC")
-        
+
         try:
             now = datetime.now(pytz.UTC)
-            
+
             # Define major trading sessions
             sessions = {
                 "Sydney": {"start": 22, "end": 7, "tz": "Australia/Sydney"},
-                "Tokyo": {"start": 0, "end": 9, "tz": "Asia/Tokyo"}, 
+                "Tokyo": {"start": 0, "end": 9, "tz": "Asia/Tokyo"},
                 "London": {"start": 8, "end": 17, "tz": "Europe/London"},
                 "New York": {"start": 13, "end": 22, "tz": "America/New_York"}
             }
-            
+
             active_sessions = []
             upcoming_sessions = []
-            
+
             for session_name, info in sessions.items():
                 start_hour = info["start"]
                 end_hour = info["end"]
-                
+
                 # Handle sessions that cross midnight
                 if start_hour > end_hour:
                     if now.hour >= start_hour or now.hour < end_hour:
@@ -322,26 +316,26 @@ class TimeServer:
                 else:
                     if start_hour <= now.hour < end_hour:
                         active_sessions.append(session_name)
-            
-            output = f"=== TRADING SESSIONS ===\\n"
+
+            output = "=== TRADING SESSIONS ===\\n"
             output += f"Current Time: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n\\n"
-            
+
             if active_sessions:
                 output += f"🟢 Active Sessions: {', '.join(active_sessions)}\\n"
             else:
-                output += f"🔴 No Major Sessions Active\\n"
-            
-            output += f"\\n📊 Session Schedule (UTC):\\n"
-            output += f"Sydney: 22:00 - 07:00\\n"
-            output += f"Tokyo: 00:00 - 09:00\\n"  
-            output += f"London: 08:00 - 17:00\\n"
-            output += f"New York: 13:00 - 22:00\\n"
-            
+                output += "🔴 No Major Sessions Active\\n"
+
+            output += "\\n📊 Session Schedule (UTC):\\n"
+            output += "Sydney: 22:00 - 07:00\\n"
+            output += "Tokyo: 00:00 - 09:00\\n"
+            output += "London: 08:00 - 17:00\\n"
+            output += "New York: 13:00 - 22:00\\n"
+
             # Market overlap periods
-            output += f"\\n🔥 High Volume Overlaps:\\n"
-            output += f"Tokyo + London: 08:00 - 09:00 UTC\\n"
-            output += f"London + NY: 13:00 - 17:00 UTC"
-            
+            output += "\\n🔥 High Volume Overlaps:\\n"
+            output += "Tokyo + London: 08:00 - 09:00 UTC\\n"
+            output += "London + NY: 13:00 - 17:00 UTC"
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -349,15 +343,15 @@ class TimeServer:
             return CallToolResult(
                 content=[ToolMessage(content=f"Session info calculation failed: {str(e)}", isError=True)]
             )
-    
+
     async def time_until(self, args: dict) -> CallToolResult:
         """Calculate time until target"""
         target_time_str = args.get("target_time")
         timezone_str = args.get("timezone", "UTC")
-        
+
         try:
             now = datetime.now(pytz.UTC)
-            
+
             # Try to parse target time
             try:
                 target_time = datetime.fromisoformat(target_time_str.replace('Z', '+00:00'))
@@ -372,22 +366,22 @@ class TimeServer:
                     return CallToolResult(
                         content=[ToolMessage(content=f"Unable to parse target time: {target_time_str}", isError=True)]
                     )
-            
+
             time_diff = target_time - now
-            
+
             if time_diff.total_seconds() < 0:
-                output = f"Target time has already passed\\n"
+                output = "Target time has already passed\\n"
                 output += f"Time since: {str(abs(time_diff)).split('.')[0]} ago"
             else:
                 days = time_diff.days
                 hours, remainder = divmod(time_diff.seconds, 3600)
                 minutes, seconds = divmod(remainder, 60)
-                
-                output = f"=== TIME UNTIL TARGET ===\\n"
+
+                output = "=== TIME UNTIL TARGET ===\\n"
                 output += f"Current Time: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n"
                 output += f"Target Time: {target_time.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n"
                 output += f"Time Remaining: {days} days, {hours} hours, {minutes} minutes, {seconds} seconds"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -395,20 +389,20 @@ class TimeServer:
             return CallToolResult(
                 content=[ToolMessage(content=f"Time calculation failed: {str(e)}", isError=True)]
             )
-    
+
     async def schedule_reminder(self, args: dict) -> CallToolResult:
         """Schedule trading activity reminder"""
         activity = args.get("activity")
         preferred_time = args.get("preferred_time", "auto")
         market_consideration = args.get("market_consideration", True)
-        
+
         try:
             now = datetime.now(pytz.UTC)
-            
-            output = f"=== ACTIVITY SCHEDULING ===\\n"
+
+            output = "=== ACTIVITY SCHEDULING ===\\n"
             output += f"Activity: {activity}\\n"
             output += f"Current Time: {now.strftime('%Y-%m-%d %H:%M:%S UTC')}\\n\\n"
-            
+
             if preferred_time == "auto":
                 if market_consideration:
                     # Suggest optimal trading times
@@ -420,20 +414,20 @@ class TimeServer:
                         suggested_time = "After market close or during weekend"
                     else:
                         suggested_time = "During active trading hours"
-                    
+
                     output += f"💡 Suggested Timing: {suggested_time}\\n"
-                    output += f"🔥 High Volume Period: 13:00-17:00 UTC (London/NY overlap)\\n"
-                    output += f"📊 Analysis Period: 22:00-08:00 UTC (Low volatility)\\n"
+                    output += "🔥 High Volume Period: 13:00-17:00 UTC (London/NY overlap)\\n"
+                    output += "📊 Analysis Period: 22:00-08:00 UTC (Low volatility)\\n"
                 else:
-                    output += f"⏰ Schedule at your convenience\\n"
+                    output += "⏰ Schedule at your convenience\\n"
             else:
                 output += f"Scheduled Time: {preferred_time}\\n"
-            
-            output += f"\\n📅 Market Considerations:\\n"
-            output += f"Crypto: 24/7 trading available\\n"
-            output += f"Forex: Closed weekends\\n"
-            output += f"Stocks: Weekdays only"
-            
+
+            output += "\\n📅 Market Considerations:\\n"
+            output += "Crypto: 24/7 trading available\\n"
+            output += "Forex: Closed weekends\\n"
+            output += "Stocks: Weekdays only"
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -445,7 +439,7 @@ class TimeServer:
 async def main():
     """Main entry point"""
     time_server = TimeServer()
-    
+
     async with time_server.server.stdio_client() as streams:
         await time_server.server.request_loop(*streams)
 

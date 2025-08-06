@@ -7,13 +7,13 @@ priority levels, queue management strategies, and integration with circuit break
 """
 
 import asyncio
-import time
 import heapq
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Callable, Any, Tuple
-from enum import Enum, IntEnum
 import logging
+import time
 from contextlib import asynccontextmanager
+from dataclasses import dataclass, field
+from enum import Enum, IntEnum
+from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -41,66 +41,66 @@ class QueueStrategy(Enum):
 @dataclass
 class QueuedRequest:
     """Represents a queued API request."""
-    
+
     # Request identification
     request_id: str
     endpoint: str
     method: str
     priority: RequestPriority
-    
+
     # Request data
     args: tuple = field(default_factory=tuple)
     kwargs: dict = field(default_factory=dict)
     callback: Optional[Callable] = None
-    
+
     # Timing information
     created_at: float = field(default_factory=time.time)
     scheduled_at: Optional[float] = None
     expires_at: Optional[float] = None
-    
+
     # Rate limiting
     penalty_points: int = 1
     weight: int = 1
     requires_auth: bool = True
-    
+
     # Retry configuration
     max_retries: int = 3
     retry_count: int = 0
     backoff_multiplier: float = 2.0
-    
+
     # Status
     is_cancelled: bool = False
     future: Optional[asyncio.Future] = None
-    
+
     def __post_init__(self):
         """Initialize future if not provided."""
         if self.future is None:
             self.future = asyncio.Future()
-    
+
     def __lt__(self, other):
         """Compare requests for priority queue ordering."""
         if not isinstance(other, QueuedRequest):
             return NotImplemented  # Correct for comparison operators
-        
+
         # Primary sort: priority (lower is higher priority)
         if self.priority != other.priority:
             return self.priority < other.priority
-        
+
         # Secondary sort: creation time (earlier is higher priority)
         return self.created_at < other.created_at
-    
+
     @property
     def age_seconds(self) -> float:
         """Get age of request in seconds."""
         return time.time() - self.created_at
-    
+
     @property
     def is_expired(self) -> bool:
         """Check if request has expired."""
         if self.expires_at is None:
             return False
         return time.time() > self.expires_at
-    
+
     def cancel(self, reason: str = "Cancelled"):
         """Cancel the request."""
         self.is_cancelled = True
@@ -120,7 +120,7 @@ class RequestQueue:
     - Request expiration handling
     - Comprehensive metrics
     """
-    
+
     def __init__(
         self,
         max_size: int = 1000,
@@ -141,16 +141,16 @@ class RequestQueue:
         self.strategy = strategy
         self.cleanup_interval = cleanup_interval
         self.max_age_seconds = max_age_seconds
-        
+
         # Priority queues for each priority level
         self._queues: Dict[RequestPriority, List[QueuedRequest]] = {
             priority: [] for priority in RequestPriority
         }
-        
+
         # Request tracking
         self._requests: Dict[str, QueuedRequest] = {}
         self._processing: Dict[str, QueuedRequest] = {}
-        
+
         # Queue statistics
         self.stats = {
             'total_queued': 0,
@@ -161,17 +161,17 @@ class RequestQueue:
             'current_size': 0,
             'average_wait_time': 0.0,
             'max_wait_time': 0.0,
-            'priority_distribution': {p: 0 for p in RequestPriority}
+            'priority_distribution': dict.fromkeys(RequestPriority, 0)
         }
-        
+
         # Queue management
         self._lock = asyncio.Lock()
         self._not_empty = asyncio.Condition(self._lock)
         self._shutdown = False
-        
+
         # Cleanup task
         self._cleanup_task: Optional[asyncio.Task] = None
-        
+
         # Weighted fair queuing state
         self._wfq_credits: Dict[RequestPriority, float] = {
             RequestPriority.CRITICAL: 10.0,
@@ -180,19 +180,19 @@ class RequestQueue:
             RequestPriority.LOW: 1.0,
             RequestPriority.BACKGROUND: 0.5
         }
-        
+
         logger.info(f"Request queue initialized: max_size={max_size}, strategy={strategy.value}")
-    
+
     async def start(self):
         """Start the queue management system."""
         if self._cleanup_task is None:
             self._cleanup_task = asyncio.create_task(self._cleanup_loop())
             logger.info("Request queue cleanup task started")
-    
+
     async def stop(self):
         """Stop the queue management system."""
         self._shutdown = True
-        
+
         if self._cleanup_task:
             self._cleanup_task.cancel()
             try:
@@ -200,18 +200,18 @@ class RequestQueue:
             except asyncio.CancelledError:
                 pass
             self._cleanup_task = None
-        
+
         # Cancel all pending requests
         async with self._lock:
             for request in list(self._requests.values()):
                 request.cancel("Queue shutdown")
-            
+
             self._requests.clear()
             for queue in self._queues.values():
                 queue.clear()
-        
+
         logger.info("Request queue stopped")
-    
+
     async def enqueue(
         self,
         request_id: str,
@@ -252,21 +252,21 @@ class RequestQueue:
         """
         if kwargs is None:
             kwargs = {}
-        
+
         async with self._lock:
             # Check if queue is full
             if self.stats['current_size'] >= self.max_size:
                 raise ValueError(f"Queue is full (size: {self.stats['current_size']})")
-            
+
             # Check for duplicate request ID
             if request_id in self._requests:
                 raise ValueError(f"Request {request_id} already exists in queue")
-            
+
             # Create request object
             expires_at = None
             if timeout_seconds:
                 expires_at = time.time() + timeout_seconds
-            
+
             request = QueuedRequest(
                 request_id=request_id,
                 endpoint=endpoint,
@@ -281,26 +281,26 @@ class RequestQueue:
                 requires_auth=requires_auth,
                 max_retries=max_retries
             )
-            
+
             # Add to appropriate queue
             heapq.heappush(self._queues[priority], request)
             self._requests[request_id] = request
-            
+
             # Update statistics
             self.stats['total_queued'] += 1
             self.stats['current_size'] += 1
             self.stats['priority_distribution'][priority] += 1
-            
+
             # Notify waiting consumers
             self._not_empty.notify()
-            
+
             logger.debug(
                 f"Request {request_id} queued: endpoint={endpoint}, "
                 f"priority={priority.name}, queue_size={self.stats['current_size']}"
             )
-            
+
             return request
-    
+
     async def dequeue(self, timeout_seconds: Optional[float] = None) -> Optional[QueuedRequest]:
         """
         Dequeue the next request for processing.
@@ -314,45 +314,45 @@ class RequestQueue:
         async with self._not_empty:
             # Wait for requests or timeout
             start_time = time.time()
-            
+
             while self.stats['current_size'] == 0 and not self._shutdown:
                 if timeout_seconds:
                     remaining = timeout_seconds - (time.time() - start_time)
                     if remaining <= 0:
                         return None
-                    
+
                     try:
                         await asyncio.wait_for(self._not_empty.wait(), timeout=remaining)
                     except asyncio.TimeoutError:
                         return None
                 else:
                     await self._not_empty.wait()
-            
+
             if self._shutdown:
                 return None
-            
+
             # Get next request based on strategy
             request = self._get_next_request()
             if request is None:
                 return None
-            
+
             # Move to processing state
             del self._requests[request.request_id]
             self._processing[request.request_id] = request
             request.scheduled_at = time.time()
-            
+
             # Update statistics
             self.stats['current_size'] -= 1
             wait_time = request.scheduled_at - request.created_at
             self._update_wait_time_stats(wait_time)
-            
+
             logger.debug(
                 f"Request {request.request_id} dequeued: "
                 f"wait_time={wait_time:.2f}s, queue_size={self.stats['current_size']}"
             )
-            
+
             return request
-    
+
     def _get_next_request(self) -> Optional[QueuedRequest]:
         """Get next request based on queue strategy."""
         if self.strategy == QueueStrategy.FIFO:
@@ -365,12 +365,12 @@ class RequestQueue:
             return self._get_adaptive_request()
         else:
             return self._get_priority_fifo_request()  # Default
-    
+
     def _get_fifo_request(self) -> Optional[QueuedRequest]:
         """Get next request using FIFO strategy."""
         oldest_request = None
         oldest_time = float('inf')
-        
+
         for priority in RequestPriority:
             queue = self._queues[priority]
             while queue:
@@ -384,9 +384,9 @@ class RequestQueue:
                     else:
                         heapq.heappush(self._queues[request.priority], request)
                         break
-        
+
         return oldest_request
-    
+
     def _get_priority_fifo_request(self) -> Optional[QueuedRequest]:
         """Get next request using priority-FIFO strategy."""
         for priority in RequestPriority:
@@ -395,23 +395,23 @@ class RequestQueue:
                 request = heapq.heappop(queue)
                 if not request.is_cancelled and not request.is_expired:
                     return request
-        
+
         return None
-    
+
     def _get_weighted_fair_request(self) -> Optional[QueuedRequest]:
         """Get next request using weighted fair queuing."""
         # Find priority with highest credits that has requests
         best_priority = None
         best_credits = -1
-        
+
         for priority in RequestPriority:
             if self._queues[priority] and self._wfq_credits[priority] > best_credits:
                 best_priority = priority
                 best_credits = self._wfq_credits[priority]
-        
+
         if best_priority is None:
             return None
-        
+
         # Get request from best priority queue
         queue = self._queues[best_priority]
         while queue:
@@ -422,19 +422,19 @@ class RequestQueue:
                 for p in RequestPriority:
                     if p != best_priority:
                         self._wfq_credits[p] += 0.1  # Slow credit refresh
-                
+
                 return request
-        
+
         return None
-    
+
     def _get_adaptive_request(self) -> Optional[QueuedRequest]:
         """Get next request using adaptive strategy."""
         # Use weighted fair queuing but adapt credits based on queue sizes
         total_requests = sum(len(q) for q in self._queues.values())
-        
+
         if total_requests == 0:
             return None
-        
+
         # Adjust credits based on queue sizes
         for priority in RequestPriority:
             queue_size = len(self._queues[priority])
@@ -443,9 +443,9 @@ class RequestQueue:
                 base_credit = self._wfq_credits[priority]
                 # Increase credits for fuller queues (up to 2x)
                 self._wfq_credits[priority] = base_credit * (1.0 + ratio)
-        
+
         return self._get_weighted_fair_request()
-    
+
     def _update_wait_time_stats(self, wait_time: float):
         """Update wait time statistics."""
         if self.stats['total_processed'] == 0:
@@ -456,10 +456,10 @@ class RequestQueue:
             self.stats['average_wait_time'] = (
                 (self.stats['average_wait_time'] * n + wait_time) / (n + 1)
             )
-        
+
         self.stats['max_wait_time'] = max(self.stats['max_wait_time'], wait_time)
         self.stats['total_processed'] += 1
-    
+
     async def complete_request(self, request_id: str, success: bool = True):
         """
         Mark a request as completed.
@@ -473,7 +473,7 @@ class RequestQueue:
             if request is None:
                 logger.warning(f"Completed request {request_id} not found in processing")
                 return
-            
+
             if success:
                 if request.callback:
                     try:
@@ -485,9 +485,9 @@ class RequestQueue:
                         logger.error(f"Request callback error for {request_id}: {e}")
             else:
                 self.stats['total_failed'] += 1
-            
+
             logger.debug(f"Request {request_id} completed successfully: {success}")
-    
+
     async def cancel_request(self, request_id: str, reason: str = "Cancelled") -> bool:
         """
         Cancel a queued or processing request.
@@ -508,7 +508,7 @@ class RequestQueue:
                 self.stats['current_size'] -= 1
                 self.stats['total_cancelled'] += 1
                 return True
-            
+
             # Check processing requests
             request = self._processing.get(request_id)
             if request:
@@ -516,9 +516,9 @@ class RequestQueue:
                 # Note: Don't remove from processing as it may be in progress
                 self.stats['total_cancelled'] += 1
                 return True
-        
+
         return False
-    
+
     async def _cleanup_loop(self):
         """Background cleanup of expired and cancelled requests."""
         while not self._shutdown:
@@ -529,81 +529,81 @@ class RequestQueue:
                 break
             except Exception as e:
                 logger.error(f"Cleanup loop error: {e}")
-    
+
     async def _cleanup_expired_requests(self):
         """Remove expired and cancelled requests from queues."""
         async with self._lock:
             removed_count = 0
             current_time = time.time()
-            
+
             # Clean up queued requests
             for priority in RequestPriority:
                 queue = self._queues[priority]
                 valid_requests = []
-                
+
                 while queue:
                     request = heapq.heappop(queue)
-                    
+
                     if request.is_cancelled:
                         removed_count += 1
                         self.stats['total_cancelled'] += 1
                         continue
-                    
+
                     if request.is_expired:
                         request.cancel("Expired")
                         removed_count += 1
                         self.stats['total_expired'] += 1
                         continue
-                    
+
                     # Check max age
                     if request.age_seconds > self.max_age_seconds:
                         request.cancel("Max age exceeded")
                         removed_count += 1
                         self.stats['total_expired'] += 1
                         continue
-                    
+
                     valid_requests.append(request)
-                
+
                 # Rebuild heap with valid requests
                 self._queues[priority] = valid_requests
                 heapq.heapify(self._queues[priority])
-            
+
             # Update request tracking
             valid_requests = {}
             for request_id, request in self._requests.items():
                 if not request.is_cancelled and not request.is_expired:
                     valid_requests[request_id] = request
-            
+
             removed_from_tracking = len(self._requests) - len(valid_requests)
             self._requests = valid_requests
-            
+
             # Update statistics
             self.stats['current_size'] = len(self._requests)
-            
+
             if removed_count > 0 or removed_from_tracking > 0:
                 logger.debug(
                     f"Cleanup removed {removed_count} queued and "
                     f"{removed_from_tracking} tracked requests"
                 )
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """Get comprehensive queue statistics."""
         stats = self.stats.copy()
-        
+
         # Add real-time queue sizes
         stats['queue_sizes'] = {
             priority.name: len(self._queues[priority])
             for priority in RequestPriority
         }
-        
+
         stats['processing_count'] = len(self._processing)
         stats['wfq_credits'] = {
             priority.name: credits
             for priority, credits in self._wfq_credits.items()
         }
-        
+
         return stats
-    
+
     def get_queue_size(self, priority: Optional[RequestPriority] = None) -> int:
         """
         Get queue size for specific priority or total.
@@ -617,15 +617,15 @@ class RequestQueue:
         if priority is None:
             return self.stats['current_size']
         return len(self._queues[priority])
-    
+
     def is_full(self) -> bool:
         """Check if queue is at capacity."""
         return self.stats['current_size'] >= self.max_size
-    
+
     def is_empty(self) -> bool:
         """Check if queue is empty."""
         return self.stats['current_size'] == 0
-    
+
     @asynccontextmanager
     async def request_context(self, request: QueuedRequest):
         """
@@ -641,11 +641,11 @@ class RequestQueue:
             logger.error(f"Request {request.request_id} failed: {e}")
             await self.complete_request(request.request_id, success=False)
             raise
-    
+
     def __len__(self) -> int:
         """Get total queue size."""
         return self.stats['current_size']
-    
+
     def __bool__(self) -> bool:
         """Check if queue has requests."""
         return not self.is_empty()

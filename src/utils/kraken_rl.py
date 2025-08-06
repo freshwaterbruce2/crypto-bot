@@ -18,11 +18,12 @@ full compliance with Kraken's rate limiting requirements.
 """
 
 import asyncio
+import logging
 import time
-from typing import Dict, Optional, Any
 from collections import defaultdict
 from dataclasses import dataclass
-import logging
+from typing import Any, Dict, Optional
+
 logger = logging.getLogger(__name__)
 
 
@@ -96,12 +97,12 @@ class KrakenRateLimiter:
         }
 
         self.config = tier_configs.get(self.tier, RateLimitConfig.STARTER())
-        
+
         # INTEGRATION FIX: Ensure decay_rate is never 0 or invalid
         if self.config.decay_rate <= 0 or self.config.decay_rate > 10:
             logger.warning(f"[KRAKEN_RL] Invalid decay_rate {self.config.decay_rate}, setting to 1.0")
             self.config.decay_rate = 1.0
-        
+
         # INTEGRATION FIX: Validate API decay rate
         if self.config.api_decay_rate <= 0 or self.config.api_decay_rate > 10:
             logger.warning(f"[KRAKEN_RL] Invalid api_decay_rate {self.config.api_decay_rate}, setting to 0.5")
@@ -113,20 +114,20 @@ class KrakenRateLimiter:
 
         # Open order tracking
         self.open_orders: Dict[str, int] = defaultdict(int)
-        
+
         # REST API token bucket (separate from trading engine)
         self.api_counter = 0.0
         self.api_last_update = time.time()
-        
+
         # IOC order tracking for micro-profit optimization
         self.ioc_orders_success = 0
         self.ioc_orders_failed = 0  # No penalty for failed IOC!
         self.regular_orders_cancelled = 0  # 8 point penalty each!
-        
+
         # WebSocket rate counter monitoring
         self.ws_rate_counter = 0.0
         self.ws_counter_history = []
-        
+
         # Circuit breaker for preventing cascade failures
         self.circuit_breaker_open = False
         self.circuit_breaker_opened_at = 0
@@ -235,10 +236,10 @@ class KrakenRateLimiter:
             ):
                 # Check circuit breaker first
                 if not self.check_circuit_breaker():
-                    logger.warning(f"[KRAKEN_RL] Circuit breaker open - waiting for recovery")
+                    logger.warning("[KRAKEN_RL] Circuit breaker open - waiting for recovery")
                     await asyncio.sleep(self.circuit_breaker_duration)
                     continue
-                
+
                 # Calculate required wait time with exponential backoff
                 current_counter = self.rate_counters[symbol]
                 operation_cost = self._calculate_operation_cost(
@@ -250,7 +251,7 @@ class KrakenRateLimiter:
                 base_wait_time = excess / max(self.config.decay_rate, 0.1)
                 exponential_backoff = min(2 ** backoff_attempt, 16.0)  # Cap at 16 seconds
                 wait_time = min(base_wait_time + exponential_backoff, max_wait_time)
-                
+
                 backoff_attempt += 1
 
                 logger.info(
@@ -485,7 +486,7 @@ class KrakenRateLimiter:
         else:
             self.open_orders.clear()
             logger.info("[KRAKEN_RL] All open orders reset")
-    
+
     def update_websocket_counter(self, counter_value: float) -> None:
         """
         Update rate counter from WebSocket ratecounter message.
@@ -499,11 +500,11 @@ class KrakenRateLimiter:
             'value': counter_value,
             'utilization': (counter_value / self.config.max_counter) * 100
         })
-        
+
         # Keep only last 100 entries
         if len(self.ws_counter_history) > 100:
             self.ws_counter_history = self.ws_counter_history[-100:]
-        
+
         # Check if we should open circuit breaker (more conservative threshold)
         if counter_value > self.config.max_counter * 0.8:
             logger.warning(
@@ -512,7 +513,7 @@ class KrakenRateLimiter:
             )
             if not self.circuit_breaker_open:
                 self.open_circuit_breaker()
-    
+
     def open_circuit_breaker(self) -> None:
         """Open circuit breaker to prevent cascade failures."""
         self.circuit_breaker_open = True
@@ -520,12 +521,12 @@ class KrakenRateLimiter:
         logger.warning(
             f"[KRAKEN_RL] Circuit breaker OPENED for {self.circuit_breaker_duration}s"
         )
-    
+
     def close_circuit_breaker(self) -> None:
         """Close circuit breaker."""
         self.circuit_breaker_open = False
         logger.info("[KRAKEN_RL] Circuit breaker CLOSED")
-    
+
     def check_circuit_breaker(self) -> bool:
         """
         Check if circuit breaker allows operations.
@@ -539,7 +540,7 @@ class KrakenRateLimiter:
                 return True
             return False
         return True
-    
+
     def track_ioc_order(self, success: bool) -> None:
         """
         Track IOC order outcome for optimization metrics.
@@ -553,7 +554,7 @@ class KrakenRateLimiter:
             self.ioc_orders_failed += 1
             # No penalty for failed IOC! This is a HUGE advantage
             self.stats["ioc_optimization_savings"] += 1  # Saved 1 point
-    
+
     def track_order_cancellation(self) -> None:
         """Track regular order cancellation (8 point penalty!)."""
         self.regular_orders_cancelled += 1
@@ -563,11 +564,11 @@ class KrakenRateLimiter:
             f"Total: {self.regular_orders_cancelled} cancellations = "
             f"{self.regular_orders_cancelled * 8} penalty points"
         )
-    
+
     def get_ioc_optimization_stats(self) -> Dict[str, Any]:
         """Get IOC optimization statistics."""
         total_ioc = self.ioc_orders_success + self.ioc_orders_failed
-        
+
         return {
             "ioc_orders_total": total_ioc,
             "ioc_orders_success": self.ioc_orders_success,
@@ -578,11 +579,11 @@ class KrakenRateLimiter:
             "cancellation_penalty_points": self.regular_orders_cancelled * 8,
             "recommendation": self._get_ioc_recommendation()
         }
-    
+
     def _get_ioc_recommendation(self) -> str:
         """Get recommendation based on IOC usage."""
         total_ioc = self.ioc_orders_success + self.ioc_orders_failed
-        
+
         if self.regular_orders_cancelled > 5:
             return (
                 f"HIGH PRIORITY: Switch to IOC orders! "
@@ -596,7 +597,7 @@ class KrakenRateLimiter:
             return "IOC fill rate is low - consider adjusting limit prices"
         else:
             return "IOC optimization is working well"
-    
+
     async def check_rest_api_limit(self, endpoint: str) -> bool:
         """
         Check REST API rate limit (separate from trading engine).
@@ -611,22 +612,22 @@ class KrakenRateLimiter:
             # Update API counter with decay
             current_time = time.time()
             elapsed = current_time - self.api_last_update
-            
+
             if elapsed > 0:
                 decay = elapsed * self.config.api_decay_rate
                 self.api_counter = max(0, self.api_counter - decay)
                 self.api_last_update = current_time
-            
+
             # Get endpoint cost
             cost = 2.0 if endpoint in ["ledgers", "trades_history"] else 1.0
-            
+
             # Check if we have capacity
             if self.api_counter + cost <= self.config.max_api_counter:
                 self.api_counter += cost
                 return True
-            
+
             return False
-            
+
         except Exception as e:
             logger.error(f"[KRAKEN_RL] Error checking REST API limit: {e}")
             return True

@@ -53,7 +53,7 @@ KRAKEN_API_TIER_LIMITS = {
     'pro': {
         'min_order': 2.0,  # CORRECTED: Kraken requires $2 USD minimum for TIER-1 pairs
         'max_order': 50000.0,  # Increased for Pro tier
-        'rate_limit': 180,  # Pro tier: 180 calls/counter 
+        'rate_limit': 180,  # Pro tier: 180 calls/counter
         'rate_decay': 3.75,  # Pro tier: 3.75/s decay rate
         'burst_allowance': 216,  # 20% burst capacity (180 * 1.2)
         'max_open_orders': 225,
@@ -82,7 +82,7 @@ KRAKEN_MIN_ORDER_SIZES = {
     'AUD': 1.0,         # Australian Dollar - 1 AUD minimum
     'CHF': 1.0,         # Swiss Franc - 1 CHF minimum
     'JPY': 110.0,       # Japanese Yen - 110 JPY minimum
-    
+
     # Low-priced assets (good for tier-1)
     'SHIB': 100000,     # Shiba Inu
     'DOGE': 10,         # Dogecoin
@@ -90,14 +90,14 @@ KRAKEN_MIN_ORDER_SIZES = {
     'XRP': 10,          # Ripple
     'ALGO': 5,          # Algorand
     'MATIC': 5,         # Polygon
-    
+
     # Mid-range assets
     'DOT': 0.1,         # Polkadot
     'LINK': 0.1,        # Chainlink
     'UNI': 0.1,         # Uniswap
     'AVAX': 0.1,        # Avalanche
     'SOL': 0.01,        # Solana
-    
+
     # Stablecoins
     'DAI': 1.0,         # DAI
     'BUSD': 1.0,        # Binance USD
@@ -109,26 +109,26 @@ TRADING_CONSTANTS = {
     'MIN_PROFIT_TARGET': 0.001,      # 0.1% - Fee-free allows tiny profits
     'DEFAULT_PROFIT_TARGET': 0.003,  # 0.3% - Reduced for high frequency
     'MAX_PROFIT_TARGET': 0.005,      # 0.5% - Quick scalping
-    
+
     # Stop loss settings (TIGHTER for fee-free exits)
     'DEFAULT_STOP_LOSS': 0.003,      # 0.3% - No exit fees enable tight stops
     'TIGHT_STOP_LOSS': 0.002,        # 0.2% - Ultra-tight for scalping
     'MAX_STOP_LOSS': 0.008,          # 0.8% - Reduced maximum
-    
+
     # Position management (AGGRESSIVE for fee-free trading)
     'MAX_POSITIONS': 20,             # More positions for diversification
     'MAX_POSITION_SIZE_PCT': 0.15,   # 15% of portfolio per position
     'MIN_POSITION_SIZE_PCT': 0.005,  # 0.5% - Much smaller minimum positions
-    
+
     # Timing constants (COMPLIANCE: Increased for rate limit safety)
     'MIN_HOLD_TIME': 60,             # 60 seconds minimum - compliance requirement
     'MAX_HOLD_TIME': 120,            # 2 minutes maximum - quick scalping
     'SIGNAL_COOLDOWN': 1,            # 1 second between signals - higher frequency
-    
+
     # Risk management
     'MAX_DAILY_LOSS_PCT': 5.0,       # 5% maximum daily loss
     'CIRCUIT_BREAKER_THRESHOLD': 3.0, # 3% drawdown triggers circuit breaker
-    
+
     # Signal generation
     'MIN_CONFIDENCE_THRESHOLD': 0.5,  # 50% minimum confidence for signals
 }
@@ -200,16 +200,16 @@ def calculate_minimum_cost(asset: str, price: float, api_tier: str = 'starter') 
     asset_min = get_asset_minimum(asset)
     min_cost = asset_min * price
     tier_min = get_minimum_order_size(api_tier)
-    
+
     # TIER-1 pairs require $2 USD minimum (like SHIB/USDT)
     # This is a Kraken exchange requirement, not related to Pro account features
     tier1_assets = ['SHIB', 'DOGE', 'ADA', 'XRP', 'ALGO', 'MATIC']
     if asset.upper() in tier1_assets:
         tier_min = max(tier_min, MINIMUM_ORDER_SIZE_TIER1)  # Ensure $2 minimum
-    
+
     # The final minimum is the higher of asset minimum cost or tier minimum
     final_minimum = max(min_cost, tier_min)
-    
+
     # IMPORTANT: Do NOT reduce minimums for Pro accounts
     # Kraken's minimum order requirements apply to ALL account types
     return final_minimum

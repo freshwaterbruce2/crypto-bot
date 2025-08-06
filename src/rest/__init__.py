@@ -19,13 +19,13 @@ Usage:
     fallback_manager = RestFallbackManager(rest_client, websocket_manager)
 """
 
-from .strategic_rest_client import StrategicRestClient, RestWebSocketCoordinator
 from .rest_data_validator import RestDataValidator
-from .rest_fallback_manager import RestFallbackManager, ServiceLevel, OperationPriority
+from .rest_fallback_manager import OperationPriority, RestFallbackManager, ServiceLevel
+from .strategic_rest_client import RestWebSocketCoordinator, StrategicRestClient
 
 __all__ = [
     'StrategicRestClient',
-    'RestWebSocketCoordinator', 
+    'RestWebSocketCoordinator',
     'RestDataValidator',
     'RestFallbackManager',
     'ServiceLevel',

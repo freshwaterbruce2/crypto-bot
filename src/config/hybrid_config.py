@@ -14,7 +14,7 @@ KRAKEN_CONFIG = {
         "ws_v1_public": "wss://ws.kraken.com",  # Legacy, not used
         "ws_v1_private": "wss://ws-auth.kraken.com"  # Legacy, not used
     },
-    
+
     # Hybrid approach settings
     "hybrid_mode": {
         "use_websocket_for": ["ticker", "orderbook", "ohlc", "trades", "spread"],
@@ -22,7 +22,7 @@ KRAKEN_CONFIG = {
         "balance_update_method": "websocket_with_rest_fallback",
         "order_updates": "websocket_executions_channel"
     },
-    
+
     # WebSocket v2 specific settings
     "websocket_v2": {
         "reconnect_delay": 5,
@@ -36,7 +36,7 @@ KRAKEN_CONFIG = {
         "orderbook_depth": 10,
         "ohlc_interval": 1  # 1 minute candles
     },
-    
+
     # Trading settings
     "trading": {
         "max_orders_per_pair": 3,
@@ -47,7 +47,7 @@ KRAKEN_CONFIG = {
         "use_ioc_orders": True,     # Immediate or Cancel for scalping
         "order_timeout_seconds": 300  # 5 minutes
     },
-    
+
     # Rate limiting (pro tier)
     "rate_limits": {
         "rest_api_counter_max": 20,
@@ -57,11 +57,11 @@ KRAKEN_CONFIG = {
         "ws_reconnect_per_10min": 150,
         "order_rate_per_minute": 30
     },
-    
+
     # Symbols to trade (using v2 format)
     "trading_pairs": [
         "SHIB/USDT",
-        "AI16Z/USDT", 
+        "AI16Z/USDT",
         "BERA/USDT",
         "MANA/USDT",
         "DOT/USDT",
@@ -69,7 +69,7 @@ KRAKEN_CONFIG = {
         "SOL/USDT",
         "BTC/USDT"
     ],
-    
+
     # Error handling
     "error_handling": {
         "nonce_errors_max_retries": 3,
@@ -82,7 +82,7 @@ KRAKEN_CONFIG = {
 # Safe startup procedure
 STARTUP_SEQUENCE = [
     "1. Initialize REST API connection",
-    "2. Test API key permissions", 
+    "2. Test API key permissions",
     "3. Get WebSocket token via GetWebSocketsToken",
     "4. Connect to WebSocket v2 public channels",
     "5. Connect to WebSocket v2 private channels",
@@ -96,7 +96,7 @@ CRITICAL_CHECKS = {
     "api_key_permissions": [
         "Query Funds",
         "Query open orders & trades",
-        "Query closed orders & trades", 
+        "Query closed orders & trades",
         "Create & modify orders",
         "Cancel & close orders",
         "Access WebSockets API"  # MOST IMPORTANT

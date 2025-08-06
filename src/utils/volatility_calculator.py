@@ -3,14 +3,13 @@ Volatility Calculator
 Real-time volatility calculation and analysis for trading optimization
 """
 
-import asyncio
 import logging
-import time
+import math
 import statistics
-from typing import Dict, Any, Optional, List, Tuple
+import time
 from dataclasses import dataclass
 from enum import Enum
-import math
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 class VolatilityPeriod(Enum):
     """Volatility calculation periods"""
     SHORT = "short"      # 5-minute volatility
-    MEDIUM = "medium"    # 15-minute volatility  
+    MEDIUM = "medium"    # 15-minute volatility
     LONG = "long"        # 1-hour volatility
     INTRADAY = "intraday"  # Daily volatility
 
@@ -34,7 +33,7 @@ class VolatilityReading:
     price_range: float
     mean_price: float
     confidence: float = 1.0
-    
+
     def age_seconds(self) -> float:
         """Get reading age in seconds"""
         return time.time() - self.timestamp
@@ -42,19 +41,19 @@ class VolatilityReading:
 
 class VolatilityCalculator:
     """Advanced volatility calculator for trading optimization"""
-    
+
     def __init__(self, config: Dict[str, Any] = None):
         """Initialize volatility calculator"""
         self.config = config or {}
-        
+
         # Price history storage
         self.price_history = {}
         self.max_history_size = 1000
-        
+
         # Volatility cache
         self.volatility_cache = {}
         self.cache_ttl = 30  # 30 seconds cache TTL
-        
+
         # Calculation parameters
         self.min_data_points = {
             VolatilityPeriod.SHORT: 5,
@@ -62,7 +61,7 @@ class VolatilityCalculator:
             VolatilityPeriod.LONG: 60,
             VolatilityPeriod.INTRADAY: 100
         }
-        
+
         # Volatility thresholds
         self.volatility_thresholds = {
             'low': 1.0,
@@ -70,40 +69,40 @@ class VolatilityCalculator:
             'high': 5.0,
             'extreme': 10.0
         }
-        
+
         logger.info("[VOLATILITY] Volatility calculator initialized")
-    
-    async def calculate_volatility(self, symbol: str, prices: List[float], 
+
+    async def calculate_volatility(self, symbol: str, prices: List[float],
                                  period: VolatilityPeriod = VolatilityPeriod.SHORT) -> Optional[VolatilityReading]:
         """Calculate volatility for given price data"""
         try:
             if not prices or len(prices) < 2:
                 return None
-            
+
             # Check minimum data points
             min_points = self.min_data_points.get(period, 5)
             if len(prices) < min_points:
                 logger.debug(f"[VOLATILITY] Insufficient data for {symbol}: {len(prices)} < {min_points}")
                 return None
-            
+
             # Calculate price returns
             returns = []
             for i in range(1, len(prices)):
                 if prices[i-1] > 0:
                     return_pct = (prices[i] - prices[i-1]) / prices[i-1]
                     returns.append(return_pct)
-            
+
             if not returns:
                 return None
-            
+
             # Calculate volatility metrics
             volatility = self._calculate_standard_deviation(returns) * 100  # Convert to percentage
             mean_price = statistics.mean(prices)
             price_range = (max(prices) - min(prices)) / mean_price * 100
-            
+
             # Calculate confidence based on data quality
             confidence = self._calculate_confidence(len(prices), min_points)
-            
+
             reading = VolatilityReading(
                 symbol=symbol,
                 volatility=volatility,
@@ -114,18 +113,18 @@ class VolatilityCalculator:
                 mean_price=mean_price,
                 confidence=confidence
             )
-            
+
             # Cache the reading
             cache_key = f"{symbol}_{period.value}"
             self.volatility_cache[cache_key] = reading
-            
+
             logger.debug(f"[VOLATILITY] Calculated for {symbol}: {volatility:.3f}% ({period.value})")
             return reading
-            
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error calculating volatility for {symbol}: {e}")
             return None
-    
+
     async def get_real_time_volatility(self, symbol: str, exchange=None) -> Optional[VolatilityReading]:
         """Get real-time volatility using live price data"""
         try:
@@ -135,36 +134,36 @@ class VolatilityCalculator:
                 cached = self.volatility_cache[cache_key]
                 if cached.age_seconds() < self.cache_ttl:
                     return cached
-            
+
             # Get recent price history
             prices = self._get_recent_prices(symbol, exchange)
             if not prices:
                 return None
-            
+
             return await self.calculate_volatility(symbol, prices, VolatilityPeriod.SHORT)
-            
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error getting real-time volatility for {symbol}: {e}")
             return None
-    
+
     def update_price_history(self, symbol: str, price: float):
         """Update price history for symbol"""
         try:
             if symbol not in self.price_history:
                 self.price_history[symbol] = []
-            
+
             self.price_history[symbol].append({
                 'price': price,
                 'timestamp': time.time()
             })
-            
+
             # Limit history size
             if len(self.price_history[symbol]) > self.max_history_size:
                 self.price_history[symbol] = self.price_history[symbol][-self.max_history_size:]
-                
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error updating price history for {symbol}: {e}")
-    
+
     def get_volatility_classification(self, volatility: float) -> str:
         """Classify volatility level"""
         try:
@@ -178,15 +177,15 @@ class VolatilityCalculator:
                 return 'low'
             else:
                 return 'very_low'
-                
+
         except Exception:
             return 'unknown'
-    
+
     def get_position_size_adjustment(self, volatility: float) -> float:
         """Get position size adjustment based on volatility"""
         try:
             classification = self.get_volatility_classification(volatility)
-            
+
             adjustments = {
                 'very_low': 1.2,   # Increase position size for low volatility
                 'low': 1.1,
@@ -194,12 +193,12 @@ class VolatilityCalculator:
                 'high': 0.8,       # Reduce position size for high volatility
                 'extreme': 0.5     # Significantly reduce for extreme volatility
             }
-            
+
             return adjustments.get(classification, 1.0)
-            
+
         except Exception:
             return 1.0
-    
+
     def calculate_dynamic_stop_loss(self, volatility: float, base_stop_loss: float = 0.008) -> float:
         """Calculate dynamic stop loss based on volatility"""
         try:
@@ -212,47 +211,47 @@ class VolatilityCalculator:
                 multiplier = 0.8
             else:
                 multiplier = 1.0
-            
+
             return base_stop_loss * multiplier
-            
+
         except Exception:
             return base_stop_loss
-    
+
     def _calculate_standard_deviation(self, returns: List[float]) -> float:
         """Calculate standard deviation of returns"""
         try:
             if len(returns) < 2:
                 return 0.0
-            
+
             mean_return = sum(returns) / len(returns)
             variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
             std_dev = math.sqrt(variance)
-            
+
             # Annualize volatility (assuming 1-minute intervals)
             # 525600 minutes in a year
             annualized_vol = std_dev * math.sqrt(525600)
-            
+
             return annualized_vol
-            
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error calculating standard deviation: {e}")
             return 0.0
-    
+
     def _calculate_confidence(self, data_points: int, min_points: int) -> float:
         """Calculate confidence score for volatility reading"""
         try:
             if data_points < min_points:
                 return 0.0
-            
+
             # Confidence increases with more data points, up to a maximum
             max_confidence_points = min_points * 3
             confidence = min(1.0, data_points / max_confidence_points)
-            
+
             return confidence
-            
+
         except Exception:
             return 0.5
-    
+
     def _get_recent_prices(self, symbol: str, exchange=None) -> List[float]:
         """Get recent prices for volatility calculation"""
         try:
@@ -261,7 +260,7 @@ class VolatilityCalculator:
                 history = self.price_history[symbol]
                 recent_history = history[-60:]  # Last 60 price points
                 return [entry['price'] for entry in recent_history]
-            
+
             # If no internal history and exchange provided, fetch from exchange
             if exchange:
                 try:
@@ -272,13 +271,13 @@ class VolatilityCalculator:
                         return prices
                 except Exception as e:
                     logger.debug(f"[VOLATILITY] Could not fetch OHLCV for {symbol}: {e}")
-            
+
             return []
-            
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error getting recent prices for {symbol}: {e}")
             return []
-    
+
     def get_volatility_stats(self) -> Dict[str, Any]:
         """Get volatility calculator statistics"""
         return {
@@ -289,37 +288,37 @@ class VolatilityCalculator:
             'volatility_thresholds': self.volatility_thresholds,
             'min_data_points': {k.value: v for k, v in self.min_data_points.items()}
         }
-    
+
     def clear_cache(self):
         """Clear volatility cache"""
         self.volatility_cache.clear()
         logger.info("[VOLATILITY] Cache cleared")
-    
+
     def clear_old_data(self, max_age_hours: int = 24):
         """Clear old price history data"""
         try:
             cutoff_time = time.time() - (max_age_hours * 3600)
             cleared_count = 0
-            
+
             for symbol in list(self.price_history.keys()):
                 history = self.price_history[symbol]
                 # Keep only recent data
                 recent_history = [
-                    entry for entry in history 
+                    entry for entry in history
                     if entry['timestamp'] > cutoff_time
                 ]
-                
+
                 if len(recent_history) != len(history):
                     self.price_history[symbol] = recent_history
                     cleared_count += len(history) - len(recent_history)
-                
+
                 # Remove empty histories
                 if not recent_history:
                     del self.price_history[symbol]
-            
+
             if cleared_count > 0:
                 logger.info(f"[VOLATILITY] Cleared {cleared_count} old price entries")
-                
+
         except Exception as e:
             logger.error(f"[VOLATILITY] Error clearing old data: {e}")
 

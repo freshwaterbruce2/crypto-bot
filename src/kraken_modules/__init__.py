@@ -11,12 +11,12 @@ __version__ = "2025.1.0"
 __author__ = "Kraken Trading Bot 2025"
 
 # Import and export main components
-from .config_manager import KrakenConfigManager, AccountTier, OptimizedConfig
-from .connection_manager import KrakenConnectionManager, ConnectionState
+from .config_manager import AccountTier, KrakenConfigManager, OptimizedConfig
+from .connection_manager import ConnectionState, KrakenConnectionManager
 
 __all__ = [
     "KrakenConfigManager",
-    "AccountTier", 
+    "AccountTier",
     "OptimizedConfig",
     "KrakenConnectionManager",
     "ConnectionState",

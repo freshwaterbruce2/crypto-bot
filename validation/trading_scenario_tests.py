@@ -5,28 +5,27 @@ Tests system behavior under realistic trading conditions and scenarios
 
 import asyncio
 import json
-import time
 import logging
-import sys
-import traceback
-from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import random
-from decimal import Decimal
+import sys
+import time
+import traceback
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Add project root to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.config.config import Config as TradingConfig
 from src.auth.kraken_auth import KrakenAuth
-from src.rate_limiting.kraken_rate_limiter import KrakenRateLimiter2025 as KrakenRateLimiter
-from src.circuit_breaker.circuit_breaker import CircuitBreaker
-from src.exchange.websocket_manager_v2 import KrakenProWebSocketManager as WebSocketManagerV2
 from src.balance.balance_manager import BalanceManager
+from src.circuit_breaker.circuit_breaker import CircuitBreaker
+from src.config.config import Config as TradingConfig
+from src.exchange.websocket_manager_v2 import KrakenProWebSocketManager as WebSocketManagerV2
 from src.portfolio.portfolio_manager import PortfolioManager
+from src.rate_limiting.kraken_rate_limiter import KrakenRateLimiter2025 as KrakenRateLimiter
 from src.storage.database_manager import DatabaseManager
 from src.utils.decimal_precision_fix import DecimalHandler
 
@@ -105,12 +104,12 @@ class MarketData:
 
 class TradingScenarioTester:
     """Realistic trading scenario testing framework"""
-    
+
     def __init__(self):
         self.config = TradingConfig()
         self.logger = self._setup_logging()
         self.results: List[ScenarioResult] = []
-        
+
         # System components
         self.auth: Optional[KrakenAuth] = None
         self.rate_limiter: Optional[KrakenRateLimiter] = None
@@ -120,30 +119,30 @@ class TradingScenarioTester:
         self.portfolio_manager: Optional[PortfolioManager] = None
         self.database_manager: Optional[DatabaseManager] = None
         self.decimal_handler = DecimalHandler()
-        
+
         # Trading state
         self.initial_balance = {}
         self.current_positions = {}
         self.trade_history = []
         self.market_data_cache = {}
-        
+
         # Test scenarios
         self.scenarios = self._define_trading_scenarios()
-    
+
     def _setup_logging(self) -> logging.Logger:
         """Setup trading scenario testing logging"""
         logger = logging.getLogger('trading_scenario_tester')
         logger.setLevel(logging.INFO)
-        
+
         handler = logging.StreamHandler()
         formatter = logging.Formatter(
             '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
-        
+
         return logger
-    
+
     def _define_trading_scenarios(self) -> List[TradingTestScenario]:
         """Define trading scenarios to test"""
         return [
@@ -308,69 +307,69 @@ class TradingScenarioTester:
                 test_function="_test_rapid_rebalancing"
             )
         ]
-    
+
     async def run_trading_scenarios(self) -> List[ScenarioResult]:
         """Run all trading scenario tests"""
         self.logger.info("Starting realistic trading scenario testing")
-        
+
         try:
             # Initialize system
             await self._initialize_trading_system()
-            
+
             # Run each scenario
             for scenario in self.scenarios:
                 self.logger.info(f"Testing scenario: {scenario.name}")
-                
+
                 try:
                     result = await self._run_trading_scenario(scenario)
                     self.results.append(result)
-                    
+
                     if result.meets_criteria:
                         self.logger.info(f"✅ {scenario.name} MEETS CRITERIA")
                     else:
                         self.logger.warning(f"⚠️ {scenario.name} DOES NOT MEET CRITERIA")
-                    
+
                     # Reset state between scenarios
                     await self._reset_trading_state()
-                    
+
                 except Exception as e:
                     self.logger.error(f"Scenario {scenario.name} crashed: {e}")
                     self._add_crash_result(scenario, e)
-            
+
         except Exception as e:
             self.logger.error(f"Trading scenario testing failed: {e}")
-            
+
         finally:
             await self._cleanup_trading_system()
-        
+
         self.logger.info(f"Trading scenario testing completed: {len(self.results)} scenarios tested")
         return self.results
-    
+
     async def _initialize_trading_system(self):
         """Initialize trading system for scenario testing"""
         try:
             self.auth = KrakenAuth()
             self.rate_limiter = KrakenRateLimiter()
             self.circuit_breaker = CircuitBreaker()
-            
+
             self.database_manager = DatabaseManager()
             await self.database_manager.initialize()
-            
+
             self.balance_manager = BalanceManager(
                 auth=self.auth,
                 rate_limiter=self.rate_limiter
             )
-            
+
             self.portfolio_manager = PortfolioManager(
                 balance_manager=self.balance_manager,
                 database_manager=self.database_manager
             )
-            
+
             self.websocket_manager = WebSocketManagerV2(
                 auth=self.auth,
                 balance_manager=self.balance_manager
             )
-            
+
             # Set initial test balance
             self.initial_balance = {
                 "USDT": self.decimal_handler.to_decimal("1000.0"),
@@ -380,88 +379,88 @@ class TradingScenarioTester:
                 "AVAX": self.decimal_handler.to_decimal("0.0"),
                 "DOT": self.decimal_handler.to_decimal("0.0")
             }
-            
+
             await self.balance_manager._update_cached_balance(self.initial_balance)
-            
+
             self.logger.info("Trading system initialized for scenario testing")
-            
+
         except Exception as e:
             self.logger.error(f"Failed to initialize trading system: {e}")
             raise
-    
+
     async def _reset_trading_state(self):
         """Reset trading state between scenarios"""
         try:
             # Reset balances
             await self.balance_manager._update_cached_balance(self.initial_balance)
-            
+
             # Clear positions
             self.current_positions = {}
-            
+
             # Clear trade history
             self.trade_history = []
-            
+
             # Reset circuit breaker
             if self.circuit_breaker:
                 await self.circuit_breaker.reset()
-            
+
             # Clear market data cache
             self.market_data_cache = {}
-            
+
             await asyncio.sleep(1.0)  # Allow state to settle
-            
+
         except Exception as e:
             self.logger.warning(f"Failed to reset trading state: {e}")
-    
+
     async def _cleanup_trading_system(self):
         """Cleanup trading system resources"""
         try:
             if self.websocket_manager:
                 await self.websocket_manager.disconnect()
-            
+
             if self.database_manager:
                 await self.database_manager.close()
-            
+
             self.logger.info("Trading system resources cleaned up")
-            
+
         except Exception as e:
             self.logger.error(f"Cleanup error: {e}")
-    
+
     async def _run_trading_scenario(self, scenario: TradingTestScenario) -> ScenarioResult:
         """Run individual trading scenario"""
         start_time = time.time()
         errors_encountered = []
         warnings = []
-        
+
         try:
             # Get test method
             test_method = getattr(self, scenario.test_function, None)
             if not test_method:
                 raise ValueError(f"Test method {scenario.test_function} not found")
-            
+
             # Initialize scenario state
             initial_balance = await self.balance_manager.get_balance() or self.initial_balance
-            
+
             # Generate market data for scenario
             market_data = self._generate_market_data(scenario)
-            
+
             # Run scenario test
             if asyncio.iscoroutinefunction(test_method):
                 scenario_result = await test_method(scenario, market_data)
             else:
                 scenario_result = test_method(scenario, market_data)
-            
+
             duration = time.time() - start_time
-            
+
             # Calculate performance metrics
             final_balance = await self.balance_manager.get_balance() or initial_balance
             profit_loss = self._calculate_profit_loss(initial_balance, final_balance)
             max_drawdown = self._calculate_max_drawdown()
             sharpe_ratio = self._calculate_sharpe_ratio()
-            
+
             # Check if scenario meets criteria
             meets_criteria = self._evaluate_performance_criteria(scenario, scenario_result)
-            
+
             return ScenarioResult(
                 scenario_name=scenario.name,
                 duration=duration,
@@ -484,11 +483,11 @@ class TradingScenarioTester:
                     "trading_scenario": scenario.trading_scenario.value
                 }
             )
-            
+
         except Exception as e:
             duration = time.time() - start_time
             errors_encountered.append(str(e))
-            
+
             return ScenarioResult(
                 scenario_name=scenario.name,
                 duration=duration,
@@ -505,15 +504,15 @@ class TradingScenarioTester:
                 meets_criteria=False,
                 details={"error": str(e), "traceback": traceback.format_exc()}
             )
-    
+
     def _generate_market_data(self, scenario: TradingTestScenario) -> Dict[str, List[MarketData]]:
         """Generate simulated market data for scenario"""
         market_data = {}
-        
+
         for pair in scenario.pairs_to_test:
             symbol = pair.replace("/", "_")
             data_points = []
-            
+
             # Base price (simplified)
             base_prices = {
                 "BTC_USDT": 45000.0,
@@ -522,16 +521,16 @@ class TradingScenarioTester:
                 "AVAX_USDT": 35.0,
                 "DOT_USDT": 6.0
             }
-            
+
             base_price = base_prices.get(symbol, 1.0)
             current_price = base_price
-            
+
             # Generate data points based on market condition
             num_points = scenario.duration_minutes * 2  # 2 points per minute
-            
+
             for i in range(num_points):
                 timestamp = datetime.now() + timedelta(seconds=i * 30)
-                
+
                 # Price movement based on market condition
                 if scenario.market_condition == MarketCondition.BULL_MARKET:
                     price_change = random.uniform(0.001, 0.005)  # 0.1% to 0.5% up
@@ -548,21 +547,21 @@ class TradingScenarioTester:
                         price_change = random.uniform(-0.01, 0.03)  # Recovery
                 else:  # SIDEWAYS
                     price_change = random.uniform(-0.003, 0.003)  # ±0.3%
-                
+
                 current_price *= (1 + price_change)
-                
+
                 # Generate OHLC data
                 high = current_price * random.uniform(1.0, 1.002)
                 low = current_price * random.uniform(0.998, 1.0)
                 open_price = current_price * random.uniform(0.999, 1.001)
                 close_price = current_price
-                
+
                 # Generate bid/ask spread
                 spread_pct = random.uniform(0.0005, 0.002)  # 0.05% to 0.2%
                 spread = current_price * spread_pct
                 bid = current_price - spread / 2
                 ask = current_price + spread / 2
-                
+
                 data_point = MarketData(
                     symbol=symbol,
                     timestamp=timestamp,
@@ -575,29 +574,29 @@ class TradingScenarioTester:
                     ask=ask,
                     spread=spread
                 )
-                
+
                 data_points.append(data_point)
-            
+
             market_data[symbol] = data_points
-        
+
         return market_data
-    
+
     def _simulate_trade(self, symbol: str, side: str, size: float, price: float) -> Dict[str, Any]:
         """Simulate trade execution"""
         trade_id = f"trade_{len(self.trade_history) + 1}"
         timestamp = datetime.now()
-        
+
         # Simulate slippage
         slippage = random.uniform(0.0001, 0.001)  # 0.01% to 0.1%
         if side == "buy":
             executed_price = price * (1 + slippage)
         else:
             executed_price = price * (1 - slippage)
-        
+
         # Calculate fees (simplified)
         fee_rate = 0.001  # 0.1%
         fee = size * executed_price * fee_rate
-        
+
         # Calculate net amount
         if side == "buy":
             net_cost = size * executed_price + fee
@@ -605,7 +604,7 @@ class TradingScenarioTester:
         else:
             net_proceeds = size * executed_price - fee
             net_amount = net_proceeds
-        
+
         trade = {
             "trade_id": trade_id,
             "timestamp": timestamp.isoformat(),
@@ -617,15 +616,15 @@ class TradingScenarioTester:
             "net_amount": net_amount,
             "volume": size * executed_price
         }
-        
+
         self.trade_history.append(trade)
-        
+
         # Update positions
         if symbol not in self.current_positions:
             self.current_positions[symbol] = {"size": 0, "avg_price": 0}
-        
+
         pos = self.current_positions[symbol]
-        
+
         if side == "buy":
             new_size = pos["size"] + size
             if new_size > 0:
@@ -639,21 +638,21 @@ class TradingScenarioTester:
                 trade["profit"] = profit
                 pos["size"] = 0
                 pos["avg_price"] = 0
-        
+
         return trade
-    
+
     def _calculate_profit_loss(self, initial_balance: Dict, final_balance: Dict) -> float:
         """Calculate total profit/loss"""
         try:
             initial_value = sum(float(v) for v in initial_balance.values() if v is not None)
             final_value = sum(float(v) for v in final_balance.values() if v is not None)
-            
+
             return (final_value - initial_value) / initial_value if initial_value > 0 else 0
-            
+
         except Exception as e:
             self.logger.error(f"Failed to calculate profit/loss: {e}")
             return 0
-    
+
     def _calculate_max_drawdown(self) -> float:
         """Calculate maximum drawdown during scenario"""
         try:
@@ -661,63 +660,63 @@ class TradingScenarioTester:
             running_pnl = 0
             peak_pnl = 0
             max_drawdown = 0
-            
+
             for trade in self.trade_history:
                 profit = trade.get('profit', 0)
                 running_pnl += profit
-                
+
                 if running_pnl > peak_pnl:
                     peak_pnl = running_pnl
-                
+
                 drawdown = (peak_pnl - running_pnl) / abs(peak_pnl) if peak_pnl != 0 else 0
                 if drawdown > max_drawdown:
                     max_drawdown = drawdown
-            
+
             return max_drawdown
-            
+
         except Exception as e:
             self.logger.error(f"Failed to calculate max drawdown: {e}")
             return 0
-    
+
     def _calculate_sharpe_ratio(self) -> Optional[float]:
         """Calculate Sharpe ratio"""
         try:
             if len(self.trade_history) < 2:
                 return None
-            
+
             returns = [trade.get('profit', 0) for trade in self.trade_history if 'profit' in trade]
-            
+
             if not returns:
                 return None
-            
+
             mean_return = sum(returns) / len(returns)
-            
+
             if len(returns) < 2:
                 return None
-            
+
             variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
             std_dev = variance ** 0.5
-            
+
             if std_dev == 0:
                 return None
-            
+
             # Simplified Sharpe ratio (assuming risk-free rate = 0)
             return mean_return / std_dev
-            
+
         except Exception as e:
             self.logger.error(f"Failed to calculate Sharpe ratio: {e}")
             return None
-    
+
     def _get_system_performance_metrics(self) -> Dict[str, float]:
         """Get system performance metrics"""
         try:
             total_trades = len(self.trade_history)
             if total_trades == 0:
                 return {}
-            
+
             avg_trade_time = 1.0  # Simplified
             success_rate = sum(1 for trade in self.trade_history if trade.get('profit', 0) > 0) / total_trades
-            
+
             return {
                 "average_trade_execution_time": avg_trade_time,
                 "trade_success_rate": success_rate,
@@ -725,40 +724,40 @@ class TradingScenarioTester:
                 "average_slippage": 0.0005,  # Simplified
                 "system_uptime": 1.0  # Simplified
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to get system performance metrics: {e}")
             return {}
-    
-    def _evaluate_performance_criteria(self, scenario: TradingTestScenario, 
+
+    def _evaluate_performance_criteria(self, scenario: TradingTestScenario,
                                      scenario_result: Dict[str, Any]) -> bool:
         """Evaluate if scenario meets performance criteria"""
         try:
             criteria = scenario.performance_criteria
-            
+
             # Check success rate
             total_trades = len(self.trade_history)
             if total_trades > 0:
                 success_rate = sum(1 for trade in self.trade_history if trade.get('profit', 0) > 0) / total_trades
                 if success_rate < criteria.get('min_success_rate', 0):
                     return False
-            
+
             # Check profit/loss
             profit_loss = scenario_result.get('profit_loss', 0)
             if profit_loss < criteria.get('min_profit', -float('inf')):
                 return False
-            
+
             # Check drawdown
             max_drawdown = scenario_result.get('max_drawdown', 0)
             if max_drawdown > criteria.get('max_drawdown', float('inf')):
                 return False
-            
+
             return True
-            
+
         except Exception as e:
             self.logger.error(f"Failed to evaluate performance criteria: {e}")
             return False
-    
+
     def _add_crash_result(self, scenario: TradingTestScenario, error: Exception):
         """Add result for crashed scenario"""
         result = ScenarioResult(
@@ -778,80 +777,80 @@ class TradingScenarioTester:
             details={"crash_error": str(error)}
         )
         self.results.append(result)
-    
+
     # Individual scenario test methods
-    
-    async def _test_normal_market_trading(self, scenario: TradingTestScenario, 
+
+    async def _test_normal_market_trading(self, scenario: TradingTestScenario,
                                         market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test normal market trading conditions"""
         try:
             # Simulate normal trading for scenario duration
             duration_seconds = scenario.duration_minutes * 60
             trade_interval = duration_seconds / scenario.expected_trades
-            
+
             for i in range(scenario.expected_trades):
                 # Select random pair
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 # Get current market data point
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Simple trading logic: buy low, sell high
                 if random.random() < 0.5:  # 50% chance to trade
                     side = random.choice(["buy", "sell"])
                     size = random.uniform(0.001, scenario.max_position_size / data_point.close_price)
-                    
+
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.1)  # Simulate time between trades
-            
+
             return {"status": "completed", "trades": len(self.trade_history)}
-            
+
         except Exception as e:
             self.logger.error(f"Normal market trading test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_high_volatility_handling(self, scenario: TradingTestScenario, 
+
+    async def _test_high_volatility_handling(self, scenario: TradingTestScenario,
                                            market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test high volatility market handling"""
         try:
             # More frequent trading in volatile conditions
             duration_seconds = scenario.duration_minutes * 60
             trade_interval = duration_seconds / scenario.expected_trades
-            
+
             for i in range(scenario.expected_trades):
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # More conservative position sizing in volatile conditions
                 max_size = scenario.max_position_size * 0.5  # Reduce size for volatility
                 size = random.uniform(0.001, max_size / data_point.close_price)
-                
+
                 # Volatility-based trading
                 if random.random() < 0.7:  # Higher trading frequency
                     side = random.choice(["buy", "sell"])
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.05)  # Faster trading
-            
+
             return {"status": "completed", "volatility_handled": True}
-            
+
         except Exception as e:
             self.logger.error(f"High volatility handling test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_bull_market_momentum(self, scenario: TradingTestScenario, 
+
+    async def _test_bull_market_momentum(self, scenario: TradingTestScenario,
                                        market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test bull market momentum trading"""
         try:
@@ -859,29 +858,29 @@ class TradingScenarioTester:
             for i in range(scenario.expected_trades):
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Bull market bias: 70% buy, 30% sell
                 side = "buy" if random.random() < 0.7 else "sell"
                 size = random.uniform(0.001, scenario.max_position_size / data_point.close_price)
-                
+
                 if random.random() < 0.6:  # 60% chance to trade
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.08)
-            
+
             return {"status": "completed", "bull_momentum": True}
-            
+
         except Exception as e:
             self.logger.error(f"Bull market momentum test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_bear_market_resilience(self, scenario: TradingTestScenario, 
+
+    async def _test_bear_market_resilience(self, scenario: TradingTestScenario,
                                          market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test bear market resilience"""
         try:
@@ -889,30 +888,30 @@ class TradingScenarioTester:
             for i in range(scenario.expected_trades):
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Bear market: reduce position sizes, favor sells
                 max_size = scenario.max_position_size * 0.7  # Smaller positions
                 side = "sell" if random.random() < 0.6 else "buy"  # Favor sells
                 size = random.uniform(0.001, max_size / data_point.close_price)
-                
+
                 if random.random() < 0.4:  # Less frequent trading
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.12)
-            
+
             return {"status": "completed", "bear_resilience": True}
-            
+
         except Exception as e:
             self.logger.error(f"Bear market resilience test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_high_frequency_trading(self, scenario: TradingTestScenario, 
+
+    async def _test_high_frequency_trading(self, scenario: TradingTestScenario,
                                          market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test high frequency trading"""
         try:
@@ -920,59 +919,59 @@ class TradingScenarioTester:
             for i in range(scenario.expected_trades):
                 pair = scenario.pairs_to_test[0]  # Focus on one pair
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Small, frequent trades
                 side = random.choice(["buy", "sell"])
                 size = random.uniform(0.001, 0.01)  # Very small sizes
-                
+
                 trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.02)  # Very fast trading
-            
+
             return {"status": "completed", "hft_executed": True}
-            
+
         except Exception as e:
             self.logger.error(f"High frequency trading test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_multiple_pairs_trading(self, scenario: TradingTestScenario, 
+
+    async def _test_multiple_pairs_trading(self, scenario: TradingTestScenario,
                                          market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test multiple pairs trading"""
         try:
             # Distribute trades across all pairs
             trades_per_pair = scenario.expected_trades // len(scenario.pairs_to_test)
-            
+
             for pair in scenario.pairs_to_test:
                 symbol = pair.replace("/", "_")
                 data_points = market_data.get(symbol, [])
-                
+
                 for i in range(trades_per_pair):
                     if not data_points:
                         continue
-                    
+
                     data_point = data_points[i % len(data_points)]
-                    
+
                     side = random.choice(["buy", "sell"])
                     size = random.uniform(0.001, scenario.max_position_size / data_point.close_price)
-                    
+
                     if random.random() < 0.5:
                         trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                    
+
                     await asyncio.sleep(0.06)
-            
+
             return {"status": "completed", "multiple_pairs": len(scenario.pairs_to_test)}
-            
+
         except Exception as e:
             self.logger.error(f"Multiple pairs trading test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_small_position_scalping(self, scenario: TradingTestScenario, 
+
+    async def _test_small_position_scalping(self, scenario: TradingTestScenario,
                                           market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test small position scalping"""
         try:
@@ -980,29 +979,29 @@ class TradingScenarioTester:
             for i in range(scenario.expected_trades):
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Very small positions for scalping
                 side = random.choice(["buy", "sell"])
                 size = random.uniform(0.001, 0.005)  # Tiny positions
-                
+
                 if random.random() < 0.8:  # High trade frequency
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.04)
-            
+
             return {"status": "completed", "scalping_executed": True}
-            
+
         except Exception as e:
             self.logger.error(f"Small position scalping test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_flash_crash_response(self, scenario: TradingTestScenario, 
+
+    async def _test_flash_crash_response(self, scenario: TradingTestScenario,
                                        market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test flash crash response"""
         try:
@@ -1010,32 +1009,32 @@ class TradingScenarioTester:
             pair = scenario.pairs_to_test[0]
             symbol = pair.replace("/", "_")
             data_points = market_data.get(symbol, [])
-            
+
             # During crash, system should limit trading or stop
             crash_duration = scenario.expected_trades // 2
-            
+
             for i in range(crash_duration):
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Reduced trading during crash
                 if random.random() < 0.2:  # Much lower trade frequency
                     side = "sell"  # Likely to sell during crash
                     size = random.uniform(0.001, 0.01)  # Small sizes
-                    
+
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.2)  # Slower response during crash
-            
+
             return {"status": "completed", "crash_handled": True}
-            
+
         except Exception as e:
             self.logger.error(f"Flash crash response test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_profit_taking_optimization(self, scenario: TradingTestScenario, 
+
+    async def _test_profit_taking_optimization(self, scenario: TradingTestScenario,
                                              market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test profit taking optimization"""
         try:
@@ -1043,35 +1042,35 @@ class TradingScenarioTester:
             for i in range(scenario.expected_trades):
                 pair = random.choice(scenario.pairs_to_test)
                 symbol = pair.replace("/", "_")
-                
+
                 data_points = market_data.get(symbol, [])
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 # Profit taking logic: take profits on upward moves
                 side = random.choice(["buy", "sell"])
                 size = random.uniform(0.001, scenario.max_position_size / data_point.close_price)
-                
+
                 if random.random() < 0.6:
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.1)
-            
+
             return {"status": "completed", "profit_optimization": True}
-            
+
         except Exception as e:
             self.logger.error(f"Profit taking optimization test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
-    async def _test_rapid_rebalancing(self, scenario: TradingTestScenario, 
+
+    async def _test_rapid_rebalancing(self, scenario: TradingTestScenario,
                                     market_data: Dict[str, List[MarketData]]) -> Dict[str, Any]:
         """Test rapid portfolio rebalancing"""
         try:
             # Frequent rebalancing between pairs
             rebalance_frequency = scenario.expected_trades // 4  # Rebalance every few trades
-            
+
             for i in range(scenario.expected_trades):
                 # Choose pair based on rebalancing logic
                 if i % rebalance_frequency == 0:
@@ -1079,58 +1078,58 @@ class TradingScenarioTester:
                     pair = random.choice(scenario.pairs_to_test)
                 else:
                     pair = random.choice(scenario.pairs_to_test)
-                
+
                 symbol = pair.replace("/", "_")
                 data_points = market_data.get(symbol, [])
-                
+
                 if not data_points:
                     continue
-                
+
                 data_point = data_points[i % len(data_points)]
-                
+
                 side = random.choice(["buy", "sell"])
                 size = random.uniform(0.001, scenario.max_position_size / data_point.close_price)
-                
+
                 if random.random() < 0.7:
                     trade = self._simulate_trade(symbol, side, size, data_point.close_price)
-                
+
                 await asyncio.sleep(0.04)
-            
+
             return {"status": "completed", "rebalancing_executed": True}
-            
+
         except Exception as e:
             self.logger.error(f"Rapid rebalancing test failed: {e}")
             return {"status": "failed", "error": str(e)}
-    
+
     def generate_trading_report(self) -> Dict[str, Any]:
         """Generate comprehensive trading scenario report"""
         total_scenarios = len(self.results)
         successful_scenarios = sum(1 for r in self.results if r.meets_criteria)
         failed_scenarios = total_scenarios - successful_scenarios
-        
+
         # Calculate aggregate metrics
         total_trades = sum(r.trades_executed for r in self.results)
         total_profit = sum(r.profit_loss for r in self.results)
         avg_profit = total_profit / total_scenarios if total_scenarios > 0 else 0
-        
+
         # Generate recommendations
         recommendations = []
-        
+
         failed_results = [r for r in self.results if not r.meets_criteria]
         if failed_results:
             recommendations.append(f"Address {len(failed_results)} failed trading scenarios")
-        
+
         low_profit_scenarios = [r for r in self.results if r.profit_loss < 0]
         if low_profit_scenarios:
             recommendations.append(f"Optimize {len(low_profit_scenarios)} unprofitable scenarios")
-        
+
         high_drawdown_scenarios = [r for r in self.results if r.max_drawdown > 0.1]
         if high_drawdown_scenarios:
             recommendations.append(f"Reduce drawdown in {len(high_drawdown_scenarios)} scenarios")
-        
+
         if not recommendations:
             recommendations.append("All trading scenarios performed well - system ready for live trading")
-        
+
         return {
             "timestamp": datetime.now().isoformat(),
             "summary": {
@@ -1166,14 +1165,14 @@ class TradingScenarioTester:
 async def main():
     """Run trading scenario testing"""
     tester = TradingScenarioTester()
-    
+
     try:
         # Run trading scenarios
         results = await tester.run_trading_scenarios()
-        
+
         # Generate report
         report = tester.generate_trading_report()
-        
+
         # Print summary
         print(f"\n{'='*60}")
         print("TRADING SCENARIO VALIDATION REPORT")
@@ -1184,7 +1183,7 @@ async def main():
         print(f"Success Rate: {report['summary']['success_rate']:.1%}")
         print(f"Total Trades: {report['summary']['total_trades_executed']}")
         print(f"Average P&L: {report['summary']['average_profit_loss']:.2%}")
-        
+
         # Trading performance
         print(f"\n{'='*60}")
         print("TRADING PERFORMANCE")
@@ -1192,14 +1191,14 @@ async def main():
         print(f"Execution Quality: {report['trading_performance']['execution_quality']:.1%}")
         print(f"System Reliability: {report['trading_performance']['system_reliability']:.1%}")
         print(f"Profit Consistency: {report['trading_performance']['profit_consistency']:.1%}")
-        
+
         # Recommendations
         print(f"\n{'='*60}")
         print("RECOMMENDATIONS")
         print(f"{'='*60}")
         for rec in report['recommendations']:
             print(f"• {rec}")
-        
+
         # Failed scenarios
         failed_results = [r for r in results if not r.meets_criteria]
         if failed_results:
@@ -1208,17 +1207,17 @@ async def main():
             print(f"{'='*60}")
             for result in failed_results:
                 print(f"❌ {result.scenario_name} (P&L: {result.profit_loss:.2%}, Drawdown: {result.max_drawdown:.2%})")
-        
+
         # Save report
         report_file = Path("validation/trading_scenario_report.json")
         with open(report_file, "w") as f:
             json.dump(report, f, indent=2, default=str)
-        
+
         print(f"\nDetailed report saved to: {report_file}")
-        
+
         # Return success code
         return 0 if report['summary']['failed_scenarios'] == 0 else 1
-        
+
     except Exception as e:
         print(f"Trading scenario testing failed: {e}")
         traceback.print_exc()

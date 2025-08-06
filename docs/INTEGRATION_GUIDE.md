@@ -458,7 +458,7 @@ class TradingBotMCPServer:
 # tests/integration/test_full_system.py
 import pytest
 import asyncio
-from src.core.bot import TradingBot
+from src.core.bot import KrakenTradingBot
 from tests.fixtures.mock_exchange import MockExchange
 
 @pytest.fixture
@@ -470,7 +470,7 @@ async def bot_instance():
         'position_size_usdt': 10.0
     }
     
-    bot = TradingBot(config)
+    bot = KrakenTradingBot(config)
     
     # Replace exchange with mock
     bot.exchange = MockExchange()

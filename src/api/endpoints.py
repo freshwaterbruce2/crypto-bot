@@ -20,10 +20,10 @@ Usage:
     print(f"Endpoint: {endpoint.path}, Method: {endpoint.method}")
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, Optional, Any, Set
-import logging
+from typing import Any, Dict, List, Optional, Set
 
 logger = logging.getLogger(__name__)
 
@@ -115,19 +115,19 @@ class EndpointDefinition:
     examples: List[Dict[str, Any]] = field(default_factory=list)
     deprecated: bool = False
     version: str = "0"
-    
+
     def get_full_path(self, base_url: str = "https://api.kraken.com") -> str:
         """Get full URL path for this endpoint."""
         return f"{base_url.rstrip('/')}/{self.version}/{self.path.lstrip('/')}"
-    
+
     def get_required_parameters(self) -> List[ParameterDefinition]:
         """Get list of required parameters."""
         return [param for param in self.parameters if param.required]
-    
+
     def get_optional_parameters(self) -> List[ParameterDefinition]:
         """Get list of optional parameters."""
         return [param for param in self.parameters if not param.required]
-    
+
     def validate_parameters(self, params: Dict[str, Any]) -> List[str]:
         """
         Validate parameters against endpoint definition.
@@ -139,29 +139,29 @@ class EndpointDefinition:
             List of validation error messages
         """
         errors = []
-        
+
         # Check required parameters
         required_params = {param.name for param in self.get_required_parameters()}
         missing_params = required_params - set(params.keys())
-        
+
         for missing in missing_params:
             errors.append(f"Missing required parameter: {missing}")
-        
+
         # Validate parameter types and values
         param_definitions = {param.name: param for param in self.parameters}
-        
+
         for param_name, param_value in params.items():
             if param_name not in param_definitions:
                 errors.append(f"Unknown parameter: {param_name}")
                 continue
-            
+
             param_def = param_definitions[param_name]
             validation_error = self._validate_parameter_value(param_def, param_value)
             if validation_error:
                 errors.append(f"Parameter '{param_name}': {validation_error}")
-        
+
         return errors
-    
+
     def _validate_parameter_value(self, param_def: ParameterDefinition, value: Any) -> Optional[str]:
         """
         Validate a single parameter value.
@@ -175,10 +175,10 @@ class EndpointDefinition:
         """
         if value is None and param_def.required:
             return "Required parameter cannot be None"
-        
+
         if value is None:
             return None  # Optional parameter can be None
-        
+
         # Type validation
         if param_def.param_type == ParameterType.STRING and not isinstance(value, str):
             return f"Expected string, got {type(value).__name__}"
@@ -192,42 +192,42 @@ class EndpointDefinition:
             return f"Expected list, got {type(value).__name__}"
         elif param_def.param_type == ParameterType.DICT and not isinstance(value, dict):
             return f"Expected dict, got {type(value).__name__}"
-        
+
         # Custom validation rules
         if param_def.validation:
             validation_rules = param_def.validation
-            
+
             # String length validation
             if 'min_length' in validation_rules and isinstance(value, str):
                 if len(value) < validation_rules['min_length']:
                     return f"String too short (min: {validation_rules['min_length']})"
-            
+
             if 'max_length' in validation_rules and isinstance(value, str):
                 if len(value) > validation_rules['max_length']:
                     return f"String too long (max: {validation_rules['max_length']})"
-            
+
             # Numeric range validation
             if 'min_value' in validation_rules and isinstance(value, (int, float)):
                 if value < validation_rules['min_value']:
                     return f"Value too small (min: {validation_rules['min_value']})"
-            
+
             if 'max_value' in validation_rules and isinstance(value, (int, float)):
                 if value > validation_rules['max_value']:
                     return f"Value too large (max: {validation_rules['max_value']})"
-            
+
             # Allowed values validation
             if 'allowed_values' in validation_rules:
                 if value not in validation_rules['allowed_values']:
                     return f"Invalid value. Allowed: {validation_rules['allowed_values']}"
-        
+
         return None
 
 
 # Define all Kraken API endpoints
 KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
-    
+
     # ====== PUBLIC ENDPOINTS ======
-    
+
     "ServerTime": EndpointDefinition(
         name="ServerTime",
         path="public/Time",
@@ -240,7 +240,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
             {"description": "Get current server time", "params": {}}
         ]
     ),
-    
+
     "SystemStatus": EndpointDefinition(
         name="SystemStatus",
         path="public/SystemStatus",
@@ -253,7 +253,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
             {"description": "Get system status", "params": {}}
         ]
     ),
-    
+
     "AssetInfo": EndpointDefinition(
         name="AssetInfo",
         path="public/Assets",
@@ -278,7 +278,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "AssetPairs": EndpointDefinition(
         name="AssetPairs",
         path="public/AssetPairs",
@@ -303,7 +303,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "Ticker": EndpointDefinition(
         name="Ticker",
         path="public/Ticker",
@@ -322,7 +322,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "OHLC": EndpointDefinition(
         name="OHLC",
         path="public/OHLC",
@@ -353,7 +353,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "OrderBook": EndpointDefinition(
         name="OrderBook",
         path="public/Depth",
@@ -379,7 +379,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "RecentTrades": EndpointDefinition(
         name="RecentTrades",
         path="public/Trades",
@@ -403,7 +403,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     "RecentSpreads": EndpointDefinition(
         name="RecentSpreads",
         path="public/Spread",
@@ -427,9 +427,9 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=0
     ),
-    
+
     # ====== PRIVATE ENDPOINTS ======
-    
+
     "Balance": EndpointDefinition(
         name="Balance",
         path="private/Balance",
@@ -443,7 +443,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
             {"description": "Get account balance", "params": {}}
         ]
     ),
-    
+
     "TradeBalance": EndpointDefinition(
         name="TradeBalance",
         path="private/TradeBalance",
@@ -468,7 +468,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "OpenOrders": EndpointDefinition(
         name="OpenOrders",
         path="private/OpenOrders",
@@ -492,7 +492,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "ClosedOrders": EndpointDefinition(
         name="ClosedOrders",
         path="private/ClosedOrders",
@@ -538,7 +538,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "QueryOrders": EndpointDefinition(
         name="QueryOrders",
         path="private/QueryOrders",
@@ -568,7 +568,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "TradesHistory": EndpointDefinition(
         name="TradesHistory",
         path="private/TradesHistory",
@@ -609,7 +609,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=2,
         penalty_points=2
     ),
-    
+
     "QueryTrades": EndpointDefinition(
         name="QueryTrades",
         path="private/QueryTrades",
@@ -634,7 +634,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "OpenPositions": EndpointDefinition(
         name="OpenPositions",
         path="private/OpenPositions",
@@ -665,7 +665,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "LedgersInfo": EndpointDefinition(
         name="LedgersInfo",
         path="private/Ledgers",
@@ -712,7 +712,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=2,
         penalty_points=2
     ),
-    
+
     "QueryLedgers": EndpointDefinition(
         name="QueryLedgers",
         path="private/QueryLedgers",
@@ -737,7 +737,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "TradeVolume": EndpointDefinition(
         name="TradeVolume",
         path="private/TradeVolume",
@@ -760,9 +760,9 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     # ====== TRADING ENDPOINTS ======
-    
+
     "AddOrder": EndpointDefinition(
         name="AddOrder",
         path="private/AddOrder",
@@ -849,7 +849,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         penalty_points=1,
         has_age_penalty=False
     ),
-    
+
     "AddOrderBatch": EndpointDefinition(
         name="AddOrderBatch",
         path="private/AddOrderBatch",
@@ -879,7 +879,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=5,
         penalty_points=5
     ),
-    
+
     "EditOrder": EndpointDefinition(
         name="EditOrder",
         path="private/EditOrder",
@@ -940,7 +940,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         penalty_points=1,
         has_age_penalty=True
     ),
-    
+
     "CancelOrder": EndpointDefinition(
         name="CancelOrder",
         path="private/CancelOrder",
@@ -960,7 +960,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         penalty_points=1,
         has_age_penalty=True
     ),
-    
+
     "CancelAllOrders": EndpointDefinition(
         name="CancelAllOrders",
         path="private/CancelAll",
@@ -971,7 +971,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "CancelAllOrdersAfter": EndpointDefinition(
         name="CancelAllOrdersAfter",
         path="private/CancelAllOrdersAfter",
@@ -991,7 +991,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "CancelOrderBatch": EndpointDefinition(
         name="CancelOrderBatch",
         path="private/CancelOrderBatch",
@@ -1011,9 +1011,9 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         penalty_points=1,
         has_age_penalty=True
     ),
-    
+
     # ====== FUNDING ENDPOINTS ======
-    
+
     "DepositMethods": EndpointDefinition(
         name="DepositMethods",
         path="private/DepositMethods",
@@ -1032,7 +1032,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "DepositAddresses": EndpointDefinition(
         name="DepositAddresses",
         path="private/DepositAddresses",
@@ -1063,7 +1063,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "DepositStatus": EndpointDefinition(
         name="DepositStatus",
         path="private/DepositStatus",
@@ -1086,7 +1086,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "WithdrawInfo": EndpointDefinition(
         name="WithdrawInfo",
         path="private/WithdrawInfo",
@@ -1117,7 +1117,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "Withdraw": EndpointDefinition(
         name="Withdraw",
         path="private/Withdraw",
@@ -1148,7 +1148,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "WithdrawStatus": EndpointDefinition(
         name="WithdrawStatus",
         path="private/WithdrawStatus",
@@ -1171,7 +1171,7 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     "WithdrawCancel": EndpointDefinition(
         name="WithdrawCancel",
         path="private/WithdrawCancel",
@@ -1196,9 +1196,9 @@ KRAKEN_ENDPOINTS: Dict[str, EndpointDefinition] = {
         rate_limit_weight=1,
         penalty_points=1
     ),
-    
+
     # ====== WEBSOCKET TOKEN ENDPOINT ======
-    
+
     "GetWebSocketsToken": EndpointDefinition(
         name="GetWebSocketsToken",
         path="private/GetWebSocketsToken",
@@ -1244,10 +1244,10 @@ def get_private_endpoints() -> Dict[str, EndpointDefinition]:
 def get_trading_endpoints() -> Dict[str, EndpointDefinition]:
     """Get trading-related endpoints."""
     trading_endpoint_names = {
-        "AddOrder", "AddOrderBatch", "EditOrder", "CancelOrder", 
+        "AddOrder", "AddOrderBatch", "EditOrder", "CancelOrder",
         "CancelAllOrders", "CancelAllOrdersAfter", "CancelOrderBatch"
     }
-    
+
     return {
         name: endpoint for name, endpoint in KRAKEN_ENDPOINTS.items()
         if name in trading_endpoint_names
@@ -1284,7 +1284,7 @@ def validate_endpoint_parameters(endpoint_name: str, params: Dict[str, Any]) -> 
     endpoint = get_endpoint_definition(endpoint_name)
     if not endpoint:
         return [f"Unknown endpoint: {endpoint_name}"]
-    
+
     return endpoint.validate_parameters(params)
 
 
@@ -1299,19 +1299,19 @@ def get_endpoint_summary() -> Dict[str, Any]:
     public_count = len(get_public_endpoints())
     private_count = len(get_private_endpoints())
     trading_count = len(get_trading_endpoints())
-    
+
     # Count by HTTP method
     method_counts = {}
     for endpoint in KRAKEN_ENDPOINTS.values():
         method = endpoint.method.value
         method_counts[method] = method_counts.get(method, 0) + 1
-    
+
     # Count by permission
     permission_counts = {}
     for endpoint in KRAKEN_ENDPOINTS.values():
         for permission in endpoint.required_permissions:
             permission_counts[permission] = permission_counts.get(permission, 0) + 1
-    
+
     return {
         'total_endpoints': total_endpoints,
         'public_endpoints': public_count,

@@ -44,17 +44,24 @@ Performance Optimizations:
 - Partitioned tables for historical data management
 """
 
-from .database_manager import DatabaseManager, DatabaseConfig, ConnectionPool
-from .schemas import (
-    SchemaManager, BalanceHistorySchema, PositionSchema, 
-    TradeHistorySchema, PortfolioMetricsSchema, PerformanceSchema
-)
+from .backup_manager import BackupConfig, BackupManager, RecoveryManager
+from .data_retention import ArchivalManager, DataRetentionManager, RetentionPolicy
+from .database_manager import ConnectionPool, DatabaseConfig, DatabaseManager
 from .query_optimizer import (
-    QueryOptimizer, BalanceQueries, PositionQueries, 
-    PortfolioQueries, AnalyticsQueries
+    AnalyticsQueries,
+    BalanceQueries,
+    PortfolioQueries,
+    PositionQueries,
+    QueryOptimizer,
 )
-from .backup_manager import BackupManager, BackupConfig, RecoveryManager
-from .data_retention import DataRetentionManager, RetentionPolicy, ArchivalManager
+from .schemas import (
+    BalanceHistorySchema,
+    PerformanceSchema,
+    PortfolioMetricsSchema,
+    PositionSchema,
+    SchemaManager,
+    TradeHistorySchema,
+)
 
 __version__ = "1.0.0"
 __author__ = "Database-Optimizer Agent"
@@ -63,29 +70,29 @@ __author__ = "Database-Optimizer Agent"
 __all__ = [
     # Core database management
     'DatabaseManager',
-    'DatabaseConfig', 
+    'DatabaseConfig',
     'ConnectionPool',
-    
+
     # Schema management
     'SchemaManager',
     'BalanceHistorySchema',
     'PositionSchema',
-    'TradeHistorySchema', 
+    'TradeHistorySchema',
     'PortfolioMetricsSchema',
     'PerformanceSchema',
-    
+
     # Query optimization
     'QueryOptimizer',
     'BalanceQueries',
     'PositionQueries',
-    'PortfolioQueries', 
+    'PortfolioQueries',
     'AnalyticsQueries',
-    
+
     # Backup and recovery
     'BackupManager',
     'BackupConfig',
     'RecoveryManager',
-    
+
     # Data retention and cleanup
     'DataRetentionManager',
     'RetentionPolicy',

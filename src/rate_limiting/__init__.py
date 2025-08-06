@@ -16,14 +16,14 @@ Key Features:
 """
 
 from .kraken_rate_limiter import KrakenRateLimiter2025
-from .rate_limit_config import RateLimitConfig, ENDPOINT_CONFIGS
-from .request_queue import RequestQueue, RequestPriority
+from .rate_limit_config import ENDPOINT_CONFIGS, RateLimitConfig
+from .request_queue import RequestPriority, RequestQueue
 
 __version__ = "2025.1.0"
 
 __all__ = [
     'KrakenRateLimiter2025',
-    'RateLimitConfig', 
+    'RateLimitConfig',
     'ENDPOINT_CONFIGS',
     'RequestQueue',
     'RequestPriority'

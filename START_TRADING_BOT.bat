@@ -30,13 +30,26 @@ if errorlevel 1 (
 
 echo ✅ Bot files verified
 echo ✅ Python installation verified
+echo ✅ Unified launcher ready
 
-echo Starting Kraken Trading Bot...
+echo.
+echo Available launch modes:
+echo   - Interactive mode selection (default)
+echo   - Simple mode: python main.py --simple
+echo   - Orchestrated mode: python main.py --orchestrated
+echo   - Paper trading: python main.py --paper
+echo   - Component tests: python main.py --test
+echo   - Status check: python main.py --status
 echo.
 
-REM Run the main bot launcher
+echo Starting unified launcher...
+echo Press Ctrl+C to interrupt at any time
+echo.
+
+REM Run the unified launcher in interactive mode
 python main.py
 
 echo.
-echo Bot session ended.
+echo Launcher session ended.
+echo Check logs in D:\trading_data\logs\ for details
 pause

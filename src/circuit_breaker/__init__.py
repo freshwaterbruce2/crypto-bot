@@ -32,29 +32,27 @@ Usage:
 """
 
 from .circuit_breaker import (
+    BreakerOpenError,
+    BreakerTimeoutError,
     CircuitBreaker,
-    CircuitBreakerManager,
-    CircuitBreakerState,
     CircuitBreakerConfig,
     CircuitBreakerError,
-    BreakerOpenError,
-    BreakerTimeoutError
+    CircuitBreakerManager,
+    CircuitBreakerState,
 )
-
-from .health_monitor import (
-    HealthMonitor,
-    HealthStatus,
-    HealthMetrics,
-    ServiceHealth,
-    HealthCheckResult
-)
-
 from .failure_detector import (
-    FailureDetector,
-    FailurePattern,
     FailureAnalysis,
     FailureCategory,
-    FailureClassifier
+    FailureClassifier,
+    FailureDetector,
+    FailurePattern,
+)
+from .health_monitor import (
+    HealthCheckResult,
+    HealthMetrics,
+    HealthMonitor,
+    HealthStatus,
+    ServiceHealth,
 )
 
 __all__ = [
@@ -66,14 +64,14 @@ __all__ = [
     'CircuitBreakerError',
     'BreakerOpenError',
     'BreakerTimeoutError',
-    
+
     # Health monitoring
     'HealthMonitor',
     'HealthStatus',
     'HealthMetrics',
     'ServiceHealth',
     'HealthCheckResult',
-    
+
     # Failure detection
     'FailureDetector',
     'FailurePattern',

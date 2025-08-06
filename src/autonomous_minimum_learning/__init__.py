@@ -6,10 +6,10 @@ Provides intelligent learning of Kraken's minimum order requirements through exp
 
 from .minimum_discovery_learning import (
     MinimumDiscoveryLearning,
-    minimum_discovery_learning,
-    learn_from_kraken_error,
+    get_learned_minimums,
     get_suggested_volume,
-    get_learned_minimums
+    learn_from_kraken_error,
+    minimum_discovery_learning,
 )
 
 __all__ = [

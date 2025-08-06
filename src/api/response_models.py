@@ -25,10 +25,10 @@ Usage:
 
 import logging
 from decimal import Decimal
-from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional, Any, Union
-from pydantic import BaseModel, Field, validator, root_validator
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, Field, validator
 
 logger = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class KrakenResponse(BaseModel):
     """
     error: List[str] = Field(default_factory=list, description="List of error messages")
     result: Optional[Dict[str, Any]] = Field(None, description="Response result data")
-    
+
     @validator('error', pre=True)
     def validate_error(cls, v):
         """Ensure error is always a list."""
@@ -84,17 +84,17 @@ class KrakenResponse(BaseModel):
         if isinstance(v, str):
             return [v]
         return v
-    
+
     @property
     def has_errors(self) -> bool:
         """Check if response has errors."""
         return len(self.error) > 0
-    
+
     @property
     def is_success(self) -> bool:
         """Check if response is successful."""
         return not self.has_errors
-    
+
     def get_error_string(self) -> str:
         """Get concatenated error string."""
         return "; ".join(self.error) if self.error else ""
@@ -103,12 +103,12 @@ class KrakenResponse(BaseModel):
 class ServerTimeResponse(KrakenResponse):
     """Server time response model."""
     result: Optional[Dict[str, Union[int, str]]] = None
-    
+
     @property
     def unixtime(self) -> Optional[int]:
         """Get Unix timestamp."""
         return self.result.get('unixtime') if self.result else None
-    
+
     @property
     def rfc1123(self) -> Optional[str]:
         """Get RFC1123 formatted time."""
@@ -118,12 +118,12 @@ class ServerTimeResponse(KrakenResponse):
 class SystemStatusResponse(KrakenResponse):
     """System status response model."""
     result: Optional[Dict[str, Union[str, int]]] = None
-    
+
     @property
     def status(self) -> Optional[str]:
         """Get system status."""
         return self.result.get('status') if self.result else None
-    
+
     @property
     def timestamp(self) -> Optional[str]:
         """Get status timestamp."""
@@ -141,13 +141,13 @@ class AssetInfo(BaseModel):
 class AssetInfoResponse(KrakenResponse):
     """Asset info response model."""
     result: Optional[Dict[str, AssetInfo]] = None
-    
+
     @validator('result', pre=True)
     def parse_assets(cls, v):
         """Parse asset info objects."""
         if not v:
             return v
-        
+
         parsed = {}
         for asset_name, asset_data in v.items():
             if isinstance(asset_data, dict):
@@ -182,13 +182,13 @@ class AssetPairInfo(BaseModel):
 class AssetPairResponse(KrakenResponse):
     """Asset pairs response model."""
     result: Optional[Dict[str, AssetPairInfo]] = None
-    
+
     @validator('result', pre=True)
     def parse_pairs(cls, v):
         """Parse asset pair info objects."""
         if not v:
             return v
-        
+
         parsed = {}
         for pair_name, pair_data in v.items():
             if isinstance(pair_data, dict):
@@ -209,27 +209,27 @@ class TickerInfo(BaseModel):
     l: Optional[List[str]] = Field(None, description="Low array (today, last 24 hours)")
     h: Optional[List[str]] = Field(None, description="High array (today, last 24 hours)")
     o: Optional[str] = Field(None, description="Today's opening price")
-    
+
     @property
     def ask_price(self) -> Optional[str]:
         """Get current ask price."""
         return self.a[0] if self.a and len(self.a) > 0 else None
-    
+
     @property
     def bid_price(self) -> Optional[str]:
         """Get current bid price."""
         return self.b[0] if self.b and len(self.b) > 0 else None
-    
+
     @property
     def last_price(self) -> Optional[str]:
         """Get last trade price."""
         return self.c[0] if self.c and len(self.c) > 0 else None
-    
+
     @property
     def volume_24h(self) -> Optional[str]:
         """Get 24h volume."""
         return self.v[1] if self.v and len(self.v) > 1 else None
-    
+
     @property
     def vwap_24h(self) -> Optional[str]:
         """Get 24h volume weighted average price."""
@@ -239,13 +239,13 @@ class TickerInfo(BaseModel):
 class TickerResponse(KrakenResponse):
     """Ticker response model."""
     result: Optional[Dict[str, TickerInfo]] = None
-    
+
     @validator('result', pre=True)
     def parse_tickers(cls, v):
         """Parse ticker info objects."""
         if not v:
             return v
-        
+
         parsed = {}
         for pair_name, ticker_data in v.items():
             if isinstance(ticker_data, dict):
@@ -270,7 +270,7 @@ class OHLCData(BaseModel):
 class OHLCResponse(KrakenResponse):
     """OHLC response model."""
     result: Optional[Dict[str, Union[List[List], int]]] = None
-    
+
     def get_ohlc_data(self, pair: str) -> List[OHLCData]:
         """
         Get parsed OHLC data for a specific pair.
@@ -283,11 +283,11 @@ class OHLCResponse(KrakenResponse):
         """
         if not self.result or pair not in self.result:
             return []
-        
+
         raw_data = self.result[pair]
         if not isinstance(raw_data, list):
             return []
-        
+
         ohlc_list = []
         for candle in raw_data:
             if len(candle) >= 8:
@@ -301,7 +301,7 @@ class OHLCResponse(KrakenResponse):
                     volume=str(candle[6]),
                     count=int(candle[7])
                 ))
-        
+
         return ohlc_list
 
 
@@ -321,7 +321,7 @@ class OrderBookData(BaseModel):
 class OrderBookResponse(KrakenResponse):
     """Order book response model."""
     result: Optional[Dict[str, Dict[str, List[List]]]] = None
-    
+
     def get_order_book(self, pair: str) -> Optional[OrderBookData]:
         """
         Get parsed order book data for a specific pair.
@@ -334,9 +334,9 @@ class OrderBookResponse(KrakenResponse):
         """
         if not self.result or pair not in self.result:
             return None
-        
+
         book_data = self.result[pair]
-        
+
         asks = []
         for ask in book_data.get('asks', []):
             if len(ask) >= 3:
@@ -345,7 +345,7 @@ class OrderBookResponse(KrakenResponse):
                     volume=str(ask[1]),
                     timestamp=int(ask[2])
                 ))
-        
+
         bids = []
         for bid in book_data.get('bids', []):
             if len(bid) >= 3:
@@ -354,7 +354,7 @@ class OrderBookResponse(KrakenResponse):
                     volume=str(bid[1]),
                     timestamp=int(bid[2])
                 ))
-        
+
         return OrderBookData(asks=asks, bids=bids)
 
 
@@ -371,7 +371,7 @@ class TradeInfo(BaseModel):
 class RecentTradesResponse(KrakenResponse):
     """Recent trades response model."""
     result: Optional[Dict[str, Union[List[List], str]]] = None
-    
+
     def get_trades(self, pair: str) -> List[TradeInfo]:
         """
         Get parsed trade data for a specific pair.
@@ -384,11 +384,11 @@ class RecentTradesResponse(KrakenResponse):
         """
         if not self.result or pair not in self.result:
             return []
-        
+
         raw_trades = self.result[pair]
         if not isinstance(raw_trades, list):
             return []
-        
+
         trades = []
         for trade in raw_trades:
             if len(trade) >= 6:
@@ -400,14 +400,14 @@ class RecentTradesResponse(KrakenResponse):
                     ordertype=str(trade[4]),
                     misc=str(trade[5])
                 ))
-        
+
         return trades
 
 
 class BalanceResponse(KrakenResponse):
     """Account balance response model."""
     result: Optional[Dict[str, str]] = None
-    
+
     def get_balance(self, asset: str) -> str:
         """
         Get balance for specific asset.
@@ -421,7 +421,7 @@ class BalanceResponse(KrakenResponse):
         if not self.result:
             return '0'
         return self.result.get(asset, '0')
-    
+
     def get_total_balance_usd(self, ticker_data: Optional[Dict[str, TickerInfo]] = None) -> str:
         """
         Calculate total balance in USD equivalent.
@@ -434,9 +434,9 @@ class BalanceResponse(KrakenResponse):
         """
         if not self.result or not ticker_data:
             return '0'
-        
+
         total_usd = Decimal('0')
-        
+
         for asset, balance in self.result.items():
             if asset in ['ZUSD', 'USD']:
                 total_usd += Decimal(balance)
@@ -449,7 +449,7 @@ class BalanceResponse(KrakenResponse):
                         asset_price = Decimal(ticker.last_price)
                         asset_balance = Decimal(balance)
                         total_usd += asset_balance * asset_price
-        
+
         return str(total_usd)
 
 
@@ -469,7 +469,7 @@ class TradeBalanceInfo(BaseModel):
 class TradeBalanceResponse(KrakenResponse):
     """Trade balance response model."""
     result: Optional[TradeBalanceInfo] = None
-    
+
     @validator('result', pre=True)
     def parse_trade_balance(cls, v):
         """Parse trade balance info."""
@@ -497,17 +497,17 @@ class OrderInfo(BaseModel):
     misc: Optional[str] = Field(None, description="Miscellaneous")
     oflags: Optional[str] = Field(None, description="Comma delimited list of order flags")
     trades: Optional[List[str]] = Field(None, description="Array of trade IDs related to order (if trades info requested and data available)")
-    
+
     @property
     def order_type(self) -> Optional[str]:
         """Get order type from description."""
         return self.descr.get('ordertype') if self.descr else None
-    
+
     @property
     def order_side(self) -> Optional[str]:
         """Get order side from description."""
         return self.descr.get('type') if self.descr else None
-    
+
     @property
     def pair(self) -> Optional[str]:
         """Get trading pair from description."""
@@ -517,25 +517,25 @@ class OrderInfo(BaseModel):
 class OpenOrdersResponse(KrakenResponse):
     """Open orders response model."""
     result: Optional[Dict[str, Union[Dict[str, OrderInfo], int]]] = None
-    
+
     @validator('result', pre=True)
     def parse_orders(cls, v):
         """Parse order info objects."""
         if not v or 'open' not in v:
             return v
-        
+
         open_orders = v['open']
         parsed_orders = {}
-        
+
         for order_id, order_data in open_orders.items():
             if isinstance(order_data, dict):
                 parsed_orders[order_id] = OrderInfo(**order_data)
             else:
                 parsed_orders[order_id] = order_data
-        
+
         v['open'] = parsed_orders
         return v
-    
+
     def get_open_orders(self) -> Dict[str, OrderInfo]:
         """Get dictionary of open orders."""
         if not self.result or 'open' not in self.result:
@@ -546,25 +546,25 @@ class OpenOrdersResponse(KrakenResponse):
 class ClosedOrdersResponse(KrakenResponse):
     """Closed orders response model."""
     result: Optional[Dict[str, Union[Dict[str, OrderInfo], int]]] = None
-    
+
     @validator('result', pre=True)
     def parse_orders(cls, v):
         """Parse order info objects."""
         if not v or 'closed' not in v:
             return v
-        
+
         closed_orders = v['closed']
         parsed_orders = {}
-        
+
         for order_id, order_data in closed_orders.items():
             if isinstance(order_data, dict):
                 parsed_orders[order_id] = OrderInfo(**order_data)
             else:
                 parsed_orders[order_id] = order_data
-        
+
         v['closed'] = parsed_orders
         return v
-    
+
     def get_closed_orders(self) -> Dict[str, OrderInfo]:
         """Get dictionary of closed orders."""
         if not self.result or 'closed' not in self.result:
@@ -575,20 +575,20 @@ class ClosedOrdersResponse(KrakenResponse):
 class QueryOrdersResponse(KrakenResponse):
     """Query orders response model."""
     result: Optional[Dict[str, OrderInfo]] = None
-    
+
     @validator('result', pre=True)
     def parse_orders(cls, v):
         """Parse order info objects."""
         if not v:
             return v
-        
+
         parsed_orders = {}
         for order_id, order_data in v.items():
             if isinstance(order_data, dict):
                 parsed_orders[order_id] = OrderInfo(**order_data)
             else:
                 parsed_orders[order_id] = order_data
-        
+
         return parsed_orders
 
 
@@ -611,25 +611,25 @@ class TradeInfo(BaseModel):
 class TradeHistoryResponse(KrakenResponse):
     """Trade history response model."""
     result: Optional[Dict[str, Union[Dict[str, TradeInfo], int]]] = None
-    
+
     @validator('result', pre=True)
     def parse_trades(cls, v):
         """Parse trade info objects."""
         if not v or 'trades' not in v:
             return v
-        
+
         trades = v['trades']
         parsed_trades = {}
-        
+
         for trade_id, trade_data in trades.items():
             if isinstance(trade_data, dict):
                 parsed_trades[trade_id] = TradeInfo(**trade_data)
             else:
                 parsed_trades[trade_id] = trade_data
-        
+
         v['trades'] = parsed_trades
         return v
-    
+
     def get_trades(self) -> Dict[str, TradeInfo]:
         """Get dictionary of trades."""
         if not self.result or 'trades' not in self.result:
@@ -646,21 +646,21 @@ class AddOrderResult(BaseModel):
 class OrderResponse(KrakenResponse):
     """Order response model (for AddOrder, EditOrder, etc.)."""
     result: Optional[AddOrderResult] = None
-    
+
     @validator('result', pre=True)
     def parse_order_result(cls, v):
         """Parse order result."""
         if isinstance(v, dict):
             return AddOrderResult(**v)
         return v
-    
+
     @property
     def transaction_ids(self) -> List[str]:
         """Get transaction IDs."""
         if self.result and self.result.txid:
             return self.result.txid
         return []
-    
+
     @property
     def primary_txid(self) -> Optional[str]:
         """Get primary transaction ID."""
@@ -677,7 +677,7 @@ class CancelOrderResult(BaseModel):
 class CancelOrderResponse(KrakenResponse):
     """Cancel order response model."""
     result: Optional[CancelOrderResult] = None
-    
+
     @validator('result', pre=True)
     def parse_cancel_result(cls, v):
         """Parse cancel order result."""
@@ -695,19 +695,19 @@ class WebSocketTokenResult(BaseModel):
 class WebSocketTokenResponse(KrakenResponse):
     """WebSocket token response model."""
     result: Optional[WebSocketTokenResult] = None
-    
+
     @validator('result', pre=True)
     def parse_token_result(cls, v):
         """Parse WebSocket token result."""
         if isinstance(v, dict):
             return WebSocketTokenResult(**v)
         return v
-    
+
     @property
     def token(self) -> Optional[str]:
         """Get WebSocket token."""
         return self.result.token if self.result else None
-    
+
     @property
     def expires(self) -> Optional[int]:
         """Get token expiration timestamp."""

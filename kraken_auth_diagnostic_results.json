@@ -1,0 +1,162 @@
+{
+  "timestamp": 1754427630.9849653,
+  "overall_status": "partial",
+  "tests": {
+    "environment_loading": {
+      "test_name": "environment_loading",
+      "status": "pass",
+      "details": {
+        "env_file_exists": true,
+        "generic_credentials": {
+          "api_key_found": true,
+          "private_key_found": true,
+          "api_key_length": 56,
+          "private_key_length": 88
+        },
+        "rest_credentials": {
+          "api_key_found": true,
+          "private_key_found": true,
+          "api_key_length": 56,
+          "private_key_length": 88
+        },
+        "websocket_credentials": {
+          "api_key_found": true,
+          "private_key_found": true,
+          "api_key_length": 56,
+          "private_key_length": 88
+        },
+        "environment_variables": {
+          "KRAKEN_API_KEY": {
+            "present": true,
+            "length": 56
+          },
+          "KRAKEN_API_SECRET": {
+            "present": true,
+            "length": 88
+          },
+          "KRAKEN_REST_API_KEY": {
+            "present": true,
+            "length": 56
+          },
+          "KRAKEN_REST_API_SECRET": {
+            "present": true,
+            "length": 88
+          },
+          "API_KEY": {
+            "present": true,
+            "length": 56
+          },
+          "API_SECRET": {
+            "present": true,
+            "length": 88
+          }
+        }
+      }
+    },
+    "credential_format": {
+      "test_name": "credential_format",
+      "status": "pass",
+      "details": {
+        "api_key_format": {
+          "length": 56,
+          "valid_base64": true,
+          "preview": "g2ZU0wUr..."
+        },
+        "private_key_format": {
+          "length": 88,
+          "valid_base64": true,
+          "decoded_length": 64,
+          "preview": "hp4fj+Mz..."
+        }
+      }
+    },
+    "signature_generation": {
+      "test_name": "signature_generation",
+      "status": "pass",
+      "details": {
+        "manual_signature": {
+          "signature": "DPRbstBwWYDobznw...",
+          "length": 88
+        },
+        "auth_system_signature": {
+          "signature": "YpjhJcrrN8ohud6K...",
+          "length": 88,
+          "has_api_key": true
+        },
+        "signatures_match": false
+      }
+    },
+    "api_connectivity": {
+      "test_name": "api_connectivity",
+      "status": "pass",
+      "details": {
+        "public_endpoint": {
+          "url": "https://api.kraken.com/0/public/Time",
+          "status_code": 200,
+          "response_time": 0.3860924243927002,
+          "success": true,
+          "has_result": true
+        }
+      }
+    },
+    "authentication_headers": {
+      "test_name": "authentication_headers",
+      "status": "pass",
+      "details": {
+        "headers": {
+          "api_key_present": true,
+          "api_sign_present": true,
+          "content_type_present": true,
+          "api_key_matches": true,
+          "api_sign_length": 88,
+          "content_type": "application/x-www-form-urlencoded"
+        }
+      }
+    },
+    "balance_endpoint": {
+      "test_name": "balance_endpoint",
+      "status": "error",
+      "details": {
+        "exception": {
+          "type": "KrakenAPIError",
+          "message": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]",
+          "response_time": 0.4121384620666504
+        }
+      }
+    },
+    "advanced_authentication": {
+      "test_name": "advanced_authentication",
+      "status": "fail",
+      "details": {
+        "endpoints": {
+          "ServerTime": {
+            "type": "public",
+            "success": true,
+            "response_time": 0.35576510429382324,
+            "errors": [],
+            "has_result": true
+          },
+          "Balance": {
+            "type": "private",
+            "success": false,
+            "error": "KrakenAPIError: EAPI:Invalid key [endpoint: Balance]",
+            "exception_type": "KrakenAPIError"
+          },
+          "TradeBalance": {
+            "type": "private",
+            "success": false,
+            "error": "KrakenAPIError: EAPI:Invalid key [endpoint: TradeBalance]",
+            "exception_type": "KrakenAPIError"
+          },
+          "OpenOrders": {
+            "type": "private",
+            "success": false,
+            "error": "KrakenAPIError: EAPI:Invalid key [endpoint: OpenOrders]",
+            "exception_type": "KrakenAPIError"
+          }
+        }
+      }
+    }
+  },
+  "recommendations": []
+}

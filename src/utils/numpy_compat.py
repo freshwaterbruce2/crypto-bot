@@ -6,8 +6,8 @@ ensuring the trading bot can function with or without numpy installed.
 """
 
 import logging
-from typing import List, Union, Optional, Tuple
 import statistics
+from typing import List, Tuple, Union
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,21 @@ except ImportError:
 
 class NumpyCompat:
     """Provides numpy-compatible operations with pure Python fallbacks"""
-    
+
     @staticmethod
     def array(data: List[Union[int, float]]) -> Union['np.ndarray', List[float]]:
         """Create array from data"""
         if HAS_NUMPY:
             return np.array(data)
         return [float(x) for x in data]
-    
+
     @staticmethod
     def mean(data: Union[List[float], 'np.ndarray']) -> float:
         """Calculate mean of data"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.mean(data))
         return statistics.mean(data) if data else 0.0
-    
+
     @staticmethod
     def std(data: Union[List[float], 'np.ndarray'], ddof: int = 0) -> float:
         """Calculate standard deviation"""
@@ -50,21 +50,21 @@ class NumpyCompat:
             return statistics.pstdev(data)  # Population std dev
         else:
             return statistics.stdev(data)   # Sample std dev
-    
+
     @staticmethod
     def max(data: Union[List[float], 'np.ndarray']) -> float:
         """Find maximum value"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.max(data))
         return max(data) if data else 0.0
-    
+
     @staticmethod
     def min(data: Union[List[float], 'np.ndarray']) -> float:
         """Find minimum value"""
         if HAS_NUMPY and hasattr(data, '__array__'):
             return float(np.min(data))
         return min(data) if data else 0.0
-    
+
     @staticmethod
     def diff(data: Union[List[float], 'np.ndarray']) -> List[float]:
         """Calculate differences between consecutive elements"""
@@ -73,7 +73,7 @@ class NumpyCompat:
         if len(data) < 2:
             return []
         return [data[i+1] - data[i] for i in range(len(data)-1)]
-    
+
     @staticmethod
     def abs(data: Union[float, List[float], 'np.ndarray']) -> Union[float, List[float]]:
         """Calculate absolute values"""
@@ -82,7 +82,7 @@ class NumpyCompat:
         if HAS_NUMPY and hasattr(data, '__array__'):
             return np.abs(data)
         return [abs(x) for x in data]
-    
+
     @staticmethod
     def zeros(shape: Union[int, Tuple[int, ...]]) -> Union['np.ndarray', List]:
         """Create array of zeros"""
@@ -93,7 +93,7 @@ class NumpyCompat:
         # For multi-dimensional, return nested lists
         size = shape[0] if shape else 0
         return [0.0] * size
-    
+
     @staticmethod
     def linspace(start: float, stop: float, num: int) -> List[float]:
         """Create evenly spaced values"""

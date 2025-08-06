@@ -3,9 +3,9 @@ SHIB/USDT Focused Trading Configuration
 Optimized for circuit breaker recovery and rate limit compliance
 """
 
-import logging
 import json
-from typing import Dict, Any
+import logging
+from typing import Any, Dict
 
 # Configure logging for circuit breaker monitoring
 logging.basicConfig(
@@ -22,7 +22,7 @@ SHIB_USDT_TRADING_CONFIG = {
     "trading": {
         "symbol": "SHIB/USDT",
         "base_currency": "SHIB",
-        "quote_currency": "USDT", 
+        "quote_currency": "USDT",
         "focus_mode": True,  # Only trade this pair
         "min_order_value": 2.50,  # Above Kraken's $2 minimum
         "max_position_size": 1000.0,  # Maximum USDT position
@@ -32,7 +32,7 @@ SHIB_USDT_TRADING_CONFIG = {
         "max_open_orders": 2,      # Conservative limit
         "trading_interval_seconds": 30  # 30 seconds between trading decisions
     },
-    
+
     "api_protection": {
         "tier": "pro",
         "circuit_breaker_enabled": True,
@@ -44,7 +44,7 @@ SHIB_USDT_TRADING_CONFIG = {
         "retry_attempts": 2,
         "exponential_backoff": True
     },
-    
+
     "balance_management": {
         "check_interval_seconds": 60,  # Check balance every minute
         "use_balance_ex_endpoint": True,
@@ -53,7 +53,7 @@ SHIB_USDT_TRADING_CONFIG = {
         "balance_safety_margin": 0.95,  # Use 95% of available balance
         "emergency_liquidation_threshold": 0.90  # Emergency if 90% loss
     },
-    
+
     "error_handling": {
         "circuit_breaker_detection": True,
         "auto_recovery": True,
@@ -64,12 +64,12 @@ SHIB_USDT_TRADING_CONFIG = {
         "error_cooldown_seconds": 300,  # 5 minutes
         "retry_strategies": {
             "circuit_breaker": "wait_full_timeout",
-            "rate_limit": "exponential_backoff", 
+            "rate_limit": "exponential_backoff",
             "temporary": "linear_backoff",
             "network": "immediate_retry"
         }
     },
-    
+
     "monitoring": {
         "log_level": "INFO",
         "circuit_breaker_alerts": True,
@@ -92,7 +92,7 @@ RECOVERY_PROCEDURES = {
             "Parse remaining timeout from error"
         ],
         "wait_actions": [
-            "Wait for full timeout period", 
+            "Wait for full timeout period",
             "Log progress every 30 seconds",
             "Monitor for early recovery signals",
             "Prepare for gradual resumption"
@@ -104,7 +104,7 @@ RECOVERY_PROCEDURES = {
             "Gradually increase to normal operation"
         ]
     },
-    
+
     "emergency_mode": {
         "triggers": [
             "More than 5 consecutive circuit breaker errors",
@@ -135,7 +135,7 @@ SAFE_LAUNCH_SEQUENCE = [
         ]
     },
     {
-        "step": 2, 
+        "step": 2,
         "name": "API Health Check",
         "actions": [
             "Test basic API connectivity",
@@ -146,7 +146,7 @@ SAFE_LAUNCH_SEQUENCE = [
     },
     {
         "step": 3,
-        "name": "Balance and Market Check", 
+        "name": "Balance and Market Check",
         "actions": [
             "Fetch account balance (with circuit breaker protection)",
             "Verify sufficient USDT for trading",
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     print("SHIB/USDT Safe Trading Configuration Created")
     print("Circuit Breaker Protection: ENABLED")
     print("Rate Limit Compliance: STRICT")
-    print("Emergency Recovery: ENABLED") 
-    
+    print("Emergency Recovery: ENABLED")
+
     # Save configuration
     save_safe_config()

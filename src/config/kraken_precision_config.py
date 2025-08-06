@@ -8,7 +8,7 @@ Updated: 2025-08-01
 KRAKEN_PRECISION_CONFIG = {
     # Your current trading pairs with exact Kraken requirements
     'SHIB/USDT': {
-        'price_decimals': 8,      # Maximum price precision 
+        'price_decimals': 8,      # Maximum price precision
         'min_volume': 160000,     # Minimum volume (160,000 SHIB)
         'base_precision': 0,      # Integer SHIB amounts only
         'quote_precision': 8,     # USDT precision
@@ -96,10 +96,10 @@ def get_precision_config(symbol: str) -> dict:
         elif symbol.endswith('USD'):
             base = symbol[:-3]
             symbol = f"{base}/USDT"
-    
+
     # Get config
     config = KRAKEN_PRECISION_CONFIG.get(symbol) or EXTENDED_PRECISION_CONFIG.get(symbol)
-    
+
     if not config:
         # Default safe values for unknown pairs
         return {
@@ -108,30 +108,30 @@ def get_precision_config(symbol: str) -> dict:
             'base_precision': 2,
             'quote_precision': 5,
         }
-    
+
     return config
 
 def format_price(price: float, symbol: str) -> str:
     """Format price according to Kraken precision requirements"""
     config = get_precision_config(symbol)
     decimals = config['price_decimals']
-    
+
     # Truncate (round down) as per Kraken documentation
     multiplier = 10 ** decimals
     truncated_price = int(price * multiplier) / multiplier
-    
+
     return f"{truncated_price:.{decimals}f}"
 
 def format_volume(volume: float, symbol: str) -> str:
     """Format volume according to Kraken precision requirements"""
     config = get_precision_config(symbol)
     decimals = config['base_precision']
-    
+
     # Ensure minimum volume
     min_vol = config['min_volume']
     if volume < min_vol:
         volume = min_vol
-    
+
     # Format with proper precision
     if decimals == 0:
         return str(int(volume))
@@ -141,22 +141,22 @@ def format_volume(volume: float, symbol: str) -> str:
 def validate_order_params(symbol: str, price: float, volume: float) -> tuple[bool, str]:
     """Validate order parameters against Kraken requirements"""
     config = get_precision_config(symbol)
-    
+
     # Check minimum volume
     if volume < config['min_volume']:
         return False, f"Volume {volume} below minimum {config['min_volume']} for {symbol}"
-    
+
     # Check price precision
     price_str = format_price(price, symbol)
     if len(price_str.split('.')[-1]) > config['price_decimals']:
         return False, f"Price precision exceeds {config['price_decimals']} decimals for {symbol}"
-    
+
     return True, "Valid"
 
 # Quick reference for your bot's main pairs
 MAIN_PAIRS_SUMMARY = {
     'SHIB/USDT': 'Price: 8 decimals, Min: 160,000 SHIB',
-    'AI16Z/USDT': 'Price: 4 decimals, Min: 5 AI16Z', 
+    'AI16Z/USDT': 'Price: 4 decimals, Min: 5 AI16Z',
     'BERA/USDT': 'Price: 4 decimals, Min: 0.5 BERA',
     'MANA/USDT': 'Price: 5 decimals, Min: 8 MANA',
     'DOT/USDT': 'Price: 4 decimals, Min: 1.2 DOT',

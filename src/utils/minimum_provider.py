@@ -18,10 +18,7 @@ This single module eliminates scattered hard-coded minimums across the codebase.
 from __future__ import annotations
 
 import logging
-from decimal import Decimal
-from typing import Tuple, Dict
-
-from pathlib import Path
+from typing import Dict, Tuple
 
 # Lazy imports to avoid circular dependencies
 try:
@@ -53,13 +50,13 @@ _STATIC_KRAKEN_MINIMUMS: Dict[str, Dict[str, float]] = {
     "DOT/USDT": {"volume": 0.1, "cost": 1.0},
     "MATIC/USDT": {"volume": 1.0, "cost": 1.0},
     "XRP/USDT": {"volume": 1.0, "cost": 1.0},
-    
+
     # Additional portfolio pairs
     "ALGO/USDT": {"volume": 1.0, "cost": 1.0},
     "ATOM/USDT": {"volume": 0.1, "cost": 1.0},
     "LINK/USDT": {"volume": 0.1, "cost": 1.0},
     "MANA/USDT": {"volume": 1.0, "cost": 1.0},
-    
+
     # Meme coins (conservative estimates)
     "AI16Z/USDT": {"volume": 1.0, "cost": 5.0},
     "BERA/USDT": {"volume": 1.0, "cost": 5.0},

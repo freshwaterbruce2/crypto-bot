@@ -1,0 +1,81 @@
+{
+  "test_summary": {
+    "total_tests": 6,
+    "passed": 1,
+    "failed": 5,
+    "warnings": 0,
+    "success_rate_percent": 16.67,
+    "total_duration_seconds": 0.55
+  },
+  "performance_metrics": {
+    "average_test_duration_seconds": 0.092,
+    "final_memory_usage_mb": 53.98,
+    "average_memory_usage_mb": 51.99,
+    "peak_memory_usage_mb": 55.27
+  },
+  "system_information": {
+    "cpu_count": 4,
+    "memory_total_mb": 7946.86328125,
+    "python_threads": 9,
+    "open_files": 11
+  },
+  "test_results": [
+    {
+      "test_name": "Core Module Imports",
+      "status": "FAILED",
+      "duration": 0.34514498710632324,
+      "memory_usage_mb": 49.29296875,
+      "error_message": "cannot import name 'CoreConfig' from 'src.config.core' (/mnt/c/dev/tools/crypto-trading-bot-2025/src/config/core.py)",
+      "details": null
+    },
+    {
+      "test_name": "Configuration System",
+      "status": "FAILED",
+      "duration": 5.125999450683594e-05,
+      "memory_usage_mb": 49.29296875,
+      "error_message": "cannot import name 'CoreConfig' from 'src.config.core' (/mnt/c/dev/tools/crypto-trading-bot-2025/src/config/core.py)",
+      "details": null
+    },
+    {
+      "test_name": "Database System",
+      "status": "FAILED",
+      "duration": 0.14068245887756348,
+      "memory_usage_mb": 51.40625,
+      "error_message": "0",
+      "details": null
+    },
+    {
+      "test_name": "Utility Functions",
+      "status": "FAILED",
+      "duration": 0.02119922637939453,
+      "memory_usage_mb": 52.69140625,
+      "error_message": "'PriorityMessageQueue' object has no attribute 'add_message'",
+      "details": null
+    },
+    {
+      "test_name": "Performance Optimizations",
+      "status": "FAILED",
+      "duration": 0.024510622024536133,
+      "memory_usage_mb": 55.26953125,
+      "error_message": "'MemoryOptimizer' object has no attribute 'optimize_memory'",
+      "details": null
+    },
+    {
+      "test_name": "Memory Management",
+      "status": "PASSED",
+      "duration": 0.019884347915649414,
+      "memory_usage_mb": 53.98046875,
+      "error_message": null,
+      "details": {
+        "memory_peak_mb": 55.90625,
+        "memory_growth_mb": -0.3828125,
+        "memory_cleanup_effective": true,
+        "avg_operation_time_ms": 0.00015211105346679688,
+        "operations_completed": 1000
+      }
+    }
+  ],
+  "recommendations": [
+    "Fix 5 failed test(s) before production deployment"
+  ]
+}

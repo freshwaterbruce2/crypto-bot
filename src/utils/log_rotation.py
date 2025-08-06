@@ -4,22 +4,22 @@ Log Rotation Utility
 Prevents disk space issues by rotating and compressing old logs
 """
 
-import os
 import gzip
+import logging
+import os
 import shutil
 import time
-import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
 
 class LogRotationManager:
     """Manages log rotation to prevent disk space issues"""
-    
-    def __init__(self, 
+
+    def __init__(self,
                  log_dir: str = "logs",
                  max_log_size_mb: int = 50,
                  keep_days: int = 7,
@@ -40,7 +40,7 @@ class LogRotationManager:
         self.keep_days = keep_days
         self.compress_after_days = compress_after_days
         self.disk_space_threshold_pct = disk_space_threshold_pct
-        
+
     def check_disk_space(self) -> float:
         """Check current disk usage percentage"""
         try:
@@ -52,7 +52,7 @@ class LogRotationManager:
                 disk_path = disk_path[:3]  # e.g., "C:\"
             else:
                 disk_path = '/'
-            
+
             disk_usage = psutil.disk_usage(disk_path)
             return disk_usage.percent
         except ImportError:
@@ -62,70 +62,70 @@ class LogRotationManager:
             free = statvfs.f_frsize * statvfs.f_avail
             used_percent = ((total - free) / total) * 100
             return used_percent
-            
+
     def rotate_large_files(self) -> List[str]:
         """Rotate files that exceed size limit"""
         rotated_files = []
-        
+
         if not self.log_dir.exists():
             return rotated_files
-            
+
         for log_file in self.log_dir.glob("*.log"):
             if log_file.stat().st_size > self.max_log_size_bytes:
                 # Create rotated filename with timestamp
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 rotated_name = f"{log_file.stem}_{timestamp}.log"
                 rotated_path = log_file.parent / rotated_name
-                
+
                 try:
                     # Move the file
                     shutil.move(str(log_file), str(rotated_path))
-                    
+
                     # Create new empty log file
                     log_file.touch()
-                    
+
                     rotated_files.append(str(rotated_path))
                     logger.info(f"Rotated large log file: {log_file.name} -> {rotated_name}")
                 except Exception as e:
                     logger.error(f"Failed to rotate {log_file}: {e}")
-                    
+
         return rotated_files
-        
+
     def compress_old_logs(self) -> int:
         """Compress logs older than compress_after_days"""
         compressed_count = 0
         cutoff_time = time.time() - (self.compress_after_days * 86400)
-        
+
         if not self.log_dir.exists():
             return compressed_count
-            
+
         for log_file in self.log_dir.glob("*.log"):
             if log_file.stat().st_mtime < cutoff_time:
                 gz_file = log_file.with_suffix('.log.gz')
-                
+
                 try:
                     # Compress the file
                     with open(log_file, 'rb') as f_in:
                         with gzip.open(gz_file, 'wb') as f_out:
                             shutil.copyfileobj(f_in, f_out)
-                    
+
                     # Remove original file
                     log_file.unlink()
                     compressed_count += 1
                     logger.info(f"Compressed old log: {log_file.name}")
                 except Exception as e:
                     logger.error(f"Failed to compress {log_file}: {e}")
-                    
+
         return compressed_count
-        
+
     def delete_old_logs(self) -> int:
         """Delete logs older than keep_days"""
         deleted_count = 0
         cutoff_time = time.time() - (self.keep_days * 86400)
-        
+
         if not self.log_dir.exists():
             return deleted_count
-            
+
         # Delete old uncompressed logs
         for log_file in self.log_dir.glob("*.log"):
             if log_file.stat().st_mtime < cutoff_time:
@@ -135,7 +135,7 @@ class LogRotationManager:
                     logger.info(f"Deleted old log: {log_file.name}")
                 except Exception as e:
                     logger.error(f"Failed to delete {log_file}: {e}")
-                    
+
         # Delete old compressed logs
         for gz_file in self.log_dir.glob("*.log.gz"):
             if gz_file.stat().st_mtime < cutoff_time:
@@ -145,25 +145,25 @@ class LogRotationManager:
                     logger.info(f"Deleted old compressed log: {gz_file.name}")
                 except Exception as e:
                     logger.error(f"Failed to delete {gz_file}: {e}")
-                    
+
         return deleted_count
-        
+
     def emergency_cleanup(self) -> int:
         """Emergency cleanup when disk space is critical"""
         logger.warning("Performing emergency log cleanup due to disk space!")
         deleted_count = 0
-        
+
         if not self.log_dir.exists():
             return deleted_count
-            
+
         # Delete oldest logs first
         log_files = []
         for pattern in ["*.log", "*.log.gz"]:
             log_files.extend(list(self.log_dir.glob(pattern)))
-            
+
         # Sort by modification time (oldest first)
         log_files.sort(key=lambda x: x.stat().st_mtime)
-        
+
         # Delete oldest 50% of files
         files_to_delete = len(log_files) // 2
         for log_file in log_files[:files_to_delete]:
@@ -173,9 +173,9 @@ class LogRotationManager:
                 logger.info(f"Emergency deleted: {log_file.name}")
             except Exception as e:
                 logger.error(f"Failed to delete {log_file}: {e}")
-                
+
         return deleted_count
-        
+
     def run_rotation(self) -> dict:
         """Run complete log rotation process"""
         results = {
@@ -185,22 +185,22 @@ class LogRotationManager:
             'deleted_count': 0,
             'emergency_cleanup': False
         }
-        
+
         logger.info(f"Starting log rotation. Disk usage: {results['disk_usage_before']:.1f}%")
-        
+
         # Check if emergency cleanup is needed
         if results['disk_usage_before'] > self.disk_space_threshold_pct:
             results['emergency_cleanup'] = True
             results['deleted_count'] += self.emergency_cleanup()
-        
+
         # Normal rotation process
         results['rotated_files'] = self.rotate_large_files()
         results['compressed_count'] = self.compress_old_logs()
         results['deleted_count'] += self.delete_old_logs()
-        
+
         # Check disk usage after cleanup
         results['disk_usage_after'] = self.check_disk_space()
-        
+
         logger.info(
             f"Log rotation complete. "
             f"Rotated: {len(results['rotated_files'])}, "
@@ -208,7 +208,7 @@ class LogRotationManager:
             f"Deleted: {results['deleted_count']}, "
             f"Disk usage: {results['disk_usage_before']:.1f}% -> {results['disk_usage_after']:.1f}%"
         )
-        
+
         return results
 
 
@@ -219,19 +219,19 @@ def setup_automatic_rotation(config: dict) -> Optional[LogRotationManager]:
         log_dir = config.get('log_dir', 'logs')
         max_size_mb = config.get('log_max_size_mb', 50)
         keep_days = config.get('log_rotation_days', 7)
-        
+
         # Create rotation manager
         rotation_manager = LogRotationManager(
             log_dir=log_dir,
             max_log_size_mb=max_size_mb,
             keep_days=keep_days
         )
-        
+
         # Run initial rotation
         rotation_manager.run_rotation()
-        
+
         return rotation_manager
-        
+
     except Exception as e:
         logger.error(f"Failed to set up log rotation: {e}")
         return None
@@ -240,21 +240,21 @@ def setup_automatic_rotation(config: dict) -> Optional[LogRotationManager]:
 # Standalone script execution
 if __name__ == "__main__":
     import sys
-    
+
     # Configure basic logging
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # Default log directory
     log_dir = sys.argv[1] if len(sys.argv) > 1 else "logs"
-    
+
     # Create and run rotation
     manager = LogRotationManager(log_dir=log_dir)
     results = manager.run_rotation()
-    
-    print(f"\nLog Rotation Results:")
+
+    print("\nLog Rotation Results:")
     print(f"- Disk usage: {results['disk_usage_before']:.1f}% -> {results['disk_usage_after']:.1f}%")
     print(f"- Files rotated: {len(results['rotated_files'])}")
     print(f"- Files compressed: {results['compressed_count']}")

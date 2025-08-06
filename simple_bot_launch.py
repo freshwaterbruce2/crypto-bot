@@ -9,51 +9,64 @@ Uses the validated components that passed 100% validation.
 
 import asyncio
 import sys
-import time
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add project root to path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
 # Import validated components
-from src.utils.unified_kraken_nonce_manager import get_unified_nonce_manager
-from src.exchange.native_kraken_exchange import NativeKrakenExchange
-from src.utils.decimal_precision_fix import safe_decimal
 from src.core.bot import KrakenTradingBot
+from src.exchange.native_kraken_exchange import NativeKrakenExchange
+from src.utils.consolidated_nonce_manager import get_nonce_manager
+
 
 async def test_nonce_system():
     """Test the nonce system is working"""
     print("🔐 Testing nonce system...")
-    
-    nonce_manager = get_unified_nonce_manager()
-    
+
+    nonce_manager = get_nonce_manager()
+
     # Generate a few nonces to verify functionality
     nonces = []
     for i in range(5):
         nonce = int(nonce_manager.get_nonce(f'launch_test_{i}'))
         nonces.append(nonce)
-    
+
     # Verify they're increasing
     for i in range(1, len(nonces)):
         if nonces[i] <= nonces[i-1]:
             print(f"❌ Nonce sequence error: {nonces}")
             return False
-    
+
     print(f"✅ Nonce system operational - Generated {len(nonces)} valid nonces")
     return True
 
 async def test_exchange_connection():
     """Test exchange connection"""
     print("🌐 Testing exchange connection...")
-    
+
     try:
-        exchange = NativeKrakenExchange()
-        
+        # Get credentials from credential manager
+        from src.auth.credential_manager import get_kraken_credentials
+        creds = get_kraken_credentials()
+
+        if not creds:
+            print("❌ No credentials found - check environment variables or .env file")
+            return False
+
+        api_key, api_secret = creds
+        exchange = NativeKrakenExchange(api_key, api_secret)
+
         # Test connection without actual API call
         print("✅ Exchange client initialized successfully")
         return True
-        
+
     except Exception as e:
         print(f"❌ Exchange connection failed: {e}")
         return False
@@ -61,11 +74,11 @@ async def test_exchange_connection():
 async def test_bot_initialization():
     """Test bot initialization"""
     print("🤖 Testing bot initialization...")
-    
+
     try:
         bot = KrakenTradingBot()
         print("✅ Bot initialized successfully")
-        
+
         # Test if critical methods exist
         required_methods = ['initialize', 'start', 'stop']
         for method in required_methods:
@@ -74,9 +87,9 @@ async def test_bot_initialization():
             else:
                 print(f"   ❌ Method {method}: Missing")
                 return False
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Bot initialization failed: {e}")
         return False
@@ -87,15 +100,15 @@ async def main():
     print("=" * 40)
     print("Testing core components after critical fixes...")
     print()
-    
+
     tests = [
         ("Nonce System", test_nonce_system),
-        ("Exchange Connection", test_exchange_connection), 
+        ("Exchange Connection", test_exchange_connection),
         ("Bot Initialization", test_bot_initialization)
     ]
-    
+
     results = []
-    
+
     for test_name, test_func in tests:
         try:
             result = await test_func()
@@ -104,20 +117,20 @@ async def main():
             print(f"❌ {test_name} crashed: {e}")
             results.append((test_name, False))
         print()
-    
+
     # Summary
     passed = sum(1 for _, result in results if result)
     total = len(results)
-    
+
     print("=" * 40)
     print("📊 LAUNCH TEST SUMMARY")
     print("=" * 40)
     print(f"Tests: {passed}/{total} passed")
-    
+
     for test_name, result in results:
         status = "✅ PASS" if result else "❌ FAIL"
         print(f"  {status}: {test_name}")
-    
+
     if passed == total:
         print("\n🎉 ALL CORE COMPONENTS WORKING!")
         print("✅ Critical fixes are operational")

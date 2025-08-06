@@ -11,20 +11,16 @@ Provides a modern, type-safe foundation for all trading strategies with:
 
 import asyncio
 import time
-import pandas as pd
-import numpy as np
-from ..signal_generation_mixin import SignalGenerationMixin
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
-import logging
-import traceback
-import math
-import random
+
+from ..signal_generation_mixin import SignalGenerationMixin
 
 # Custom imports
-from ..utils.alert_manager import AlertManager, AlertCategory
+from ..utils.alert_manager import AlertCategory, AlertManager
 from ..utils.custom_logging import configure_logging
+
 logger = configure_logging()
 
 
@@ -108,7 +104,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         self.minimum_requirements = {}  # Learned minimum trade requirements
         self.error_recovery_attempts = 0
         self.max_error_recovery_attempts = 3
-        
+
         # Alert management
         self.alert_manager = AlertManager(max_alerts=1000)
 
@@ -128,43 +124,43 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 # Access components through bot reference
                 if hasattr(self.bot_reference, 'components'):
                     components = self.bot_reference.components
-                    
+
                     # Portfolio Intelligence
                     if hasattr(components, 'portfolio_intelligence'):
                         self.portfolio_intelligence = components.portfolio_intelligence
                         logger.info(f"[{self.symbol}] Connected to Portfolio Intelligence")
-                    
+
                     # Balance Manager
                     if hasattr(components, 'balance_manager'):
                         self.balance_manager = components.balance_manager
                         logger.info(f"[{self.symbol}] Connected to Balance Manager")
-                    
+
                     # Learning Manager
                     if hasattr(components, 'learning_manager'):
                         self.learning_manager = components.learning_manager
                         logger.info(f"[{self.symbol}] Connected to Learning Manager")
-                    
+
                     # Analytics Assistant
                     if hasattr(components, 'analytics_assistant'):
                         self.analytics_assistant = components.analytics_assistant
                         logger.info(f"[{self.symbol}] Connected to Analytics Assistant")
-                
+
                 # WebSocket Manager (not in components, but in bot directly)
                 if hasattr(self.bot_reference, 'websocket_manager'):
                     self.websocket_manager = self.bot_reference.websocket_manager
                     logger.info(f"[{self.symbol}] Connected to WebSocket V2 Manager")
-                        
+
             except Exception as e:
                 logger.warning(f"[{self.symbol}] Error initializing components: {e}")
 
     def _on_initialized(self) -> None:
         """Lifecycle hook called after strategy is initialized."""
         logger.info(f"[{self.symbol}] Strategy '{self.name}' initialized with portfolio intelligence.")
-        
+
         # Load learned minimum requirements if available
         if self.learning_manager:
             self._load_learned_minimums()
-        
+
         # For sell engines, immediately transition to Ready since they don't need OHLC history
         if "SellEngine" in self.name and len(self.data) == 0:
             logger.info(f"[{self.symbol}] Sell engine transitioning directly to Ready")
@@ -184,7 +180,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         logger.info(
             f"[{self.symbol}] Strategy '{self.name}' has sufficient data and is now Ready."
         )
-        
+
         # Perform initial portfolio check
         asyncio.create_task(self._check_portfolio_status())
 
@@ -193,7 +189,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         logger.info(
             f"[{self.symbol}] Strategy '{self.name}' status changed: {old_status} -> {new_status}"
         )
-        
+
         # Track status changes for learning
         if self.learning_manager:
             try:
@@ -210,7 +206,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 )
             except Exception as e:
                 logger.debug(f"[{self.symbol}] Error recording status change: {e}")
-        
+
         if self.status_update_callback:
             try:
                 self.status_update_callback(
@@ -247,9 +243,9 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 f"[{self.symbol}] Attempting error recovery "
                 f"({self.error_recovery_attempts}/{self.max_error_recovery_attempts})"
             )
-            
+
             await asyncio.sleep(5 * self.error_recovery_attempts)  # Exponential backoff
-            
+
             # Try to reinitialize
             self._initialize_components()
             self._change_status("Initializing")
@@ -279,36 +275,36 @@ class BaseStrategy(SignalGenerationMixin, ABC):
             current_time = time.time()
             if current_time - self._last_portfolio_check < self._portfolio_check_interval:
                 return
-                
+
             self._last_portfolio_check = current_time
-            
+
             if self.balance_manager:
                 # Get USDT balance
                 usdt_balance = await self.get_balance("USDT")
-                
+
                 if usdt_balance < 10.0:  # Below typical minimum
                     # Check if funds are deployed
                     deployment_status = await self.balance_manager.get_deployment_status("USDT")
-                    
+
                     if deployment_status == 'funds_deployed':
                         self._change_status("FundsDeployed")
-                        
+
                         # Get reallocation opportunities
                         realloc_opps = await self.balance_manager.get_reallocation_opportunities("USDT")
-                        
+
                         if realloc_opps:
                             logger.info(
                                 f"[{self.symbol}] Capital deployed. "
                                 f"Found {len(realloc_opps)} reallocation opportunities."
                             )
-                            
+
                             # Alert about deployed capital
                             self.alert_manager.info(
                                 category=AlertCategory.STRATEGY,
                                 message=f"Capital deployed in {len(realloc_opps)} positions",
                                 data={"reallocation_opportunities": len(realloc_opps), "symbol": self.symbol}
                             )
-                            
+
                             # Execute strategic reallocation if autonomous sell engine is available
                             if hasattr(self, 'autonomous_sell_engine') and self.autonomous_sell_engine:
                                 reallocation_plan = []
@@ -317,16 +313,16 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                                         'action_type': 'reallocation_sell',
                                         'symbol': f"{opp['asset']}/USDT",
                                         'priority': i + 1,
-                                        'reason': f"Strategic reallocation for better opportunities",
+                                        'reason': "Strategic reallocation for better opportunities",
                                         'target_proceeds': opp['value_in_currency'],
                                         'urgency': 'medium'
                                     })
-                                
+
                                 if reallocation_plan:
                                     logger.info(f"[{self.symbol}] Executing reallocation plan with {len(reallocation_plan)} actions")
                                     try:
                                         realloc_result = await self.autonomous_sell_engine.execute_reallocation_plan(reallocation_plan)
-                                        
+
                                         if realloc_result.get('successful_sales', 0) > 0:
                                             logger.info(f"[{self.symbol}] [OK] Reallocated ${realloc_result.get('total_proceeds', 0):.2f} from underperforming assets")
                                             # Update status to reflect successful reallocation
@@ -340,7 +336,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     else:
                         self._change_status("LowBalance")
                         logger.warning(f"[{self.symbol}] Truly insufficient funds. Deposits needed.")
-                        
+
         except Exception as e:
             logger.error(f"[{self.symbol}] Error checking portfolio status: {e}")
 
@@ -351,7 +347,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         """
         if isinstance(self.data, list):
             self.data.append(data_point)
-            
+
             # Keep only recent data to prevent memory issues
             if len(self.data) > 1000:
                 self.data = self.data[-500:]  # Keep last 500 points
@@ -369,7 +365,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
             self._last_update_time = time.time()
 
         self._check_and_update_status()
-        
+
         # Periodic portfolio check
         await self._check_portfolio_status()
 
@@ -412,7 +408,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 self.error_recovery_attempts = 0
 
             return ohlc_data
-            
+
         except Exception as e:
             logger.error(f"[{self.symbol}] Error processing OHLC data: {e}")
             self._change_status("Error")
@@ -441,12 +437,12 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         try:
             if not signal or signal.get("action") is None:
                 return signal
-                
+
             # Check if we're in FundsDeployed state
             if self.status == "FundsDeployed":
                 # Check signal confidence
                 confidence = signal.get("strength", 0.0)
-                
+
                 if confidence < 0.75:  # High confidence threshold for reallocation
                     logger.info(
                         f"[{self.symbol}] Signal confidence {confidence:.2f} "
@@ -457,7 +453,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     signal["action"] = None  # Block the signal
                 else:
                     signal["metadata"]["reallocation_candidate"] = True
-                    
+
             # Validate minimum requirements
             if self.portfolio_intelligence and signal.get("action") == "BUY":
                 validation = await self.portfolio_intelligence.validate_trade_minimums(
@@ -465,14 +461,14 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     quote_amount=signal.get("size", self.order_size_usdt),
                     current_price=signal.get("price", self._last_price)
                 )
-                
+
                 if validation and validation.get("needs_adjustment"):
                     signal["size"] = validation["safe_quote_cost"]
                     signal["metadata"]["size_adjusted"] = True
                     signal["metadata"]["original_size"] = self.order_size_usdt
-                    
+
             return signal
-            
+
         except Exception as e:
             logger.error(f"[{self.symbol}] Error validating signal with portfolio: {e}")
             return signal
@@ -496,7 +492,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
             f"Updated risk parameters for {self.name}: "
             f"SL={self.stop_loss_pct:.2%}, TP={self.take_profit_pct:.2%}"
         )
-        
+
         # Record parameter update for learning
         if self.learning_manager:
             self.learning_manager.record_event(
@@ -520,7 +516,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 cached = self.balance_manager.get_cached_balance(currency)
                 if cached is not None:
                     return cached
-                    
+
             # Fallback to direct exchange query
             balance = await self.exchange.fetch_balance()
             if currency in balance:
@@ -534,7 +530,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         """Get the current price for the trading pair from WebSocket V2."""
         try:
             symbol = symbol or self.symbol
-            
+
             # Try WebSocket V2 first
             if self.websocket_manager:
                 ticker = await self.websocket_manager.get_ticker(symbol)
@@ -543,7 +539,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     return self._last_price
                 else:
                     logger.debug(f"[{self.symbol}] No WebSocket price for {symbol}")
-            
+
             # NO FALLBACK to REST API - only use real-time data
             logger.warning(f"[{self.symbol}] No real-time price available for {symbol}")
             return self._last_price
@@ -556,21 +552,21 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         Perform cleanup operations when shutting down the strategy.
         """
         logger.info(f"Cleaning up resources for strategy: {self.name}")
-        
+
         # Save learned parameters
         if self.learning_manager and self.minimum_requirements:
             try:
                 self.learning_manager.save_learned_minimums(
-                    self.symbol, 
+                    self.symbol,
                     self.minimum_requirements
                 )
             except Exception as e:
                 logger.error(f"Error saving learned minimums: {e}")
-        
+
         # Clear data to free memory
         self.data = []
         self.deployed_capital = {}
-        
+
         # Update final status
         self._change_status("Stopped")
 
@@ -598,7 +594,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
             "balance_manager_connected": self.balance_manager is not None,
             "learning_enabled": self.learning_manager is not None
         }
-        
+
         # Add portfolio-specific status if in FundsDeployed state
         if self.status == "FundsDeployed":
             status["deployed_capital_info"] = {
@@ -610,9 +606,9 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 "status": "Insufficient funds for trading",
                 "recommendation": "Deposit funds to resume trading"
             }
-            
+
         return status
-    
+
     def is_ready(self) -> bool:
         """
         Check if strategy is ready to trade.
@@ -642,7 +638,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
     def get_trade_size(self, base_size: float) -> float:
         """Return the adjusted trade size based on the multiplier."""
         adjusted_size = base_size * self.trade_size_multiplier
-        
+
         # Ensure minimum trade size requirements
         if self.minimum_requirements:
             min_cost = self.minimum_requirements.get("min_cost", 0)
@@ -652,7 +648,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     f"to minimum {min_cost:.2f}"
                 )
                 adjusted_size = min_cost
-                
+
         return adjusted_size
 
     def update_risk_parameters(
@@ -668,14 +664,14 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                 self.stop_loss_pct = stop_loss_pct
             else:
                 logger.warning(f"Invalid stop_loss_pct: {stop_loss_pct}, keeping current value")
-                
+
         if take_profit_pct is not None:
             # Validate take profit is reasonable
             if 0.001 <= take_profit_pct <= 0.2:  # 0.1% to 20%
                 self.take_profit_pct = take_profit_pct
             else:
                 logger.warning(f"Invalid take_profit_pct: {take_profit_pct}, keeping current value")
-                
+
         if trade_size_multiplier is not None:
             # Validate multiplier is reasonable
             if 0.1 <= trade_size_multiplier <= 3.0:  # 10% to 300%
@@ -685,7 +681,7 @@ class BaseStrategy(SignalGenerationMixin, ABC):
                     f"Invalid trade_size_multiplier: {trade_size_multiplier}, "
                     "keeping current value"
                 )
-                
+
         logger.info(
             f"[RISK] Updated risk parameters for {self.name}: "
             f"SL={self.stop_loss_pct:.2%}, TP={self.take_profit_pct:.2%}, "
@@ -700,18 +696,18 @@ class BaseStrategy(SignalGenerationMixin, ABC):
         # Basic checks
         if self.status not in ["Ready", "Active", "FundsDeployed"]:
             return False
-            
+
         # If funds are deployed, only trade on high confidence signals
         if self.status == "FundsDeployed":
             # This will be evaluated when generate_signals is called
             return True
-            
+
         # Check if we have sufficient balance
         usdt_balance = await self.get_balance("USDT")
         if usdt_balance < self.order_size_usdt * 0.5:  # Need at least half the order size
             await self._check_portfolio_status()  # Update status
             return self.status == "FundsDeployed"  # Can still trade if funds deployed
-            
+
         return True
 
     def record_trade_attempt(self, success: bool, details: Dict[str, Any]) -> None:

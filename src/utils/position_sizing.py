@@ -14,11 +14,11 @@ Key Features:
 """
 
 import logging
-from typing import Dict, Any, Optional
-from decimal import Decimal, ROUND_DOWN
-from ..config.constants import calculate_minimum_cost, MINIMUM_ORDER_SIZE_TIER1
+from typing import Any, Dict, Optional
+
+from ..config.constants import MINIMUM_ORDER_SIZE_TIER1, calculate_minimum_cost
 from ..config.kraken_precision_config import (
-    get_precision_config, format_price, format_volume, validate_order_params
+    get_precision_config,
 )
 
 logger = logging.getLogger(__name__)
@@ -48,15 +48,15 @@ def calculate_position_size_for_small_account(
     """
     try:
         logger.debug(f"[POSITION_SIZING] Calculating for ${account_balance:.2f} account, {symbol}")
-        
+
         config = config or {}
-        
+
         # Extract asset from symbol for tier-1 detection
         if '/' in symbol:
             base_asset = symbol.split('/')[0]
         else:
             base_asset = symbol.replace('USDT', '')
-        
+
         # Calculate Kraken-compliant minimum order size
         if min_order_size_usd is None:
             if current_price is not None:
@@ -65,10 +65,10 @@ def calculate_position_size_for_small_account(
                 # Use tier-1 minimum as fallback for SHIB and similar assets
                 tier1_assets = ['SHIB', 'DOGE', 'ADA', 'XRP', 'ALGO', 'MATIC']
                 min_order_size_usd = MINIMUM_ORDER_SIZE_TIER1 if base_asset.upper() in tier1_assets else 1.0
-        
+
         # Base calculations
         max_deployable = account_balance * risk_percentage
-        
+
         # Ensure we meet minimum order requirements
         if max_deployable < min_order_size_usd:
             return {
@@ -78,18 +78,18 @@ def calculate_position_size_for_small_account(
                 'deployable_amount': max_deployable,
                 'min_required': min_order_size_usd
             }
-        
+
         # SHIB/USDT specific calculations
         if symbol == 'SHIB/USDT':
             return _calculate_shib_position_size(
                 max_deployable, account_balance, config
             )
-        
+
         # General position sizing for other pairs
         return _calculate_general_position_size(
             max_deployable, account_balance, symbol, config
         )
-        
+
     except Exception as e:
         logger.error(f"[POSITION_SIZING] Error calculating position size: {e}")
         return {
@@ -106,19 +106,27 @@ def _calculate_shib_position_size(
     config: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Calculate SHIB-specific position sizes with Kraken precision requirements"""
-    
+
     # Get Kraken precision config for SHIB/USDT
     precision_config = get_precision_config('SHIB/USDT')
-    
+
     # SHIB price approximation (this would be real-time in production)
     shib_price = 0.00001  # $0.00001 per SHIB token
-    
+
     # Use Kraken's official minimum volume requirement
     min_order_shib = precision_config['min_volume']  # 160,000 SHIB minimum
-    
+
     # Calculate maximum SHIB tokens we can buy
+    if shib_price <= 0:
+        logger.error(f"[POSITION_SIZING] Invalid SHIB price {shib_price} - cannot calculate position size")
+        return {
+            'success': False,
+            'error': f'Invalid SHIB price {shib_price}',
+            'deployable_amount': deployable_amount
+        }
+
     max_shib_tokens = deployable_amount / shib_price
-    
+
     # Ensure we meet Kraken minimum SHIB order requirements
     if max_shib_tokens < min_order_shib:
         required_usd = min_order_shib * shib_price
@@ -130,10 +138,10 @@ def _calculate_shib_position_size(
             'required_usd': required_usd,
             'available_usd': deployable_amount
         }
-    
+
     # Calculate position tiers for diversification
     position_tiers = _calculate_shib_position_tiers(deployable_amount, max_shib_tokens)
-    
+
     return {
         'success': True,
         'symbol': 'SHIB/USDT',
@@ -155,25 +163,25 @@ def _calculate_general_position_size(
     config: Dict[str, Any]
 ) -> Dict[str, Any]:
     """Calculate position sizes for non-SHIB pairs"""
-    
+
     # Extract base and quote assets
     if '/' in symbol:
         base_asset, quote_asset = symbol.split('/')
     else:
         base_asset = symbol.replace('USDT', '')
         quote_asset = 'USDT'
-    
+
     # Conservative position sizing for small accounts
     position_tiers = [
         {'size_usd': deployable_amount * 0.6, 'description': 'primary_position'},
         {'size_usd': deployable_amount * 0.25, 'description': 'secondary_position'},
         {'size_usd': deployable_amount * 0.15, 'description': 'reserve_position'}
     ]
-    
+
     # Filter out positions below minimum
     min_order_size = config.get('min_order_size_usdt', 1.0)
     valid_tiers = [tier for tier in position_tiers if tier['size_usd'] >= min_order_size]
-    
+
     return {
         'success': True,
         'symbol': symbol,
@@ -189,9 +197,9 @@ def _calculate_general_position_size(
 
 def _calculate_shib_position_tiers(deployable_amount: float, max_tokens: float) -> list:
     """Calculate SHIB position tiers for progressive deployment"""
-    
+
     tiers = []
-    
+
     # Tier 1: 60% of deployable (aggressive primary position)
     tier1_usd = deployable_amount * 0.6
     tier1_tokens = tier1_usd / 0.00001
@@ -202,7 +210,7 @@ def _calculate_shib_position_tiers(deployable_amount: float, max_tokens: float) 
             'percentage': 60,
             'description': 'primary_aggressive'
         })
-    
+
     # Tier 2: 25% of deployable (secondary position)
     tier2_usd = deployable_amount * 0.25
     tier2_tokens = tier2_usd / 0.00001
@@ -213,7 +221,7 @@ def _calculate_shib_position_tiers(deployable_amount: float, max_tokens: float) 
             'percentage': 25,
             'description': 'secondary_position'
         })
-    
+
     # Tier 3: 15% of deployable (reserve/DCA)
     tier3_usd = deployable_amount * 0.15
     tier3_tokens = tier3_usd / 0.00001
@@ -224,36 +232,40 @@ def _calculate_shib_position_tiers(deployable_amount: float, max_tokens: float) 
             'percentage': 15,
             'description': 'reserve_dca'
         })
-    
+
     return tiers
 
 
 def _calculate_compound_potential(initial_amount: float) -> Dict[str, Any]:
     """Calculate compound growth potential for micro-profit trading"""
-    
+
     # Micro-profit parameters
     profit_rate = 0.002  # 0.2% per trade
     trades_per_day = 50   # Aggressive micro-scalping
-    
+
     # Calculate daily compound growth
     current_balance = initial_amount
     daily_balances = []
-    
+
     for day in range(7):  # One week projection
         daily_trades = trades_per_day
         for trade in range(daily_trades):
             profit = current_balance * profit_rate
             current_balance += profit
-        
+
+        # SECURITY FIX: Prevent division by zero
+        growth_pct = ((current_balance / initial_amount) - 1) * 100 if initial_amount > 0 else 0.0
+
         daily_balances.append({
             'day': day + 1,
             'balance': current_balance,
             'profit': current_balance - initial_amount,
-            'growth_pct': ((current_balance / initial_amount) - 1) * 100
+            'growth_pct': growth_pct
         })
-    
-    weekly_growth = ((current_balance / initial_amount) - 1) * 100
-    
+
+    # SECURITY FIX: Prevent division by zero
+    weekly_growth = ((current_balance / initial_amount) - 1) * 100 if initial_amount > 0 else 0.0
+
     return {
         'initial_amount': initial_amount,
         'profit_per_trade': profit_rate,
@@ -277,13 +289,22 @@ def calculate_shib_token_amount(usd_amount: float, shib_price: float = 0.00001) 
         Dict with token calculations
     """
     try:
+        # SECURITY FIX: Validate price before division
+        if shib_price <= 0:
+            logger.error(f"[POSITION_SIZING] Invalid SHIB price {shib_price} for token calculation")
+            return {
+                'error': f'Invalid SHIB price {shib_price}',
+                'usd_amount': usd_amount,
+                'shib_price': shib_price
+            }
+
         # Calculate SHIB tokens
         shib_tokens = usd_amount / shib_price
-        
+
         # Check minimum order requirements
         min_shib_tokens = 100000  # 100k SHIB minimum
         meets_minimum = shib_tokens >= min_shib_tokens
-        
+
         return {
             'usd_amount': usd_amount,
             'shib_price': shib_price,
@@ -293,7 +314,7 @@ def calculate_shib_token_amount(usd_amount: float, shib_price: float = 0.00001) 
             'meets_minimum': meets_minimum,
             'token_value_check': usd_amount >= 1.0  # $1 minimum
         }
-        
+
     except Exception as e:
         logger.error(f"[POSITION_SIZING] Error calculating SHIB tokens: {e}")
         return {
@@ -322,13 +343,13 @@ def validate_position_size_constraints(
         Dict with validation results
     """
     config = config or {}
-    
+
     # Basic constraints
     min_order_size = config.get('min_order_size_usdt', 1.0)
     max_deployment_pct = config.get('max_capital_deployment_pct', 0.95)
-    
+
     max_position_size = account_balance * max_deployment_pct
-    
+
     # Validation checks
     validation_results = {
         'valid': True,
@@ -337,67 +358,76 @@ def validate_position_size_constraints(
         'warnings': [],
         'errors': []
     }
-    
+
     # Check minimum size
     if position_size < min_order_size:
         validation_results['valid'] = False
         validation_results['errors'].append(
             f'Position ${position_size:.2f} below minimum ${min_order_size}'
         )
-    
+
     validation_results['constraints_checked'].append('minimum_size')
-    
+
     # Check maximum deployment
     if position_size > max_position_size:
         validation_results['valid'] = False
         validation_results['errors'].append(
             f'Position ${position_size:.2f} exceeds max ${max_position_size:.2f} ({max_deployment_pct:.0%} of account)'
         )
-    
+
     validation_results['constraints_checked'].append('maximum_deployment')
-    
+
     # SHIB-specific validations
     if symbol == 'SHIB/USDT':
         shib_validation = _validate_shib_constraints(position_size, config)
         validation_results['shib_constraints'] = shib_validation
-        
+
         if not shib_validation['valid']:
             validation_results['valid'] = False
             validation_results['errors'].extend(shib_validation['errors'])
-    
+
     # Risk warnings
     risk_pct = (position_size / account_balance) * 100
     if risk_pct > 80:
         validation_results['warnings'].append(
             f'High risk: {risk_pct:.1f}% of account in single position'
         )
-    
+
     return validation_results
 
 
 def _validate_shib_constraints(position_size: float, config: Dict[str, Any]) -> Dict[str, Any]:
     """Validate SHIB-specific constraints"""
-    
+
     single_pair_config = config.get('single_pair_focus', {})
     min_order_shib = single_pair_config.get('min_order_shib', 100000)
     shib_price = 0.00001
-    
+
+    # SECURITY FIX: Validate price before division
+    if shib_price <= 0:
+        return {
+            'valid': False,
+            'errors': [f'Invalid SHIB price {shib_price} for validation'],
+            'shib_tokens': 0,
+            'min_shib_required': min_order_shib
+        }
+
     # Calculate SHIB tokens for position
     shib_tokens = position_size / shib_price
-    
+
     validation = {
         'valid': True,
         'errors': [],
         'shib_tokens': shib_tokens,
         'min_shib_required': min_order_shib
     }
-    
+
     if shib_tokens < min_order_shib:
         validation['valid'] = False
         validation['errors'].append(
             f'SHIB tokens {shib_tokens:.0f} below minimum {min_order_shib}'
         )
-    
+
     return validation
 
 

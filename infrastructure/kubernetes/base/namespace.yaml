@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: trading
+  labels:
+    name: trading
+    environment: production
+    compliance: financial-services
+  annotations:
+    description: "Crypto Trading Bot Production Environment"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: trading-quota
+  namespace: trading
+spec:
+  hard:
+    requests.cpu: "100"
+    requests.memory: "200Gi"
+    persistentvolumeclaims: "10"
+    services: "20"
+    pods: "100"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: trading-limits
+  namespace: trading
+spec:
+  limits:
+  - max:
+      cpu: "4"
+      memory: "8Gi"
+    min:
+      cpu: "100m"
+      memory: "128Mi"
+    default:
+      cpu: "1"
+      memory: "1Gi"
+    defaultRequest:
+      cpu: "500m"
+      memory: "512Mi"
+    type: Container
+  - max:
+      storage: "10Gi"
+    type: PersistentVolumeClaim

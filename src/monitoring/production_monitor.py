@@ -22,18 +22,16 @@ Features:
 import asyncio
 import json
 import logging
-import os
-import psutil
-import threading
 import time
-from collections import defaultdict, deque
-from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Any, Callable, Union
-from pathlib import Path
-import aiofiles
 import traceback
+from collections import deque
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
+import aiofiles
+import psutil
 
 logger = logging.getLogger(__name__)
 
@@ -53,11 +51,11 @@ class MetricThresholds:
     trade_execution_time_ms: float = 5000.0   # Alert if >5 seconds
 
 
-@dataclass 
+@dataclass
 class ProductionMetrics:
     """Current production metrics snapshot"""
     timestamp: float
-    
+
     # Trading metrics
     trades_executed: int = 0
     trades_successful: int = 0
@@ -65,7 +63,7 @@ class ProductionMetrics:
     success_rate: float = 0.0
     total_pnl: float = 0.0
     daily_pnl: float = 0.0
-    
+
     # System health metrics
     nonce_failures: int = 0
     nonce_generation_rate: float = 0.0
@@ -73,19 +71,19 @@ class ProductionMetrics:
     websocket_latency_ms: float = 0.0
     api_errors: int = 0
     api_error_rate: float = 0.0
-    
+
     # Resource metrics
     memory_usage_mb: float = 0.0
     cpu_usage_percent: float = 0.0
     log_file_size_mb: float = 0.0
     log_rotation_count: int = 0
-    
+
     # Component health
     balance_manager_health: str = "unknown"
     balance_manager_response_time: float = 0.0
     websocket_status: str = "unknown"
     websocket_connection_count: int = 0
-    
+
     # Performance metrics
     trade_execution_time_ms: float = 0.0
     balance_check_time_ms: float = 0.0
@@ -100,7 +98,7 @@ class AlertConfig:
     webhook_notifications: bool = False
     console_alerts: bool = True
     log_alerts: bool = True
-    
+
     # Notification endpoints
     webhook_url: Optional[str] = None
     email_smtp_server: Optional[str] = None
@@ -109,22 +107,22 @@ class AlertConfig:
 
 class MetricCollector:
     """Collects metrics from various bot components"""
-    
+
     def __init__(self, project_root: Path):
         self.project_root = project_root
         self.trading_data_path = project_root / "D:" / "trading_data"
         self.logs_path = self.trading_data_path / "logs"
         self.learning_path = self.trading_data_path / "learning"
-        
+
         # Metric history for trend analysis
         self.metric_history: deque = deque(maxlen=1440)  # 24 hours of 1-minute samples
-        
+
         # Component references (set by bot integration)
         self.balance_manager = None
         self.websocket_manager = None
         self.exchange_client = None
         self.nonce_manager = None
-    
+
     async def collect_trading_metrics(self) -> Dict[str, Any]:
         """Collect trading performance metrics"""
         metrics = {
@@ -135,36 +133,36 @@ class MetricCollector:
             'total_pnl': 0.0,
             'daily_pnl': 0.0
         }
-        
+
         try:
             # Read trading data from logs and files
             today = datetime.now().strftime("%Y%m%d")
             log_file = self.logs_path / f"bot_{today}.log"
-            
+
             if log_file.exists():
                 trades_today = await self._parse_trades_from_log(log_file)
                 metrics['trades_executed'] = len(trades_today)
                 metrics['trades_successful'] = sum(1 for t in trades_today if t.get('status') == 'success')
                 metrics['trades_failed'] = metrics['trades_executed'] - metrics['trades_successful']
-                
+
                 if metrics['trades_executed'] > 0:
                     metrics['success_rate'] = (metrics['trades_successful'] / metrics['trades_executed']) * 100
-                
+
                 # Calculate P&L
                 metrics['daily_pnl'] = sum(t.get('pnl', 0) for t in trades_today)
-            
+
             # Read total P&L from insights file
             insights_file = self.learning_path / "autonomous_insights.json"
             if insights_file.exists():
-                async with aiofiles.open(insights_file, 'r') as f:
+                async with aiofiles.open(insights_file) as f:
                     insights = json.loads(await f.read())
                     metrics['total_pnl'] = insights.get('total_pnl', 0.0)
-                    
+
         except Exception as e:
             logger.error(f"Error collecting trading metrics: {e}")
-            
+
         return metrics
-    
+
     async def collect_system_metrics(self) -> Dict[str, Any]:
         """Collect system health and resource metrics"""
         metrics = {
@@ -179,41 +177,41 @@ class MetricCollector:
             'api_errors': 0,
             'api_error_rate': 0.0
         }
-        
+
         try:
             # Memory and CPU usage
             process = psutil.Process()
             metrics['memory_usage_mb'] = process.memory_info().rss / 1024 / 1024
             metrics['cpu_usage_percent'] = process.cpu_percent()
-            
+
             # Log file metrics
             log_files = list(self.logs_path.glob("*.log"))
             if log_files:
                 total_size = sum(f.stat().st_size for f in log_files)
                 metrics['log_file_size_mb'] = total_size / 1024 / 1024
                 metrics['log_rotation_count'] = len(log_files)
-            
+
             # Nonce manager metrics
             if self.nonce_manager:
                 nonce_stats = getattr(self.nonce_manager, 'get_statistics', lambda: {})()
                 metrics['nonce_failures'] = nonce_stats.get('failures', 0)
                 metrics['nonce_generation_rate'] = nonce_stats.get('generation_rate', 0.0)
-            
+
             # WebSocket metrics
             if self.websocket_manager:
                 ws_stats = getattr(self.websocket_manager, 'get_connection_stats', lambda: {})()
                 metrics['websocket_reconnects'] = ws_stats.get('reconnect_count', 0)
                 metrics['websocket_latency_ms'] = ws_stats.get('latency_ms', 0.0)
-            
+
             # API error metrics from recent logs
             today_errors = await self._count_api_errors_today()
             metrics['api_errors'] = today_errors
-            
+
         except Exception as e:
             logger.error(f"Error collecting system metrics: {e}")
-            
+
         return metrics
-    
+
     async def collect_component_health(self) -> Dict[str, Any]:
         """Collect health status of critical components"""
         health = {
@@ -225,7 +223,7 @@ class MetricCollector:
             'balance_check_time_ms': 0.0,
             'order_processing_time_ms': 0.0
         }
-        
+
         try:
             # Balance manager health check
             if self.balance_manager:
@@ -238,23 +236,23 @@ class MetricCollector:
                 except Exception as e:
                     health['balance_manager_health'] = f'error: {str(e)[:50]}'
                     health['balance_manager_response_time'] = (time.time() - start_time) * 1000
-            
+
             # WebSocket status
             if self.websocket_manager:
                 ws_status = getattr(self.websocket_manager, 'is_connected', lambda: False)()
                 health['websocket_status'] = 'connected' if ws_status else 'disconnected'
                 health['websocket_connection_count'] = getattr(self.websocket_manager, 'connection_count', 0)
-                
+
         except Exception as e:
             logger.error(f"Error collecting component health: {e}")
-            
+
         return health
-    
+
     async def _parse_trades_from_log(self, log_file: Path) -> List[Dict]:
         """Parse trading data from log files"""
         trades = []
         try:
-            async with aiofiles.open(log_file, 'r') as f:
+            async with aiofiles.open(log_file) as f:
                 content = await f.read()
                 # Simple parsing logic - would need to match your log format
                 for line in content.split('\n'):
@@ -265,28 +263,28 @@ class MetricCollector:
         except Exception as e:
             logger.error(f"Error parsing trades from log: {e}")
         return trades
-    
+
     async def _count_api_errors_today(self) -> int:
         """Count API errors from today's logs"""
         try:
             today = datetime.now().strftime("%Y%m%d")
             log_file = self.logs_path / f"bot_{today}.log"
-            
+
             if not log_file.exists():
                 return 0
-                
+
             error_count = 0
-            async with aiofiles.open(log_file, 'r') as f:
+            async with aiofiles.open(log_file) as f:
                 content = await f.read()
                 for line in content.split('\n'):
                     if any(keyword in line.lower() for keyword in ['error', 'exception', 'failed', 'timeout']):
                         if any(api_keyword in line.lower() for api_keyword in ['api', 'request', 'response', 'http']):
                             error_count += 1
-            
+
             return error_count
         except Exception:
             return 0
-    
+
     async def _test_balance_manager(self):
         """Quick health test for balance manager"""
         if hasattr(self.balance_manager, 'get_balance'):
@@ -297,20 +295,20 @@ class MetricCollector:
 
 class AlertManager:
     """Manages alerts and notifications for threshold breaches"""
-    
+
     def __init__(self, config: AlertConfig, thresholds: MetricThresholds):
         self.config = config
         self.thresholds = thresholds
         self.alert_history = deque(maxlen=1000)
         self.alert_cooldowns = {}  # Prevent spam alerts
-        
+
     async def check_thresholds(self, metrics: ProductionMetrics) -> List[Dict[str, Any]]:
         """Check all metrics against thresholds and generate alerts"""
         alerts = []
-        
+
         if not self.config.enabled:
             return alerts
-        
+
         # Memory usage alert
         if metrics.memory_usage_mb > self.thresholds.memory_usage_mb:
             alerts.append(self._create_alert(
@@ -319,7 +317,7 @@ class AlertManager:
                 'warning',
                 metrics.memory_usage_mb
             ))
-        
+
         # Log file size alert
         if metrics.log_file_size_mb > self.thresholds.log_file_size_mb:
             alerts.append(self._create_alert(
@@ -328,7 +326,7 @@ class AlertManager:
                 'warning',
                 metrics.log_file_size_mb
             ))
-        
+
         # Nonce generation rate alert
         if metrics.nonce_generation_rate > 0 and metrics.nonce_generation_rate < self.thresholds.nonce_generation_rate:
             alerts.append(self._create_alert(
@@ -337,7 +335,7 @@ class AlertManager:
                 'critical',
                 metrics.nonce_generation_rate
             ))
-        
+
         # WebSocket reconnects alert
         if metrics.websocket_reconnects > self.thresholds.websocket_reconnects_per_hour:
             alerts.append(self._create_alert(
@@ -346,7 +344,7 @@ class AlertManager:
                 'warning',
                 metrics.websocket_reconnects
             ))
-        
+
         # API error rate alert
         if metrics.api_error_rate > self.thresholds.api_error_rate_percent:
             alerts.append(self._create_alert(
@@ -355,7 +353,7 @@ class AlertManager:
                 'critical',
                 metrics.api_error_rate
             ))
-        
+
         # Trading success rate alert
         if metrics.success_rate > 0 and metrics.success_rate < self.thresholds.trading_success_rate_percent:
             alerts.append(self._create_alert(
@@ -364,7 +362,7 @@ class AlertManager:
                 'critical',
                 metrics.success_rate
             ))
-        
+
         # Daily P&L alert
         if metrics.daily_pnl < self.thresholds.daily_pnl_loss_limit:
             alerts.append(self._create_alert(
@@ -373,7 +371,7 @@ class AlertManager:
                 'critical',
                 metrics.daily_pnl
             ))
-        
+
         # Balance manager response time alert
         if metrics.balance_manager_response_time > self.thresholds.balance_manager_response_time * 1000:  # Convert to ms
             alerts.append(self._create_alert(
@@ -382,7 +380,7 @@ class AlertManager:
                 'warning',
                 metrics.balance_manager_response_time
             ))
-        
+
         # WebSocket latency alert
         if metrics.websocket_latency_ms > self.thresholds.websocket_latency_ms:
             alerts.append(self._create_alert(
@@ -391,7 +389,7 @@ class AlertManager:
                 'warning',
                 metrics.websocket_latency_ms
             ))
-        
+
         # Trade execution time alert
         if metrics.trade_execution_time_ms > self.thresholds.trade_execution_time_ms:
             alerts.append(self._create_alert(
@@ -400,16 +398,16 @@ class AlertManager:
                 'warning',
                 metrics.trade_execution_time_ms
             ))
-        
+
         # Process and deduplicate alerts
         filtered_alerts = []
         for alert in alerts:
             if self._should_send_alert(alert):
                 filtered_alerts.append(alert)
                 await self._send_alert(alert)
-        
+
         return filtered_alerts
-    
+
     def _create_alert(self, metric: str, message: str, severity: str, value: float) -> Dict[str, Any]:
         """Create standardized alert object"""
         return {
@@ -421,28 +419,28 @@ class AlertManager:
             'timestamp': time.time(),
             'resolved': False
         }
-    
+
     def _should_send_alert(self, alert: Dict[str, Any]) -> bool:
         """Check if alert should be sent (cooldown logic)"""
         metric = alert['metric']
         now = time.time()
-        
+
         # Cooldown periods based on severity
         cooldown_periods = {
             'info': 300,      # 5 minutes
-            'warning': 600,   # 10 minutes  
+            'warning': 600,   # 10 minutes
             'critical': 1800  # 30 minutes
         }
-        
+
         cooldown = cooldown_periods.get(alert['severity'], 600)
-        
+
         if metric in self.alert_cooldowns:
             if now - self.alert_cooldowns[metric] < cooldown:
                 return False
-        
+
         self.alert_cooldowns[metric] = now
         return True
-    
+
     async def _send_alert(self, alert: Dict[str, Any]):
         """Send alert through configured channels"""
         try:
@@ -456,22 +454,22 @@ class AlertManager:
                 color = severity_colors.get(alert['severity'], '')
                 reset_color = '\033[0m'
                 print(f"{color}[ALERT {alert['severity'].upper()}]{reset_color} {alert['message']}")
-            
+
             # Log alerts
             if self.config.log_alerts:
                 log_method = getattr(logger, alert['severity'].lower(), logger.warning)
                 log_method(f"Production Alert: {alert['message']}")
-            
+
             # Store in history
             self.alert_history.append(alert)
-            
+
             # TODO: Implement email and webhook notifications
             # if self.config.email_notifications and self.config.email_recipients:
             #     await self._send_email_alert(alert)
-            # 
+            #
             # if self.config.webhook_notifications and self.config.webhook_url:
             #     await self._send_webhook_alert(alert)
-            
+
         except Exception as e:
             logger.error(f"Error sending alert: {e}")
 
@@ -487,8 +485,8 @@ class ProductionMonitor:
     - Web dashboard integration
     - Emergency shutdown capabilities
     """
-    
-    def __init__(self, 
+
+    def __init__(self,
                  project_root: Optional[Path] = None,
                  thresholds: Optional[MetricThresholds] = None,
                  alert_config: Optional[AlertConfig] = None):
@@ -503,30 +501,30 @@ class ProductionMonitor:
         self.project_root = project_root or Path.cwd()
         self.thresholds = thresholds or MetricThresholds()
         self.alert_config = alert_config or AlertConfig()
-        
+
         # Core components
         self.collector = MetricCollector(self.project_root)
         self.alert_manager = AlertManager(self.alert_config, self.thresholds)
-        
+
         # State management
         self.running = False
         self.health_check_task = None
         self.monitoring_task = None
-        
+
         # Current metrics
         self.current_metrics: Optional[ProductionMetrics] = None
         self.metric_history: deque = deque(maxlen=1440)  # 24 hours at 1-minute intervals
-        
+
         # Dashboard integration
         self.dashboard_callbacks: List[Callable] = []
-        
+
         # Emergency controls
         self.emergency_shutdown_callback: Optional[Callable] = None
-        
+
         logger.info("Production Monitor initialized")
-    
-    def set_bot_components(self, 
-                          balance_manager=None, 
+
+    def set_bot_components(self,
+                          balance_manager=None,
                           websocket_manager=None,
                           exchange_client=None,
                           nonce_manager=None):
@@ -535,42 +533,42 @@ class ProductionMonitor:
         self.collector.websocket_manager = websocket_manager
         self.collector.exchange_client = exchange_client
         self.collector.nonce_manager = nonce_manager
-        
+
         logger.info("Bot components connected to production monitor")
-    
+
     def register_dashboard_callback(self, callback: Callable):
         """Register callback for dashboard updates"""
         self.dashboard_callbacks.append(callback)
-    
+
     def set_emergency_shutdown_callback(self, callback: Callable):
         """Set callback for emergency shutdown trigger"""
         self.emergency_shutdown_callback = callback
-    
+
     async def start_monitoring(self):
         """Start the production monitoring system"""
         if self.running:
             logger.warning("Production monitor is already running")
             return
-        
+
         self.running = True
         logger.info("Starting production monitoring system...")
-        
+
         # Start health check task (every 5 minutes)
         self.health_check_task = asyncio.create_task(self._health_check_loop())
-        
+
         # Start continuous monitoring task (every 30 seconds)
         self.monitoring_task = asyncio.create_task(self._monitoring_loop())
-        
+
         logger.info("Production monitor started successfully")
-    
+
     async def stop_monitoring(self):
         """Stop the production monitoring system"""
         if not self.running:
             return
-        
+
         self.running = False
         logger.info("Stopping production monitoring system...")
-        
+
         # Cancel tasks
         if self.health_check_task:
             self.health_check_task.cancel()
@@ -578,16 +576,16 @@ class ProductionMonitor:
                 await self.health_check_task
             except asyncio.CancelledError:
                 pass
-        
+
         if self.monitoring_task:
             self.monitoring_task.cancel()
             try:
                 await self.monitoring_task
             except asyncio.CancelledError:
                 pass
-        
+
         logger.info("Production monitor stopped")
-    
+
     async def _health_check_loop(self):
         """Health check loop running every 5 minutes"""
         while self.running:
@@ -599,7 +597,7 @@ class ProductionMonitor:
             except Exception as e:
                 logger.error(f"Health check error: {e}")
                 await asyncio.sleep(60)  # Retry in 1 minute on error
-    
+
     async def _monitoring_loop(self):
         """Continuous monitoring loop running every 30 seconds"""
         while self.running:
@@ -611,45 +609,45 @@ class ProductionMonitor:
             except Exception as e:
                 logger.error(f"Monitoring loop error: {e}")
                 await asyncio.sleep(30)
-    
+
     async def _perform_health_check(self):
         """Perform comprehensive health check"""
         logger.info("Performing health check...")
-        
+
         try:
             # Collect current metrics
             await self._collect_and_analyze_metrics()
-            
+
             if self.current_metrics:
                 # Check for critical issues
                 critical_alerts = []
-                
+
                 # Check for emergency conditions
                 if (self.current_metrics.memory_usage_mb > self.thresholds.memory_usage_mb * 2 or
                     self.current_metrics.api_error_rate > self.thresholds.api_error_rate_percent * 10 or
                     self.current_metrics.daily_pnl < self.thresholds.daily_pnl_loss_limit * 2):
-                    
+
                     critical_alerts.append("Emergency conditions detected")
-                
+
                 if critical_alerts and self.emergency_shutdown_callback:
                     logger.critical("EMERGENCY: Triggering shutdown due to critical conditions")
                     for alert in critical_alerts:
                         logger.critical(f"Emergency condition: {alert}")
-                    
+
                     # Trigger emergency shutdown
                     try:
                         await self.emergency_shutdown_callback()
                     except Exception as e:
                         logger.error(f"Emergency shutdown failed: {e}")
-                
+
                 logger.info(f"Health check completed - Memory: {self.current_metrics.memory_usage_mb:.1f}MB, "
                            f"Success Rate: {self.current_metrics.success_rate:.1f}%, "
                            f"API Errors: {self.current_metrics.api_errors}")
-            
+
         except Exception as e:
             logger.error(f"Health check failed: {e}")
             logger.error(traceback.format_exc())
-    
+
     async def _collect_and_analyze_metrics(self):
         """Collect metrics and perform analysis"""
         try:
@@ -657,7 +655,7 @@ class ProductionMonitor:
             trading_metrics = await self.collector.collect_trading_metrics()
             system_metrics = await self.collector.collect_system_metrics()
             health_metrics = await self.collector.collect_component_health()
-            
+
             # Create metrics object
             self.current_metrics = ProductionMetrics(
                 timestamp=time.time(),
@@ -665,44 +663,44 @@ class ProductionMonitor:
                 **system_metrics,
                 **health_metrics
             )
-            
+
             # Add to history
             self.metric_history.append(self.current_metrics)
-            
+
             # Check thresholds and generate alerts
             alerts = await self.alert_manager.check_thresholds(self.current_metrics)
-            
+
             # Notify dashboard callbacks
             for callback in self.dashboard_callbacks:
                 try:
                     await callback(self.current_metrics, alerts)
                 except Exception as e:
                     logger.error(f"Dashboard callback error: {e}")
-            
+
         except Exception as e:
             logger.error(f"Metric collection failed: {e}")
             logger.error(traceback.format_exc())
-    
+
     def get_current_metrics(self) -> Optional[ProductionMetrics]:
         """Get current metrics snapshot"""
         return self.current_metrics
-    
+
     def get_metric_history(self, minutes: int = 60) -> List[ProductionMetrics]:
         """Get metric history for specified time period"""
         if not self.metric_history:
             return []
-        
+
         cutoff_time = time.time() - (minutes * 60)
         return [m for m in self.metric_history if m.timestamp >= cutoff_time]
-    
+
     def get_alert_history(self, minutes: int = 60) -> List[Dict[str, Any]]:
         """Get recent alerts"""
         if not self.alert_manager.alert_history:
             return []
-        
+
         cutoff_time = time.time() - (minutes * 60)
         return [a for a in self.alert_manager.alert_history if a['timestamp'] >= cutoff_time]
-    
+
     def get_system_status(self) -> Dict[str, Any]:
         """Get overall system status summary"""
         if not self.current_metrics:
@@ -711,29 +709,29 @@ class ProductionMonitor:
                 'message': 'No metrics available',
                 'last_update': None
             }
-        
+
         # Determine overall status
         status = 'healthy'
         issues = []
-        
+
         # Check critical thresholds
         if self.current_metrics.memory_usage_mb > self.thresholds.memory_usage_mb:
             status = 'warning'
             issues.append(f'High memory usage: {self.current_metrics.memory_usage_mb:.1f}MB')
-        
+
         if self.current_metrics.api_error_rate > self.thresholds.api_error_rate_percent:
             status = 'critical'
             issues.append(f'High API error rate: {self.current_metrics.api_error_rate:.2f}%')
-        
-        if (self.current_metrics.success_rate > 0 and 
+
+        if (self.current_metrics.success_rate > 0 and
             self.current_metrics.success_rate < self.thresholds.trading_success_rate_percent):
             status = 'critical'
             issues.append(f'Low success rate: {self.current_metrics.success_rate:.1f}%')
-        
+
         if self.current_metrics.daily_pnl < self.thresholds.daily_pnl_loss_limit:
             status = 'critical'
             issues.append(f'High daily losses: ${self.current_metrics.daily_pnl:.2f}')
-        
+
         return {
             'status': status,
             'message': '; '.join(issues) if issues else 'All systems operating normally',
@@ -748,11 +746,11 @@ class ProductionMonitor:
                 'balance_manager_health': self.current_metrics.balance_manager_health
             }
         }
-    
+
     async def trigger_emergency_shutdown(self, reason: str = "Manual trigger"):
         """Trigger emergency shutdown"""
         logger.critical(f"EMERGENCY SHUTDOWN TRIGGERED: {reason}")
-        
+
         if self.emergency_shutdown_callback:
             try:
                 await self.emergency_shutdown_callback()
@@ -761,7 +759,7 @@ class ProductionMonitor:
                 logger.error(f"Emergency shutdown failed: {e}")
         else:
             logger.warning("No emergency shutdown callback configured")
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert current state to dictionary for API/dashboard"""
         return {
@@ -781,35 +779,35 @@ _production_monitor: Optional[ProductionMonitor] = None
 def get_production_monitor(project_root: Optional[Path] = None) -> ProductionMonitor:
     """Get or create production monitor singleton"""
     global _production_monitor
-    
+
     if _production_monitor is None:
         _production_monitor = ProductionMonitor(project_root)
-    
+
     return _production_monitor
 
 
 # Example usage and integration
 if __name__ == "__main__":
     import asyncio
-    
+
     async def main():
         # Initialize monitor
         monitor = get_production_monitor()
-        
+
         # Configure custom thresholds
         thresholds = MetricThresholds(
             memory_usage_mb=400.0,
             trading_success_rate_percent=90.0
         )
         monitor.thresholds = thresholds
-        
+
         # Start monitoring
         await monitor.start_monitoring()
-        
+
         # Run for 5 minutes as demonstration
         await asyncio.sleep(300)
-        
+
         # Stop monitoring
         await monitor.stop_monitoring()
-    
+
     asyncio.run(main())

@@ -20,11 +20,11 @@ Usage:
 """
 
 import logging
-import sys
 import os
 import re
-from typing import Optional, Dict, Any
+import sys
 from logging.handlers import RotatingFileHandler
+from typing import Any, Dict, Optional
 
 
 class UnicodeSafeFormatter(logging.Formatter):
@@ -34,7 +34,7 @@ class UnicodeSafeFormatter(logging.Formatter):
     This formatter automatically replaces problematic Unicode characters with
     safe ASCII alternatives while preserving log functionality.
     """
-    
+
     # Unicode replacement mapping for common emoji and symbols
     UNICODE_REPLACEMENTS = {
         '[OK]': '[SUCCESS]',
@@ -137,13 +137,13 @@ class UnicodeSafeFormatter(logging.Formatter):
         '‰': 'permille',
         '‱': 'permyriad',
     }
-    
+
     def __init__(self, *args, **kwargs) -> None:
         """Initialize the Unicode-safe formatter."""
         super().__init__(*args, **kwargs)
         # Compile regex pattern for efficient Unicode detection
         self.unicode_pattern = re.compile(r'[^\x00-\x7F]+')
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """
         Format the log record with Unicode safety.
@@ -157,16 +157,16 @@ class UnicodeSafeFormatter(logging.Formatter):
         try:
             # Get the original formatted message
             formatted_message = super().format(record)
-            
+
             # Apply Unicode replacements
             safe_message = self._sanitize_unicode(formatted_message)
-            
+
             return safe_message
-            
-        except Exception as e:
+
+        except Exception:
             # Fallback formatting if something goes wrong
             return f"[LOGGING_ERROR] {record.levelname}: {self._sanitize_unicode(str(record.getMessage()))}"
-    
+
     def _sanitize_unicode(self, text: str) -> str:
         """
         Sanitize Unicode characters in text.
@@ -179,11 +179,11 @@ class UnicodeSafeFormatter(logging.Formatter):
         """
         if not isinstance(text, str):
             text = str(text)
-        
+
         # Apply known replacements first
         for unicode_char, replacement in self.UNICODE_REPLACEMENTS.items():
             text = text.replace(unicode_char, replacement)
-        
+
         # Handle any remaining non-ASCII characters
         def replace_unknown_unicode(match):
             """Replace unknown Unicode characters with safe alternatives."""
@@ -196,13 +196,13 @@ class UnicodeSafeFormatter(logging.Formatter):
                     return f'[{name}]'
             except:
                 pass
-            
+
             # Fallback to hex representation
             return f'[U+{ord(char):04X}]'
-        
+
         # Replace any remaining Unicode characters
         safe_text = self.unicode_pattern.sub(replace_unknown_unicode, text)
-        
+
         return safe_text
 
 
@@ -210,7 +210,7 @@ class UnicodeSafeStreamHandler(logging.StreamHandler):
     """
     Stream handler that safely handles Unicode characters on Windows console.
     """
-    
+
     def emit(self, record: logging.LogRecord):
         """
         Emit a log record with Unicode safety.
@@ -221,7 +221,7 @@ class UnicodeSafeStreamHandler(logging.StreamHandler):
         try:
             # Get the formatted message
             msg = self.format(record)
-            
+
             # Handle encoding for different stream types
             if hasattr(self.stream, 'encoding') and self.stream.encoding:
                 # Use stream's encoding if available
@@ -236,9 +236,9 @@ class UnicodeSafeStreamHandler(logging.StreamHandler):
                 # Default safe output
                 ascii_msg = msg.encode('ascii', errors='replace').decode('ascii')
                 self.stream.write(ascii_msg + self.terminator)
-            
+
             self.flush()
-            
+
         except Exception:
             # Ultimate fallback - just try to output something useful
             try:
@@ -280,34 +280,34 @@ def setup_unicode_safe_logging(
     # Create logger
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    
+
     # Clear any existing handlers to avoid duplicates
     logger.handlers.clear()
-    
+
     # Create Unicode-safe formatter
     formatter = UnicodeSafeFormatter(
         '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
     # Console handler with Unicode safety
     if console_output:
         console_handler = UnicodeSafeStreamHandler(sys.stdout)
         console_handler.setLevel(level)
         console_handler.setFormatter(formatter)
         logger.addHandler(console_handler)
-    
+
     # File handler with UTF-8 encoding
     if file_output:
         if not log_file:
             log_file = f"{name.replace('.', '_')}.log"
-        
+
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
             log_path = os.path.join(log_dir, log_file)
         else:
             log_path = log_file
-        
+
         try:
             file_handler = RotatingFileHandler(
                 log_path,
@@ -322,7 +322,7 @@ def setup_unicode_safe_logging(
             # If file handler fails, continue with console only
             if console_output:
                 logger.warning(f"Could not set up file logging: {e}")
-    
+
     return logger
 
 
@@ -342,24 +342,24 @@ def configure_global_unicode_safe_logging(
     """
     # Create log directory
     os.makedirs(log_dir, exist_ok=True)
-    
+
     # Configure root logger with Unicode safety
     root_logger = logging.getLogger()
     root_logger.handlers.clear()
     root_logger.setLevel(log_level)
-    
+
     # Create Unicode-safe formatter
     formatter = UnicodeSafeFormatter(
         '[%(asctime)s] [%(levelname)s] [%(name)s] - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
     # Console handler
     console_handler = UnicodeSafeStreamHandler(sys.stdout)
     console_handler.setLevel(log_level)
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
-    
+
     # Main application log file
     main_log_path = os.path.join(log_dir, "kraken_bot.log")
     try:
@@ -374,7 +374,7 @@ def configure_global_unicode_safe_logging(
         root_logger.addHandler(main_file_handler)
     except Exception as e:
         root_logger.warning(f"Could not set up main log file: {e}")
-    
+
     # Error log file (ERROR and CRITICAL only)
     error_log_path = os.path.join(log_dir, "kraken_bot_errors.log")
     try:
@@ -389,7 +389,7 @@ def configure_global_unicode_safe_logging(
         root_logger.addHandler(error_file_handler)
     except Exception as e:
         root_logger.warning(f"Could not set up error log file: {e}")
-    
+
     return {
         'status': 'configured',
         'log_dir': log_dir,
@@ -408,7 +408,7 @@ def test_unicode_safe_logging():
         level=logging.DEBUG,
         log_file='unicode_test.log'
     )
-    
+
     # Test various Unicode characters and emoji
     test_messages = [
         "Basic ASCII message",
@@ -423,10 +423,10 @@ def test_unicode_safe_logging():
         "Box drawing: [EMOJI] [EMOJI]",
         "More complex: [TARGET][REFRESH][STATS][IDEA][GUARD][STAR][SPARK][SUCCESS]"
     ]
-    
+
     for i, message in enumerate(test_messages, 1):
         logger.info(f"Test {i}: {message}")
-    
+
     logger.info("Unicode safety test completed successfully!")
     return logger
 

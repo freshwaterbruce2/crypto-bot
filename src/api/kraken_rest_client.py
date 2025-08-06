@@ -31,35 +31,38 @@ Integration:
 import asyncio
 import json
 import logging
+import threading
 import time
 import urllib.parse
-from contextlib import asynccontextmanager
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any, Union, Tuple, Callable
-from collections import deque, defaultdict
-import threading
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import aiohttp
-from aiohttp import ClientSession, ClientTimeout, TCPConnector, ClientError
+from aiohttp import ClientError, ClientSession, ClientTimeout, TCPConnector
 
 # Import our components
 from ..auth.kraken_auth import KrakenAuth
-from ..rate_limiting.kraken_rate_limiter import KrakenRateLimiter2025, AccountTier, RequestPriority
-from ..circuit_breaker.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerState
+from ..circuit_breaker.circuit_breaker import (
+    CircuitBreaker,
+    CircuitBreakerConfig,
+)
+from ..rate_limiting.kraken_rate_limiter import AccountTier, KrakenRateLimiter2025, RequestPriority
 
 # Import API components
 from .endpoints import (
-    get_endpoint_definition, KRAKEN_ENDPOINTS, EndpointDefinition,
-    EndpointType, HttpMethod, validate_endpoint_parameters
+    EndpointDefinition,
+    EndpointType,
+    HttpMethod,
+    get_endpoint_definition,
 )
 from .exceptions import (
-    KrakenAPIError, AuthenticationError, RateLimitError, NetworkError,
-    ValidationError, raise_for_kraken_errors, create_exception_from_error
-)
-from .response_models import (
-    KrakenResponse, parse_kraken_response, get_response_model,
-    BalanceResponse, OrderResponse, TickerResponse, OrderBookResponse,
-    TradeHistoryResponse, CancelOrderResponse, WebSocketTokenResponse
+    AuthenticationError,
+    KrakenAPIError,
+    NetworkError,
+    RateLimitError,
+    ValidationError,
+    raise_for_kraken_errors,
 )
 
 logger = logging.getLogger(__name__)
@@ -104,13 +107,13 @@ class ClientMetrics:
     avg_response_time: float = 0.0
     total_response_time: float = 0.0
     endpoint_stats: Dict[str, Dict[str, Any]] = field(default_factory=lambda: defaultdict(dict))
-    
+
     def update_request_stats(self, endpoint: str, success: bool, response_time: float, error_type: Optional[str] = None):
         """Update request statistics."""
         self.total_requests += 1
         self.total_response_time += response_time
         self.avg_response_time = self.total_response_time / self.total_requests
-        
+
         if success:
             self.successful_requests += 1
         else:
@@ -121,7 +124,7 @@ class ClientMetrics:
                 self.authentication_errors += 1
             elif error_type == 'network':
                 self.network_errors += 1
-        
+
         # Update endpoint-specific stats
         if endpoint not in self.endpoint_stats:
             self.endpoint_stats[endpoint] = {
@@ -131,32 +134,32 @@ class ClientMetrics:
                 'avg_response_time': 0.0,
                 'total_response_time': 0.0
             }
-        
+
         stats = self.endpoint_stats[endpoint]
         stats['requests'] += 1
         stats['total_response_time'] += response_time
         stats['avg_response_time'] = stats['total_response_time'] / stats['requests']
-        
+
         if success:
             stats['successes'] += 1
         else:
             stats['failures'] += 1
-    
+
     def get_success_rate(self) -> float:
         """Get overall success rate."""
         if self.total_requests == 0:
             return 0.0
         return self.successful_requests / self.total_requests
-    
+
     def get_endpoint_success_rate(self, endpoint: str) -> float:
         """Get success rate for specific endpoint."""
         if endpoint not in self.endpoint_stats:
             return 0.0
-        
+
         stats = self.endpoint_stats[endpoint]
         if stats['requests'] == 0:
             return 0.0
-        
+
         return stats['successes'] / stats['requests']
 
 
@@ -167,11 +170,11 @@ class KrakenRestClient:
     Provides comprehensive API access with authentication, rate limiting,
     circuit breaker protection, retry logic, and performance monitoring.
     """
-    
+
     def __init__(
         self,
-        api_key: str,
-        private_key: str,
+        api_key: Optional[str] = None,
+        private_key: Optional[str] = None,
         base_url: str = "https://api.kraken.com",
         api_version: str = "0",
         timeout: float = 30.0,
@@ -186,8 +189,8 @@ class KrakenRestClient:
         Initialize Kraken REST client.
         
         Args:
-            api_key: Kraken API key
-            private_key: Kraken private key (base64 encoded)
+            api_key: Kraken API key (from KRAKEN_KEY or legacy KRAKEN_API_KEY). If None, will load from environment.
+            private_key: Kraken private key (base64 encoded, from KRAKEN_SECRET or legacy KRAKEN_API_SECRET). If None, will load from environment.
             base_url: Base URL for Kraken API
             api_version: API version
             timeout: Default request timeout
@@ -198,6 +201,19 @@ class KrakenRestClient:
             session: Optional aiohttp session (will create if None)
             user_agent: User agent string
         """
+        # Load credentials from environment if not provided
+        if not api_key or not private_key:
+            env_api_key, env_private_key = self._load_credentials_from_environment()
+            api_key = api_key or env_api_key
+            private_key = private_key or env_private_key
+
+        # Validate that we have credentials
+        if not api_key or not private_key:
+            raise ValueError(
+                "API credentials are required. Set KRAKEN_KEY and KRAKEN_SECRET environment variables "
+                "or provide api_key and private_key parameters."
+            )
+
         self.api_key = api_key
         self.private_key = private_key
         self.base_url = base_url.rstrip('/')
@@ -205,34 +221,34 @@ class KrakenRestClient:
         self.timeout = timeout
         self.max_retries = max_retries
         self.user_agent = user_agent
-        
+
         # Convert account tier if string
         if isinstance(account_tier, str):
             account_tier = AccountTier(account_tier.lower())
         self.account_tier = account_tier
-        
+
         # Session management
         self._session = session
         self._session_owned = session is None
         self._session_lock = asyncio.Lock()
-        
+
         # Authentication
         self.auth = KrakenAuth(
-            api_key=api_key,
-            private_key=private_key,
+            api_key=self.api_key,
+            private_key=self.private_key,
             enable_debug=False
         )
-        
+
         # Rate limiting
         self.rate_limiter = None
         if enable_rate_limiting:
             self.rate_limiter = KrakenRateLimiter2025(
                 account_tier=account_tier,
-                api_key=api_key,
+                api_key=self.api_key,
                 enable_queue=True,
                 enable_circuit_breaker=False  # We have our own circuit breaker
             )
-        
+
         # Circuit breaker
         self.circuit_breaker = None
         if enable_circuit_breaker:
@@ -244,43 +260,43 @@ class KrakenRestClient:
                 timeout=timeout
             )
             self.circuit_breaker = CircuitBreaker(
-                name=f"kraken_api_{api_key[:8]}",
+                name=f"kraken_api_{self.api_key[:8]}",
                 config=cb_config
             )
-        
+
         # Configuration
         self.retry_config = RetryConfig(
             max_attempts=max_retries,
             base_delay=1.0,
             max_delay=60.0
         )
-        
+
         # Metrics and monitoring
         self.metrics = ClientMetrics()
         self._request_history = deque(maxlen=1000)
-        
+
         # Thread safety
         self._lock = threading.RLock()
-        
+
         # State
         self._closed = False
         self._start_time = time.time()
-        
+
         logger.info(
             f"Kraken REST client initialized: "
-            f"api_key={api_key[:8]}..., tier={account_tier.value}, "
+            f"api_key={self.api_key[:8]}..., tier={account_tier.value}, "
             f"rate_limiting={enable_rate_limiting}, circuit_breaker={enable_circuit_breaker}"
         )
-    
+
     async def __aenter__(self):
         """Async context manager entry."""
         await self.start()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close()
-    
+
     async def start(self):
         """Start the client and initialize components."""
         async with self._session_lock:
@@ -294,54 +310,85 @@ class KrakenRestClient:
                     keepalive_timeout=30,
                     enable_cleanup_closed=True
                 )
-                
+
                 timeout_config = ClientTimeout(
                     total=self.timeout,
                     connect=10.0,
                     sock_read=self.timeout
                 )
-                
+
                 headers = {
                     'User-Agent': self.user_agent,
                     'Accept': 'application/json',
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-                
+
                 self._session = ClientSession(
                     connector=connector,
                     timeout=timeout_config,
                     headers=headers,
                     raise_for_status=False  # We handle status codes manually
                 )
-        
+
         # Start rate limiter
         if self.rate_limiter:
             await self.rate_limiter.start()
-        
+
         logger.info("Kraken REST client started")
-    
+
+    def _load_credentials_from_environment(self) -> Tuple[Optional[str], Optional[str]]:
+        """
+        Load credentials from environment variables.
+        
+        Priority order:
+        1. KRAKEN_KEY / KRAKEN_SECRET (primary)
+        2. KRAKEN_API_KEY / KRAKEN_API_SECRET (fallback)
+        
+        Returns:
+            Tuple of (api_key, private_key) or (None, None) if not found
+        """
+        import os
+
+        # Try primary environment variables
+        api_key = os.getenv('KRAKEN_KEY')
+        private_key = os.getenv('KRAKEN_SECRET')
+        credential_source = "KRAKEN_KEY/KRAKEN_SECRET"
+
+        # Fallback to legacy names
+        if not api_key or not private_key:
+            api_key = os.getenv('KRAKEN_API_KEY')
+            private_key = os.getenv('KRAKEN_API_SECRET')
+            credential_source = "KRAKEN_API_KEY/KRAKEN_API_SECRET"
+
+        if api_key and private_key:
+            logger.info(f"Loaded Kraken credentials from environment variables: {credential_source}")
+            return api_key, private_key
+        else:
+            logger.warning("No Kraken credentials found in environment variables")
+            return None, None
+
     async def close(self):
         """Close the client and cleanup resources."""
         if self._closed:
             return
-        
+
         self._closed = True
-        
+
         # Close session if we own it
         if self._session_owned and self._session:
             await self._session.close()
-        
+
         # Stop rate limiter
         if self.rate_limiter:
             await self.rate_limiter.stop()
-        
+
         # Cleanup auth
         self.auth.cleanup()
-        
+
         # Log final metrics
         success_rate = self.metrics.get_success_rate() * 100
         uptime = time.time() - self._start_time
-        
+
         logger.info(
             f"Kraken REST client closed: "
             f"requests={self.metrics.total_requests}, "
@@ -349,13 +396,13 @@ class KrakenRestClient:
             f"avg_response_time={self.metrics.avg_response_time:.2f}s, "
             f"uptime={uptime:.1f}s"
         )
-    
+
     async def _get_session(self) -> ClientSession:
         """Get or create aiohttp session."""
         if self._session is None:
             await self.start()
         return self._session
-    
+
     async def _make_request(
         self,
         endpoint_name: str,
@@ -380,16 +427,16 @@ class KrakenRestClient:
         """
         if self._closed:
             raise RuntimeError("Client is closed")
-        
+
         # Get endpoint definition
         endpoint = get_endpoint_definition(endpoint_name)
         if not endpoint:
             raise ValidationError(f"Unknown endpoint: {endpoint_name}")
-        
+
         # Set default config
         if config is None:
             config = RequestConfig()
-        
+
         # Validate parameters
         if params:
             validation_errors = endpoint.validate_parameters(params)
@@ -399,10 +446,10 @@ class KrakenRestClient:
                     endpoint=endpoint_name,
                     request_data=params
                 )
-        
+
         start_time = time.time()
         last_exception = None
-        
+
         for attempt in range(config.max_retries or self.retry_config.max_attempts):
             try:
                 # Check circuit breaker
@@ -413,7 +460,7 @@ class KrakenRestClient:
                         retry_after=30.0,
                         endpoint=endpoint_name
                     )
-                
+
                 # Check rate limiting
                 if self.rate_limiter:
                     can_proceed = await self.rate_limiter.wait_for_rate_limit(
@@ -421,24 +468,24 @@ class KrakenRestClient:
                         priority=config.priority,
                         timeout_seconds=config.timeout or self.timeout
                     )
-                    
+
                     if not can_proceed:
                         raise RateLimitError(
                             "Rate limit timeout",
                             retry_after=60.0,
                             endpoint=endpoint_name
                         )
-                
+
                 # Make the actual HTTP request
                 response_data = await self._execute_http_request(endpoint, params, config)
-                
+
                 # Record success
                 response_time = time.time() - start_time
                 self.metrics.update_request_stats(endpoint_name, True, response_time)
-                
+
                 if self.circuit_breaker:
                     self.circuit_breaker._record_success(response_time * 1000)
-                
+
                 # Record request in history
                 self._request_history.append({
                     'endpoint': endpoint_name,
@@ -447,13 +494,13 @@ class KrakenRestClient:
                     'response_time': response_time,
                     'attempt': attempt + 1
                 })
-                
+
                 return response_data
-            
+
             except Exception as e:
                 last_exception = e
                 response_time = time.time() - start_time
-                
+
                 # Determine error type for metrics
                 error_type = 'unknown'
                 if isinstance(e, AuthenticationError):
@@ -462,12 +509,12 @@ class KrakenRestClient:
                     error_type = 'rate_limit'
                 elif isinstance(e, NetworkError):
                     error_type = 'network'
-                
+
                 self.metrics.update_request_stats(endpoint_name, False, response_time, error_type)
-                
+
                 if self.circuit_breaker:
                     self.circuit_breaker._record_failure(e, response_time * 1000)
-                
+
                 # Record failed request in history
                 self._request_history.append({
                     'endpoint': endpoint_name,
@@ -477,31 +524,31 @@ class KrakenRestClient:
                     'attempt': attempt + 1,
                     'error': str(e)
                 })
-                
+
                 # Check if we should retry
                 should_retry = self._should_retry_request(e, attempt, config)
-                
+
                 if not should_retry or attempt >= (config.max_retries or self.retry_config.max_attempts) - 1:
                     logger.error(
                         f"Request failed after {attempt + 1} attempts: "
                         f"endpoint={endpoint_name}, error={e}"
                     )
                     raise e
-                
+
                 # Calculate retry delay
                 retry_delay = self._calculate_retry_delay(e, attempt)
-                
+
                 logger.warning(
                     f"Request failed, retrying in {retry_delay:.1f}s: "
                     f"endpoint={endpoint_name}, attempt={attempt + 1}, error={e}"
                 )
-                
+
                 self.metrics.retried_requests += 1
                 await asyncio.sleep(retry_delay)
-        
+
         # Should never reach here due to the loop logic, but just in case
         raise last_exception or NetworkError("Request failed after all retries")
-    
+
     async def _execute_http_request(
         self,
         endpoint: EndpointDefinition,
@@ -521,29 +568,28 @@ class KrakenRestClient:
         """
         if config is None:
             config = RequestConfig()
-            
+
         session = await self._get_session()
-        
+
         # Build URL
         url = f"{self.base_url}/{self.api_version}/{endpoint.path.lstrip('/')}"
-        
+
         # Prepare request data
         request_data = params.copy() if params else {}
-        
-        # Add nonce for private endpoints
-        if endpoint.endpoint_type == EndpointType.PRIVATE:
-            nonce = self.auth.nonce_manager.get_nonce("kraken_rest_api")
-            request_data['nonce'] = nonce
-        
-        # Get authentication headers
+
+        # CRITICAL FIX: Don't generate nonce here - let auth handle it
+        # The nonce must be the same in both signature and request body
+
+        # Get authentication headers (which will add nonce to request_data)
         headers = {}
         if endpoint.endpoint_type == EndpointType.PRIVATE:
+            # Pass request_data to auth - it will add the nonce
             auth_headers = await self.auth.get_auth_headers_async(
                 f"/{self.api_version}/{endpoint.path.lstrip('/')}",
                 request_data
             )
             headers.update(auth_headers)
-        
+
         # Prepare request body
         if endpoint.method == HttpMethod.GET:
             # GET requests use query parameters
@@ -554,10 +600,10 @@ class KrakenRestClient:
             # POST requests use form data
             full_url = url
             request_body = urllib.parse.urlencode(request_data).encode('utf-8') if request_data else None
-        
+
         # Set timeout
         timeout = ClientTimeout(total=config.timeout or self.timeout)
-        
+
         # Make HTTP request
         try:
             async with session.request(
@@ -567,11 +613,11 @@ class KrakenRestClient:
                 headers=headers,
                 timeout=timeout
             ) as response:
-                
+
                 # Check for HTTP errors
                 if response.status >= 400:
                     error_text = await response.text()
-                    
+
                     if response.status == 401:
                         raise AuthenticationError(
                             f"Authentication failed: {error_text}",
@@ -584,7 +630,7 @@ class KrakenRestClient:
                             retry_after_seconds = float(retry_after)
                         except ValueError:
                             retry_after_seconds = 60.0
-                        
+
                         raise RateLimitError(
                             f"Rate limit exceeded: {error_text}",
                             retry_after=retry_after_seconds,
@@ -601,7 +647,7 @@ class KrakenRestClient:
                             f"HTTP error ({response.status}): {error_text}",
                             endpoint=endpoint.name
                         )
-                
+
                 # Parse JSON response
                 try:
                     response_data = await response.json()
@@ -612,13 +658,13 @@ class KrakenRestClient:
                         endpoint=endpoint.name,
                         response_data={'raw_response': response_text}
                     )
-                
+
                 # Check for Kraken API errors
                 if config.raise_for_errors:
                     raise_for_kraken_errors(response_data, endpoint.name, request_data)
-                
+
                 return response_data
-        
+
         except asyncio.TimeoutError:
             raise NetworkError(
                 f"Request timeout after {config.timeout or self.timeout}s",
@@ -632,7 +678,7 @@ class KrakenRestClient:
                 endpoint=endpoint.name,
                 original_exception=e
             )
-    
+
     def _should_retry_request(
         self,
         error: Exception,
@@ -651,21 +697,21 @@ class KrakenRestClient:
             True if request should be retried
         """
         max_attempts = config.max_retries or self.retry_config.max_attempts
-        
+
         if attempt >= max_attempts - 1:
             return False
-        
+
         # Check if error type is retryable
         for retryable_type in self.retry_config.retryable_exceptions:
             if isinstance(error, retryable_type):
                 return True
-        
+
         # Check if it's a retryable Kraken API error
         if isinstance(error, KrakenAPIError) and error.is_retryable():
             return True
-        
+
         return False
-    
+
     def _calculate_retry_delay(self, error: Exception, attempt: int) -> float:
         """
         Calculate delay before retry attempt.
@@ -680,31 +726,31 @@ class KrakenRestClient:
         # Use error-specific retry delay if available
         if isinstance(error, KrakenAPIError) and error.retry_after:
             return error.retry_after
-        
+
         # Calculate exponential backoff
         delay = self.retry_config.base_delay * (
             self.retry_config.backoff_multiplier ** attempt
         )
-        
+
         # Apply jitter if enabled
         if self.retry_config.jitter:
             import random
             jitter = delay * 0.1 * (random.random() - 0.5)
             delay += jitter
-        
+
         # Cap at maximum delay
         return min(delay, self.retry_config.max_delay)
-    
+
     # ====== PUBLIC API METHODS ======
-    
+
     async def get_server_time(self) -> Dict[str, Any]:
         """Get server time."""
         return await self._make_request('ServerTime')
-    
+
     async def get_system_status(self) -> Dict[str, Any]:
         """Get system status."""
         return await self._make_request('SystemStatus')
-    
+
     async def get_asset_info(self, asset: Optional[str] = None) -> Dict[str, Any]:
         """
         Get asset information.
@@ -715,9 +761,9 @@ class KrakenRestClient:
         params = {}
         if asset:
             params['asset'] = asset
-        
+
         return await self._make_request('AssetInfo', params)
-    
+
     async def get_asset_pairs(self, pair: Optional[str] = None, info: str = "info") -> Dict[str, Any]:
         """
         Get tradable asset pairs.
@@ -729,9 +775,9 @@ class KrakenRestClient:
         params = {'info': info}
         if pair:
             params['pair'] = pair
-        
+
         return await self._make_request('AssetPairs', params)
-    
+
     async def get_ticker_information(self, pair: str) -> Dict[str, Any]:
         """
         Get ticker information.
@@ -740,7 +786,7 @@ class KrakenRestClient:
             pair: Comma delimited list of asset pairs
         """
         return await self._make_request('Ticker', {'pair': pair})
-    
+
     async def get_ohlc_data(
         self,
         pair: str,
@@ -758,9 +804,9 @@ class KrakenRestClient:
         params = {'pair': pair, 'interval': interval}
         if since:
             params['since'] = since
-        
+
         return await self._make_request('OHLC', params)
-    
+
     async def get_order_book(self, pair: str, count: int = 100) -> Dict[str, Any]:
         """
         Get order book.
@@ -770,7 +816,7 @@ class KrakenRestClient:
             count: Maximum number of asks/bids
         """
         return await self._make_request('OrderBook', {'pair': pair, 'count': count})
-    
+
     async def get_recent_trades(self, pair: str, since: Optional[str] = None) -> Dict[str, Any]:
         """
         Get recent trades.
@@ -782,15 +828,15 @@ class KrakenRestClient:
         params = {'pair': pair}
         if since:
             params['since'] = since
-        
+
         return await self._make_request('RecentTrades', params)
-    
+
     # ====== PRIVATE API METHODS ======
-    
+
     async def get_account_balance(self) -> Dict[str, Any]:
         """Get account balance."""
         return await self._make_request('Balance')
-    
+
     async def get_trade_balance(self, asset: str = "ZUSD") -> Dict[str, Any]:
         """
         Get trade balance.
@@ -799,7 +845,7 @@ class KrakenRestClient:
             asset: Base asset used to determine balance
         """
         return await self._make_request('TradeBalance', {'asset': asset})
-    
+
     async def get_open_orders(
         self,
         trades: bool = False,
@@ -815,9 +861,9 @@ class KrakenRestClient:
         params = {'trades': trades}
         if userref:
             params['userref'] = userref
-        
+
         return await self._make_request('OpenOrders', params)
-    
+
     async def get_closed_orders(
         self,
         trades: bool = False,
@@ -847,9 +893,9 @@ class KrakenRestClient:
             params['end'] = end
         if ofs:
             params['ofs'] = ofs
-        
+
         return await self._make_request('ClosedOrders', params)
-    
+
     async def query_orders_info(
         self,
         txid: str,
@@ -867,9 +913,9 @@ class KrakenRestClient:
         params = {'txid': txid, 'trades': trades}
         if userref:
             params['userref'] = userref
-        
+
         return await self._make_request('QueryOrders', params)
-    
+
     async def get_trades_history(
         self,
         type: str = "all",
@@ -895,11 +941,11 @@ class KrakenRestClient:
             params['end'] = end
         if ofs:
             params['ofs'] = ofs
-        
+
         return await self._make_request('TradesHistory', params)
-    
+
     # ====== TRADING METHODS ======
-    
+
     async def add_order(
         self,
         pair: str,
@@ -940,7 +986,7 @@ class KrakenRestClient:
             'ordertype': ordertype,
             'volume': volume
         }
-        
+
         if price:
             params['price'] = price
         if price2:
@@ -959,9 +1005,9 @@ class KrakenRestClient:
             params['validate'] = validate
         if close:
             params['close'] = close
-        
+
         return await self._make_request('AddOrder', params)
-    
+
     async def edit_order(
         self,
         txid: str,
@@ -987,7 +1033,7 @@ class KrakenRestClient:
             validate: Validate inputs only, do not submit order
         """
         params = {'txid': txid, 'pair': pair}
-        
+
         if volume:
             params['volume'] = volume
         if price:
@@ -1000,9 +1046,9 @@ class KrakenRestClient:
             params['newuserref'] = newuserref
         if validate:
             params['validate'] = validate
-        
+
         return await self._make_request('EditOrder', params)
-    
+
     async def cancel_order(self, txid: str) -> Dict[str, Any]:
         """
         Cancel open order.
@@ -1011,11 +1057,11 @@ class KrakenRestClient:
             txid: Transaction ID of order to cancel
         """
         return await self._make_request('CancelOrder', {'txid': txid})
-    
+
     async def cancel_all_orders(self) -> Dict[str, Any]:
         """Cancel all open orders."""
         return await self._make_request('CancelAllOrders')
-    
+
     async def cancel_all_orders_after(self, timeout: int) -> Dict[str, Any]:
         """
         Cancel all orders after X seconds.
@@ -1024,19 +1070,19 @@ class KrakenRestClient:
             timeout: Duration (in seconds) to set/extend the timer by
         """
         return await self._make_request('CancelAllOrdersAfter', {'timeout': timeout})
-    
+
     # ====== WEBSOCKET TOKEN METHOD ======
-    
+
     async def get_websockets_token(self) -> Dict[str, Any]:
         """Get WebSocket authentication token."""
         return await self._make_request('GetWebSocketsToken')
-    
+
     # ====== UTILITY METHODS ======
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get client performance metrics."""
         uptime = time.time() - self._start_time
-        
+
         return {
             'uptime_seconds': uptime,
             'success_rate': self.metrics.get_success_rate(),
@@ -1054,7 +1100,7 @@ class KrakenRestClient:
             'rate_limiter_status': self.rate_limiter.get_status() if self.rate_limiter else None,
             'circuit_breaker_status': self.circuit_breaker.get_status() if self.circuit_breaker else None
         }
-    
+
     def get_status(self) -> Dict[str, Any]:
         """Get comprehensive client status."""
         return {
@@ -1074,7 +1120,7 @@ class KrakenRestClient:
             'metrics': self.get_metrics(),
             'recent_requests': list(self._request_history)[-10:]  # Last 10 requests
         }
-    
+
     async def health_check(self) -> Dict[str, Any]:
         """
         Perform comprehensive health check.
@@ -1087,7 +1133,7 @@ class KrakenRestClient:
             'overall_status': 'healthy',
             'checks': {}
         }
-        
+
         # Check API connectivity
         try:
             server_time = await self.get_server_time()
@@ -1102,7 +1148,7 @@ class KrakenRestClient:
                 'error': str(e)
             }
             health['overall_status'] = 'unhealthy'
-        
+
         # Check authentication
         if health['overall_status'] == 'healthy':
             try:
@@ -1124,7 +1170,7 @@ class KrakenRestClient:
                 }
                 if health['overall_status'] == 'healthy':
                     health['overall_status'] = 'degraded'
-        
+
         # Check rate limiter
         if self.rate_limiter:
             rl_status = self.rate_limiter.get_status()
@@ -1133,7 +1179,7 @@ class KrakenRestClient:
                 'requests_made': rl_status['statistics']['requests_made'],
                 'requests_blocked': rl_status['statistics']['requests_blocked']
             }
-        
+
         # Check circuit breaker
         if self.circuit_breaker:
             cb_status = self.circuit_breaker.get_status()
@@ -1142,21 +1188,21 @@ class KrakenRestClient:
                 'state': cb_status['state'],
                 'failure_count': cb_status['failure_count']
             }
-            
+
             if not cb_status['can_execute'] and health['overall_status'] == 'healthy':
                 health['overall_status'] = 'degraded'
-        
+
         return health
-    
+
     def reset_metrics(self):
         """Reset all performance metrics."""
         with self._lock:
             self.metrics = ClientMetrics()
             self._request_history.clear()
             self._start_time = time.time()
-        
+
         logger.info("Client metrics reset")
-    
+
     async def test_connectivity(self) -> bool:
         """
         Test basic API connectivity.
@@ -1170,7 +1216,7 @@ class KrakenRestClient:
         except Exception as e:
             logger.error(f"Connectivity test failed: {e}")
             return False
-    
+
     async def test_authentication(self) -> bool:
         """
         Test API authentication.
@@ -1185,4 +1231,29 @@ class KrakenRestClient:
             return False
         except Exception as e:
             logger.error(f"Authentication test failed: {e}")
+            return False
+
+    async def test_connection(self) -> bool:
+        """
+        Test complete API connection (connectivity + authentication).
+        
+        Returns:
+            True if both connectivity and authentication work
+        """
+        try:
+            # Test basic connectivity first
+            if not await self.test_connectivity():
+                logger.error("Connectivity test failed")
+                return False
+
+            # Test authentication
+            if not await self.test_authentication():
+                logger.error("Authentication test failed")
+                return False
+
+            logger.info("Connection test passed (connectivity + authentication)")
+            return True
+
+        except Exception as e:
+            logger.error(f"Connection test failed: {e}")
             return False

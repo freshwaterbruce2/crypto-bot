@@ -7,13 +7,12 @@ Provides consolidated view of all open positions, P&L, and portfolio metrics.
 
 import asyncio
 import logging
-from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from dataclasses import dataclass, field
-import json
+from typing import Any, Dict, List, Optional
 
-from src.utils.decimal_precision_fix import safe_decimal, safe_float, format_price
+from src.utils.decimal_precision_fix import safe_decimal
 
 logger = logging.getLogger(__name__)
 
@@ -38,40 +37,40 @@ class PositionDashboard:
     Real-time position tracking and portfolio visualization.
     Integrates with balance manager and websocket for live updates.
     """
-    
+
     def __init__(self, bot):
         """Initialize position dashboard with bot reference"""
         self.bot = bot
         self.logger = logging.getLogger(self.__class__.__name__)
-        
+
         # Position tracking
         self.positions: Dict[str, PositionMetrics] = {}
         self.position_history: List[Dict[str, Any]] = []
-        
+
         # Portfolio metrics
         self.total_value = Decimal('0')
         self.total_pnl = Decimal('0')
         self.total_pnl_percent = 0.0
-        
+
         # Update tracking
         self.last_update = datetime.now()
         self.update_interval = 5  # seconds
         self.update_task = None
-        
+
         self.logger.info("[POSITION_DASHBOARD] Initialized")
-    
+
     async def start(self):
         """Start position tracking"""
         self.logger.info("[POSITION_DASHBOARD] Starting position tracking...")
-        
+
         # Initial position scan
         await self.scan_positions()
-        
+
         # Start update loop
         self.update_task = asyncio.create_task(self._update_loop())
-        
+
         self.logger.info("[POSITION_DASHBOARD] Position tracking started")
-    
+
     async def stop(self):
         """Stop position tracking"""
         if self.update_task:
@@ -80,27 +79,27 @@ class PositionDashboard:
                 await self.update_task
             except asyncio.CancelledError:
                 pass
-        
+
         self.logger.info("[POSITION_DASHBOARD] Position tracking stopped")
-    
+
     async def scan_positions(self) -> Dict[str, PositionMetrics]:
         """Scan all current positions from balance manager"""
         try:
             if not hasattr(self.bot, 'balance_manager') or not self.bot.balance_manager:
                 self.logger.warning("[POSITION_DASHBOARD] Balance manager not available")
                 return {}
-            
+
             # Get deployed positions
             deployed = await self.bot.balance_manager.get_deployed_capital()
-            
+
             # Clear old positions
             self.positions.clear()
-            
+
             # Process each deployed position
             for symbol, info in deployed.items():
                 if symbol == 'USDT' or not info.get('amount', 0):
                     continue
-                
+
                 # Create position metrics
                 metrics = PositionMetrics(
                     symbol=symbol,
@@ -112,34 +111,34 @@ class PositionDashboard:
                     pnl_percent=float(info.get('pnl_percent', 0)),
                     time_held=0  # Will be calculated from order history
                 )
-                
+
                 self.positions[symbol] = metrics
-            
+
             # Update portfolio totals
             await self._update_totals()
-            
+
             self.logger.info(f"[POSITION_DASHBOARD] Scanned {len(self.positions)} positions")
             return self.positions
-            
+
         except Exception as e:
             self.logger.error(f"[POSITION_DASHBOARD] Position scan error: {e}")
             return {}
-    
+
     async def _update_loop(self):
         """Continuous position update loop"""
         while True:
             try:
                 await asyncio.sleep(self.update_interval)
-                
+
                 # Update positions
                 await self.update_positions()
-                
+
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 self.logger.error(f"[POSITION_DASHBOARD] Update loop error: {e}")
                 await asyncio.sleep(10)  # Wait longer on error
-    
+
     async def update_positions(self):
         """Update all position metrics with latest prices"""
         try:
@@ -149,26 +148,26 @@ class PositionDashboard:
                 current_price = await self._get_current_price(symbol)
                 if current_price:
                     position.current_price = safe_decimal(current_price)
-                    
+
                     # Recalculate metrics
                     position.value_usd = position.quantity * position.current_price
                     position.pnl_usd = (position.current_price - position.entry_price) * position.quantity
-                    
+
                     if position.entry_price > 0:
                         position.pnl_percent = float((position.current_price - position.entry_price) / position.entry_price * 100)
-                    
+
                     # Update time held
                     position.time_held = int((datetime.now() - position.last_update).total_seconds())
                     position.last_update = datetime.now()
-            
+
             # Update totals
             await self._update_totals()
-            
+
             self.last_update = datetime.now()
-            
+
         except Exception as e:
             self.logger.error(f"[POSITION_DASHBOARD] Position update error: {e}")
-    
+
     async def _get_current_price(self, symbol: str) -> Optional[Decimal]:
         """Get current price for symbol"""
         try:
@@ -177,33 +176,33 @@ class PositionDashboard:
                 ticker_data = self.bot.websocket_manager.get_ticker_data(f"{symbol}/USDT")
                 if ticker_data and 'last' in ticker_data:
                     return safe_decimal(ticker_data['last'])
-            
+
             # Fallback to exchange
             if hasattr(self.bot, 'exchange') and self.bot.exchange:
                 ticker = await self.bot.exchange.fetch_ticker(f"{symbol}/USDT")
                 if ticker and 'last' in ticker:
                     return safe_decimal(ticker['last'])
-            
+
             return None
-            
+
         except Exception as e:
             self.logger.error(f"[POSITION_DASHBOARD] Price fetch error for {symbol}: {e}")
             return None
-    
+
     async def _update_totals(self):
         """Update portfolio totals"""
         self.total_value = sum(p.value_usd for p in self.positions.values())
         self.total_pnl = sum(p.pnl_usd for p in self.positions.values())
-        
+
         # Add liquid balance
         if hasattr(self.bot, 'balance_manager') and self.bot.balance_manager:
             liquid = await self.bot.balance_manager.get_liquid_capital()
             self.total_value += safe_decimal(liquid)
-        
+
         # Calculate total P&L percentage
         if self.total_value > 0:
             self.total_pnl_percent = float(self.total_pnl / self.total_value * 100)
-    
+
     def get_summary(self) -> Dict[str, Any]:
         """Get dashboard summary"""
         return {
@@ -226,11 +225,11 @@ class PositionDashboard:
                 for symbol, p in self.positions.items()
             }
         }
-    
+
     def display_dashboard(self):
         """Display formatted dashboard in logs"""
         summary = self.get_summary()
-        
+
         self.logger.info("=" * 60)
         self.logger.info("POSITION DASHBOARD")
         self.logger.info("=" * 60)
@@ -238,7 +237,7 @@ class PositionDashboard:
         self.logger.info(f"Total P&L: ${summary['total_pnl']:,.2f} ({summary['total_pnl_percent']:+.2f}%)")
         self.logger.info(f"Active Positions: {summary['positions_count']}")
         self.logger.info("-" * 60)
-        
+
         for symbol, pos in summary['positions'].items():
             pnl_sign = "+" if pos['pnl_percent'] >= 0 else ""
             self.logger.info(
@@ -246,9 +245,9 @@ class PositionDashboard:
                 f"P&L: ${pos['pnl_usd']:,.2f} ({pnl_sign}{pos['pnl_percent']:.2f}%) | "
                 f"Held: {pos['time_held_minutes']}m"
             )
-        
+
         self.logger.info("=" * 60)
-    
+
     async def add_position(self, symbol: str, entry_price: float, quantity: float):
         """Manually add a position (called after order execution)"""
         try:
@@ -262,16 +261,16 @@ class PositionDashboard:
                 pnl_percent=0.0,
                 time_held=0
             )
-            
+
             self.positions[symbol] = metrics
             self.logger.info(f"[POSITION_DASHBOARD] Added position: {symbol} @ ${entry_price}")
-            
+
             # Update immediately
             await self.update_positions()
-            
+
         except Exception as e:
             self.logger.error(f"[POSITION_DASHBOARD] Error adding position: {e}")
-    
+
     async def remove_position(self, symbol: str):
         """Remove a position (called after sell order)"""
         if symbol in self.positions:
@@ -286,10 +285,10 @@ class PositionDashboard:
                 'time_held': pos.time_held,
                 'closed_at': datetime.now().isoformat()
             })
-            
+
             # Remove from active
             del self.positions[symbol]
             self.logger.info(f"[POSITION_DASHBOARD] Closed position: {symbol} | P&L: ${pos.pnl_usd:.2f}")
-            
+
             # Update totals
             await self._update_totals()

@@ -18,15 +18,15 @@ Usage:
     config = config_manager.get_complete_config()
 """
 
+import logging
+from typing import Any, Dict
+
 from .core import CoreConfigManager
-from .trading import TradingConfigManager  
-from .risk import RiskConfigManager
 from .kraken import KrakenConfigManager
 from .learning import LearningConfigManager
+from .risk import RiskConfigManager
+from .trading import TradingConfigManager
 from .validator import ConfigValidator
-
-import logging
-from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,23 +35,23 @@ class ConfigManager:
     """
     Unified configuration manager that coordinates all config modules
     """
-    
+
     def __init__(self, config_path: str = "config.json"):
         """Initialize unified config manager"""
         # Initialize core config first
         self.core_manager = CoreConfigManager(config_path)
         core_config = self.core_manager.get_core_config()
-        
+
         # Initialize specialized managers
         self.trading_manager = TradingConfigManager(core_config)
         self.risk_manager = RiskConfigManager(core_config)
         self.kraken_manager = KrakenConfigManager(core_config)
         self.learning_manager = LearningConfigManager(core_config)
         self.validator = ConfigValidator()
-        
+
         # Validate complete configuration
         self._validate_config()
-    
+
     def get_complete_config(self) -> Dict[str, Any]:
         """Get complete configuration from all managers"""
         return {
@@ -61,17 +61,17 @@ class ConfigManager:
             'kraken': self.kraken_manager.get_all_settings(),
             'learning': self.learning_manager.get_all_settings()
         }
-    
+
     def _validate_config(self):
         """Validate complete configuration"""
         complete_config = self.get_complete_config()
         is_valid, errors, fixes = self.validator.validate_config(complete_config)
-        
+
         if fixes:
             logger.info(f"Applied {len(fixes)} configuration fixes")
             for fix in fixes:
                 logger.info(f"  - {fix}")
-        
+
         if errors:
             logger.warning(f"Found {len(errors)} configuration errors")
             for error in errors:
@@ -87,10 +87,10 @@ def load_config(config_path: str = "config.json") -> Dict[str, Any]:
 
 __all__ = [
     'ConfigManager',
-    'CoreConfigManager', 
+    'CoreConfigManager',
     'TradingConfigManager',
     'RiskConfigManager',
-    'KrakenConfigManager', 
+    'KrakenConfigManager',
     'LearningConfigManager',
     'ConfigValidator',
     'load_config'

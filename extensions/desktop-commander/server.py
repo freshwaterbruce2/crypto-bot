@@ -5,39 +5,20 @@ Provides system control, window management, and desktop automation capabilities
 """
 
 import asyncio
-import json
 import subprocess
-import sys
-import os
 import winreg
-from typing import Any, Dict, List, Optional
+
 import psutil
 import pyautogui
-from mcp.server.models import InitializationOptions
-from mcp.server import NotificationOptions, Server
+from mcp.server import Server
 from mcp.server.models import (
-    CallToolRequestParams,
     CallToolResult,
-    EmptyResult,
-    GetPromptRequestParams,
-    GetPromptResult,
-    ListPromptsResult,
-    ListResourcesResult,
     ListToolsResult,
-    Prompt,
-    PromptArgument,
-    PromptMessage,
-    ReadResourceRequestParams,
-    ReadResourceResult,
-    Resource,
-    TextContent,
     Tool,
     ToolMessage,
 )
 from mcp.types import (
     INVALID_PARAMS,
-    INTERNAL_ERROR,
-    JSONRPCError,
     McpError,
 )
 
@@ -47,14 +28,14 @@ pyautogui.PAUSE = 0.1
 
 class DesktopCommander:
     """Windows 11 Desktop Commander with advanced automation capabilities"""
-    
+
     def __init__(self):
         self.server = Server("desktop-commander")
         self.setup_handlers()
-    
+
     def setup_handlers(self):
         """Setup MCP server handlers"""
-        
+
         @self.server.list_tools()
         async def handle_list_tools() -> ListToolsResult:
             """List available desktop commander tools"""
@@ -172,7 +153,7 @@ class DesktopCommander:
                 )
             ]
             return ListToolsResult(tools=tools)
-        
+
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: dict) -> CallToolResult:
             """Handle tool calls"""
@@ -201,13 +182,13 @@ class DesktopCommander:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Error: {str(e)}", isError=True)]
                 )
-    
+
     async def execute_command(self, args: dict) -> CallToolResult:
         """Execute Windows command or PowerShell script"""
         command = args.get("command", "")
         shell = args.get("shell", "cmd")
         admin = args.get("admin", False)
-        
+
         try:
             if shell == "powershell":
                 if admin:
@@ -220,7 +201,7 @@ class DesktopCommander:
                     full_command = f"runas /user:Administrator \"{command}\""
                 else:
                     full_command = command
-            
+
             result = subprocess.run(
                 full_command,
                 shell=True,
@@ -228,13 +209,13 @@ class DesktopCommander:
                 text=True,
                 timeout=30
             )
-            
+
             output = f"Exit Code: {result.returncode}\\n"
             if result.stdout:
                 output += f"STDOUT:\\n{result.stdout}\\n"
             if result.stderr:
                 output += f"STDERR:\\n{result.stderr}\\n"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -242,12 +223,12 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Command execution failed: {str(e)}", isError=True)]
             )
-    
+
     async def list_running_processes(self, args: dict) -> CallToolResult:
         """List running processes with details"""
         filter_name = args.get("filter_name", "")
         sort_by = args.get("sort_by", "name")
-        
+
         try:
             processes = []
             for proc in psutil.process_iter(['pid', 'name', 'cpu_percent', 'memory_info', 'status']):
@@ -255,7 +236,7 @@ class DesktopCommander:
                     proc_info = proc.info
                     if filter_name and filter_name.lower() not in proc_info['name'].lower():
                         continue
-                    
+
                     processes.append({
                         'pid': proc_info['pid'],
                         'name': proc_info['name'],
@@ -265,7 +246,7 @@ class DesktopCommander:
                     })
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
-            
+
             # Sort processes
             if sort_by == "cpu":
                 processes.sort(key=lambda x: x['cpu_percent'], reverse=True)
@@ -273,14 +254,14 @@ class DesktopCommander:
                 processes.sort(key=lambda x: x['memory_mb'], reverse=True)
             else:
                 processes.sort(key=lambda x: x['name'])
-            
+
             output = "Running Processes:\\n"
             output += f"{'PID':<8} {'Name':<25} {'CPU%':<8} {'Memory(MB)':<12} {'Status':<10}\\n"
             output += "-" * 70 + "\\n"
-            
+
             for proc in processes[:50]:  # Limit to top 50
                 output += f"{proc['pid']:<8} {proc['name'][:24]:<25} {proc['cpu_percent']:<8} {proc['memory_mb']:<12} {proc['status']:<10}\\n"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -288,24 +269,24 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Failed to list processes: {str(e)}", isError=True)]
             )
-    
+
     async def kill_process(self, args: dict) -> CallToolResult:
         """Kill a process by name or PID"""
         process = args.get("process", "")
         force = args.get("force", False)
-        
+
         try:
             if process.isdigit():
                 # Kill by PID
                 pid = int(process)
                 proc = psutil.Process(pid)
                 proc_name = proc.name()
-                
+
                 if force:
                     proc.kill()
                 else:
                     proc.terminate()
-                
+
                 return CallToolResult(
                     content=[ToolMessage(content=f"Process {proc_name} (PID: {pid}) terminated successfully")]
                 )
@@ -322,7 +303,7 @@ class DesktopCommander:
                             killed_count += 1
                         except (psutil.NoSuchProcess, psutil.AccessDenied):
                             continue
-                
+
                 if killed_count > 0:
                     return CallToolResult(
                         content=[ToolMessage(content=f"Terminated {killed_count} process(es) named '{process}'")]
@@ -335,7 +316,7 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Failed to kill process: {str(e)}", isError=True)]
             )
-    
+
     async def get_system_info(self) -> CallToolResult:
         """Get comprehensive system information"""
         try:
@@ -344,13 +325,13 @@ class DesktopCommander:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
             disk = psutil.disk_usage('/')
-            
+
             # Network info
             network = psutil.net_io_counters()
-            
+
             # Boot time
             boot_time = psutil.boot_time()
-            
+
             output = "=== SYSTEM INFORMATION ===\\n"
             output += f"CPU Cores: {cpu_count}\\n"
             output += f"CPU Usage: {cpu_percent}%\\n"
@@ -363,7 +344,7 @@ class DesktopCommander:
             output += f"Network Sent: {round(network.bytes_sent / 1024**2, 2)} MB\\n"
             output += f"Network Received: {round(network.bytes_recv / 1024**2, 2)} MB\\n"
             output += f"Boot Time: {boot_time}\\n"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -371,13 +352,13 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Failed to get system info: {str(e)}", isError=True)]
             )
-    
+
     async def manage_windows(self, args: dict) -> CallToolResult:
         """Manage windows"""
         action = args.get("action", "list")
         window_title = args.get("window_title", "")
         process_name = args.get("process_name", "")
-        
+
         try:
             if action == "list":
                 # Use PowerShell to list windows
@@ -388,7 +369,7 @@ class DesktopCommander:
                     capture_output=True,
                     text=True
                 )
-                
+
                 return CallToolResult(
                     content=[ToolMessage(content=f"Active Windows:\\n{result.stdout}")]
                 )
@@ -401,11 +382,11 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Window management failed: {str(e)}", isError=True)]
             )
-    
+
     async def automate_gui(self, args: dict) -> CallToolResult:
         """Automate GUI interactions"""
         action = args.get("action")
-        
+
         try:
             if action == "screenshot":
                 filename = args.get("filename", "screenshot.png")
@@ -446,12 +427,12 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"GUI automation failed: {str(e)}", isError=True)]
             )
-    
+
     async def manage_services(self, args: dict) -> CallToolResult:
         """Manage Windows services"""
         action = args.get("action", "list")
         service_name = args.get("service_name", "")
-        
+
         try:
             if action == "list":
                 cmd = "Get-Service | Select-Object Name, Status, DisplayName"
@@ -469,21 +450,21 @@ class DesktopCommander:
                     return CallToolResult(
                         content=[ToolMessage(content="Service name required", isError=True)]
                     )
-                
+
                 if action == "start":
                     cmd = f"Start-Service -Name '{service_name}'"
                 elif action == "stop":
                     cmd = f"Stop-Service -Name '{service_name}'"
                 else:  # restart
                     cmd = f"Restart-Service -Name '{service_name}'"
-                
+
                 result = subprocess.run(
                     f"powershell -Command \"{cmd}\"",
                     shell=True,
                     capture_output=True,
                     text=True
                 )
-                
+
                 if result.returncode == 0:
                     return CallToolResult(
                         content=[ToolMessage(content=f"Service '{service_name}' {action}ed successfully")]
@@ -500,7 +481,7 @@ class DesktopCommander:
             return CallToolResult(
                 content=[ToolMessage(content=f"Service management failed: {str(e)}", isError=True)]
             )
-    
+
     async def registry_operations(self, args: dict) -> CallToolResult:
         """Windows Registry operations"""
         action = args.get("action")
@@ -508,7 +489,7 @@ class DesktopCommander:
         key_path = args.get("key_path")
         value_name = args.get("value_name", "")
         value_data = args.get("value_data", "")
-        
+
         try:
             # Map hive names to winreg constants
             hive_map = {
@@ -516,14 +497,14 @@ class DesktopCommander:
                 "HKEY_LOCAL_MACHINE": winreg.HKEY_LOCAL_MACHINE,
                 "HKEY_CLASSES_ROOT": winreg.HKEY_CLASSES_ROOT
             }
-            
+
             if hive not in hive_map:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Invalid hive: {hive}", isError=True)]
                 )
-            
+
             hive_key = hive_map[hive]
-            
+
             if action == "read":
                 with winreg.OpenKey(hive_key, key_path) as key:
                     if value_name:
@@ -540,42 +521,42 @@ class DesktopCommander:
                                 name, value, value_type = winreg.EnumValue(key, i)
                                 values.append(f"{name}: {value} (Type: {value_type})")
                                 i += 1
-                        except WindowsError:
+                        except OSError:
                             pass
-                        
+
                         return CallToolResult(
                             content=[ToolMessage(content="Registry Values:\\n" + "\\n".join(values))]
                         )
-            
+
             elif action == "write":
                 if not value_name or not value_data:
                     return CallToolResult(
                         content=[ToolMessage(content="Value name and data required for write", isError=True)]
                     )
-                
+
                 with winreg.OpenKey(hive_key, key_path, 0, winreg.KEY_SET_VALUE) as key:
                     winreg.SetValueEx(key, value_name, 0, winreg.REG_SZ, value_data)
-                
+
                 return CallToolResult(
                     content=[ToolMessage(content=f"Registry value '{value_name}' set successfully")]
                 )
-            
+
             else:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Registry operation '{action}' not implemented", isError=True)]
                 )
-                
+
         except Exception as e:
             return CallToolResult(
                 content=[ToolMessage(content=f"Registry operation failed: {str(e)}", isError=True)]
             )
-    
+
     async def network_operations(self, args: dict) -> CallToolResult:
         """Network diagnostic operations"""
         action = args.get("action")
         target = args.get("target", "")
         options = args.get("options", "")
-        
+
         try:
             if action == "ping":
                 cmd = f"ping {options} {target}" if target else "ping 8.8.8.8"
@@ -591,7 +572,7 @@ class DesktopCommander:
                 return CallToolResult(
                     content=[ToolMessage(content=f"Unknown network action: {action}", isError=True)]
                 )
-            
+
             result = subprocess.run(
                 cmd,
                 shell=True,
@@ -599,14 +580,14 @@ class DesktopCommander:
                 text=True,
                 timeout=30
             )
-            
+
             output = f"Command: {cmd}\\n"
             output += f"Exit Code: {result.returncode}\\n"
             if result.stdout:
                 output += f"Output:\\n{result.stdout}"
             if result.stderr:
                 output += f"Error:\\n{result.stderr}"
-            
+
             return CallToolResult(
                 content=[ToolMessage(content=output)]
             )
@@ -618,7 +599,7 @@ class DesktopCommander:
 async def main():
     """Main entry point"""
     desktop_commander = DesktopCommander()
-    
+
     # Read server capabilities from stdin
     async with desktop_commander.server.stdio_client() as streams:
         await desktop_commander.server.request_loop(*streams)

@@ -15,21 +15,20 @@ Endpoints:
 """
 
 import asyncio
-import json
 import logging
 import time
-from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from typing import Any, Dict, List, Optional
+
 import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-from .production_monitor import ProductionMonitor, get_production_monitor, MetricThresholds, AlertConfig
-
+from .production_monitor import (
+    ProductionMonitor,
+    get_production_monitor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +70,7 @@ class EmergencyStopRequest(BaseModel):
 
 class DashboardServer:
     """Real-time dashboard server for production monitoring"""
-    
+
     def __init__(self, monitor: ProductionMonitor, port: int = 8000):
         self.monitor = monitor
         self.port = port
@@ -80,32 +79,32 @@ class DashboardServer:
             description="Real-time monitoring dashboard for crypto trading bot",
             version="1.0.0"
         )
-        
+
         # WebSocket connection manager
         self.websocket_connections: List[WebSocket] = []
-        
+
         # Setup middleware and routes
         self._setup_middleware()
         self._setup_routes()
-        
+
         # Register with monitor for updates
         self.monitor.register_dashboard_callback(self._handle_monitor_update)
-        
+
         logger.info(f"Dashboard server initialized on port {port}")
-    
+
     def _setup_middleware(self):
         """Setup CORS and other middleware"""
         self.app.add_middleware(
             CORSMiddleware,
             allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
-            allow_credentials=True, 
+            allow_credentials=True,
             allow_methods=["*"],
             allow_headers=["*"],
         )
-    
+
     def _setup_routes(self):
         """Setup API routes"""
-        
+
         @self.app.get("/")
         async def root():
             """Root endpoint with basic info"""
@@ -115,26 +114,26 @@ class DashboardServer:
                 "status": "running",
                 "endpoints": [
                     "/api/status",
-                    "/api/metrics", 
+                    "/api/metrics",
                     "/api/metrics/history",
                     "/api/alerts",
                     "/ws"
                 ]
             }
-        
+
         @self.app.get("/api/status", response_model=SystemStatusResponse)
         async def get_system_status():
             """Get overall system status"""
             status = self.monitor.get_system_status()
             return SystemStatusResponse(**status)
-        
+
         @self.app.get("/api/metrics")
         async def get_current_metrics():
             """Get current metrics snapshot"""
             metrics = self.monitor.get_current_metrics()
             if not metrics:
                 raise HTTPException(status_code=404, detail="No metrics available")
-            
+
             return {
                 "timestamp": metrics.timestamp,
                 "trades_executed": metrics.trades_executed,
@@ -161,7 +160,7 @@ class DashboardServer:
                 "balance_check_time_ms": metrics.balance_check_time_ms,
                 "order_processing_time_ms": metrics.order_processing_time_ms
             }
-        
+
         @self.app.get("/api/metrics/history")
         async def get_metrics_history(minutes: int = 60):
             """Get historical metrics"""
@@ -180,31 +179,31 @@ class DashboardServer:
                 }
                 for m in history
             ]
-        
+
         @self.app.get("/api/alerts")
         async def get_alerts(minutes: int = 60):
             """Get recent alerts"""
             alerts = self.monitor.get_alert_history(minutes)
             return alerts
-        
+
         @self.app.post("/api/control/emergency-stop")
         async def emergency_stop(request: EmergencyStopRequest, background_tasks: BackgroundTasks):
             """Trigger emergency shutdown"""
             if not request.confirm:
                 raise HTTPException(status_code=400, detail="Emergency stop requires confirmation")
-            
+
             logger.warning(f"Emergency stop requested via dashboard: {request.reason}")
-            
+
             # Trigger shutdown in background
             background_tasks.add_task(self.monitor.trigger_emergency_shutdown, request.reason)
-            
+
             return {
                 "success": True,
                 "message": "Emergency shutdown initiated",
                 "reason": request.reason,
                 "timestamp": time.time()
             }
-        
+
         @self.app.get("/api/thresholds")
         async def get_thresholds():
             """Get current alert thresholds"""
@@ -220,17 +219,17 @@ class DashboardServer:
                 "websocket_latency_ms": self.monitor.thresholds.websocket_latency_ms,
                 "trade_execution_time_ms": self.monitor.thresholds.trade_execution_time_ms
             }
-        
+
         @self.app.websocket("/ws")
         async def websocket_endpoint(websocket: WebSocket):
             """WebSocket endpoint for real-time updates"""
             await websocket.accept()
             self.websocket_connections.append(websocket)
-            
+
             try:
                 # Send initial data
                 await self._send_websocket_update(websocket)
-                
+
                 # Keep connection alive
                 while True:
                     try:
@@ -239,7 +238,7 @@ class DashboardServer:
                     except asyncio.TimeoutError:
                         # Send ping
                         await websocket.send_json({"type": "ping", "timestamp": time.time()})
-                    
+
             except WebSocketDisconnect:
                 self.websocket_connections.remove(websocket)
                 logger.info("WebSocket client disconnected")
@@ -247,7 +246,7 @@ class DashboardServer:
                 logger.error(f"WebSocket error: {e}")
                 if websocket in self.websocket_connections:
                     self.websocket_connections.remove(websocket)
-    
+
     async def _handle_monitor_update(self, metrics, alerts):
         """Handle updates from production monitor"""
         # Broadcast to all WebSocket connections
@@ -269,7 +268,7 @@ class DashboardServer:
             "alerts": alerts,
             "system_status": self.monitor.get_system_status()
         }
-        
+
         # Send to all connected clients
         disconnected = []
         for websocket in self.websocket_connections:
@@ -278,12 +277,12 @@ class DashboardServer:
             except Exception as e:
                 logger.error(f"WebSocket send error: {e}")
                 disconnected.append(websocket)
-        
+
         # Remove disconnected clients
         for ws in disconnected:
             if ws in self.websocket_connections:
                 self.websocket_connections.remove(ws)
-    
+
     async def _send_websocket_update(self, websocket: WebSocket):
         """Send current data to a specific WebSocket"""
         try:
@@ -308,7 +307,7 @@ class DashboardServer:
                 await websocket.send_json(update_data)
         except Exception as e:
             logger.error(f"WebSocket initial data send error: {e}")
-    
+
     async def start(self):
         """Start the dashboard server"""
         logger.info(f"Starting dashboard server on port {self.port}")
@@ -324,7 +323,7 @@ class DashboardServer:
 
 class DashboardHTML:
     """Generate HTML dashboard for standalone deployment"""
-    
+
     @staticmethod
     def generate_dashboard_html() -> str:
         """Generate complete HTML dashboard with embedded CSS and JavaScript"""
@@ -813,17 +812,17 @@ async def start_dashboard_server(monitor: ProductionMonitor, port: int = 8000):
 if __name__ == "__main__":
     import asyncio
     from pathlib import Path
-    
+
     async def main():
         # Initialize monitor
         project_root = Path(__file__).parent.parent.parent
         monitor = get_production_monitor(project_root)
-        
+
         # Start monitoring
         await monitor.start_monitoring()
-        
+
         # Start dashboard server
         server = DashboardServer(monitor, 8001)
         await server.start()
-    
+
     asyncio.run(main())

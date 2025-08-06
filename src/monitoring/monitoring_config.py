@@ -8,12 +8,11 @@ Provides default configurations, validation, and easy setup.
 
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Dict, Any, Optional, List
+from typing import Any, Dict, List, Optional
 
-from .production_monitor import MetricThresholds, AlertConfig
-
+from .production_monitor import AlertConfig, MetricThresholds
 
 logger = logging.getLogger(__name__)
 
@@ -36,83 +35,83 @@ class MonitoringConfig:
     # Health check intervals
     health_check_interval: float = 300.0  # 5 minutes
     metrics_collection_interval: float = 30.0  # 30 seconds
-    
+
     # Data retention
     metric_history_hours: int = 24
     alert_history_hours: int = 48
-    
+
     # Logging
     enable_monitoring_logs: bool = True
     log_level: str = "INFO"
     log_file_path: Optional[str] = None
-    
+
     # Component monitoring
     monitor_balance_manager: bool = True
     monitor_websocket: bool = True
     monitor_nonce_system: bool = True
     monitor_trading_performance: bool = True
     monitor_system_resources: bool = True
-    
+
     # Emergency controls
     enable_emergency_shutdown: bool = True
     emergency_conditions: List[str] = None
-    
+
     # Integration settings
     non_intrusive_mode: bool = True
     fallback_on_errors: bool = True
-    
+
     def __post_init__(self):
         if self.emergency_conditions is None:
             self.emergency_conditions = [
                 "memory_usage_critical",
-                "api_error_rate_critical", 
+                "api_error_rate_critical",
                 "daily_loss_limit_exceeded"
             ]
 
 
 class ConfigurationManager:
     """Manages monitoring configuration with validation and defaults"""
-    
+
     def __init__(self, config_file: Optional[Path] = None):
         self.config_file = config_file
         self._config_cache = {}
-    
+
     def load_config(self, config_file: Optional[Path] = None) -> Dict[str, Any]:
         """Load configuration from file or return defaults"""
         config_path = config_file or self.config_file
-        
+
         if config_path and config_path.exists():
             try:
-                with open(config_path, 'r') as f:
+                with open(config_path) as f:
                     config = json.load(f)
                 logger.info(f"Loaded monitoring config from {config_path}")
                 return self._validate_and_merge_config(config)
             except Exception as e:
                 logger.error(f"Error loading config from {config_path}: {e}")
                 logger.info("Using default configuration")
-        
+
         return self.get_default_config()
-    
+
     def save_config(self, config: Dict[str, Any], config_file: Optional[Path] = None):
         """Save configuration to file"""
         config_path = config_file or self.config_file
-        
+
         if not config_path:
             raise ValueError("No config file path specified")
-        
+
         try:
             # Ensure directory exists
             config_path.parent.mkdir(parents=True, exist_ok=True)
-            
+
             with open(config_path, 'w') as f:
                 json.dump(config, f, indent=2)
-            
+
             logger.info(f"Saved monitoring config to {config_path}")
-            
+
         except Exception as e:
             logger.error(f"Error saving config to {config_path}: {e}")
             raise
-    
+
     def get_default_config(self) -> Dict[str, Any]:
         """Get default monitoring configuration"""
         return {
@@ -121,11 +120,11 @@ class ConfigurationManager:
             'alerts': asdict(AlertConfig()),
             'dashboard': asdict(DashboardConfig())
         }
-    
+
     def get_production_config(self) -> Dict[str, Any]:
         """Get production-optimized configuration"""
         config = self.get_default_config()
-        
+
         # Production-specific thresholds
         config['thresholds'].update({
             'memory_usage_mb': 400.0,
@@ -133,7 +132,7 @@ class ConfigurationManager:
             'daily_pnl_loss_limit': -25.0,
             'api_error_rate_percent': 0.05
         })
-        
+
         # Production alert settings
         config['alerts'].update({
             'console_alerts': False,
@@ -141,20 +140,20 @@ class ConfigurationManager:
             'email_notifications': True,
             'webhook_notifications': True
         })
-        
+
         # Production monitoring settings
         config['monitoring'].update({
             'health_check_interval': 180.0,  # 3 minutes
             'metrics_collection_interval': 15.0,  # 15 seconds
             'enable_emergency_shutdown': True
         })
-        
+
         return config
-    
+
     def get_development_config(self) -> Dict[str, Any]:
         """Get development-optimized configuration"""
         config = self.get_default_config()
-        
+
         # Development-specific thresholds (more lenient)
         config['thresholds'].update({
             'memory_usage_mb': 600.0,
@@ -162,7 +161,7 @@ class ConfigurationManager:
             'daily_pnl_loss_limit': -100.0,
             'api_error_rate_percent': 0.5
         })
-        
+
         # Development alert settings
         config['alerts'].update({
             'console_alerts': True,
@@ -170,40 +169,40 @@ class ConfigurationManager:
             'email_notifications': False,
             'webhook_notifications': False
         })
-        
+
         # Development monitoring settings
         config['monitoring'].update({
             'health_check_interval': 600.0,  # 10 minutes
             'metrics_collection_interval': 60.0,  # 1 minute
             'enable_emergency_shutdown': False
         })
-        
+
         return config
-    
+
     def _validate_and_merge_config(self, user_config: Dict[str, Any]) -> Dict[str, Any]:
         """Validate user config and merge with defaults"""
         default_config = self.get_default_config()
-        
+
         # Deep merge configuration
         merged_config = self._deep_merge(default_config, user_config)
-        
+
         # Validate configuration
         self._validate_config(merged_config)
-        
+
         return merged_config
-    
+
     def _deep_merge(self, base: Dict, override: Dict) -> Dict:
         """Deep merge two dictionaries"""
         result = base.copy()
-        
+
         for key, value in override.items():
             if key in result and isinstance(result[key], dict) and isinstance(value, dict):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
-        
+
         return result
-    
+
     def _validate_config(self, config: Dict[str, Any]):
         """Validate configuration values"""
         try:
@@ -212,20 +211,20 @@ class ConfigurationManager:
             if monitoring.get('health_check_interval', 0) < 30:
                 logger.warning("Health check interval less than 30 seconds, using 30")
                 monitoring['health_check_interval'] = 30.0
-            
+
             # Validate thresholds
             thresholds = config.get('thresholds', {})
             if thresholds.get('memory_usage_mb', 0) < 100:
                 logger.warning("Memory threshold too low, using 100MB minimum")
                 thresholds['memory_usage_mb'] = 100.0
-            
+
             # Validate dashboard config
             dashboard = config.get('dashboard', {})
             port = dashboard.get('port', 8000)
             if not (1024 <= port <= 65535):
                 logger.warning(f"Invalid dashboard port {port}, using 8000")
                 dashboard['port'] = 8000
-            
+
         except Exception as e:
             logger.error(f"Config validation error: {e}")
             raise
@@ -242,11 +241,11 @@ def create_monitoring_config_objects(config_dict: Dict[str, Any]) -> tuple:
     thresholds = MetricThresholds(**config_dict.get('thresholds', {}))
     alert_config = AlertConfig(**config_dict.get('alerts', {}))
     dashboard_config = DashboardConfig(**config_dict.get('dashboard', {}))
-    
+
     return monitoring_config, thresholds, alert_config, dashboard_config
 
 
-def setup_monitoring_from_config(config_path: Optional[Path] = None, 
+def setup_monitoring_from_config(config_path: Optional[Path] = None,
                                 config_type: str = "default") -> Dict[str, Any]:
     """
     Setup monitoring configuration from file or defaults
@@ -259,7 +258,7 @@ def setup_monitoring_from_config(config_path: Optional[Path] = None,
         Complete configuration dictionary
     """
     manager = ConfigurationManager(config_path)
-    
+
     if config_type == "production":
         config = manager.get_production_config()
     elif config_type == "development":
@@ -268,7 +267,7 @@ def setup_monitoring_from_config(config_path: Optional[Path] = None,
         config = manager.load_config()
     else:
         config = manager.get_default_config()
-    
+
     return config
 
 
@@ -299,7 +298,7 @@ CONFIGS = {
             'port': 8000
         }
     },
-    
+
     'production': {
         'monitoring': {
             'health_check_interval': 180.0,
@@ -323,7 +322,7 @@ CONFIGS = {
             'port': 8000
         }
     },
-    
+
     'development': {
         'monitoring': {
             'health_check_interval': 600.0,
@@ -347,7 +346,7 @@ CONFIGS = {
             'port': 8001
         }
     },
-    
+
     'minimal': {
         'monitoring': {
             'health_check_interval': 900.0,  # 15 minutes
@@ -372,10 +371,10 @@ def get_config_by_name(config_name: str) -> Dict[str, Any]:
     """Get predefined configuration by name"""
     if config_name not in CONFIGS:
         raise ValueError(f"Unknown config name: {config_name}. Available: {list(CONFIGS.keys())}")
-    
+
     base_config = ConfigurationManager().get_default_config()
     named_config = CONFIGS[config_name]
-    
+
     # Deep merge
     manager = ConfigurationManager()
     return manager._deep_merge(base_config, named_config)
@@ -383,27 +382,26 @@ def get_config_by_name(config_name: str) -> Dict[str, Any]:
 
 # Example usage and testing
 if __name__ == "__main__":
-    import asyncio
-    
+
     def test_configs():
         """Test configuration loading and validation"""
         manager = ConfigurationManager()
-        
+
         # Test default config
         default = manager.get_default_config()
         print("Default config keys:", list(default.keys()))
-        
+
         # Test production config
         production = manager.get_production_config()
         print("Production memory threshold:", production['thresholds']['memory_usage_mb'])
-        
+
         # Test development config
         development = manager.get_development_config()
         print("Development health check interval:", development['monitoring']['health_check_interval'])
-        
+
         # Test named configs
         for name in CONFIGS.keys():
             config = get_config_by_name(name)
             print(f"{name} config dashboard enabled:", config['dashboard']['enabled'])
-    
+
     test_configs()

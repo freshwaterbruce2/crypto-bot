@@ -23,23 +23,23 @@
   "trade_pairs": [
     "SHIB/USDT"
   ],
-  "interval_minutes": 0.2,
-  "position_size_usdt": 2.5,
-  "min_order_size_usdt": 2.0,
-  "max_order_size_usdt": 5.0,
+  "interval_minutes": 0.1,
+  "position_size_usdt": 3.0,
+  "min_order_size_usdt": 2.5,
+  "max_order_size_usdt": 8.0,
   "tier_1_trade_limit": 1.0,
   "use_dynamic_position_sizing": true,
-  "position_size_percentage": 0.9,
+  "position_size_percentage": 0.95,
   "enable_size_validation": true,
   "skip_insufficient_balance": true,
-  "take_profit_pct": 0.002,
-  "stop_loss_pct": 0.008,
+  "take_profit_pct": 0.0008,
+  "stop_loss_pct": 0.003,
   "position_cycling": {
     "enabled": true,
-    "max_hold_time_hours": 0.083,
-    "force_sell_profitable_after_hours": 0.017,
-    "check_interval_minutes": 0.167,
-    "min_profit_to_sell_early": 0.001
+    "max_hold_time_hours": 0.05,
+    "force_sell_profitable_after_hours": 0.01,
+    "check_interval_minutes": 0.1,
+    "min_profit_to_sell_early": 0.0008
   },
   "risk_per_trade": 0.03,
   "min_trade_value_usd": 2.0,
@@ -50,7 +50,7 @@
   "confidence_based_sizing": false,
   "max_portfolio_risk": 0.5,
   "max_asset_exposure": 0.6,
-  "max_position_pct": 0.7,
+  "max_position_pct": 0.85,
   "circuit_breaker_drawdown": 3.0,
   "circuit_breaker_volatility": 2.0,
   "disable_risk_checks": false,
@@ -77,33 +77,35 @@
   "kraken_websocket_connections": 2,
   "kraken_rate_limit_backoff": true,
   "rate_limiting_v2": {
-    "enabled": true,
-    "kraken_2025_specs": {
-      "rest_api_limits": {
-        "starter": {"max_counter": 15, "decay_rate": 0.33},
-        "intermediate": {"max_counter": 20, "decay_rate": 0.5},
-        "pro": {"max_counter": 20, "decay_rate": 1.0}
-      },
-      "trading_limits": {
-        "starter": {"max_orders": 60, "max_ratecount": 60, "decay_rate": 1.0},
-        "intermediate": {"max_orders": 80, "max_ratecount": 125, "decay_rate": 2.34},
-        "pro": {"max_orders": 225, "max_ratecount": 180, "decay_rate": 3.75}
-      }
-    },
-    "max_orders_per_minute": 53,
-    "burst_orders_allowed": 45,
-    "aggressive_counter_management": true,
-    "pro_tier_optimization": true,
-    "prefer_market_orders": true,
-    "use_ioc_for_scalping": true,
-    "max_concurrent_orders": 20,
-    "safety_buffer_pct": 0.8,
-    "temporary_lockout_wait": 900.0,
-    "rate_limit_backoff_multiplier": 2.0,
-    "lockout_2025_compliance": {
-      "exact_15_minute_wait": true,
-      "lockout_detection_improved": true,
-      "automatic_recovery": true,
+  "enabled": true,
+  "kraken_2025_specs": {
+  "rest_api_limits": {
+  "starter": {"max_counter": 15, "decay_rate": 0.33},
+  "intermediate": {"max_counter": 20, "decay_rate": 0.5},
+  "pro": {"max_counter": 20, "decay_rate": 1.0}
+  },
+  "trading_limits": {
+  "starter": {"max_orders": 60, "max_ratecount": 60, "decay_rate": 1.0},
+  "intermediate": {"max_orders": 80, "max_ratecount": 125, "decay_rate": 2.34},
+  "pro": {"max_orders": 225, "max_ratecount": 180, "decay_rate": 3.75}
+  }
+  },
+  "max_orders_per_minute": 90,
+  "burst_orders_allowed": 75,
+  "aggressive_counter_management": true,
+  "pro_tier_optimization": true,
+  "prefer_market_orders": true,
+  "use_ioc_for_scalping": true,
+  "max_concurrent_orders": 30,
+  "safety_buffer_pct": 0.85,
+  "temporary_lockout_wait": 900.0,
+  "rate_limit_backoff_multiplier": 1.5,
+  "ultra_high_frequency_mode": true,
+  "micro_scalping_optimization": true,
+  "lockout_2025_compliance": {
+  "exact_15_minute_wait": true,
+  "lockout_detection_improved": true,
+    "automatic_recovery": true,
       "counter_reset_on_success": true
     }
   },
@@ -184,20 +186,20 @@
   },
   "fee_free_scalping": {
     "enabled": true,
-    "min_profit_target": 0.001,
-    "max_hold_time_seconds": 300,
+    "min_profit_target": 0.0008,
+    "max_hold_time_seconds": 180,
     "rapid_fire_mode": true,
-    "consecutive_wins_boost": 3,
-    "target_daily_trades": 100,
-    "max_concurrent_positions": 10,
+    "consecutive_wins_boost": 5,
+    "target_daily_trades": 250,
+    "max_concurrent_positions": 15,
     "ultra_tight_stops": true,
-    "stop_loss_pct": 0.001
+    "stop_loss_pct": 0.0012
   },
   "dynamic_profit_targets": {
-    "ultra_fast": 0.001,
-    "fast": 0.002,
-    "medium": 0.003,
-    "conservative": 0.005
+    "ultra_fast": 0.0008,
+    "fast": 0.0015,
+    "medium": 0.0025,
+    "conservative": 0.004
   },
   "max_position_multiplier": 3.5,
   "min_position_multiplier": 1.0,
@@ -241,7 +243,7 @@
     }
   },
   "position_sizing_aggressive": 0.7,
-  "max_capital_deployment_pct": 0.95,
+  "max_capital_deployment_pct": 0.98,
   "ultra_fresh_data_mode": true,
   "learning_acceleration": true,
   "order_settings": {
@@ -409,33 +411,42 @@
   },
   "rapid_fire_mode": {
     "enabled": true,
-    "consecutive_profit_threshold": 0.01,
-    "max_consecutive_trades": 5,
-    "cooldown_after_series": 30,
+    "consecutive_profit_threshold": 0.0008,
+    "max_consecutive_trades": 10,
+    "cooldown_after_series": 15,
+    "ultra_rapid_fire": true,
+    "micro_profit_chain_bonus": true,
     "pairs_for_rapid_fire": [
       "SHIB/USDT"
     ]
   },
   "micro_profit_optimization": {
-    "target_latency_ms": 100,
+    "target_latency_ms": 50,
     "parallel_validation": true,
     "fast_path_enabled": true,
-    "cache_ttl_seconds": 60,
+    "cache_ttl_seconds": 30,
     "batch_processing": true,
+    "ultra_aggressive_mode": true,
     "profit_tiers": [
-      0.01,
-      0.015,
-      0.02,
-      0.025,
-      0.03
-    ]
+      0.0008,
+      0.0015,
+      0.0025,
+      0.004,
+      0.006
+    ],
+    "harvest_any_profit": true,
+    "minimum_profit_usd": 0.01
   },
   "compound_tracking": {
     "enabled": true,
     "track_hourly_rate": true,
     "track_daily_projection": true,
     "snowball_visualization": true,
-    "target_daily_trades": 100
+    "target_daily_trades": 250,
+    "compound_profit_threshold": 0.0008,
+    "auto_compound_enabled": true,
+    "compound_reinvestment_pct": 98,
+    "track_micro_profits": true
   },
   "balance_management": {
     "use_realtime_websocket": false,
@@ -556,15 +567,32 @@
     "enabled": true,
     "primary_pair": "SHIB/USDT",
     "balance_accumulation_mode": true,
-    "aggressive_capital_deployment": 0.95,
+    "aggressive_capital_deployment": 0.98,
     "min_order_shib": 100000,
-    "target_daily_compound_rate": 0.02,
+    "target_daily_compound_rate": 0.05,
     "micro_profit_reinvestment": true,
+    "ultra_aggressive_compounding": true,
+    "reinvest_immediately": true,
+    "compound_every_profit": true,
     "single_pair_advantages": {
       "reduced_spread_costs": true,
       "concentrated_liquidity": true,
       "faster_execution": true,
-      "simplified_risk_management": true
+      "simplified_risk_management": true,
+      "maximum_compounding_efficiency": true
     }
+  },
+  "balance_target": {
+    "enabled": true,
+    "target_total_balance_usd": 500.0,
+    "stop_trading_at_target": false,
+    "alert_at_percentage": 95,
+    "single_pair_until_target": "SHIB/USDT",
+    "aggressive_mode_until_target": true,
+    "compound_all_profits": true,
+    "auto_increase_position_size": true,
+    "compound_frequency_minutes": 15,
+    "reinvest_profit_percentage": 98,
+    "description": "Trade only SHIB/USDT with aggressive compounding until reaching $500 total balance"
   }
 }

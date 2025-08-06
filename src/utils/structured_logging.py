@@ -8,14 +8,14 @@ and trading-specific log enrichment for better monitoring and debugging.
 
 import json
 import logging
-import time
-import threading
-from datetime import datetime
-from typing import Dict, Any, Optional, List, Union
-from functools import wraps
-from collections import defaultdict, deque
 import sys
+import threading
+import time
 import traceback
+from collections import defaultdict, deque
+from datetime import datetime
+from functools import wraps
+from typing import Any, Dict
 
 # Performance tracking
 _log_metrics = defaultdict(int)
@@ -25,12 +25,12 @@ _metric_lock = threading.Lock()
 
 class TradingLogFormatter(logging.Formatter):
     """Custom JSON formatter for trading logs"""
-    
+
     def __init__(self, include_extra: bool = True):
         super().__init__()
         self.include_extra = include_extra
         self.hostname = self._get_hostname()
-        
+
     def _get_hostname(self) -> str:
         """Get hostname for log enrichment"""
         try:
@@ -38,10 +38,10 @@ class TradingLogFormatter(logging.Formatter):
             return socket.gethostname()
         except:
             return "unknown"
-    
+
     def format(self, record: logging.LogRecord) -> str:
         """Format log record as structured JSON"""
-        
+
         # Base log structure
         log_entry = {
             "timestamp": datetime.fromtimestamp(record.created).isoformat(),
@@ -55,7 +55,7 @@ class TradingLogFormatter(logging.Formatter):
             "process": record.process,
             "hostname": self.hostname
         }
-        
+
         # Add exception info if present
         if record.exc_info:
             log_entry["exception"] = {
@@ -63,7 +63,7 @@ class TradingLogFormatter(logging.Formatter):
                 "message": str(record.exc_info[1]) if record.exc_info[1] else None,
                 "traceback": self.formatException(record.exc_info)
             }
-        
+
         # Add extra fields
         if self.include_extra:
             for key, value in record.__dict__.items():
@@ -82,27 +82,27 @@ class TradingLogFormatter(logging.Formatter):
                                 log_entry[key] = value
                         except (TypeError, ValueError):
                             log_entry[key] = str(value)
-        
+
         return json.dumps(log_entry, default=str, separators=(',', ':'))
 
 
 class TradingLogger:
     """Enhanced logger for trading operations with performance tracking"""
-    
+
     def __init__(self, name: str):
         self.logger = logging.getLogger(name)
         self.name = name
-        
+
         # Performance tracking
         self.operation_counts = defaultdict(int)
         self.operation_timings = defaultdict(list)
-        
+
     def _log_with_context(self, level: int, msg: str, **kwargs):
         """Log with trading context"""
         with _metric_lock:
             _log_metrics[level] += 1
             _log_timings.append(time.time())
-        
+
         # Enrich with trading context
         extra = {
             'log_id': f"{int(time.time()*1000)}_{threading.get_ident()}",
@@ -110,29 +110,29 @@ class TradingLogger:
             'exchange': kwargs.pop('exchange', 'kraken'),
             **kwargs
         }
-        
+
         self.logger.log(level, msg, extra=extra)
-    
+
     def info(self, msg: str, **kwargs):
         """Log info message with context"""
         self._log_with_context(logging.INFO, msg, **kwargs)
-    
+
     def warning(self, msg: str, **kwargs):
         """Log warning message with context"""
         self._log_with_context(logging.WARNING, msg, **kwargs)
-    
+
     def error(self, msg: str, **kwargs):
         """Log error message with context"""
         self._log_with_context(logging.ERROR, msg, **kwargs)
-    
+
     def debug(self, msg: str, **kwargs):
         """Log debug message with context"""
         self._log_with_context(logging.DEBUG, msg, **kwargs)
-    
+
     def critical(self, msg: str, **kwargs):
         """Log critical message with context"""
         self._log_with_context(logging.CRITICAL, msg, **kwargs)
-    
+
     def trade(self, symbol: str, side: str, amount: float, price: float, **kwargs):
         """Log trade execution with structured data"""
         self._log_with_context(
@@ -146,7 +146,7 @@ class TradingLogger:
             trade_value=amount * price,
             **kwargs
         )
-    
+
     def balance_update(self, asset: str, old_balance: float, new_balance: float, **kwargs):
         """Log balance update with structured data"""
         change = new_balance - old_balance
@@ -160,7 +160,7 @@ class TradingLogger:
             balance_change=change,
             **kwargs
         )
-    
+
     def signal_generated(self, symbol: str, signal_type: str, confidence: float, **kwargs):
         """Log trading signal with structured data"""
         self._log_with_context(
@@ -172,7 +172,7 @@ class TradingLogger:
             confidence=confidence,
             **kwargs
         )
-    
+
     def performance_metric(self, metric_name: str, value: float, unit: str = "", **kwargs):
         """Log performance metric"""
         self._log_with_context(
@@ -184,7 +184,7 @@ class TradingLogger:
             metric_unit=unit,
             **kwargs
         )
-    
+
     def api_call(self, endpoint: str, method: str, duration: float, status_code: int = None, **kwargs):
         """Log API call with performance data"""
         self._log_with_context(
@@ -197,7 +197,7 @@ class TradingLogger:
             status_code=status_code,
             **kwargs
         )
-    
+
     def websocket_event(self, event_type: str, channel: str, data_size: int = 0, **kwargs):
         """Log WebSocket event with structured data"""
         self._log_with_context(
@@ -218,11 +218,11 @@ def timed_operation(operation_name: str = None):
         def wrapper(*args, **kwargs):
             start_time = time.time()
             op_name = operation_name or f"{func.__module__}.{func.__name__}"
-            
+
             try:
                 result = func(*args, **kwargs)
                 duration = time.time() - start_time
-                
+
                 # Log successful operation
                 logger = get_logger(func.__module__)
                 logger.performance_metric(
@@ -232,12 +232,12 @@ def timed_operation(operation_name: str = None):
                     operation=op_name,
                     success=True
                 )
-                
+
                 return result
-                
+
             except Exception as e:
                 duration = time.time() - start_time
-                
+
                 # Log failed operation
                 logger = get_logger(func.__module__)
                 logger.error(
@@ -249,7 +249,7 @@ def timed_operation(operation_name: str = None):
                     success=False
                 )
                 raise
-                
+
         return wrapper
     return decorator
 
@@ -277,50 +277,50 @@ def log_exceptions(logger_name: str = None):
 
 class LoggingContextManager:
     """Context manager for adding context to all logs within a block"""
-    
+
     def __init__(self, logger: TradingLogger, **context):
         self.logger = logger
         self.context = context
         self.original_log_method = None
-    
+
     def __enter__(self):
         # Store original logging method
         self.original_log_method = self.logger._log_with_context
-        
+
         # Create wrapped method with context
         def wrapped_log(level, msg, **kwargs):
             combined_kwargs = {**self.context, **kwargs}
             return self.original_log_method(level, msg, **combined_kwargs)
-        
+
         self.logger._log_with_context = wrapped_log
         return self
-    
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         # Restore original method
         self.logger._log_with_context = self.original_log_method
 
 
-def setup_structured_logging(log_level: str = "INFO", 
+def setup_structured_logging(log_level: str = "INFO",
                             log_file: str = None,
                             enable_console: bool = True) -> None:
     """Setup structured logging for the entire application"""
-    
+
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, log_level.upper()))
-    
+
     # Clear existing handlers
     root_logger.handlers.clear()
-    
+
     # Create formatter
     formatter = TradingLogFormatter()
-    
+
     # Console handler
     if enable_console:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
         root_logger.addHandler(console_handler)
-    
+
     # File handler
     if log_file:
         try:
@@ -329,12 +329,12 @@ def setup_structured_logging(log_level: str = "INFO",
             root_logger.addHandler(file_handler)
         except Exception as e:
             print(f"Failed to setup file logging: {e}")
-    
+
     # Set specific logger levels
     logging.getLogger('kraken').setLevel(logging.WARNING)
     logging.getLogger('urllib3').setLevel(logging.WARNING)
     logging.getLogger('websockets').setLevel(logging.WARNING)
-    
+
     print(f"Structured logging configured: level={log_level}, file={log_file}")
 
 
@@ -348,7 +348,7 @@ def get_logging_stats() -> Dict[str, Any]:
     with _metric_lock:
         total_logs = sum(_log_metrics.values())
         recent_logs = len([t for t in _log_timings if time.time() - t < 60])  # Last minute
-        
+
         return {
             "total_logs": total_logs,
             "recent_logs_per_minute": recent_logs,
@@ -368,7 +368,7 @@ performance_logger = get_logger("performance")
 # Export main components
 __all__ = [
     'TradingLogger',
-    'TradingLogFormatter', 
+    'TradingLogFormatter',
     'setup_structured_logging',
     'get_logger',
     'get_logging_stats',

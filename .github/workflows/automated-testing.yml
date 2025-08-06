@@ -1,0 +1,261 @@
+name: Automated Testing Suite
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: '0 */4 * * *'  # Run every 4 hours
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.12'
+  MIN_COVERAGE: 85
+
+jobs:
+  test-matrix:
+    name: Test Matrix
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11', '3.12']
+        test-type: [unit, integration, e2e]
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpq-dev redis-server
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install postgresql redis
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Run ${{ matrix.test-type }} tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          TEST_ENV: ci
+        run: |
+          if [ "${{ matrix.test-type }}" == "unit" ]; then
+            pytest tests/unit/ -v --cov=src --cov-report=xml --cov-report=term
+          elif [ "${{ matrix.test-type }}" == "integration" ]; then
+            pytest tests/integration/ -v --cov=src --cov-append --cov-report=xml
+          elif [ "${{ matrix.test-type }}" == "e2e" ]; then
+            pytest tests/e2e/ -v --cov=src --cov-append --cov-report=xml
+          fi
+        shell: bash
+
+      - name: Check coverage threshold
+        run: |
+          coverage report --fail-under=${{ env.MIN_COVERAGE }}
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.test-type }}
+          path: coverage.xml
+
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install mutmut
+
+      - name: Run mutation tests
+        run: |
+          mutmut run --paths-to-mutate=src/ --tests-dir=tests/ --runner="pytest -x" || true
+          mutmut results
+
+      - name: Generate mutation report
+        run: |
+          mutmut html
+          
+      - name: Upload mutation test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-test-results
+          path: html/
+
+  property-based-testing:
+    name: Property-Based Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install hypothesis
+
+      - name: Run property-based tests
+        run: |
+          pytest tests/property/ -v --hypothesis-show-statistics
+
+  fuzz-testing:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install atheris
+
+      - name: Run fuzz tests
+        run: |
+          python tests/fuzz/run_fuzzing.py --max-time=300
+
+  contract-testing:
+    name: Contract Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pact-python
+
+      - name: Run contract tests
+        run: |
+          pytest tests/contracts/ -v
+
+      - name: Publish contracts to Pact Broker
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          PACT_BROKER_URL: ${{ secrets.PACT_BROKER_URL }}
+          PACT_BROKER_TOKEN: ${{ secrets.PACT_BROKER_TOKEN }}
+        run: |
+          pact-broker publish pacts/ --consumer-app-version=${{ github.sha }}
+
+  chaos-testing:
+    name: Chaos Testing
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Litmus Chaos
+        run: |
+          kubectl apply -f https://litmuschaos.github.io/litmus/litmus-operator-v2.14.0.yaml
+
+      - name: Run chaos experiments
+        run: |
+          kubectl apply -f tests/chaos/experiments/
+
+      - name: Wait for experiments
+        run: |
+          sleep 300  # Wait 5 minutes for chaos experiments
+
+      - name: Validate system resilience
+        run: |
+          python tests/chaos/validate_resilience.py
+
+  test-report:
+    name: Generate Test Report
+    runs-on: ubuntu-latest
+    needs: [test-matrix, mutation-testing, property-based-testing]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          merge-multiple: true
+
+      - name: Merge coverage reports
+        run: |
+          pip install coverage
+          coverage combine coverage*.xml
+          coverage report
+          coverage html
+
+      - name: Generate test summary
+        run: |
+          echo "# Test Execution Summary" > test-summary.md
+          echo "## Coverage Report" >> test-summary.md
+          coverage report --format=markdown >> test-summary.md
+          
+      - name: Upload final test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: complete-test-report
+          path: |
+            htmlcov/
+            test-summary.md
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('test-summary.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });

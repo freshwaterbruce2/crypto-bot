@@ -6,11 +6,10 @@ API documentation. It includes endpoint mappings, tier configurations,
 penalty point calculations, and backoff strategies.
 """
 
-import time
-from dataclasses import dataclass
-from typing import Dict, List, Optional, Union, Tuple
-from enum import Enum
 import logging
+from dataclasses import dataclass
+from enum import Enum
+from typing import Dict, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -20,40 +19,40 @@ class EndpointType(Enum):
     PRIVATE = "private"
     PUBLIC = "public"
     WEBSOCKET = "websocket"
-    
+
 
 class AccountTier(Enum):
     """Kraken account tiers with different rate limits."""
     STARTER = "starter"
-    INTERMEDIATE = "intermediate" 
+    INTERMEDIATE = "intermediate"
     PRO = "pro"
 
 
 @dataclass
 class RateLimitConfig:
     """Rate limit configuration for specific account tiers and endpoint types."""
-    
+
     # Basic rate limits (requests per minute)
     private_limit: int = 15  # 2025 spec: 15 requests per minute for private endpoints
     public_limit: int = 20   # 2025 spec: 20 requests per minute for public endpoints
-    
+
     # Penalty point system
     max_penalty_points: int = 180  # Maximum before rate limiting kicks in
     penalty_decay_rate: float = 3.75  # Points per second decay rate
-    
+
     # Request weights
     default_weight: int = 1
     heavy_weight: int = 2
-    
+
     # Backoff configuration
     base_backoff_seconds: float = 1.0
     max_backoff_seconds: float = 300.0  # 5 minutes maximum
     backoff_multiplier: float = 2.0
-    
+
     # Queue management
     max_queue_size: int = 1000
     priority_queue_ratio: float = 0.3  # 30% for high priority requests
-    
+
     # Circuit breaker
     circuit_breaker_threshold: float = 0.9  # Open at 90% capacity
     circuit_breaker_recovery_time: float = 30.0  # 30 seconds
@@ -69,7 +68,7 @@ TIER_CONFIGS = {
         base_backoff_seconds=2.0,
         max_backoff_seconds=120.0
     ),
-    
+
     AccountTier.INTERMEDIATE: RateLimitConfig(
         private_limit=15,
         public_limit=20,
@@ -78,7 +77,7 @@ TIER_CONFIGS = {
         base_backoff_seconds=1.5,
         max_backoff_seconds=180.0
     ),
-    
+
     AccountTier.PRO: RateLimitConfig(
         private_limit=15,
         public_limit=20,
@@ -90,27 +89,27 @@ TIER_CONFIGS = {
 }
 
 
-@dataclass 
+@dataclass
 class EndpointConfig:
     """Configuration for individual API endpoints."""
-    
+
     name: str
     endpoint_type: EndpointType
     weight: int = 1
     penalty_points: int = 1
     max_requests_per_minute: Optional[int] = None
     requires_auth: bool = False
-    
+
     # Special handling flags
     is_trading_endpoint: bool = False
     supports_batch: bool = False
     has_age_penalty: bool = False  # For order modifications
-    
+
 
 # Kraken API endpoint configurations (2025 specifications)
 ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
-    
-    # ===== PUBLIC ENDPOINTS ===== 
+
+    # ===== PUBLIC ENDPOINTS =====
     "ServerTime": EndpointConfig(
         name="ServerTime",
         endpoint_type=EndpointType.PUBLIC,
@@ -118,15 +117,15 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,  # No penalty for public endpoints
         max_requests_per_minute=20
     ),
-    
+
     "SystemStatus": EndpointConfig(
-        name="SystemStatus", 
+        name="SystemStatus",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     "AssetPairs": EndpointConfig(
         name="AssetPairs",
         endpoint_type=EndpointType.PUBLIC,
@@ -134,7 +133,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     "Ticker": EndpointConfig(
         name="Ticker",
         endpoint_type=EndpointType.PUBLIC,
@@ -142,7 +141,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     "OHLC": EndpointConfig(
         name="OHLC",
         endpoint_type=EndpointType.PUBLIC,
@@ -150,7 +149,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     "Depth": EndpointConfig(
         name="Depth",
         endpoint_type=EndpointType.PUBLIC,
@@ -158,15 +157,15 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,
         max_requests_per_minute=10  # Lower limit due to weight
     ),
-    
+
     "Trades": EndpointConfig(
         name="Trades",
-        endpoint_type=EndpointType.PUBLIC, 
+        endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     "Spread": EndpointConfig(
         name="Spread",
         endpoint_type=EndpointType.PUBLIC,
@@ -174,7 +173,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         penalty_points=0,
         max_requests_per_minute=20
     ),
-    
+
     # ===== PRIVATE ENDPOINTS =====
     "Balance": EndpointConfig(
         name="Balance",
@@ -184,7 +183,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "TradeBalance": EndpointConfig(
         name="TradeBalance",
         endpoint_type=EndpointType.PRIVATE,
@@ -193,7 +192,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "OpenOrders": EndpointConfig(
         name="OpenOrders",
         endpoint_type=EndpointType.PRIVATE,
@@ -202,7 +201,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "ClosedOrders": EndpointConfig(
         name="ClosedOrders",
         endpoint_type=EndpointType.PRIVATE,
@@ -211,7 +210,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=10,
         requires_auth=True
     ),
-    
+
     "QueryOrders": EndpointConfig(
         name="QueryOrders",
         endpoint_type=EndpointType.PRIVATE,
@@ -220,7 +219,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "TradesHistory": EndpointConfig(
         name="TradesHistory",
         endpoint_type=EndpointType.PRIVATE,
@@ -229,7 +228,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=10,
         requires_auth=True
     ),
-    
+
     "QueryTrades": EndpointConfig(
         name="QueryTrades",
         endpoint_type=EndpointType.PRIVATE,
@@ -238,7 +237,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "OpenPositions": EndpointConfig(
         name="OpenPositions",
         endpoint_type=EndpointType.PRIVATE,
@@ -247,7 +246,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "Ledgers": EndpointConfig(
         name="Ledgers",
         endpoint_type=EndpointType.PRIVATE,
@@ -256,7 +255,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=10,
         requires_auth=True
     ),
-    
+
     "QueryLedgers": EndpointConfig(
         name="QueryLedgers",
         endpoint_type=EndpointType.PRIVATE,
@@ -265,7 +264,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=10,
         requires_auth=True
     ),
-    
+
     "TradeVolume": EndpointConfig(
         name="TradeVolume",
         endpoint_type=EndpointType.PRIVATE,
@@ -274,7 +273,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "ExportStatus": EndpointConfig(
         name="ExportStatus",
         endpoint_type=EndpointType.PRIVATE,
@@ -283,7 +282,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "RetrieveExport": EndpointConfig(
         name="RetrieveExport",
         endpoint_type=EndpointType.PRIVATE,
@@ -292,7 +291,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     "RemoveExport": EndpointConfig(
         name="RemoveExport",
         endpoint_type=EndpointType.PRIVATE,
@@ -301,7 +300,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True
     ),
-    
+
     # ===== TRADING ENDPOINTS =====
     "AddOrder": EndpointConfig(
         name="AddOrder",
@@ -312,7 +311,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         requires_auth=True,
         is_trading_endpoint=True
     ),
-    
+
     "AmendOrder": EndpointConfig(
         name="AmendOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -323,7 +322,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         is_trading_endpoint=True,
         has_age_penalty=True
     ),
-    
+
     "EditOrder": EndpointConfig(
         name="EditOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -334,7 +333,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         is_trading_endpoint=True,
         has_age_penalty=True
     ),
-    
+
     "CancelOrder": EndpointConfig(
         name="CancelOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -345,7 +344,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         is_trading_endpoint=True,
         has_age_penalty=True
     ),
-    
+
     "CancelAll": EndpointConfig(
         name="CancelAll",
         endpoint_type=EndpointType.PRIVATE,
@@ -355,7 +354,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         requires_auth=True,
         is_trading_endpoint=True
     ),
-    
+
     "CancelAllOrdersAfter": EndpointConfig(
         name="CancelAllOrdersAfter",
         endpoint_type=EndpointType.PRIVATE,
@@ -365,7 +364,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         requires_auth=True,
         is_trading_endpoint=True
     ),
-    
+
     # ===== WEBSOCKET ENDPOINTS =====
     "WS-Subscribe": EndpointConfig(
         name="WS-Subscribe",
@@ -375,16 +374,16 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         max_requests_per_minute=60,  # Higher limit for WebSocket
         requires_auth=False
     ),
-    
+
     "WS-Unsubscribe": EndpointConfig(
-        name="WS-Unsubscribe", 
+        name="WS-Unsubscribe",
         endpoint_type=EndpointType.WEBSOCKET,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=60,
         requires_auth=False
     ),
-    
+
     "WS-AddOrder": EndpointConfig(
         name="WS-AddOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -394,7 +393,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         requires_auth=True,
         is_trading_endpoint=True
     ),
-    
+
     "WS-CancelOrder": EndpointConfig(
         name="WS-CancelOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -405,7 +404,7 @@ ENDPOINT_CONFIGS: Dict[str, EndpointConfig] = {
         is_trading_endpoint=True,
         has_age_penalty=True
     ),
-    
+
     "WS-EditOrder": EndpointConfig(
         name="WS-EditOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -444,7 +443,7 @@ def calculate_age_penalty(endpoint_name: str, order_age_seconds: float) -> int:
             return 1
         else:
             return 0
-            
+
     elif endpoint_name in ["EditOrder", "WS-EditOrder"]:
         if order_age_seconds < 5:
             return 6
@@ -458,7 +457,7 @@ def calculate_age_penalty(endpoint_name: str, order_age_seconds: float) -> int:
             return 1
         else:
             return 0
-            
+
     elif endpoint_name in ["CancelOrder", "WS-CancelOrder"]:
         if order_age_seconds < 5:
             return 8
@@ -474,7 +473,7 @@ def calculate_age_penalty(endpoint_name: str, order_age_seconds: float) -> int:
             return 1
         else:
             return 0
-    
+
     return 0
 
 
@@ -517,12 +516,12 @@ def get_tier_config(tier: Union[AccountTier, str]) -> RateLimitConfig:
     """
     if isinstance(tier, str):
         tier = AccountTier(tier.lower())
-    
+
     config = TIER_CONFIGS.get(tier)
     if config is None:
         logger.warning(f"Unknown tier '{tier}', using intermediate config")
         return TIER_CONFIGS[AccountTier.INTERMEDIATE]
-    
+
     return config
 
 
@@ -582,12 +581,12 @@ def validate_rate_limits() -> Dict[str, List[str]]:
     """
     warnings = []
     errors = []
-    
+
     # Check for duplicate endpoint names
     names = list(ENDPOINT_CONFIGS.keys())
     if len(names) != len(set(names)):
         errors.append("Duplicate endpoint names found")
-    
+
     # Validate rate limits don't exceed Kraken specifications
     for name, config in ENDPOINT_CONFIGS.items():
         if config.endpoint_type == EndpointType.PRIVATE:
@@ -596,14 +595,14 @@ def validate_rate_limits() -> Dict[str, List[str]]:
         elif config.endpoint_type == EndpointType.PUBLIC:
             if config.max_requests_per_minute and config.max_requests_per_minute > 20:
                 warnings.append(f"{name}: Public endpoint exceeds 20 RPM limit")
-    
+
     # Check penalty point configurations
     for tier, config in TIER_CONFIGS.items():
         if config.penalty_decay_rate <= 0:
             errors.append(f"{tier.value}: Invalid penalty decay rate")
         if config.max_penalty_points <= 0:
             errors.append(f"{tier.value}: Invalid max penalty points")
-    
+
     return {
         'warnings': warnings,
         'errors': errors,

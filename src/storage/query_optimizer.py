@@ -19,10 +19,10 @@ Features:
 
 import logging
 import time
-from typing import Dict, List, Optional, Any, Tuple, Union
-from decimal import Decimal
 from dataclasses import dataclass
+from decimal import Decimal
 from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +49,10 @@ class QueryConfig:
 
 class BalanceQueries:
     """Optimized queries for balance operations"""
-    
+
     def __init__(self, db_manager):
         self.db = db_manager
-        
+
         # Pre-compiled query templates
         self.queries = {
             'get_latest_balance': """
@@ -69,7 +69,7 @@ class BalanceQueries:
                 ORDER BY timestamp_ms DESC 
                 LIMIT 1
             """,
-            
+
             'get_all_latest_balances': """
                 SELECT 
                     bh1.asset,
@@ -88,7 +88,7 @@ class BalanceQueries:
                 WHERE bh1.balance > 0
                 ORDER BY bh1.balance DESC
             """,
-            
+
             'get_balance_history': """
                 SELECT 
                     asset,
@@ -108,7 +108,7 @@ class BalanceQueries:
                 ORDER BY timestamp_ms DESC
                 LIMIT ?
             """,
-            
+
             'get_balance_changes': """
                 SELECT 
                     asset,
@@ -126,7 +126,7 @@ class BalanceQueries:
                 ORDER BY timestamp_ms DESC
                 LIMIT ?
             """,
-            
+
             'insert_balance_entry': """
                 INSERT INTO balance_history (
                     asset, balance, hold_trade, source, change_reason,
@@ -134,7 +134,7 @@ class BalanceQueries:
                     percentage_change, running_total, validation_status, metadata
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            
+
             'batch_insert_balances': """
                 INSERT INTO balance_history (
                     asset, balance, hold_trade, source, change_reason,
@@ -142,7 +142,7 @@ class BalanceQueries:
                     percentage_change, validation_status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            
+
             'get_balance_analytics': """
                 SELECT 
                     asset,
@@ -158,7 +158,7 @@ class BalanceQueries:
                     AND timestamp_ms >= ?
                 GROUP BY asset
             """,
-            
+
             'get_top_balance_changes': """
                 SELECT 
                     asset,
@@ -175,54 +175,54 @@ class BalanceQueries:
                 LIMIT ?
             """
         }
-    
+
     async def get_latest_balance(self, asset: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
         """Get latest balance for specific asset with microsecond precision"""
         try:
             start_time = time.time()
-            
+
             results = await self.db.execute_query(
-                self.queries['get_latest_balance'], 
+                self.queries['get_latest_balance'],
                 (asset,),
                 use_cache=use_cache,
                 cache_timeout=60  # 1 minute cache for balance queries
             )
-            
+
             execution_time_ms = (time.time() - start_time) * 1000
-            
+
             if execution_time_ms > 50:  # Log slow balance queries
                 logger.warning(f"[BALANCE_QUERIES] Slow balance query: {execution_time_ms:.2f}ms for {asset}")
-            
+
             return results[0] if results else None
-            
+
         except Exception as e:
             logger.error(f"[BALANCE_QUERIES] Error getting latest balance for {asset}: {e}")
             return None
-    
+
     async def get_all_latest_balances(self, use_cache: bool = True) -> List[Dict[str, Any]]:
         """Get all latest balances with optimized JOIN query"""
         try:
             start_time = time.time()
-            
+
             results = await self.db.execute_query(
                 self.queries['get_all_latest_balances'],
                 (),
                 use_cache=use_cache,
                 cache_timeout=30  # 30 second cache for all balances
             )
-            
+
             execution_time_ms = (time.time() - start_time) * 1000
-            
+
             if execution_time_ms > 100:  # Log slow all-balance queries
                 logger.warning(f"[BALANCE_QUERIES] Slow all-balance query: {execution_time_ms:.2f}ms")
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"[BALANCE_QUERIES] Error getting all latest balances: {e}")
             return []
-    
-    async def get_balance_history(self, asset: str, start_time: int, end_time: int, 
+
+    async def get_balance_history(self, asset: str, start_time: int, end_time: int,
                                 limit: int = 1000, use_cache: bool = True) -> List[Dict[str, Any]]:
         """Get balance history for time range analysis"""
         try:
@@ -232,25 +232,25 @@ class BalanceQueries:
                 use_cache=use_cache,
                 cache_timeout=300  # 5 minute cache for historical data
             )
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"[BALANCE_QUERIES] Error getting balance history for {asset}: {e}")
             return []
-    
+
     async def insert_balance_entry(self, asset: str, balance: Decimal, hold_trade: Decimal,
-                                 source: str, change_reason: str = None, 
+                                 source: str, change_reason: str = None,
                                  balance_change: Decimal = None, percentage_change: float = None,
                                  metadata: str = None) -> bool:
         """Insert new balance entry with optimized performance"""
         try:
             timestamp_ms = int(time.time() * 1000)
             timestamp_readable = time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
-            
+
             # Calculate running total (simplified for performance)
             running_total = float(balance)
-            
+
             affected_rows = await self.db.execute_write(
                 self.queries['insert_balance_entry'],
                 (
@@ -259,13 +259,13 @@ class BalanceQueries:
                     percentage_change or 0.0, running_total, 'valid', metadata
                 )
             )
-            
+
             return affected_rows > 0
-            
+
         except Exception as e:
             logger.error(f"[BALANCE_QUERIES] Error inserting balance entry for {asset}: {e}")
             return False
-    
+
     async def batch_insert_balances(self, balance_entries: List[Tuple]) -> int:
         """Batch insert balance entries for high-throughput operations"""
         try:
@@ -273,7 +273,7 @@ class BalanceQueries:
                 self.queries['batch_insert_balances'],
                 balance_entries
             )
-            
+
         except Exception as e:
             logger.error(f"[BALANCE_QUERIES] Error batch inserting balances: {e}")
             return 0
@@ -281,10 +281,10 @@ class BalanceQueries:
 
 class PositionQueries:
     """Optimized queries for position tracking and P&L calculations"""
-    
+
     def __init__(self, db_manager):
         self.db = db_manager
-        
+
         self.queries = {
             'get_position': """
                 SELECT 
@@ -310,7 +310,7 @@ class PositionQueries:
                 FROM positions 
                 WHERE position_id = ?
             """,
-            
+
             'get_open_positions': """
                 SELECT 
                     position_id,
@@ -330,7 +330,7 @@ class PositionQueries:
                 WHERE status = 'OPEN'
                 ORDER BY created_at DESC
             """,
-            
+
             'get_positions_by_symbol': """
                 SELECT 
                     position_id,
@@ -349,7 +349,7 @@ class PositionQueries:
                     AND status IN ('OPEN', 'PARTIAL')
                 ORDER BY created_at DESC
             """,
-            
+
             'update_position_price': """
                 UPDATE positions 
                 SET 
@@ -378,7 +378,7 @@ class PositionQueries:
                     updated_at = strftime('%s', 'now') * 1000
                 WHERE position_id = ?
             """,
-            
+
             'close_position_partial': """
                 UPDATE positions 
                 SET 
@@ -401,7 +401,7 @@ class PositionQueries:
                     updated_at = strftime('%s', 'now') * 1000
                 WHERE position_id = ?
             """,
-            
+
             'create_position': """
                 INSERT INTO positions (
                     position_id, symbol, position_type, status,
@@ -409,7 +409,7 @@ class PositionQueries:
                     strategy, tags, metadata, created_at, updated_at
                 ) VALUES (?, ?, ?, 'OPEN', ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            
+
             'get_portfolio_summary': """
                 SELECT 
                     COUNT(*) as total_positions,
@@ -423,7 +423,7 @@ class PositionQueries:
                     SUM(CASE WHEN status = 'OPEN' THEN current_size * current_price ELSE 0 END) as open_position_value
                 FROM positions
             """,
-            
+
             'get_position_analytics': """
                 SELECT 
                     symbol,
@@ -442,7 +442,7 @@ class PositionQueries:
                 ORDER BY total_pnl DESC
             """
         }
-    
+
     async def get_position(self, position_id: str, use_cache: bool = True) -> Optional[Dict[str, Any]]:
         """Get position details with real-time P&L"""
         try:
@@ -452,59 +452,59 @@ class PositionQueries:
                 use_cache=use_cache,
                 cache_timeout=30  # 30 second cache for position data
             )
-            
+
             return results[0] if results else None
-            
+
         except Exception as e:
             logger.error(f"[POSITION_QUERIES] Error getting position {position_id}: {e}")
             return None
-    
+
     async def get_open_positions(self, use_cache: bool = True) -> List[Dict[str, Any]]:
         """Get all open positions with optimized query"""
         try:
             start_time = time.time()
-            
+
             results = await self.db.execute_query(
                 self.queries['get_open_positions'],
                 (),
                 use_cache=use_cache,
                 cache_timeout=15  # 15 second cache for open positions
             )
-            
+
             execution_time_ms = (time.time() - start_time) * 1000
-            
+
             if execution_time_ms > 100:
                 logger.warning(f"[POSITION_QUERIES] Slow open positions query: {execution_time_ms:.2f}ms")
-            
+
             return results
-            
+
         except Exception as e:
             logger.error(f"[POSITION_QUERIES] Error getting open positions: {e}")
             return []
-    
+
     async def update_position_price(self, position_id: str, new_price: Decimal) -> bool:
         """Update position price with real-time P&L calculation"""
         try:
             price = float(new_price)
-            
+
             affected_rows = await self.db.execute_write(
                 self.queries['update_position_price'],
                 (price, price, price, price, price, price, price, price, price, price, price, position_id)
             )
-            
+
             return affected_rows > 0
-            
+
         except Exception as e:
             logger.error(f"[POSITION_QUERIES] Error updating position price {position_id}: {e}")
             return False
-    
+
     async def create_position(self, position_id: str, symbol: str, position_type: str,
                             size: Decimal, entry_price: Decimal, strategy: str = None,
                             tags: str = None, metadata: str = None) -> bool:
         """Create new position with optimized insertion"""
         try:
             timestamp_ms = int(time.time() * 1000)
-            
+
             affected_rows = await self.db.execute_write(
                 self.queries['create_position'],
                 (
@@ -513,13 +513,13 @@ class PositionQueries:
                     strategy, tags, metadata, timestamp_ms, timestamp_ms
                 )
             )
-            
+
             return affected_rows > 0
-            
+
         except Exception as e:
             logger.error(f"[POSITION_QUERIES] Error creating position {position_id}: {e}")
             return False
-    
+
     async def get_portfolio_summary(self, use_cache: bool = True) -> Dict[str, Any]:
         """Get comprehensive portfolio summary with single query"""
         try:
@@ -529,9 +529,9 @@ class PositionQueries:
                 use_cache=use_cache,
                 cache_timeout=60  # 1 minute cache for portfolio summary
             )
-            
+
             return results[0] if results else {}
-            
+
         except Exception as e:
             logger.error(f"[POSITION_QUERIES] Error getting portfolio summary: {e}")
             return {}
@@ -539,10 +539,10 @@ class PositionQueries:
 
 class PortfolioQueries:
     """Optimized queries for portfolio-level analytics and metrics"""
-    
+
     def __init__(self, db_manager):
         self.db = db_manager
-        
+
         self.queries = {
             'insert_portfolio_metrics': """
                 INSERT INTO portfolio_metrics (
@@ -554,20 +554,20 @@ class PortfolioQueries:
                     volume_today, fees_today, metadata
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            
+
             'get_latest_portfolio_metrics': """
                 SELECT * FROM portfolio_metrics 
                 ORDER BY timestamp_ms DESC 
                 LIMIT 1
             """,
-            
+
             'get_portfolio_metrics_range': """
                 SELECT * FROM portfolio_metrics 
                 WHERE timestamp_ms >= ? AND timestamp_ms <= ?
                 ORDER BY timestamp_ms DESC
                 LIMIT ?
             """,
-            
+
             'get_portfolio_performance': """
                 SELECT 
                     DATE(timestamp_ms/1000, 'unixepoch') as date,
@@ -585,7 +585,7 @@ class PortfolioQueries:
                 ORDER BY date DESC
                 LIMIT ?
             """,
-            
+
             'calculate_drawdown': """
                 WITH portfolio_peaks AS (
                     SELECT 
@@ -609,7 +609,7 @@ class PortfolioQueries:
                 ORDER BY drawdown ASC
                 LIMIT 1
             """,
-            
+
             'get_risk_metrics': """
                 SELECT 
                     COUNT(*) as data_points,
@@ -626,13 +626,13 @@ class PortfolioQueries:
                 WHERE timestamp_ms >= ?
             """
         }
-    
+
     async def insert_portfolio_metrics(self, metrics_data: Dict[str, Any]) -> bool:
         """Insert portfolio metrics with optimized performance"""
         try:
             timestamp_ms = int(time.time() * 1000)
             timestamp_readable = time.strftime('%Y-%m-%d %H:%M:%S')
-            
+
             values = (
                 timestamp_ms, timestamp_readable,
                 metrics_data.get('total_value', 0.0),
@@ -654,18 +654,18 @@ class PortfolioQueries:
                 metrics_data.get('fees_today', 0.0),
                 metrics_data.get('metadata')
             )
-            
+
             affected_rows = await self.db.execute_write(
                 self.queries['insert_portfolio_metrics'],
                 values
             )
-            
+
             return affected_rows > 0
-            
+
         except Exception as e:
             logger.error(f"[PORTFOLIO_QUERIES] Error inserting portfolio metrics: {e}")
             return False
-    
+
     async def get_latest_portfolio_metrics(self, use_cache: bool = True) -> Optional[Dict[str, Any]]:
         """Get latest portfolio metrics"""
         try:
@@ -675,9 +675,9 @@ class PortfolioQueries:
                 use_cache=use_cache,
                 cache_timeout=60  # 1 minute cache
             )
-            
+
             return results[0] if results else None
-            
+
         except Exception as e:
             logger.error(f"[PORTFOLIO_QUERIES] Error getting latest portfolio metrics: {e}")
             return None
@@ -685,10 +685,10 @@ class PortfolioQueries:
 
 class AnalyticsQueries:
     """Advanced analytics queries for performance analysis"""
-    
+
     def __init__(self, db_manager):
         self.db = db_manager
-        
+
         self.queries = {
             'calculate_sharpe_ratio': """
                 WITH daily_returns AS (
@@ -709,7 +709,7 @@ class AnalyticsQueries:
                     END as sharpe_ratio
                 FROM daily_returns
             """,
-            
+
             'strategy_performance': """
                 SELECT 
                     strategy,
@@ -728,7 +728,7 @@ class AnalyticsQueries:
                 GROUP BY strategy
                 ORDER BY total_pnl DESC
             """,
-            
+
             'market_correlation': """
                 WITH portfolio_returns AS (
                     SELECT 
@@ -755,21 +755,21 @@ class AnalyticsQueries:
                 FROM market_data
             """
         }
-    
+
     async def calculate_sharpe_ratio(self, days_back: int = 30) -> Optional[Dict[str, Any]]:
         """Calculate Sharpe ratio for specified period"""
         try:
             start_time = int((time.time() - days_back * 86400) * 1000)
-            
+
             results = await self.db.execute_query(
                 self.queries['calculate_sharpe_ratio'],
                 (start_time,),
                 use_cache=True,
                 cache_timeout=300  # 5 minute cache
             )
-            
+
             return results[0] if results else None
-            
+
         except Exception as e:
             logger.error(f"[ANALYTICS_QUERIES] Error calculating Sharpe ratio: {e}")
             return None
@@ -779,18 +779,18 @@ class QueryOptimizer:
     """
     Main query optimizer that coordinates all specialized query classes
     """
-    
+
     def __init__(self, database_manager, config: Optional[QueryConfig] = None):
         """Initialize query optimizer"""
         self.db = database_manager
         self.config = config or QueryConfig()
-        
+
         # Initialize specialized query handlers
         self.balance_queries = BalanceQueries(database_manager)
         self.position_queries = PositionQueries(database_manager)
         self.portfolio_queries = PortfolioQueries(database_manager)
         self.analytics_queries = AnalyticsQueries(database_manager)
-        
+
         # Performance monitoring
         self._query_stats = {
             'total_queries': 0,
@@ -799,23 +799,23 @@ class QueryOptimizer:
             'failed_queries': 0,
             'avg_execution_time_ms': 0.0
         }
-        
+
         logger.info("[QUERY_OPTIMIZER] Initialized with optimized query system")
-    
+
     async def explain_query(self, query: str, parameters: Tuple = ()) -> List[Dict[str, Any]]:
         """Analyze query execution plan for optimization"""
         if not self.config.enable_explain:
             return []
-        
+
         try:
             explain_query = f"EXPLAIN QUERY PLAN {query}"
             results = await self.db.execute_query(explain_query, parameters)
             return results
-            
+
         except Exception as e:
             logger.error(f"[QUERY_OPTIMIZER] Error explaining query: {e}")
             return []
-    
+
     def get_optimization_stats(self) -> Dict[str, Any]:
         """Get query optimization statistics"""
         return {
@@ -827,47 +827,47 @@ class QueryOptimizer:
             'cache_enabled': self.config.use_cache,
             'max_execution_time_ms': self.config.max_execution_time_ms
         }
-    
+
     async def optimize_all_queries(self) -> bool:
         """Run optimization analysis on all query types"""
         try:
             logger.info("[QUERY_OPTIMIZER] Running comprehensive query optimization...")
-            
+
             # Test key queries and log performance
             test_queries = [
                 ("Balance Latest", self.balance_queries.get_all_latest_balances, ()),
                 ("Open Positions", self.position_queries.get_open_positions, ()),
                 ("Portfolio Summary", self.position_queries.get_portfolio_summary, ())
             ]
-            
+
             optimization_results = []
-            
+
             for query_name, query_func, args in test_queries:
                 start_time = time.time()
-                
+
                 try:
                     await query_func(*args)
                     execution_time_ms = (time.time() - start_time) * 1000
-                    
+
                     optimization_results.append({
                         'query': query_name,
                         'execution_time_ms': execution_time_ms,
                         'status': 'optimal' if execution_time_ms < 100 else 'needs_optimization',
                         'recommendation': 'Consider indexing' if execution_time_ms > 200 else 'Performing well'
                     })
-                    
+
                     logger.info(f"[QUERY_OPTIMIZER] {query_name}: {execution_time_ms:.2f}ms")
-                    
+
                 except Exception as e:
                     optimization_results.append({
                         'query': query_name,
                         'status': 'error',
                         'error': str(e)
                     })
-            
+
             logger.info(f"[QUERY_OPTIMIZER] Optimization analysis complete: {len(optimization_results)} queries tested")
             return True
-            
+
         except Exception as e:
             logger.error(f"[QUERY_OPTIMIZER] Error during query optimization: {e}")
             return False

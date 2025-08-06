@@ -24,7 +24,7 @@ import logging
 import re
 import time
 from pathlib import Path
-from typing import Dict, Any, Optional, Tuple, List
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,7 @@ class MinimumDiscoveryLearning:
     def __init__(self):
         """Initialize the minimum discovery learning system."""
         # Use centralized path configuration
-        from pathlib import Path
-        
+
         # Get project root and construct path relative to it
         current_file = Path(__file__).resolve()
         project_root = current_file.parent.parent.parent  # Navigate up from src/autonomous_minimum_learning to project root
@@ -68,7 +67,7 @@ class MinimumDiscoveryLearning:
         """Load previously learned minimums from persistent storage."""
         if self.learned_minimums_file.exists():
             try:
-                with open(self.learned_minimums_file, 'r') as f:
+                with open(self.learned_minimums_file) as f:
                     return json.load(f)
             except Exception as e:
                 logger.error(f"[MINIMUM_LEARNING] Error loading learned minimums: {e}")
@@ -80,7 +79,7 @@ class MinimumDiscoveryLearning:
             with open(self.learned_minimums_file, 'w') as f:
                 json.dump(self.learned_minimums, f, indent=2)
             logger.info(f"[MINIMUM_LEARNING] Saved {len(self.learned_minimums)} learned minimums")
-            
+
             # Auto-filter high failure pairs
             self._analyze_and_warn_problematic_pairs()
         except Exception as e:
@@ -91,16 +90,16 @@ class MinimumDiscoveryLearning:
         try:
             events = []
             if self.learning_events_file.exists():
-                with open(self.learning_events_file, 'r') as f:
+                with open(self.learning_events_file) as f:
                     events = json.load(f)
-            
+
             event['timestamp'] = time.time()
             events.append(event)
-            
+
             # Keep only last 1000 events
             if len(events) > 1000:
                 events = events[-1000:]
-            
+
             with open(self.learning_events_file, 'w') as f:
                 json.dump(events, f, indent=2)
         except Exception as e:
@@ -119,34 +118,34 @@ class MinimumDiscoveryLearning:
             # Pattern 1: Explicit minimum in error message
             pattern1 = r"minimum.*?(\d+\.?\d*)"
             match1 = re.search(pattern1, error_message, re.IGNORECASE)
-            
+
             # Pattern 2: Volume specification
             pattern2 = r"volume[:\s]+(\d+\.?\d*)"
             match2 = re.search(pattern2, error_message, re.IGNORECASE)
-            
+
             # Pattern 3: Cost specification
             pattern3 = r"cost[:\s]+(\d+\.?\d*)"
             match3 = re.search(pattern3, error_message, re.IGNORECASE)
-            
+
             minimums = {}
-            
+
             if "volume" in error_message.lower() and (match1 or match2):
                 volume = float(match1.group(1) if match1 else match2.group(1))
                 minimums['volume'] = volume * 1.1  # Add 10% buffer
                 logger.info(f"[MINIMUM_LEARNING] Extracted volume minimum: {minimums['volume']} for {pair}")
-            
+
             if "cost" in error_message.lower() and (match1 or match3):
                 cost = float(match1.group(1) if match1 else match3.group(1))
                 minimums['cost'] = cost * 1.1  # Add 10% buffer
                 logger.info(f"[MINIMUM_LEARNING] Extracted cost minimum: {minimums['cost']} for {pair}")
-            
+
             return minimums if minimums else None
-            
+
         except Exception as e:
             logger.error(f"[MINIMUM_LEARNING] Error extracting minimum from '{error_message}': {e}")
             return None
 
-    def learn_from_error(self, error_message: str, pair: str, attempted_volume: float, 
+    def learn_from_error(self, error_message: str, pair: str, attempted_volume: float,
                         attempted_price: float) -> bool:
         """
         Learn minimum requirements from a trading error.
@@ -161,11 +160,11 @@ class MinimumDiscoveryLearning:
             bool: True if learning was successful
         """
         self.learning_stats['total_attempts'] += 1
-        
+
         try:
             # First try to extract explicit minimums from error
             extracted = self.extract_minimum_from_error(error_message, pair)
-            
+
             if not extracted:
                 # Fallback: Infer from attempted values
                 if "volume" in error_message.lower():
@@ -173,26 +172,26 @@ class MinimumDiscoveryLearning:
                     estimated_min = attempted_volume * 2  # Conservative estimate
                     extracted = {'volume': estimated_min}
                     logger.info(f"[MINIMUM_LEARNING] Estimated volume minimum: {estimated_min} for {pair}")
-                
+
                 elif "cost" in error_message.lower():
                     # Cost was too low, estimate minimum
                     attempted_cost = attempted_volume * attempted_price
                     estimated_min = max(attempted_cost * 2, 2.0)  # At least $2 for tier 1
                     extracted = {'cost': estimated_min}
                     logger.info(f"[MINIMUM_LEARNING] Estimated cost minimum: {estimated_min} for {pair}")
-            
+
             if extracted:
                 # Update learned minimums
                 if pair not in self.learned_minimums:
                     self.learned_minimums[pair] = {}
-                
+
                 self.learned_minimums[pair].update(extracted)
                 self.learned_minimums[pair]['last_updated'] = time.time()
                 self.learned_minimums[pair]['learn_count'] = self.learned_minimums[pair].get('learn_count', 0) + 1
-                
+
                 # Save to persistent storage
                 self._save_learned_minimums()
-                
+
                 # Log the learning event
                 self._log_learning_event({
                     'type': 'minimum_learned',
@@ -202,16 +201,16 @@ class MinimumDiscoveryLearning:
                     'attempted_volume': attempted_volume,
                     'attempted_price': attempted_price
                 })
-                
+
                 self.learning_stats['successful_learns'] += 1
                 self.learning_stats['last_update'] = time.time()
-                
+
                 return True
-                
+
         except Exception as e:
             logger.error(f"[MINIMUM_LEARNING] Error learning from error: {e}")
             self.learning_stats['failed_learns'] += 1
-        
+
         return False
 
     def get_learned_minimums(self, pair: str) -> Optional[Dict[str, float]]:
@@ -229,7 +228,7 @@ class MinimumDiscoveryLearning:
             return minimums
         return None
 
-    def suggest_trade_volume(self, pair: str, available_balance: float, 
+    def suggest_trade_volume(self, pair: str, available_balance: float,
                            current_price: float) -> Tuple[float, str]:
         """
         Suggest optimal trade volume based on learned minimums and available balance.
@@ -246,40 +245,40 @@ class MinimumDiscoveryLearning:
             Tuple of (suggested_volume, reason)
         """
         learned = self.get_learned_minimums(pair)
-        
+
         if not learned:
             # No learned minimums yet - start with conservative estimate
             # This will trigger learning if it fails
             suggested_volume = available_balance / current_price * 0.9  # Use 90% of available
             return suggested_volume, "No learned minimums - attempting with available balance"
-        
+
         # Calculate volumes based on different constraints
         candidates = []
-        
+
         # Volume-based minimum
         if 'volume' in learned:
             min_volume = learned['volume']
             candidates.append((min_volume, f"Learned volume minimum: {min_volume}"))
-        
+
         # Cost-based minimum
         if 'cost' in learned:
             min_cost = learned['cost']
             min_volume_from_cost = min_cost / current_price
             candidates.append((min_volume_from_cost, f"Learned cost minimum: ${min_cost}"))
-        
+
         # Available balance constraint
         max_volume_from_balance = available_balance / current_price * 0.95  # Keep 5% buffer
-        
+
         # Choose the maximum of all minimums (most conservative)
         if candidates:
             suggested_volume, reason = max(candidates, key=lambda x: x[0])
-            
+
             # But don't exceed available balance
             if suggested_volume > max_volume_from_balance:
                 return max_volume_from_balance, f"Limited by balance: ${available_balance:.2f}"
-            
+
             return suggested_volume * 1.05, reason + " (with 5% buffer)"
-        
+
         # Fallback
         return max_volume_from_balance, "Using available balance"
 
@@ -290,7 +289,7 @@ class MinimumDiscoveryLearning:
             'pairs_learned': len(self.learned_minimums),
             'total_minimums': sum(len(m) - 2 for m in self.learned_minimums.values())  # Exclude metadata
         }
-    
+
     def bulk_learn_minimums(self, pairs_data: Dict[str, Dict[str, float]]) -> int:
         """
         Bulk learn minimums for multiple pairs (useful for initialization).
@@ -303,23 +302,23 @@ class MinimumDiscoveryLearning:
             Number of pairs successfully learned
         """
         learned_count = 0
-        
+
         for pair, minimums in pairs_data.items():
             try:
                 if pair not in self.learned_minimums:
                     self.learned_minimums[pair] = {}
-                
+
                 self.learned_minimums[pair].update(minimums)
                 self.learned_minimums[pair]['last_updated'] = time.time()
                 self.learned_minimums[pair]['learn_count'] = 1
                 self.learned_minimums[pair]['bulk_learned'] = True
-                
+
                 learned_count += 1
                 logger.info(f"[MINIMUM_LEARNING] Bulk learned minimums for {pair}: {minimums}")
-                
+
             except Exception as e:
                 logger.error(f"[MINIMUM_LEARNING] Error bulk learning {pair}: {e}")
-        
+
         if learned_count > 0:
             self._save_learned_minimums()
             self._log_learning_event({
@@ -327,9 +326,9 @@ class MinimumDiscoveryLearning:
                 'pairs_count': learned_count,
                 'pairs': list(pairs_data.keys())
             })
-        
+
         return learned_count
-    
+
     def get_portfolio_pairs_status(self, portfolio_pairs: List[str]) -> Dict[str, bool]:
         """
         Check which portfolio pairs have learned minimums.
@@ -351,7 +350,7 @@ minimum_discovery_learning = MinimumDiscoveryLearning()
 
 
 # Convenience functions for direct usage
-def learn_from_kraken_error(error_message: str, pair: str, attempted_volume: float, 
+def learn_from_kraken_error(error_message: str, pair: str, attempted_volume: float,
                            attempted_price: float) -> bool:
     """Learn from a Kraken trading error."""
     return minimum_discovery_learning.learn_from_error(

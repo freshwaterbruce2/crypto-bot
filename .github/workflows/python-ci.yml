@@ -1,0 +1,315 @@
+name: Python CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scans daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  PYTHON_VERSION: '3.11'
+  CACHE_VERSION: v1
+
+jobs:
+  # Code Quality Checks
+  quality-check:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for better analysis
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.cache/pre-commit
+          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pre-commit pytest pytest-cov pytest-asyncio black ruff mypy
+
+      - name: Run pre-commit hooks
+        run: |
+          pre-commit run --all-files --show-diff-on-failure
+
+      - name: Type checking with mypy
+        run: |
+          mypy src/ --ignore-missing-imports --check-untyped-defs
+
+  # Security Scanning
+  security-scan:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install security tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install bandit safety pip-audit
+
+      - name: Run Bandit security scan
+        run: |
+          bandit -r src/ -f json -o bandit-report.json || true
+          bandit -r src/ -f txt || true
+
+      - name: Check dependencies for vulnerabilities
+        run: |
+          pip install -r requirements.txt
+          safety check --json || true
+          pip-audit || true
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          languages: python
+
+  # Testing with Coverage
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-asyncio pytest-mock
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-${{ matrix.python-version }}
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports-${{ matrix.python-version }}
+          path: htmlcov/
+
+  # Performance Testing
+  performance-test:
+    name: Performance Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install memory-profiler py-spy pytest-benchmark
+
+      - name: Run performance benchmarks
+        run: |
+          # Create performance test script
+          cat > test_performance.py << 'EOF'
+          import asyncio
+          import time
+          import psutil
+          import json
+          from datetime import datetime
+
+          async def measure_startup_time():
+              start = time.time()
+              # Import main bot module
+              from src.bot import KrakenBot
+              end = time.time()
+              return end - start
+
+          async def measure_memory_usage():
+              process = psutil.Process()
+              return process.memory_info().rss / 1024 / 1024  # MB
+
+          async def run_performance_tests():
+              results = {
+                  "timestamp": datetime.utcnow().isoformat(),
+                  "startup_time": await measure_startup_time(),
+                  "memory_usage_mb": await measure_memory_usage(),
+                  "cpu_percent": psutil.cpu_percent(interval=1)
+              }
+              
+              with open("performance_report.json", "w") as f:
+                  json.dump(results, f, indent=2)
+              
+              print(f"Startup time: {results['startup_time']:.2f}s")
+              print(f"Memory usage: {results['memory_usage_mb']:.2f}MB")
+              print(f"CPU usage: {results['cpu_percent']:.1f}%")
+
+          if __name__ == "__main__":
+              asyncio.run(run_performance_tests())
+          EOF
+          
+          python test_performance.py || true
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: performance_report.json
+
+  # Dependency Check
+  dependency-check:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Check for outdated dependencies
+        run: |
+          pip install pip-outdated
+          pip-outdated requirements.txt || true
+
+      - name: License check
+        run: |
+          pip install pip-licenses
+          pip install -r requirements.txt
+          pip-licenses --format=json > licenses.json
+          pip-licenses --format=markdown > licenses.md
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            licenses.json
+            licenses.md
+
+  # Docker Build (for future deployment)
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: crypto-bot:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Release Preparation
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [quality-check, security-scan, test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate changelog
+        run: |
+          echo "# Release Notes" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## Changes since last release:" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s" $(git describe --tags --abbrev=0)..HEAD >> RELEASE_NOTES.md || echo "First release" >> RELEASE_NOTES.md
+
+      - name: Create release package
+        run: |
+          # Create distribution directory
+          mkdir -p dist
+          
+          # Copy essential files
+          cp -r src dist/
+          cp requirements.txt dist/
+          cp README.md dist/
+          cp LICENSE dist/ 2>/dev/null || echo "No LICENSE file"
+          
+          # Create version file
+          echo "$(date +%Y%m%d_%H%M%S)" > dist/VERSION
+          
+          # Create tarball
+          tar -czf crypto-bot-release.tar.gz dist/
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-package
+          path: |
+            crypto-bot-release.tar.gz
+            RELEASE_NOTES.md
+
+  # Notification on failure
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    if: failure()
+    needs: [quality-check, security-scan, test]
+    steps:
+      - name: Create failure report
+        run: |
+          echo "🚨 CI/CD Pipeline Failed!" > failure_report.txt
+          echo "Repository: ${{ github.repository }}" >> failure_report.txt
+          echo "Branch: ${{ github.ref }}" >> failure_report.txt
+          echo "Commit: ${{ github.sha }}" >> failure_report.txt
+          echo "Time: $(date)" >> failure_report.txt
+          
+      - name: Upload failure report
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-report
+          path: failure_report.txt

@@ -15,16 +15,14 @@ Key Features:
 
 import asyncio
 import logging
-from typing import Dict, Any, Optional, Union
 from decimal import Decimal
+from typing import Any, Dict, Optional, Union
 
 from ..utils.order_safety_system import (
-    OrderSafetySystem, 
-    OrderRequest, 
-    OrderType,
+    OrderSafetySystem,
     safe_buy_order,
     safe_sell_order,
-    validate_order_feasibility
+    validate_order_feasibility,
 )
 from ..utils.secure_credentials import get_safe_key_id
 
@@ -41,26 +39,26 @@ class StrategySafetyAdapter:
     - Circuit breaker protection
     - Comprehensive error handling
     """
-    
+
     def __init__(self, strategy_instance, exchange_wrapper=None, config: Dict[str, Any] = None):
         self.strategy = strategy_instance
         self.exchange = exchange_wrapper
         self.config = config or {}
-        
+
         # Initialize safety system
         self.safety_system = OrderSafetySystem(exchange_wrapper, config)
-        
+
         # Strategy performance tracking
         self.total_orders = 0
         self.successful_orders = 0
         self.rejected_orders = 0
         self.last_order_time = 0
-        
+
         logger.info(f"[STRATEGY_SAFETY] Safety adapter initialized for {self.strategy.__class__.__name__}")
         logger.info(f"[STRATEGY_SAFETY] API Key ID: {get_safe_key_id()}")
-    
-    async def safe_execute_buy_order(self, 
-                                   symbol: str, 
+
+    async def safe_execute_buy_order(self,
+                                   symbol: str,
                                    amount: Union[float, Decimal],
                                    price: Optional[Union[float, Decimal]] = None,
                                    **kwargs) -> Dict[str, Any]:
@@ -71,9 +69,9 @@ class StrategySafetyAdapter:
         """
         try:
             self.total_orders += 1
-            
+
             logger.info(f"[STRATEGY_SAFETY] Executing safe buy order: {amount} {symbol}")
-            
+
             # Use the safe order system instead of direct exchange calls
             result = await safe_buy_order(
                 symbol=symbol,
@@ -81,17 +79,17 @@ class StrategySafetyAdapter:
                 exchange_wrapper=self.exchange,
                 config=self.config
             )
-            
+
             self.successful_orders += 1
             self.last_order_time = asyncio.get_event_loop().time()
-            
+
             logger.info(f"[STRATEGY_SAFETY] Buy order successful: {result.get('id', 'unknown')}")
             return result
-            
+
         except Exception as e:
             self.rejected_orders += 1
             logger.error(f"[STRATEGY_SAFETY] Buy order failed: {e}")
-            
+
             # Return standardized error response
             return {
                 'status': 'failed',
@@ -101,10 +99,10 @@ class StrategySafetyAdapter:
                 'amount': float(amount),
                 'safety_protected': True
             }
-    
+
     async def safe_execute_sell_order(self,
                                     symbol: str,
-                                    amount: Union[float, Decimal], 
+                                    amount: Union[float, Decimal],
                                     price: Optional[Union[float, Decimal]] = None,
                                     **kwargs) -> Dict[str, Any]:
         """
@@ -112,9 +110,9 @@ class StrategySafetyAdapter:
         """
         try:
             self.total_orders += 1
-            
+
             logger.info(f"[STRATEGY_SAFETY] Executing safe sell order: {amount} {symbol}")
-            
+
             # Use the safe order system
             result = await safe_sell_order(
                 symbol=symbol,
@@ -122,17 +120,17 @@ class StrategySafetyAdapter:
                 exchange_wrapper=self.exchange,
                 config=self.config
             )
-            
+
             self.successful_orders += 1
             self.last_order_time = asyncio.get_event_loop().time()
-            
+
             logger.info(f"[STRATEGY_SAFETY] Sell order successful: {result.get('id', 'unknown')}")
             return result
-            
+
         except Exception as e:
             self.rejected_orders += 1
             logger.error(f"[STRATEGY_SAFETY] Sell order failed: {e}")
-            
+
             return {
                 'status': 'failed',
                 'error': str(e),
@@ -141,7 +139,7 @@ class StrategySafetyAdapter:
                 'amount': float(amount),
                 'safety_protected': True
             }
-    
+
     async def validate_strategy_order(self,
                                     symbol: str,
                                     side: str,
@@ -159,10 +157,10 @@ class StrategySafetyAdapter:
                 exchange_wrapper=self.exchange,
                 config=self.config
             )
-            
+
             logger.debug(f"[STRATEGY_SAFETY] Order validation: {symbol} {side} {amount} -> {result['status']}")
             return result
-            
+
         except Exception as e:
             logger.error(f"[STRATEGY_SAFETY] Order validation failed: {e}")
             return {
@@ -170,7 +168,7 @@ class StrategySafetyAdapter:
                 'can_execute': False,
                 'error': str(e)
             }
-    
+
     def get_websocket_price_data(self, symbol: str) -> Dict[str, Any]:
         """
         Get real-time WebSocket V2 price data instead of REST API calls
@@ -180,7 +178,7 @@ class StrategySafetyAdapter:
         try:
             # This would integrate with your WebSocket V2 manager
             # For now, return a standardized format
-            
+
             # Check if WebSocket data is available
             if hasattr(self.exchange, 'websocket_manager'):
                 ws_data = self.exchange.websocket_manager.get_ticker_data(symbol)
@@ -193,22 +191,22 @@ class StrategySafetyAdapter:
                         'timestamp': ws_data.get('timestamp', 0),
                         'source': 'websocket_v2'
                     }
-            
+
             # Fallback to exchange if WebSocket not available
             logger.warning(f"[STRATEGY_SAFETY] WebSocket data not available for {symbol}, using fallback")
             return {
                 'price': 0,
                 'source': 'fallback'
             }
-            
+
         except Exception as e:
             logger.error(f"[STRATEGY_SAFETY] Error getting WebSocket price data: {e}")
             return {'price': 0, 'source': 'error'}
-    
+
     def get_strategy_performance_metrics(self) -> Dict[str, Any]:
         """Get comprehensive strategy performance metrics"""
         success_rate = (self.successful_orders / self.total_orders * 100) if self.total_orders > 0 else 0
-        
+
         return {
             'strategy_name': self.strategy.__class__.__name__,
             'total_orders': self.total_orders,
@@ -219,9 +217,9 @@ class StrategySafetyAdapter:
             'safety_system_active': True,
             'order_safety_status': self.safety_system.get_safety_status()
         }
-    
-    async def execute_strategy_with_safety(self, 
-                                         symbol: str, 
+
+    async def execute_strategy_with_safety(self,
+                                         symbol: str,
                                          timeframe: str = '1m') -> Dict[str, Any]:
         """
         Execute strategy analysis with safety checks and optimizations
@@ -231,7 +229,7 @@ class StrategySafetyAdapter:
         try:
             # Get WebSocket V2 optimized data
             price_data = self.get_websocket_price_data(symbol)
-            
+
             if price_data['price'] <= 0:
                 return {
                     'action': 'HOLD',
@@ -239,7 +237,7 @@ class StrategySafetyAdapter:
                     'reason': 'No price data available',
                     'safety_protected': True
                 }
-            
+
             # Execute strategy analysis
             if hasattr(self.strategy, 'analyze'):
                 result = await self.strategy.analyze(symbol, timeframe)
@@ -251,32 +249,32 @@ class StrategySafetyAdapter:
                     'reason': 'Strategy analyze method not found',
                     'safety_protected': True
                 }
-            
+
             # Add safety metadata
             result['safety_protected'] = True
             result['websocket_data_used'] = price_data['source'] == 'websocket_v2'
             result['price_data_age'] = asyncio.get_event_loop().time() - price_data.get('timestamp', 0)
-            
+
             # Validate any orders before execution
             if result.get('action') in ['BUY', 'SELL'] and result.get('confidence', 0) > 0:
                 # Get suggested order size from strategy or use default
                 order_size = result.get('order_size', self.config.get('position_size_usdt', 5.0))
-                
+
                 # Validate order feasibility
                 validation = await self.validate_strategy_order(
                     symbol=symbol,
                     side=result['action'].lower(),
                     amount=order_size
                 )
-                
+
                 if not validation.get('can_execute', False):
                     logger.warning(f"[STRATEGY_SAFETY] Order validation failed: {validation.get('error')}")
                     result['action'] = 'HOLD'
                     result['confidence'] = 0
                     result['reason'] = f"Order validation failed: {validation.get('error')}"
-            
+
             return result
-            
+
         except Exception as e:
             logger.error(f"[STRATEGY_SAFETY] Strategy execution error: {e}")
             return {
@@ -288,8 +286,8 @@ class StrategySafetyAdapter:
 
 
 # Convenience function for easy strategy wrapping
-def wrap_strategy_with_safety(strategy_instance, 
-                            exchange_wrapper=None, 
+def wrap_strategy_with_safety(strategy_instance,
+                            exchange_wrapper=None,
                             config: Dict[str, Any] = None) -> StrategySafetyAdapter:
     """
     Wrap any strategy with comprehensive safety protection
@@ -318,12 +316,12 @@ def safety_protected_strategy(exchange_wrapper=None, config=None):
     """
     def decorator(strategy_class):
         original_init = strategy_class.__init__
-        
+
         def wrapped_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._safety_adapter = StrategySafetyAdapter(self, exchange_wrapper, config)
-        
+
         strategy_class.__init__ = wrapped_init
         return strategy_class
-    
+
     return decorator
