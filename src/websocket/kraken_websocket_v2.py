@@ -36,6 +36,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class KrakenWebSocketConfig:
     """Kraken WebSocket V2 configuration"""
+
     # WebSocket endpoints
     public_url: str = "wss://ws.kraken.com/v2"
     private_url: str = "wss://ws-auth.kraken.com/v2"
@@ -62,10 +63,12 @@ class KrakenWebSocketV2:
     Main WebSocket V2 client for Kraken exchange
     """
 
-    def __init__(self,
-                 api_key: str = None,
-                 api_secret: str = None,
-                 config: Optional[KrakenWebSocketConfig] = None):
+    def __init__(
+        self,
+        api_key: str = None,
+        api_secret: str = None,
+        config: Optional[KrakenWebSocketConfig] = None,
+    ):
         """
         Initialize Kraken WebSocket V2 client
 
@@ -84,8 +87,7 @@ class KrakenWebSocketV2:
 
         # Message handler
         self.message_handler = KrakenV2MessageHandler(
-            enable_sequence_tracking=True,
-            enable_statistics=True
+            enable_sequence_tracking=True, enable_statistics=True
         )
 
         # Authentication
@@ -106,15 +108,15 @@ class KrakenWebSocketV2:
 
         # Callbacks
         self.callbacks: dict[str, list[Callable]] = {
-            'balance': [],
-            'ticker': [],
-            'orderbook': [],
-            'trade': [],
-            'ohlc': [],
-            'connected': [],
-            'disconnected': [],
-            'error': [],
-            'authenticated': []
+            "balance": [],
+            "ticker": [],
+            "orderbook": [],
+            "trade": [],
+            "ohlc": [],
+            "connected": [],
+            "disconnected": [],
+            "error": [],
+            "authenticated": [],
         }
 
         # Status tracking
@@ -165,7 +167,9 @@ class KrakenWebSocketV2:
             if private_channels and self.api_key and self.api_secret:
                 auth_success = await self._connect_private()
                 if not auth_success:
-                    logger.warning("[KRAKEN_WS_V2] Failed to connect to private channels, continuing with public only")
+                    logger.warning(
+                        "[KRAKEN_WS_V2] Failed to connect to private channels, continuing with public only"
+                    )
 
             self.is_running = True
             self.connection_start_time = time.time()
@@ -173,13 +177,13 @@ class KrakenWebSocketV2:
             logger.info("[KRAKEN_WS_V2] WebSocket V2 connection established")
 
             # Call connected callbacks
-            await self._call_callbacks('connected')
+            await self._call_callbacks("connected")
 
             return True
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Connection error: {e}")
-            await self._call_callbacks('error', e)
+            await self._call_callbacks("error", e)
             return False
 
     async def disconnect(self):
@@ -206,7 +210,7 @@ class KrakenWebSocketV2:
         self.active_subscriptions.clear()
 
         # Call disconnected callbacks
-        await self._call_callbacks('disconnected')
+        await self._call_callbacks("disconnected")
 
         logger.info("[KRAKEN_WS_V2] WebSocket V2 disconnected")
 
@@ -220,15 +224,15 @@ class KrakenWebSocketV2:
                 ping_timeout=self.config.ping_timeout,
                 max_reconnect_attempts=self.config.max_reconnect_attempts,
                 reconnect_delay=self.config.reconnect_delay,
-                heartbeat_timeout=self.config.heartbeat_timeout
+                heartbeat_timeout=self.config.heartbeat_timeout,
             )
 
             # Create connection manager
             self.public_connection = ConnectionManager(config)
 
             # Set up callbacks
-            self.public_connection.set_callback('message', self._handle_public_message)
-            self.public_connection.set_callback('error', self._handle_connection_error)
+            self.public_connection.set_callback("message", self._handle_public_message)
+            self.public_connection.set_callback("error", self._handle_connection_error)
 
             # Connect
             success = await self.public_connection.connect()
@@ -260,16 +264,16 @@ class KrakenWebSocketV2:
                 ping_timeout=self.config.ping_timeout,
                 max_reconnect_attempts=self.config.max_reconnect_attempts,
                 reconnect_delay=self.config.reconnect_delay,
-                heartbeat_timeout=self.config.heartbeat_timeout
+                heartbeat_timeout=self.config.heartbeat_timeout,
             )
 
             # Create connection manager
             self.private_connection = ConnectionManager(config)
 
             # Set up callbacks
-            self.private_connection.set_callback('message', self._handle_private_message)
-            self.private_connection.set_callback('authenticated', self._handle_authentication)
-            self.private_connection.set_callback('error', self._handle_connection_error)
+            self.private_connection.set_callback("message", self._handle_private_message)
+            self.private_connection.set_callback("authenticated", self._handle_authentication)
+            self.private_connection.set_callback("error", self._handle_connection_error)
 
             # Connect with authentication token
             success = await self.private_connection.connect(self.auth_token)
@@ -293,19 +297,19 @@ class KrakenWebSocketV2:
 
         try:
             # Try different token methods
-            if hasattr(self.exchange_client, 'get_websocket_token'):
+            if hasattr(self.exchange_client, "get_websocket_token"):
                 token_response = await self.exchange_client.get_websocket_token()
                 if isinstance(token_response, str):
                     self.auth_token = token_response
-                elif isinstance(token_response, dict) and 'token' in token_response:
-                    self.auth_token = token_response['token']
+                elif isinstance(token_response, dict) and "token" in token_response:
+                    self.auth_token = token_response["token"]
                 else:
                     logger.error(f"[KRAKEN_WS_V2] Invalid token response: {token_response}")
                     return False
-            elif hasattr(self.exchange_client, 'get_websockets_token'):
+            elif hasattr(self.exchange_client, "get_websockets_token"):
                 token_response = await self.exchange_client.get_websockets_token()
-                if isinstance(token_response, dict) and 'token' in token_response:
-                    self.auth_token = token_response['token']
+                if isinstance(token_response, dict) and "token" in token_response:
+                    self.auth_token = token_response["token"]
                 else:
                     logger.error(f"[KRAKEN_WS_V2] Invalid token response: {token_response}")
                     return False
@@ -342,7 +346,7 @@ class KrakenWebSocketV2:
                     logger.info("[KRAKEN_WS_V2] Token refreshed successfully")
 
                     # Re-subscribe to maintain active subscriptions
-                    if 'balances' in self.active_subscriptions:
+                    if "balances" in self.active_subscriptions:
                         logger.info("[KRAKEN_WS_V2] Re-subscribing to balance updates")
                         await self.subscribe_balance()
                 else:
@@ -356,14 +360,14 @@ class KrakenWebSocketV2:
 
     def _setup_message_callbacks(self):
         """Set up message handler callbacks"""
-        self.message_handler.register_callback('balance', self._handle_balance_updates)
-        self.message_handler.register_callback('balances', self._handle_balance_updates)
-        self.message_handler.register_callback('ticker', self._handle_ticker_updates)
-        self.message_handler.register_callback('book', self._handle_orderbook_updates)
-        self.message_handler.register_callback('orderbook', self._handle_orderbook_updates)
-        self.message_handler.register_callback('trade', self._handle_trade_updates)
-        self.message_handler.register_callback('ohlc', self._handle_ohlc_updates)
-        self.message_handler.register_callback('subscription', self._handle_subscription_response)
+        self.message_handler.register_callback("balance", self._handle_balance_updates)
+        self.message_handler.register_callback("balances", self._handle_balance_updates)
+        self.message_handler.register_callback("ticker", self._handle_ticker_updates)
+        self.message_handler.register_callback("book", self._handle_orderbook_updates)
+        self.message_handler.register_callback("orderbook", self._handle_orderbook_updates)
+        self.message_handler.register_callback("trade", self._handle_trade_updates)
+        self.message_handler.register_callback("ohlc", self._handle_ohlc_updates)
+        self.message_handler.register_callback("subscription", self._handle_subscription_response)
 
     async def _handle_public_message(self, message: dict[str, Any]):
         """Handle public channel messages"""
@@ -378,12 +382,12 @@ class KrakenWebSocketV2:
     async def _handle_authentication(self):
         """Handle successful authentication"""
         logger.info("[KRAKEN_WS_V2] Authentication successful")
-        await self._call_callbacks('authenticated')
+        await self._call_callbacks("authenticated")
 
     async def _handle_connection_error(self, error: Exception):
         """Handle connection errors"""
         logger.error(f"[KRAKEN_WS_V2] Connection error: {error}")
-        await self._call_callbacks('error', error)
+        await self._call_callbacks("error", error)
 
     async def _handle_balance_updates(self, balance_updates: list[BalanceUpdate]):
         """Handle balance update messages"""
@@ -393,10 +397,12 @@ class KrakenWebSocketV2:
             # Update local balance data
             for balance_update in balance_updates:
                 self.balance_data[balance_update.asset] = balance_update
-                logger.debug(f"[KRAKEN_WS_V2] Updated balance: {balance_update.asset} = {balance_update.free_balance}")
+                logger.debug(
+                    f"[KRAKEN_WS_V2] Updated balance: {balance_update.asset} = {balance_update.free_balance}"
+                )
 
             # Call balance callbacks
-            await self._call_callbacks('balance', balance_updates)
+            await self._call_callbacks("balance", balance_updates)
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling balance updates: {e}")
@@ -407,10 +413,12 @@ class KrakenWebSocketV2:
             # Update local ticker data
             for ticker_update in ticker_updates:
                 self.ticker_data[ticker_update.symbol] = ticker_update
-                logger.debug(f"[KRAKEN_WS_V2] Updated ticker: {ticker_update.symbol} = ${ticker_update.last}")
+                logger.debug(
+                    f"[KRAKEN_WS_V2] Updated ticker: {ticker_update.symbol} = ${ticker_update.last}"
+                )
 
             # Call ticker callbacks
-            await self._call_callbacks('ticker', ticker_updates)
+            await self._call_callbacks("ticker", ticker_updates)
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling ticker updates: {e}")
@@ -424,7 +432,7 @@ class KrakenWebSocketV2:
                 logger.debug(f"[KRAKEN_WS_V2] Updated orderbook: {orderbook_update.symbol}")
 
             # Call orderbook callbacks
-            await self._call_callbacks('orderbook', orderbook_updates)
+            await self._call_callbacks("orderbook", orderbook_updates)
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling orderbook updates: {e}")
@@ -441,12 +449,16 @@ class KrakenWebSocketV2:
 
                 # Keep only recent trades (last 100)
                 if len(self.trade_data[trade_update.symbol]) > 100:
-                    self.trade_data[trade_update.symbol] = self.trade_data[trade_update.symbol][-100:]
+                    self.trade_data[trade_update.symbol] = self.trade_data[trade_update.symbol][
+                        -100:
+                    ]
 
-                logger.debug(f"[KRAKEN_WS_V2] New trade: {trade_update.symbol} {trade_update.side} {trade_update.volume} @ ${trade_update.price}")
+                logger.debug(
+                    f"[KRAKEN_WS_V2] New trade: {trade_update.symbol} {trade_update.side} {trade_update.volume} @ ${trade_update.price}"
+                )
 
             # Call trade callbacks
-            await self._call_callbacks('trade', trade_updates)
+            await self._call_callbacks("trade", trade_updates)
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling trade updates: {e}")
@@ -465,10 +477,12 @@ class KrakenWebSocketV2:
                 if len(self.ohlc_data[ohlc_update.symbol]) > 1000:
                     self.ohlc_data[ohlc_update.symbol] = self.ohlc_data[ohlc_update.symbol][-1000:]
 
-                logger.debug(f"[KRAKEN_WS_V2] New OHLC: {ohlc_update.symbol} close=${ohlc_update.close}")
+                logger.debug(
+                    f"[KRAKEN_WS_V2] New OHLC: {ohlc_update.symbol} close=${ohlc_update.close}"
+                )
 
             # Call OHLC callbacks
-            await self._call_callbacks('ohlc', ohlc_updates)
+            await self._call_callbacks("ohlc", ohlc_updates)
 
         except Exception as e:
             logger.error(f"[KRAKEN_WS_V2] Error handling OHLC updates: {e}")
@@ -476,16 +490,16 @@ class KrakenWebSocketV2:
     async def _handle_subscription_response(self, response: SubscriptionResponse):
         """Handle subscription responses"""
         try:
-            channel = response.result.get('channel', 'unknown')
+            channel = response.result.get("channel", "unknown")
 
             if response.success:
                 logger.info(f"[KRAKEN_WS_V2] Subscription successful: {channel}")
                 # Track active subscription
                 async with self.subscription_lock:
                     self.active_subscriptions[channel] = {
-                        'timestamp': time.time(),
-                        'req_id': response.req_id,
-                        'params': response.result
+                        "timestamp": time.time(),
+                        "req_id": response.req_id,
+                        "params": response.result,
                     }
             else:
                 logger.error(f"[KRAKEN_WS_V2] Subscription failed: {channel} - {response.error}")
@@ -521,12 +535,7 @@ class KrakenWebSocketV2:
             logger.error("[KRAKEN_WS_V2] Private connection required for balance subscription")
             return False
 
-        subscription = SubscriptionRequest(
-            method="subscribe",
-            params={
-                "channel": "balances"
-            }
-        )
+        subscription = SubscriptionRequest(method="subscribe", params={"channel": "balances"})
 
         return await self._send_subscription(subscription, private=True)
 
@@ -538,11 +547,7 @@ class KrakenWebSocketV2:
             symbols: List of trading pairs (e.g., ['BTC/USDT', 'ETH/USDT'])
         """
         subscription = SubscriptionRequest(
-            method="subscribe",
-            params={
-                "channel": "ticker",
-                "symbol": symbols
-            }
+            method="subscribe", params={"channel": "ticker", "symbol": symbols}
         )
 
         return await self._send_subscription(subscription, private=False)
@@ -556,12 +561,7 @@ class KrakenWebSocketV2:
             depth: Orderbook depth (10, 25, 100, 500, 1000)
         """
         subscription = SubscriptionRequest(
-            method="subscribe",
-            params={
-                "channel": "book",
-                "symbol": symbols,
-                "depth": depth
-            }
+            method="subscribe", params={"channel": "book", "symbol": symbols, "depth": depth}
         )
 
         return await self._send_subscription(subscription, private=False)
@@ -574,11 +574,7 @@ class KrakenWebSocketV2:
             symbols: List of trading pairs
         """
         subscription = SubscriptionRequest(
-            method="subscribe",
-            params={
-                "channel": "trade",
-                "symbol": symbols
-            }
+            method="subscribe", params={"channel": "trade", "symbol": symbols}
         )
 
         return await self._send_subscription(subscription, private=False)
@@ -592,12 +588,7 @@ class KrakenWebSocketV2:
             interval: OHLC interval in minutes (1, 5, 15, 30, 60, 240, 1440, 10080, 21600)
         """
         subscription = SubscriptionRequest(
-            method="subscribe",
-            params={
-                "channel": "ohlc",
-                "symbol": symbols,
-                "interval": interval
-            }
+            method="subscribe", params={"channel": "ohlc", "symbol": symbols, "interval": interval}
         )
 
         return await self._send_subscription(subscription, private=False)
@@ -614,10 +605,7 @@ class KrakenWebSocketV2:
         if symbols:
             params["symbol"] = symbols
 
-        subscription = SubscriptionRequest(
-            method="unsubscribe",
-            params=params
-        )
+        subscription = SubscriptionRequest(method="unsubscribe", params=params)
 
         # Determine if private or public channel
         private_channels = ["balances", "executions", "openOrders"]
@@ -625,7 +613,9 @@ class KrakenWebSocketV2:
 
         return await self._send_subscription(subscription, private=is_private)
 
-    async def _send_subscription(self, subscription: SubscriptionRequest, private: bool = False) -> bool:
+    async def _send_subscription(
+        self, subscription: SubscriptionRequest, private: bool = False
+    ) -> bool:
         """Send subscription request"""
         try:
             # Rate limiting check
@@ -637,16 +627,22 @@ class KrakenWebSocketV2:
             connection = self.private_connection if private else self.public_connection
 
             if not connection or not connection.is_connected:
-                logger.error(f"[KRAKEN_WS_V2] No {'private' if private else 'public'} connection available")
+                logger.error(
+                    f"[KRAKEN_WS_V2] No {'private' if private else 'public'} connection available"
+                )
                 return False
 
             # Send subscription
             success = await connection.send_message(subscription.to_dict())
 
             if success:
-                logger.info(f"[KRAKEN_WS_V2] Sent subscription: {subscription.params.get('channel', 'unknown')}")
+                logger.info(
+                    f"[KRAKEN_WS_V2] Sent subscription: {subscription.params.get('channel', 'unknown')}"
+                )
             else:
-                logger.error(f"[KRAKEN_WS_V2] Failed to send subscription: {subscription.params.get('channel', 'unknown')}")
+                logger.error(
+                    f"[KRAKEN_WS_V2] Failed to send subscription: {subscription.params.get('channel', 'unknown')}"
+                )
 
             return success
 
@@ -660,7 +656,8 @@ class KrakenWebSocketV2:
 
         # Clean old timestamps
         self.subscription_timestamps = [
-            ts for ts in self.subscription_timestamps
+            ts
+            for ts in self.subscription_timestamps
             if current_time - ts < 1.0  # 1 second window
         ]
 
@@ -684,8 +681,7 @@ class KrakenWebSocketV2:
     def get_all_balances(self) -> dict[str, dict[str, Any]]:
         """Get all current balances"""
         return {
-            asset: balance_update.to_dict()
-            for asset, balance_update in self.balance_data.items()
+            asset: balance_update.to_dict() for asset, balance_update in self.balance_data.items()
         }
 
     def get_ticker(self, symbol: str) -> Optional[dict[str, Any]]:
@@ -719,30 +715,32 @@ class KrakenWebSocketV2:
     def get_connection_status(self) -> dict[str, Any]:
         """Get detailed connection status"""
         status = {
-            'is_running': self.is_running,
-            'connection_start_time': self.connection_start_time,
-            'uptime': time.time() - self.connection_start_time if self.connection_start_time > 0 else 0,
-            'last_message_time': self.last_message_time,
-            'public_connection': None,
-            'private_connection': None,
-            'active_subscriptions': len(self.active_subscriptions),
-            'subscription_details': dict(self.active_subscriptions),
-            'message_handler_stats': self.message_handler.get_statistics(),
-            'data_counts': {
-                'balances': len(self.balance_data),
-                'tickers': len(self.ticker_data),
-                'orderbooks': len(self.orderbook_data),
-                'trade_symbols': len(self.trade_data),
-                'ohlc_symbols': len(self.ohlc_data)
-            }
+            "is_running": self.is_running,
+            "connection_start_time": self.connection_start_time,
+            "uptime": time.time() - self.connection_start_time
+            if self.connection_start_time > 0
+            else 0,
+            "last_message_time": self.last_message_time,
+            "public_connection": None,
+            "private_connection": None,
+            "active_subscriptions": len(self.active_subscriptions),
+            "subscription_details": dict(self.active_subscriptions),
+            "message_handler_stats": self.message_handler.get_statistics(),
+            "data_counts": {
+                "balances": len(self.balance_data),
+                "tickers": len(self.ticker_data),
+                "orderbooks": len(self.orderbook_data),
+                "trade_symbols": len(self.trade_data),
+                "ohlc_symbols": len(self.ohlc_data),
+            },
         }
 
         # Add connection manager status
         if self.public_connection:
-            status['public_connection'] = self.public_connection.get_status()
+            status["public_connection"] = self.public_connection.get_status()
 
         if self.private_connection:
-            status['private_connection'] = self.private_connection.get_status()
+            status["private_connection"] = self.private_connection.get_status()
 
         return status
 
@@ -754,8 +752,7 @@ class KrakenWebSocketV2:
 
     def is_authenticated(self) -> bool:
         """Check if private connection is authenticated"""
-        return (self.private_connection and
-                self.private_connection.is_authenticated)
+        return self.private_connection and self.private_connection.is_authenticated
 
     async def _call_callbacks(self, event_type: str, data: Any = None):
         """Call registered callbacks for event type"""
@@ -775,15 +772,18 @@ class KrakenWebSocketV2:
     def get_balance_streaming_status(self) -> dict[str, Any]:
         """Get balance streaming status for compatibility with existing code"""
         return {
-            'websocket_connected': self.is_connected(),
-            'websocket_healthy': self.is_connected() and (time.time() - self.last_message_time) < 60,
-            'auth_token_available': bool(self.auth_token),
-            'balance_data_count': len(self.balance_data),
-            'private_connection_available': bool(self.private_connection),
-            'private_connection_authenticated': self.is_authenticated(),
-            'last_message_time': self.last_message_time,
-            'time_since_last_message': time.time() - self.last_message_time if self.last_message_time > 0 else float('inf'),
-            'streaming_healthy': self.is_connected() and self.is_authenticated()
+            "websocket_connected": self.is_connected(),
+            "websocket_healthy": self.is_connected()
+            and (time.time() - self.last_message_time) < 60,
+            "auth_token_available": bool(self.auth_token),
+            "balance_data_count": len(self.balance_data),
+            "private_connection_available": bool(self.private_connection),
+            "private_connection_authenticated": self.is_authenticated(),
+            "last_message_time": self.last_message_time,
+            "time_since_last_message": time.time() - self.last_message_time
+            if self.last_message_time > 0
+            else float("inf"),
+            "streaming_healthy": self.is_connected() and self.is_authenticated(),
         }
 
     async def test_balance_format_conversion(self) -> bool:
@@ -791,8 +791,12 @@ class KrakenWebSocketV2:
         try:
             # Simulate test balance data
             test_data = [
-                BalanceUpdate(asset="USDT", balance=safe_decimal("100.50"), hold_trade=safe_decimal("0")),
-                BalanceUpdate(asset="BTC", balance=safe_decimal("0.001"), hold_trade=safe_decimal("0.0005"))
+                BalanceUpdate(
+                    asset="USDT", balance=safe_decimal("100.50"), hold_trade=safe_decimal("0")
+                ),
+                BalanceUpdate(
+                    asset="BTC", balance=safe_decimal("0.001"), hold_trade=safe_decimal("0.0005")
+                ),
             ]
 
             # Process test data
@@ -800,7 +804,7 @@ class KrakenWebSocketV2:
 
             # Check if data was processed correctly
             usdt_balance = self.get_balance("USDT")
-            if usdt_balance and usdt_balance['free'] == 100.50:
+            if usdt_balance and usdt_balance["free"] == 100.50:
                 logger.info("[KRAKEN_WS_V2] Balance format conversion test successful")
                 return True
             else:

@@ -55,11 +55,11 @@ class ConfigManager:
     def get_complete_config(self) -> dict[str, Any]:
         """Get complete configuration from all managers"""
         return {
-            'core': self.core_manager.get_all_settings(),
-            'trading': self.trading_manager.get_all_settings(),
-            'risk': self.risk_manager.get_all_settings(),
-            'kraken': self.kraken_manager.get_all_settings(),
-            'learning': self.learning_manager.get_all_settings()
+            "core": self.core_manager.get_all_settings(),
+            "trading": self.trading_manager.get_all_settings(),
+            "risk": self.risk_manager.get_all_settings(),
+            "kraken": self.kraken_manager.get_all_settings(),
+            "learning": self.learning_manager.get_all_settings(),
         }
 
     def _validate_config(self):
@@ -86,12 +86,12 @@ def load_config(config_path: str = "config.json") -> dict[str, Any]:
 
 
 __all__ = [
-    'ConfigManager',
-    'CoreConfigManager',
-    'TradingConfigManager',
-    'RiskConfigManager',
-    'KrakenConfigManager',
-    'LearningConfigManager',
-    'ConfigValidator',
-    'load_config'
+    "ConfigManager",
+    "CoreConfigManager",
+    "TradingConfigManager",
+    "RiskConfigManager",
+    "KrakenConfigManager",
+    "LearningConfigManager",
+    "ConfigValidator",
+    "load_config",
 ]

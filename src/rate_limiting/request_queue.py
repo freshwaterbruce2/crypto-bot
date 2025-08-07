@@ -23,19 +23,21 @@ class RequestPriority(IntEnum):
     Request priority levels for queue management.
     Lower numbers = higher priority.
     """
-    CRITICAL = 0      # Emergency orders, liquidations
-    HIGH = 1          # Trade execution, order management
-    NORMAL = 2        # Regular trading operations
-    LOW = 3           # Data fetching, analysis
-    BACKGROUND = 4    # Cleanup, maintenance operations
+
+    CRITICAL = 0  # Emergency orders, liquidations
+    HIGH = 1  # Trade execution, order management
+    NORMAL = 2  # Regular trading operations
+    LOW = 3  # Data fetching, analysis
+    BACKGROUND = 4  # Cleanup, maintenance operations
 
 
 class QueueStrategy(Enum):
     """Queue processing strategies."""
-    FIFO = "fifo"                    # First In, First Out
+
+    FIFO = "fifo"  # First In, First Out
     PRIORITY_FIFO = "priority_fifo"  # Priority-based with FIFO within priority
     WEIGHTED_FAIR = "weighted_fair"  # Weighted fair queuing
-    ADAPTIVE = "adaptive"            # Adaptive based on conditions
+    ADAPTIVE = "adaptive"  # Adaptive based on conditions
 
 
 @dataclass
@@ -126,7 +128,7 @@ class RequestQueue:
         max_size: int = 1000,
         strategy: QueueStrategy = QueueStrategy.PRIORITY_FIFO,
         cleanup_interval: float = 30.0,
-        max_age_seconds: float = 300.0
+        max_age_seconds: float = 300.0,
     ):
         """
         Initialize request queue.
@@ -153,15 +155,15 @@ class RequestQueue:
 
         # Queue statistics
         self.stats = {
-            'total_queued': 0,
-            'total_processed': 0,
-            'total_cancelled': 0,
-            'total_expired': 0,
-            'total_failed': 0,
-            'current_size': 0,
-            'average_wait_time': 0.0,
-            'max_wait_time': 0.0,
-            'priority_distribution': dict.fromkeys(RequestPriority, 0)
+            "total_queued": 0,
+            "total_processed": 0,
+            "total_cancelled": 0,
+            "total_expired": 0,
+            "total_failed": 0,
+            "current_size": 0,
+            "average_wait_time": 0.0,
+            "max_wait_time": 0.0,
+            "priority_distribution": dict.fromkeys(RequestPriority, 0),
         }
 
         # Queue management
@@ -178,7 +180,7 @@ class RequestQueue:
             RequestPriority.HIGH: 5.0,
             RequestPriority.NORMAL: 2.0,
             RequestPriority.LOW: 1.0,
-            RequestPriority.BACKGROUND: 0.5
+            RequestPriority.BACKGROUND: 0.5,
         }
 
         logger.info(f"Request queue initialized: max_size={max_size}, strategy={strategy.value}")
@@ -225,7 +227,7 @@ class RequestQueue:
         penalty_points: int = 1,
         weight: int = 1,
         requires_auth: bool = True,
-        max_retries: int = 3
+        max_retries: int = 3,
     ) -> QueuedRequest:
         """
         Enqueue a request for processing.
@@ -255,7 +257,7 @@ class RequestQueue:
 
         async with self._lock:
             # Check if queue is full
-            if self.stats['current_size'] >= self.max_size:
+            if self.stats["current_size"] >= self.max_size:
                 raise ValueError(f"Queue is full (size: {self.stats['current_size']})")
 
             # Check for duplicate request ID
@@ -279,7 +281,7 @@ class RequestQueue:
                 penalty_points=penalty_points,
                 weight=weight,
                 requires_auth=requires_auth,
-                max_retries=max_retries
+                max_retries=max_retries,
             )
 
             # Add to appropriate queue
@@ -287,9 +289,9 @@ class RequestQueue:
             self._requests[request_id] = request
 
             # Update statistics
-            self.stats['total_queued'] += 1
-            self.stats['current_size'] += 1
-            self.stats['priority_distribution'][priority] += 1
+            self.stats["total_queued"] += 1
+            self.stats["current_size"] += 1
+            self.stats["priority_distribution"][priority] += 1
 
             # Notify waiting consumers
             self._not_empty.notify()
@@ -315,7 +317,7 @@ class RequestQueue:
             # Wait for requests or timeout
             start_time = time.time()
 
-            while self.stats['current_size'] == 0 and not self._shutdown:
+            while self.stats["current_size"] == 0 and not self._shutdown:
                 if timeout_seconds:
                     remaining = timeout_seconds - (time.time() - start_time)
                     if remaining <= 0:
@@ -342,7 +344,7 @@ class RequestQueue:
             request.scheduled_at = time.time()
 
             # Update statistics
-            self.stats['current_size'] -= 1
+            self.stats["current_size"] -= 1
             wait_time = request.scheduled_at - request.created_at
             self._update_wait_time_stats(wait_time)
 
@@ -369,7 +371,7 @@ class RequestQueue:
     def _get_fifo_request(self) -> Optional[QueuedRequest]:
         """Get next request using FIFO strategy."""
         oldest_request = None
-        oldest_time = float('inf')
+        oldest_time = float("inf")
 
         for priority in RequestPriority:
             queue = self._queues[priority]
@@ -448,17 +450,17 @@ class RequestQueue:
 
     def _update_wait_time_stats(self, wait_time: float):
         """Update wait time statistics."""
-        if self.stats['total_processed'] == 0:
-            self.stats['average_wait_time'] = wait_time
+        if self.stats["total_processed"] == 0:
+            self.stats["average_wait_time"] = wait_time
         else:
             # Running average
-            n = self.stats['total_processed']
-            self.stats['average_wait_time'] = (
-                (self.stats['average_wait_time'] * n + wait_time) / (n + 1)
+            n = self.stats["total_processed"]
+            self.stats["average_wait_time"] = (self.stats["average_wait_time"] * n + wait_time) / (
+                n + 1
             )
 
-        self.stats['max_wait_time'] = max(self.stats['max_wait_time'], wait_time)
-        self.stats['total_processed'] += 1
+        self.stats["max_wait_time"] = max(self.stats["max_wait_time"], wait_time)
+        self.stats["total_processed"] += 1
 
     async def complete_request(self, request_id: str, success: bool = True):
         """
@@ -484,7 +486,7 @@ class RequestQueue:
                     except Exception as e:
                         logger.error(f"Request callback error for {request_id}: {e}")
             else:
-                self.stats['total_failed'] += 1
+                self.stats["total_failed"] += 1
 
             logger.debug(f"Request {request_id} completed successfully: {success}")
 
@@ -505,8 +507,8 @@ class RequestQueue:
             if request:
                 request.cancel(reason)
                 del self._requests[request_id]
-                self.stats['current_size'] -= 1
-                self.stats['total_cancelled'] += 1
+                self.stats["current_size"] -= 1
+                self.stats["total_cancelled"] += 1
                 return True
 
             # Check processing requests
@@ -514,7 +516,7 @@ class RequestQueue:
             if request:
                 request.cancel(reason)
                 # Note: Don't remove from processing as it may be in progress
-                self.stats['total_cancelled'] += 1
+                self.stats["total_cancelled"] += 1
                 return True
 
         return False
@@ -546,20 +548,20 @@ class RequestQueue:
 
                     if request.is_cancelled:
                         removed_count += 1
-                        self.stats['total_cancelled'] += 1
+                        self.stats["total_cancelled"] += 1
                         continue
 
                     if request.is_expired:
                         request.cancel("Expired")
                         removed_count += 1
-                        self.stats['total_expired'] += 1
+                        self.stats["total_expired"] += 1
                         continue
 
                     # Check max age
                     if request.age_seconds > self.max_age_seconds:
                         request.cancel("Max age exceeded")
                         removed_count += 1
-                        self.stats['total_expired'] += 1
+                        self.stats["total_expired"] += 1
                         continue
 
                     valid_requests.append(request)
@@ -578,7 +580,7 @@ class RequestQueue:
             self._requests = valid_requests
 
             # Update statistics
-            self.stats['current_size'] = len(self._requests)
+            self.stats["current_size"] = len(self._requests)
 
             if removed_count > 0 or removed_from_tracking > 0:
                 logger.debug(
@@ -591,15 +593,13 @@ class RequestQueue:
         stats = self.stats.copy()
 
         # Add real-time queue sizes
-        stats['queue_sizes'] = {
-            priority.name: len(self._queues[priority])
-            for priority in RequestPriority
+        stats["queue_sizes"] = {
+            priority.name: len(self._queues[priority]) for priority in RequestPriority
         }
 
-        stats['processing_count'] = len(self._processing)
-        stats['wfq_credits'] = {
-            priority.name: credits
-            for priority, credits in self._wfq_credits.items()
+        stats["processing_count"] = len(self._processing)
+        stats["wfq_credits"] = {
+            priority.name: credits for priority, credits in self._wfq_credits.items()
         }
 
         return stats
@@ -615,16 +615,16 @@ class RequestQueue:
             Queue size
         """
         if priority is None:
-            return self.stats['current_size']
+            return self.stats["current_size"]
         return len(self._queues[priority])
 
     def is_full(self) -> bool:
         """Check if queue is at capacity."""
-        return self.stats['current_size'] >= self.max_size
+        return self.stats["current_size"] >= self.max_size
 
     def is_empty(self) -> bool:
         """Check if queue is empty."""
-        return self.stats['current_size'] == 0
+        return self.stats["current_size"] == 0
 
     @asynccontextmanager
     async def request_context(self, request: QueuedRequest):
@@ -644,7 +644,7 @@ class RequestQueue:
 
     def __len__(self) -> int:
         """Get total queue size."""
-        return self.stats['current_size']
+        return self.stats["current_size"]
 
     def __bool__(self) -> bool:
         """Check if queue has requests."""

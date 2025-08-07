@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 class ConnectionState(Enum):
     """WebSocket connection states"""
+
     DISCONNECTED = "disconnected"
     CONNECTING = "connecting"
     CONNECTED = "connected"
@@ -35,6 +36,7 @@ class ConnectionState(Enum):
 @dataclass
 class ConnectionConfig:
     """WebSocket connection configuration"""
+
     url: str
     auth_url: Optional[str] = None
     ping_interval: float = 20.0
@@ -52,6 +54,7 @@ class ConnectionConfig:
 @dataclass
 class ReconnectState:
     """Reconnection state tracking"""
+
     attempt_count: int = 0
     next_delay: float = 1.0
     last_attempt_time: float = 0
@@ -68,10 +71,7 @@ class ReconnectState:
         """Increment attempt count and calculate next delay"""
         self.attempt_count += 1
         self.last_attempt_time = time.time()
-        self.next_delay = min(
-            self.next_delay * self.backoff_multiplier,
-            self.max_delay
-        )
+        self.next_delay = min(self.next_delay * self.backoff_multiplier, self.max_delay)
 
 
 class ConnectionManager:
@@ -132,12 +132,14 @@ class ConnectionManager:
 
         try:
             # Determine WebSocket URL (use auth URL if token provided)
-            ws_url = self.config.auth_url if auth_token and self.config.auth_url else self.config.url
+            ws_url = (
+                self.config.auth_url if auth_token and self.config.auth_url else self.config.url
+            )
 
             # Additional headers for authentication if needed
             headers = {}
             if auth_token:
-                headers['Authorization'] = f'Bearer {auth_token}'
+                headers["Authorization"] = f"Bearer {auth_token}"
 
             # Create WebSocket connection with timeout
             self.websocket = await asyncio.wait_for(
@@ -146,9 +148,9 @@ class ConnectionManager:
                     ping_interval=self.config.ping_interval,
                     ping_timeout=self.config.ping_timeout,
                     close_timeout=self.config.close_timeout,
-                    extra_headers=headers if headers else None
+                    extra_headers=headers if headers else None,
                 ),
-                timeout=self.config.connection_timeout
+                timeout=self.config.connection_timeout,
             )
 
             # Update connection state
@@ -181,7 +183,9 @@ class ConnectionManager:
             return True
 
         except asyncio.TimeoutError:
-            logger.error(f"[CONNECTION_MANAGER] Connection timeout after {self.config.connection_timeout}s")
+            logger.error(
+                f"[CONNECTION_MANAGER] Connection timeout after {self.config.connection_timeout}s"
+            )
             self.state = ConnectionState.FAILED
             return False
 
@@ -257,7 +261,9 @@ class ConnectionManager:
             # Queue message for later sending
             if len(self.pending_messages) < self.config.message_queue_size:
                 self.pending_messages.append(message)
-                logger.debug(f"[CONNECTION_MANAGER] Queued message: {message.get('method', 'unknown')}")
+                logger.debug(
+                    f"[CONNECTION_MANAGER] Queued message: {message.get('method', 'unknown')}"
+                )
             else:
                 logger.warning("[CONNECTION_MANAGER] Message queue full, dropping message")
             return False
@@ -277,12 +283,7 @@ class ConnectionManager:
 
     async def _authenticate(self, auth_token: str):
         """Send authentication message"""
-        auth_message = {
-            "method": "authenticate",
-            "params": {
-                "token": auth_token
-            }
-        }
+        auth_message = {"method": "authenticate", "params": {"token": auth_token}}
 
         success = await self.send_message(auth_message)
         if success:
@@ -298,8 +299,7 @@ class ConnectionManager:
             try:
                 # Receive message with timeout
                 message_raw = await asyncio.wait_for(
-                    self.websocket.recv(),
-                    timeout=self.config.heartbeat_timeout
+                    self.websocket.recv(), timeout=self.config.heartbeat_timeout
                 )
 
                 # Update last message time
@@ -313,14 +313,14 @@ class ConnectionManager:
                     continue
 
                 # Handle heartbeat messages
-                if message.get('channel') == 'heartbeat':
+                if message.get("channel") == "heartbeat":
                     self.status.last_heartbeat = time.time()
                     logger.debug("[CONNECTION_MANAGER] Heartbeat received")
                     continue
 
                 # Handle authentication responses
-                if message.get('method') == 'authenticate':
-                    if message.get('success'):
+                if message.get("method") == "authenticate":
+                    if message.get("success"):
                         self.state = ConnectionState.AUTHENTICATED
                         self.status.authenticated = True
                         logger.info("[CONNECTION_MANAGER] Authentication successful")
@@ -329,9 +329,11 @@ class ConnectionManager:
                             try:
                                 await self.on_authenticated()
                             except Exception as e:
-                                logger.error(f"[CONNECTION_MANAGER] Authentication callback error: {e}")
+                                logger.error(
+                                    f"[CONNECTION_MANAGER] Authentication callback error: {e}"
+                                )
                     else:
-                        error = message.get('error', 'Unknown authentication error')
+                        error = message.get("error", "Unknown authentication error")
                         logger.error(f"[CONNECTION_MANAGER] Authentication failed: {error}")
                         self.status.last_error = error
                     continue
@@ -350,7 +352,9 @@ class ConnectionManager:
                         logger.error(f"[CONNECTION_MANAGER] Message callback error: {e}")
 
             except asyncio.TimeoutError:
-                logger.warning(f"[CONNECTION_MANAGER] No message received for {self.config.heartbeat_timeout}s")
+                logger.warning(
+                    f"[CONNECTION_MANAGER] No message received for {self.config.heartbeat_timeout}s"
+                )
                 # Connection might be stale, trigger reconnection
                 if not self._shutdown:
                     asyncio.create_task(self._handle_connection_loss())
@@ -390,7 +394,9 @@ class ConnectionManager:
 
                 # Check for stale connection
                 if current_time - self.last_message_time > self.config.heartbeat_timeout:
-                    logger.warning(f"[CONNECTION_MANAGER] Connection appears stale (no messages for {self.config.heartbeat_timeout}s)")
+                    logger.warning(
+                        f"[CONNECTION_MANAGER] Connection appears stale (no messages for {self.config.heartbeat_timeout}s)"
+                    )
                     if not self._shutdown:
                         asyncio.create_task(self._handle_connection_loss())
                     break
@@ -427,7 +433,10 @@ class ConnectionManager:
         """Automatic reconnection loop with exponential backoff"""
         logger.info("[CONNECTION_MANAGER] Starting reconnection loop")
 
-        while not self._shutdown and self.reconnect_state.attempt_count < self.config.max_reconnect_attempts:
+        while (
+            not self._shutdown
+            and self.reconnect_state.attempt_count < self.config.max_reconnect_attempts
+        ):
             # Wait for reconnect delay
             await asyncio.sleep(self.reconnect_state.next_delay)
 
@@ -437,7 +446,9 @@ class ConnectionManager:
             # Increment attempt count
             self.reconnect_state.increment()
 
-            logger.info(f"[CONNECTION_MANAGER] Reconnection attempt {self.reconnect_state.attempt_count}/{self.config.max_reconnect_attempts}")
+            logger.info(
+                f"[CONNECTION_MANAGER] Reconnection attempt {self.reconnect_state.attempt_count}/{self.config.max_reconnect_attempts}"
+            )
 
             try:
                 # Clean up existing connection
@@ -456,7 +467,9 @@ class ConnectionManager:
                     self.status.reconnect_count += 1
                     return  # Exit reconnection loop
                 else:
-                    logger.warning(f"[CONNECTION_MANAGER] Reconnection attempt {self.reconnect_state.attempt_count} failed")
+                    logger.warning(
+                        f"[CONNECTION_MANAGER] Reconnection attempt {self.reconnect_state.attempt_count} failed"
+                    )
 
             except Exception as e:
                 logger.error(f"[CONNECTION_MANAGER] Reconnection error: {e}")
@@ -465,7 +478,9 @@ class ConnectionManager:
 
         # Max attempts reached
         if self.reconnect_state.attempt_count >= self.config.max_reconnect_attempts:
-            logger.error(f"[CONNECTION_MANAGER] Max reconnection attempts ({self.config.max_reconnect_attempts}) reached")
+            logger.error(
+                f"[CONNECTION_MANAGER] Max reconnection attempts ({self.config.max_reconnect_attempts}) reached"
+            )
             self.state = ConnectionState.FAILED
 
     async def _send_pending_messages(self):
@@ -486,7 +501,9 @@ class ConnectionManager:
                 self.pending_messages.append(message)
 
         if self.pending_messages:
-            logger.warning(f"[CONNECTION_MANAGER] {len(self.pending_messages)} messages remain queued")
+            logger.warning(
+                f"[CONNECTION_MANAGER] {len(self.pending_messages)} messages remain queued"
+            )
 
     async def get_queued_message(self) -> Optional[dict[str, Any]]:
         """Get next queued message for processing"""
@@ -497,15 +514,15 @@ class ConnectionManager:
 
     def set_callback(self, callback_type: str, callback: Callable):
         """Set callback for connection events"""
-        if callback_type == 'message':
+        if callback_type == "message":
             self.on_message = callback
-        elif callback_type == 'connected':
+        elif callback_type == "connected":
             self.on_connected = callback
-        elif callback_type == 'disconnected':
+        elif callback_type == "disconnected":
             self.on_disconnected = callback
-        elif callback_type == 'error':
+        elif callback_type == "error":
             self.on_error = callback
-        elif callback_type == 'authenticated':
+        elif callback_type == "authenticated":
             self.on_authenticated = callback
         else:
             logger.warning(f"[CONNECTION_MANAGER] Unknown callback type: {callback_type}")
@@ -513,15 +530,15 @@ class ConnectionManager:
     def get_status(self) -> dict[str, Any]:
         """Get detailed connection status"""
         return {
-            'state': self.state.value,
-            'status': self.status.to_dict(),
-            'reconnect_state': {
-                'attempt_count': self.reconnect_state.attempt_count,
-                'next_delay': self.reconnect_state.next_delay,
-                'last_attempt_time': self.reconnect_state.last_attempt_time
+            "state": self.state.value,
+            "status": self.status.to_dict(),
+            "reconnect_state": {
+                "attempt_count": self.reconnect_state.attempt_count,
+                "next_delay": self.reconnect_state.next_delay,
+                "last_attempt_time": self.reconnect_state.last_attempt_time,
             },
-            'pending_messages': len(self.pending_messages),
-            'queue_size': self.message_queue.qsize()
+            "pending_messages": len(self.pending_messages),
+            "queue_size": self.message_queue.qsize(),
         }
 
     @property

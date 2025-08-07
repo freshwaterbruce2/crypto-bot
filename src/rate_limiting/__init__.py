@@ -22,9 +22,9 @@ from .request_queue import RequestPriority, RequestQueue
 __version__ = "2025.1.0"
 
 __all__ = [
-    'KrakenRateLimiter2025',
-    'RateLimitConfig',
-    'ENDPOINT_CONFIGS',
-    'RequestQueue',
-    'RequestPriority'
+    "KrakenRateLimiter2025",
+    "RateLimitConfig",
+    "ENDPOINT_CONFIGS",
+    "RequestQueue",
+    "RequestPriority",
 ]

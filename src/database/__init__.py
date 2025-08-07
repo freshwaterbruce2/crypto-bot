@@ -11,12 +11,6 @@ from .database_manager import (
     get_database_manager,
 )
 
-__all__ = [
-    'DatabaseManager',
-    'TradeRecord',
-    'OrderRecord',
-    'BalanceRecord',
-    'get_database_manager'
-]
+__all__ = ["DatabaseManager", "TradeRecord", "OrderRecord", "BalanceRecord", "get_database_manager"]
 
-__version__ = '1.0.0'
+__version__ = "1.0.0"

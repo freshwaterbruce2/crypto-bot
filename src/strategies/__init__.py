@@ -11,7 +11,8 @@ try:
 except ImportError:
     try:
         import sys
-        sys.path.insert(0, '..')
+
+        sys.path.insert(0, "..")
         import numpy_compat
     except ImportError:
         pass
@@ -52,7 +53,7 @@ __all__ = [
     "AssetConfigLoader",
     "PortfolioAwareStrategy",
     "BuyLogicHandler",
-    "SellLogicHandler"
+    "SellLogicHandler",
 ]
 
 # Strategy version for compatibility checking

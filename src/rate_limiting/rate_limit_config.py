@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class EndpointType(Enum):
     """API endpoint types for rate limiting."""
+
     PRIVATE = "private"
     PUBLIC = "public"
     WEBSOCKET = "websocket"
@@ -23,6 +24,7 @@ class EndpointType(Enum):
 
 class AccountTier(Enum):
     """Kraken account tiers with different rate limits."""
+
     STARTER = "starter"
     INTERMEDIATE = "intermediate"
     PRO = "pro"
@@ -34,7 +36,7 @@ class RateLimitConfig:
 
     # Basic rate limits (requests per minute)
     private_limit: int = 15  # 2025 spec: 15 requests per minute for private endpoints
-    public_limit: int = 20   # 2025 spec: 20 requests per minute for public endpoints
+    public_limit: int = 20  # 2025 spec: 20 requests per minute for public endpoints
 
     # Penalty point system
     max_penalty_points: int = 180  # Maximum before rate limiting kicks in
@@ -66,26 +68,24 @@ TIER_CONFIGS = {
         max_penalty_points=60,  # Starter tier limit
         penalty_decay_rate=0.33,  # 0.33 points per second
         base_backoff_seconds=2.0,
-        max_backoff_seconds=120.0
+        max_backoff_seconds=120.0,
     ),
-
     AccountTier.INTERMEDIATE: RateLimitConfig(
         private_limit=15,
         public_limit=20,
         max_penalty_points=125,  # Intermediate tier limit
         penalty_decay_rate=2.34,  # 2.34 points per second
         base_backoff_seconds=1.5,
-        max_backoff_seconds=180.0
+        max_backoff_seconds=180.0,
     ),
-
     AccountTier.PRO: RateLimitConfig(
         private_limit=15,
         public_limit=20,
         max_penalty_points=180,  # Pro tier limit
         penalty_decay_rate=3.75,  # 3.75 points per second
         base_backoff_seconds=1.0,
-        max_backoff_seconds=300.0
-    )
+        max_backoff_seconds=300.0,
+    ),
 }
 
 
@@ -108,72 +108,63 @@ class EndpointConfig:
 
 # Kraken API endpoint configurations (2025 specifications)
 ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
-
     # ===== PUBLIC ENDPOINTS =====
     "ServerTime": EndpointConfig(
         name="ServerTime",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,  # No penalty for public endpoints
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "SystemStatus": EndpointConfig(
         name="SystemStatus",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "AssetPairs": EndpointConfig(
         name="AssetPairs",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "Ticker": EndpointConfig(
         name="Ticker",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "OHLC": EndpointConfig(
         name="OHLC",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "Depth": EndpointConfig(
         name="Depth",
         endpoint_type=EndpointType.PUBLIC,
         weight=2,  # Heavier endpoint
         penalty_points=0,
-        max_requests_per_minute=10  # Lower limit due to weight
+        max_requests_per_minute=10,  # Lower limit due to weight
     ),
-
     "Trades": EndpointConfig(
         name="Trades",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     "Spread": EndpointConfig(
         name="Spread",
         endpoint_type=EndpointType.PUBLIC,
         weight=1,
         penalty_points=0,
-        max_requests_per_minute=20
+        max_requests_per_minute=20,
     ),
-
     # ===== PRIVATE ENDPOINTS =====
     "Balance": EndpointConfig(
         name="Balance",
@@ -181,126 +172,112 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "TradeBalance": EndpointConfig(
         name="TradeBalance",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "OpenOrders": EndpointConfig(
         name="OpenOrders",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "ClosedOrders": EndpointConfig(
         name="ClosedOrders",
         endpoint_type=EndpointType.PRIVATE,
         weight=2,
         penalty_points=2,
         max_requests_per_minute=10,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "QueryOrders": EndpointConfig(
         name="QueryOrders",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "TradesHistory": EndpointConfig(
         name="TradesHistory",
         endpoint_type=EndpointType.PRIVATE,
         weight=2,
         penalty_points=2,
         max_requests_per_minute=10,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "QueryTrades": EndpointConfig(
         name="QueryTrades",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "OpenPositions": EndpointConfig(
         name="OpenPositions",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "Ledgers": EndpointConfig(
         name="Ledgers",
         endpoint_type=EndpointType.PRIVATE,
         weight=2,
         penalty_points=2,
         max_requests_per_minute=10,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "QueryLedgers": EndpointConfig(
         name="QueryLedgers",
         endpoint_type=EndpointType.PRIVATE,
         weight=2,
         penalty_points=2,
         max_requests_per_minute=10,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "TradeVolume": EndpointConfig(
         name="TradeVolume",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "ExportStatus": EndpointConfig(
         name="ExportStatus",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "RetrieveExport": EndpointConfig(
         name="RetrieveExport",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     "RemoveExport": EndpointConfig(
         name="RemoveExport",
         endpoint_type=EndpointType.PRIVATE,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=15,
-        requires_auth=True
+        requires_auth=True,
     ),
-
     # ===== TRADING ENDPOINTS =====
     "AddOrder": EndpointConfig(
         name="AddOrder",
@@ -309,9 +286,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         penalty_points=1,  # Base penalty, can increase with order type
         max_requests_per_minute=15,
         requires_auth=True,
-        is_trading_endpoint=True
+        is_trading_endpoint=True,
     ),
-
     "AmendOrder": EndpointConfig(
         name="AmendOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -320,9 +296,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True,
         is_trading_endpoint=True,
-        has_age_penalty=True
+        has_age_penalty=True,
     ),
-
     "EditOrder": EndpointConfig(
         name="EditOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -331,9 +306,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True,
         is_trading_endpoint=True,
-        has_age_penalty=True
+        has_age_penalty=True,
     ),
-
     "CancelOrder": EndpointConfig(
         name="CancelOrder",
         endpoint_type=EndpointType.PRIVATE,
@@ -342,9 +316,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         max_requests_per_minute=15,
         requires_auth=True,
         is_trading_endpoint=True,
-        has_age_penalty=True
+        has_age_penalty=True,
     ),
-
     "CancelAll": EndpointConfig(
         name="CancelAll",
         endpoint_type=EndpointType.PRIVATE,
@@ -352,9 +325,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         penalty_points=1,
         max_requests_per_minute=15,
         requires_auth=True,
-        is_trading_endpoint=True
+        is_trading_endpoint=True,
     ),
-
     "CancelAllOrdersAfter": EndpointConfig(
         name="CancelAllOrdersAfter",
         endpoint_type=EndpointType.PRIVATE,
@@ -362,9 +334,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         penalty_points=1,
         max_requests_per_minute=15,
         requires_auth=True,
-        is_trading_endpoint=True
+        is_trading_endpoint=True,
     ),
-
     # ===== WEBSOCKET ENDPOINTS =====
     "WS-Subscribe": EndpointConfig(
         name="WS-Subscribe",
@@ -372,18 +343,16 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         weight=1,
         penalty_points=1,
         max_requests_per_minute=60,  # Higher limit for WebSocket
-        requires_auth=False
+        requires_auth=False,
     ),
-
     "WS-Unsubscribe": EndpointConfig(
         name="WS-Unsubscribe",
         endpoint_type=EndpointType.WEBSOCKET,
         weight=1,
         penalty_points=1,
         max_requests_per_minute=60,
-        requires_auth=False
+        requires_auth=False,
     ),
-
     "WS-AddOrder": EndpointConfig(
         name="WS-AddOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -391,9 +360,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         penalty_points=1,
         max_requests_per_minute=30,
         requires_auth=True,
-        is_trading_endpoint=True
+        is_trading_endpoint=True,
     ),
-
     "WS-CancelOrder": EndpointConfig(
         name="WS-CancelOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -402,9 +370,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         max_requests_per_minute=30,
         requires_auth=True,
         is_trading_endpoint=True,
-        has_age_penalty=True
+        has_age_penalty=True,
     ),
-
     "WS-EditOrder": EndpointConfig(
         name="WS-EditOrder",
         endpoint_type=EndpointType.WEBSOCKET,
@@ -413,8 +380,8 @@ ENDPOINT_CONFIGS: dict[str, EndpointConfig] = {
         max_requests_per_minute=30,
         requires_auth=True,
         is_trading_endpoint=True,
-        has_age_penalty=True
-    )
+        has_age_penalty=True,
+    ),
 }
 
 
@@ -499,7 +466,7 @@ def get_endpoint_config(endpoint_name: str) -> EndpointConfig:
             weight=1,
             penalty_points=1,
             max_requests_per_minute=15,
-            requires_auth=True
+            requires_auth=True,
         )
     return config
 
@@ -525,7 +492,9 @@ def get_tier_config(tier: Union[AccountTier, str]) -> RateLimitConfig:
     return config
 
 
-def calculate_backoff_delay(attempt: int, base_delay: float, multiplier: float, max_delay: float) -> float:
+def calculate_backoff_delay(
+    attempt: int, base_delay: float, multiplier: float, max_delay: float
+) -> float:
     """
     Calculate exponential backoff delay.
 
@@ -538,7 +507,7 @@ def calculate_backoff_delay(attempt: int, base_delay: float, multiplier: float, 
     Returns:
         Delay time in seconds
     """
-    delay = base_delay * (multiplier ** attempt)
+    delay = base_delay * (multiplier**attempt)
     return min(delay, max_delay)
 
 
@@ -553,8 +522,7 @@ def get_endpoints_by_type(endpoint_type: EndpointType) -> list[str]:
         List of endpoint names
     """
     return [
-        name for name, config in ENDPOINT_CONFIGS.items()
-        if config.endpoint_type == endpoint_type
+        name for name, config in ENDPOINT_CONFIGS.items() if config.endpoint_type == endpoint_type
     ]
 
 
@@ -603,18 +571,17 @@ def validate_rate_limits() -> dict[str, list[str]]:
         if config.max_penalty_points <= 0:
             errors.append(f"{tier.value}: Invalid max penalty points")
 
-    return {
-        'warnings': warnings,
-        'errors': errors,
-        'valid': len(errors) == 0
-    }
+    return {"warnings": warnings, "errors": errors, "valid": len(errors) == 0}
 
 
 # Validate configurations at import time
 validation_result = validate_rate_limits()
-if not validation_result['valid']:
+if not validation_result["valid"]:
     logger.error(f"Rate limit configuration validation failed: {validation_result['errors']}")
-elif validation_result['warnings']:
+elif validation_result["warnings"]:
     logger.warning(f"Rate limit configuration warnings: {validation_result['warnings']}")
 else:
     logger.info("Rate limit configurations validated successfully")
+
+# Export for backward compatibility
+KRAKEN_RATE_LIMITS = ENDPOINT_CONFIGS

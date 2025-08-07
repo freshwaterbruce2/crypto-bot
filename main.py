@@ -38,16 +38,18 @@ load_dotenv()
 # Setup credential loading based on environment
 import platform
 
-if platform.system() == 'Windows':
+if platform.system() == "Windows":
     # Native Windows - try to sync system environment variables
     try:
         # Check if we have system environment variables
         import os
-        has_system_creds = (os.environ.get('KRAKEN_KEY') or os.environ.get('KRAKEN_API_KEY'))
 
-        if has_system_creds and not os.getenv('KRAKEN_KEY'):
+        has_system_creds = os.environ.get("KRAKEN_KEY") or os.environ.get("KRAKEN_API_KEY")
+
+        if has_system_creds and not os.getenv("KRAKEN_KEY"):
             # System vars exist but not in loaded environment - fix it
             from fix_windows_credentials import fix_credential_loading
+
             if fix_credential_loading():
                 print("✓ Windows credentials synchronized from system environment")
     except Exception as e:
@@ -56,13 +58,16 @@ else:
     # WSL/Linux - try Windows environment bridge
     try:
         from src.utils.windows_env_bridge import WSL_ENVIRONMENT, setup_kraken_credentials
+
         if WSL_ENVIRONMENT:
             print("Detected WSL environment - setting up Windows environment bridge...")
             bridge_success = setup_kraken_credentials()
             if bridge_success:
                 print("✓ Windows environment bridge setup successful")
             else:
-                print("⚠ Windows environment bridge setup failed - will try other credential sources")
+                print(
+                    "⚠ Windows environment bridge setup failed - will try other credential sources"
+                )
     except ImportError:
         pass
     except Exception as e:
@@ -118,34 +123,53 @@ class UnifiedLauncher:
             "orchestrated_mode_available": False,
             "simple_mode_available": False,
             "credentials_configured": False,
-            "credentials_error": None
+            "credentials_error": None,
         }
 
         # Check credential configuration
         try:
             from src.auth.credential_manager import get_credential_status
+
             credential_status = get_credential_status()
 
             # Check if we have valid credentials
-            has_valid_unified = credential_status['unified_credentials']['found'] and credential_status['unified_credentials']['valid']
-            has_valid_generic = credential_status['generic_credentials']['found'] and credential_status['generic_credentials']['valid']
+            has_valid_unified = (
+                credential_status["unified_credentials"]["found"]
+                and credential_status["unified_credentials"]["valid"]
+            )
+            has_valid_generic = (
+                credential_status["generic_credentials"]["found"]
+                and credential_status["generic_credentials"]["valid"]
+            )
 
             if has_valid_unified or has_valid_generic:
                 # Double-check that credentials are not placeholder values
                 from src.auth.credential_manager import get_kraken_credentials
+
                 api_key, private_key = get_kraken_credentials()
 
                 if api_key and private_key:
                     # Check for placeholder values
-                    placeholder_values = ['YOUR_NEW_API_KEY_HERE', 'YOUR_NEW_API_SECRET_HERE', 'YOUR_API_KEY_HERE', 'YOUR_API_SECRET_HERE']
+                    placeholder_values = [
+                        "YOUR_NEW_API_KEY_HERE",
+                        "YOUR_NEW_API_SECRET_HERE",
+                        "YOUR_API_KEY_HERE",
+                        "YOUR_API_SECRET_HERE",
+                    ]
                     if api_key not in placeholder_values and private_key not in placeholder_values:
                         env_status["credentials_configured"] = True
                     else:
-                        env_status["credentials_error"] = "Placeholder values found in .env file - please configure with real API keys"
+                        env_status["credentials_error"] = (
+                            "Placeholder values found in .env file - please configure with real API keys"
+                        )
                 else:
-                    env_status["credentials_error"] = "No credentials returned from credential manager"
+                    env_status["credentials_error"] = (
+                        "No credentials returned from credential manager"
+                    )
             else:
-                env_status["credentials_error"] = "No valid credentials found in environment variables or .env file"
+                env_status["credentials_error"] = (
+                    "No valid credentials found in environment variables or .env file"
+                )
 
         except Exception as e:
             env_status["credentials_error"] = f"Error checking credentials: {e}"
@@ -153,6 +177,7 @@ class UnifiedLauncher:
         # Check for paper trading
         try:
             from src.paper_trading.integration import get_paper_integration
+
             env_status["paper_trading_available"] = True
         except ImportError:
             pass
@@ -164,6 +189,7 @@ class UnifiedLauncher:
         # Check for simple mode (check if KrakenTradingBot is importable)
         try:
             from src.core.bot import KrakenTradingBot
+
             env_status["simple_mode_available"] = True
         except ImportError:
             pass
@@ -189,11 +215,11 @@ class UnifiedLauncher:
 
         # Credential status
         print("\nCredential Configuration:")
-        if env_status['credentials_configured']:
+        if env_status["credentials_configured"]:
             print("  API Credentials: ✓ Configured and valid")
         else:
             print("  API Credentials: ✗ Not configured or invalid")
-            if env_status['credentials_error']:
+            if env_status["credentials_error"]:
                 print(f"    Error: {env_status['credentials_error']}")
                 print("    Run: python diagnose_credentials_issue.py for detailed diagnosis")
 
@@ -211,70 +237,29 @@ class UnifiedLauncher:
 
         # Check credentials before launching
         env_status = self.check_environment()
-        if not env_status['credentials_configured']:
+        if not env_status["credentials_configured"]:
             self.logger.error("Cannot launch bot: credentials not properly configured")
             print("\n" + "=" * 50)
             print("LAUNCH FAILED - CREDENTIAL ISSUE")
             print("=" * 50)
-            if env_status['credentials_error']:
+            if env_status["credentials_error"]:
                 print(f"Error: {env_status['credentials_error']}")
             print("\nTo fix this issue:")
-            print("1. Run: python diagnose_credentials_issue.py")
-            print("2. Follow the instructions to configure your .env file")
+            print("1. Check your .env file has KRAKEN_KEY and KRAKEN_SECRET")
+            print("2. Make sure they are real API keys, not placeholder values")
             print("3. Try launching the bot again")
             print("=" * 50)
             return False
 
         try:
-            # Direct bot launch with proper error handling
-            from src.config import load_config
-            from src.core.bot import KrakenTradingBot
+            # Launch simple SHIB bot
+            self.logger.info("Starting Simple SHIB/USDT Trading Bot...")
 
-            # Load configuration
-            config = load_config("config.json")
-            if not config:
-                self.logger.error("Failed to load configuration")
-                return False
+            # Import and run the simple bot
+            from simple_shib_bot import SimpleShibBot
 
-            self.logger.info("Initializing KrakenTradingBot...")
-            bot = KrakenTradingBot()
-
-            # Setup graceful shutdown
-            import signal
-            shutdown_event = asyncio.Event()
-
-            def signal_handler(signum, frame):
-                self.logger.info(f"Received signal {signum}, shutting down...")
-                shutdown_event.set()
-
-            signal.signal(signal.SIGINT, signal_handler)
-            signal.signal(signal.SIGTERM, signal_handler)
-
-            # Initialize and start bot
-            self.logger.info("Initializing bot components...")
-            await bot.initialize()
-
-            self.logger.info("Starting trading operations...")
-            self.logger.info("Press Ctrl+C to stop the bot")
-
-            # Create tasks for bot operation and shutdown monitoring
-            trading_task = asyncio.create_task(bot.run())
-            shutdown_task = asyncio.create_task(shutdown_event.wait())
-
-            # Wait for either trading to complete or shutdown signal
-            done, pending = await asyncio.wait(
-                [trading_task, shutdown_task],
-                return_when=asyncio.FIRST_COMPLETED
-            )
-
-            # Cancel remaining tasks
-            for task in pending:
-                task.cancel()
-
-            # Graceful shutdown
-            self.logger.info("Shutting down bot...")
-            await bot.shutdown()
-
+            bot = SimpleShibBot()
+            await bot.start()
             return True
 
         except Exception as e:
@@ -289,9 +274,10 @@ class UnifiedLauncher:
             orchestrated_path = self.project_root / "main_orchestrated.py"
             if orchestrated_path.exists():
                 import subprocess
-                result = subprocess.run([
-                    sys.executable, str(orchestrated_path)
-                ], cwd=str(self.project_root))
+
+                result = subprocess.run(
+                    [sys.executable, str(orchestrated_path)], cwd=str(self.project_root)
+                )
                 return result.returncode == 0
             else:
                 self.logger.error("Orchestrated mode not available")
@@ -309,9 +295,10 @@ class UnifiedLauncher:
             paper_launcher_path = self.project_root / "launch_paper_trading.py"
             if paper_launcher_path.exists():
                 import subprocess
-                result = subprocess.run([
-                    sys.executable, str(paper_launcher_path)
-                ], cwd=str(self.project_root))
+
+                result = subprocess.run(
+                    [sys.executable, str(paper_launcher_path)], cwd=str(self.project_root)
+                )
                 return result.returncode == 0
             else:
                 self.logger.error("Paper trading mode not available")
@@ -329,9 +316,10 @@ class UnifiedLauncher:
             test_launcher_path = self.project_root / "simple_bot_launch.py"
             if test_launcher_path.exists():
                 import subprocess
-                result = subprocess.run([
-                    sys.executable, str(test_launcher_path)
-                ], cwd=str(self.project_root))
+
+                result = subprocess.run(
+                    [sys.executable, str(test_launcher_path)], cwd=str(self.project_root)
+                )
                 return result.returncode == 0
             else:
                 # Run basic component test
@@ -358,16 +346,21 @@ class UnifiedLauncher:
             import psutil
 
             running_processes = []
-            for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
-                    cmdline = proc.info['cmdline']
-                    if cmdline and any('bot' in str(cmd).lower() or 'trading' in str(cmd).lower() for cmd in cmdline):
-                        if any('python' in str(cmd).lower() for cmd in cmdline):
-                            running_processes.append({
-                                'pid': proc.info['pid'],
-                                'name': proc.info['name'],
-                                'cmdline': ' '.join(cmdline[:3])  # First 3 args
-                            })
+                    cmdline = proc.info["cmdline"]
+                    if cmdline and any(
+                        "bot" in str(cmd).lower() or "trading" in str(cmd).lower()
+                        for cmd in cmdline
+                    ):
+                        if any("python" in str(cmd).lower() for cmd in cmdline):
+                            running_processes.append(
+                                {
+                                    "pid": proc.info["pid"],
+                                    "name": proc.info["name"],
+                                    "cmdline": " ".join(cmdline[:3]),  # First 3 args
+                                }
+                            )
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
 
@@ -383,11 +376,7 @@ class UnifiedLauncher:
                 print("No bot processes currently running")
 
             # Check for recent logs
-            log_dirs = [
-                Path("D:/trading_data/logs"),
-                Path("logs"),
-                self.project_root / "logs"
-            ]
+            log_dirs = [Path("D:/trading_data/logs"), Path("logs"), self.project_root / "logs"]
 
             recent_logs = []
             for log_dir in log_dirs:
@@ -396,7 +385,8 @@ class UnifiedLauncher:
                         try:
                             stat = log_file.stat()
                             recent_logs.append((log_file, stat.st_mtime))
-                        except:
+                        except OSError as e:
+                            self.logger.debug(f"Could not stat log file {log_file}: {e}")
                             continue
 
             if recent_logs:
@@ -419,21 +409,25 @@ class UnifiedLauncher:
 
         options = []
 
-        if env_status['simple_mode_available']:
+        if env_status["simple_mode_available"]:
             options.append(("1", "Simple Mode", "Basic bot launch with core features"))
 
-        if env_status['orchestrated_mode_available']:
-            options.append(("2", "Orchestrated Mode", "Full system with monitoring and diagnostics"))
+        if env_status["orchestrated_mode_available"]:
+            options.append(
+                ("2", "Orchestrated Mode", "Full system with monitoring and diagnostics")
+            )
 
-        if env_status['paper_trading_available']:
+        if env_status["paper_trading_available"]:
             options.append(("3", "Paper Trading", "Safe trading simulation mode"))
 
-        options.extend([
-            ("4", "Component Tests", "Test core components and validate setup"),
-            ("5", "Status Check", "Check if bot is currently running"),
-            ("6", "Environment Info", "Show detailed environment information"),
-            ("q", "Quit", "Exit launcher")
-        ])
+        options.extend(
+            [
+                ("4", "Component Tests", "Test core components and validate setup"),
+                ("5", "Status Check", "Check if bot is currently running"),
+                ("6", "Environment Info", "Show detailed environment information"),
+                ("q", "Quit", "Exit launcher"),
+            ]
+        )
 
         for option_key, name, desc in options:
             print(f"  {option_key}. {name} - {desc}")
@@ -447,11 +441,11 @@ class UnifiedLauncher:
                 if choice == "q":
                     print("Exiting launcher...")
                     return None
-                elif choice == "1" and env_status['simple_mode_available']:
+                elif choice == "1" and env_status["simple_mode_available"]:
                     return "simple"
-                elif choice == "2" and env_status['orchestrated_mode_available']:
+                elif choice == "2" and env_status["orchestrated_mode_available"]:
                     return "orchestrated"
-                elif choice == "3" and env_status['paper_trading_available']:
+                elif choice == "3" and env_status["paper_trading_available"]:
                     return "paper"
                 elif choice == "4":
                     return "test"
@@ -544,31 +538,33 @@ Examples:
   python main.py --info             # Show environment info
 
 For detailed help on any mode, add --help after the mode.
-        """
+        """,
     )
 
     # Mode selection
     mode_group = parser.add_mutually_exclusive_group()
-    mode_group.add_argument("--simple", action="store_true",
-                           help="Launch simple bot mode")
-    mode_group.add_argument("--orchestrated", action="store_true",
-                           help="Launch orchestrated mode with full monitoring")
-    mode_group.add_argument("--paper", action="store_true",
-                           help="Launch paper trading mode (safe simulation)")
-    mode_group.add_argument("--test", action="store_true",
-                           help="Run component tests only")
-    mode_group.add_argument("--status", action="store_true",
-                           help="Check current bot status")
-    mode_group.add_argument("--info", action="store_true",
-                           help="Show environment information")
+    mode_group.add_argument("--simple", action="store_true", help="Launch simple bot mode")
+    mode_group.add_argument(
+        "--orchestrated", action="store_true", help="Launch orchestrated mode with full monitoring"
+    )
+    mode_group.add_argument(
+        "--paper", action="store_true", help="Launch paper trading mode (safe simulation)"
+    )
+    mode_group.add_argument("--test", action="store_true", help="Run component tests only")
+    mode_group.add_argument("--status", action="store_true", help="Check current bot status")
+    mode_group.add_argument("--info", action="store_true", help="Show environment information")
 
     # Configuration options
-    parser.add_argument("--config", type=str, default="config.json",
-                       help="Configuration file path (default: config.json)")
-    parser.add_argument("--verbose", action="store_true",
-                       help="Enable verbose logging")
-    parser.add_argument("--dry-run", action="store_true",
-                       help="Validate configuration without launching")
+    parser.add_argument(
+        "--config",
+        type=str,
+        default="config.json",
+        help="Configuration file path (default: config.json)",
+    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose logging")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Validate configuration without launching"
+    )
 
     args = parser.parse_args()
 

@@ -71,6 +71,7 @@ DEFAULT_API_VERSION = "0"
 DEFAULT_TIMEOUT = 30.0
 DEFAULT_MAX_RETRIES = 3
 
+
 # Quick client factory
 def create_client(
     api_key: str,
@@ -79,7 +80,7 @@ def create_client(
     timeout: float = DEFAULT_TIMEOUT,
     max_retries: int = DEFAULT_MAX_RETRIES,
     enable_rate_limiting: bool = True,
-    enable_circuit_breaker: bool = True
+    enable_circuit_breaker: bool = True,
 ) -> KrakenRestClient:
     """
     Quick factory function to create a configured Kraken REST client.
@@ -103,55 +104,51 @@ def create_client(
         timeout=timeout,
         max_retries=max_retries,
         enable_rate_limiting=enable_rate_limiting,
-        enable_circuit_breaker=enable_circuit_breaker
+        enable_circuit_breaker=enable_circuit_breaker,
     )
+
 
 # Alias for backward compatibility
 create_kraken_client = create_client
 
 __all__ = [
     # Main client
-    'KrakenRestClient',
-    'create_client',
-    'create_kraken_client',
-
+    "KrakenRestClient",
+    "create_client",
+    "create_kraken_client",
     # Configuration classes
-    'RequestConfig',
-    'RetryConfig',
-    'ClientMetrics',
-
+    "RequestConfig",
+    "RetryConfig",
+    "ClientMetrics",
     # Exceptions
-    'KrakenAPIError',
-    'AuthenticationError',
-    'RateLimitError',
-    'ValidationError',
-    'NetworkError',
-    'InsufficientFundsError',
-    'OrderError',
-    'KrakenSystemError',
-
+    "KrakenAPIError",
+    "AuthenticationError",
+    "RateLimitError",
+    "ValidationError",
+    "NetworkError",
+    "InsufficientFundsError",
+    "OrderError",
+    "KrakenSystemError",
     # Endpoints
-    'EndpointDefinition',
-    'KRAKEN_ENDPOINTS',
-    'get_endpoint_definition',
-    'EndpointType',
-    'HttpMethod',
-
+    "EndpointDefinition",
+    "KRAKEN_ENDPOINTS",
+    "get_endpoint_definition",
+    "EndpointType",
+    "HttpMethod",
     # Response models
-    'KrakenResponse',
-    'BalanceResponse',
-    'TickerResponse',
-    'OrderBookResponse',
-    'TradeHistoryResponse',
-    'OrderResponse',
-    'OrderStatus',
-    'CancelOrderResponse',
-    'SystemStatusResponse',
-    'AssetPairResponse',
-
+    "KrakenResponse",
+    "BalanceResponse",
+    "TickerResponse",
+    "OrderBookResponse",
+    "TradeHistoryResponse",
+    "OrderResponse",
+    "OrderStatus",
+    "CancelOrderResponse",
+    "SystemStatusResponse",
+    "AssetPairResponse",
     # Constants
-    'DEFAULT_BASE_URL',
-    'DEFAULT_API_VERSION',
-    'DEFAULT_TIMEOUT',
-    'DEFAULT_MAX_RETRIES'
+    "DEFAULT_BASE_URL",
+    "DEFAULT_API_VERSION",
+    "DEFAULT_TIMEOUT",
+    "DEFAULT_MAX_RETRIES",
 ]

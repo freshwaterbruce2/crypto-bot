@@ -1,0 +1,11 @@
+{
+  "trading_pair": "SHIB/USDT",
+  "min_trade_amount": 2.0,
+  "profit_target": 0.008,
+  "stop_loss": 0.02,
+  "check_interval_seconds": 30,
+  "balance_buffer": 0.5,
+  "use_percentage_of_balance": 0.95,
+  "enable_logging": true,
+  "log_level": "INFO"
+}

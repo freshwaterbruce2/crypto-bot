@@ -35,15 +35,15 @@ Usage:
 
 from .balance_cache import BalanceCache, BalanceCacheEntry
 from .balance_history import BalanceHistory, BalanceHistoryEntry
-from .balance_manager import BalanceManager
+from .balance_manager_v2 import BalanceManagerV2 as BalanceManager
 from .balance_validator import BalanceValidationResult, BalanceValidator
 
 __all__ = [
-    'BalanceManager',
-    'BalanceCache',
-    'BalanceCacheEntry',
-    'BalanceValidator',
-    'BalanceValidationResult',
-    'BalanceHistory',
-    'BalanceHistoryEntry'
+    "BalanceManager",
+    "BalanceCache",
+    "BalanceCacheEntry",
+    "BalanceValidator",
+    "BalanceValidationResult",
+    "BalanceHistory",
+    "BalanceHistoryEntry",
 ]

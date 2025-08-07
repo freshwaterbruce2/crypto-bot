@@ -28,7 +28,9 @@ class CoreConfigManager:
                 logger.info(f"[CORE_CONFIG] Loaded configuration from {self.config_path}")
                 return config
             else:
-                logger.warning(f"[CORE_CONFIG] Config file {self.config_path} not found, using defaults")
+                logger.warning(
+                    f"[CORE_CONFIG] Config file {self.config_path} not found, using defaults"
+                )
                 return self._get_default_config()
         except Exception as e:
             logger.error(f"[CORE_CONFIG] Error loading config: {e}")
@@ -41,23 +43,29 @@ class CoreConfigManager:
             "position_size_usdt": 2.0,
             "tier_1_trade_limit": 3.5,
             "kraken_api_tier": "starter",
-
             # Risk management
             "max_position_pct": 0.8,
             "max_daily_loss": 50.0,
             "min_order_size_usdt": 1.0,
-
             # Trading pairs
             "trading_pairs": [
-                "AI16Z/USDT", "ALGO/USDT", "ADA/USDT", "AVAX/USDT",
-                "DOGE/USDT", "DOT/USDT", "LINK/USDT", "MATIC/USDT",
-                "XRP/USDT", "ATOM/USDT", "APE/USDT", "CRO/USDT"
+                "AI16Z/USDT",
+                "ALGO/USDT",
+                "ADA/USDT",
+                "AVAX/USDT",
+                "DOGE/USDT",
+                "DOT/USDT",
+                "LINK/USDT",
+                "MATIC/USDT",
+                "XRP/USDT",
+                "ATOM/USDT",
+                "APE/USDT",
+                "CRO/USDT",
             ],
-
             # Environment
             "environment": "production",
             "logging_level": "INFO",
-            "data_directory": "D:/trading_bot_data"
+            "data_directory": "D:/trading_bot_data",
         }
 
     def get_core_config(self) -> dict[str, Any]:
@@ -80,7 +88,7 @@ class CoreConfigManager:
     def _save_config(self) -> None:
         """Save configuration to file"""
         try:
-            with open(self.config_path, 'w') as f:
+            with open(self.config_path, "w") as f:
                 json.dump(self.config_data, f, indent=2)
             logger.info(f"[CORE_CONFIG] Saved configuration to {self.config_path}")
         except Exception as e:

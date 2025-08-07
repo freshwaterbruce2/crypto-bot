@@ -67,34 +67,31 @@ from .websocket_v2_orders import OrderRequest, OrderResponse, WebSocketV2OrderMa
 
 __all__ = [
     # Enhanced WebSocket V2 components
-    'WebSocketV2Manager',
-    'WebSocketV2Config',
-    'WebSocketV2ChannelProcessor',
-    'WebSocketV2OrderManager',
-    'OrderRequest',
-    'OrderResponse',
-
+    "WebSocketV2Manager",
+    "WebSocketV2Config",
+    "WebSocketV2ChannelProcessor",
+    "WebSocketV2OrderManager",
+    "OrderRequest",
+    "OrderResponse",
     # New V2 message handler
-    'KrakenV2MessageHandler',
-    'create_kraken_v2_handler',
-
+    "KrakenV2MessageHandler",
+    "create_kraken_v2_handler",
     # Legacy components
-    'KrakenWebSocketV2',
-    'ConnectionManager',
-    'ConnectionState',
-
+    "KrakenWebSocketV2",
+    "ConnectionManager",
+    "ConnectionState",
     # Data models
-    'WebSocketMessage',
-    'BalanceUpdate',
-    'TickerUpdate',
-    'OrderBookUpdate',
-    'OrderBookLevel',
-    'TradeUpdate',
-    'OHLCUpdate',
-    'SubscriptionRequest',
-    'SubscriptionResponse',
-    'ConnectionStatus'
+    "WebSocketMessage",
+    "BalanceUpdate",
+    "TickerUpdate",
+    "OrderBookUpdate",
+    "OrderBookLevel",
+    "TradeUpdate",
+    "OHLCUpdate",
+    "SubscriptionRequest",
+    "SubscriptionResponse",
+    "ConnectionStatus",
 ]
 
-__version__ = '2.0.0'
-__author__ = 'Backend-Coder Agent'
+__version__ = "2.0.0"
+__author__ = "Backend-Coder Agent"

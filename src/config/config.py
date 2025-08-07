@@ -56,8 +56,8 @@ class Config:
 
     def __post_init__(self):
         """Post-initialization setup."""
-        self.api_key = os.getenv('KRAKEN_API_KEY', self.api_key)
-        self.api_secret = os.getenv('KRAKEN_API_SECRET', self.api_secret)
+        self.api_key = os.getenv("KRAKEN_API_KEY", self.api_key)
+        self.api_secret = os.getenv("KRAKEN_API_SECRET", self.api_secret)
 
         # Validate required fields
         if not self.api_key or not self.api_secret:
@@ -66,32 +66,32 @@ class Config:
     def to_dict(self) -> dict[str, Any]:
         """Convert configuration to dictionary."""
         return {
-            'exchange_name': self.exchange_name,
-            'base_currency': self.base_currency,
-            'trading_pairs': self.trading_pairs,
-            'max_position_size': self.max_position_size,
-            'stop_loss_percent': self.stop_loss_percent,
-            'take_profit_percent': self.take_profit_percent,
-            'max_daily_loss': self.max_daily_loss,
-            'max_open_positions': self.max_open_positions,
-            'min_order_size': self.min_order_size,
-            'rsi_period': self.rsi_period,
-            'rsi_oversold': self.rsi_oversold,
-            'rsi_overbought': self.rsi_overbought,
-            'ma_short_period': self.ma_short_period,
-            'ma_long_period': self.ma_long_period,
-            'regime_lookback_period': self.regime_lookback_period,
-            'volatility_threshold': self.volatility_threshold,
-            'trend_threshold': self.trend_threshold,
-            'performance_window': self.performance_window,
-            'benchmark_symbol': self.benchmark_symbol,
-            'log_level': self.log_level,
-            'log_file': self.log_file,
-            'db_path': self.db_path
+            "exchange_name": self.exchange_name,
+            "base_currency": self.base_currency,
+            "trading_pairs": self.trading_pairs,
+            "max_position_size": self.max_position_size,
+            "stop_loss_percent": self.stop_loss_percent,
+            "take_profit_percent": self.take_profit_percent,
+            "max_daily_loss": self.max_daily_loss,
+            "max_open_positions": self.max_open_positions,
+            "min_order_size": self.min_order_size,
+            "rsi_period": self.rsi_period,
+            "rsi_oversold": self.rsi_oversold,
+            "rsi_overbought": self.rsi_overbought,
+            "ma_short_period": self.ma_short_period,
+            "ma_long_period": self.ma_long_period,
+            "regime_lookback_period": self.regime_lookback_period,
+            "volatility_threshold": self.volatility_threshold,
+            "trend_threshold": self.trend_threshold,
+            "performance_window": self.performance_window,
+            "benchmark_symbol": self.benchmark_symbol,
+            "log_level": self.log_level,
+            "log_file": self.log_file,
+            "db_path": self.db_path,
         }
 
     @classmethod
-    def from_dict(cls, config_dict: dict[str, Any]) -> 'Config':
+    def from_dict(cls, config_dict: dict[str, Any]) -> "Config":
         """Create configuration from dictionary."""
         return cls(**config_dict)
 
@@ -119,7 +119,9 @@ class Config:
             assert 50 < self.rsi_overbought < 100, "RSI overbought must be between 50 and 100"
 
             # Validate MA periods
-            assert self.ma_short_period < self.ma_long_period, "Short MA period must be less than long MA period"
+            assert self.ma_short_period < self.ma_long_period, (
+                "Short MA period must be less than long MA period"
+            )
 
             logger.info("Configuration validation passed")
             return True

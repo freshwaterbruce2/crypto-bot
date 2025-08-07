@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class AuthRequest:
     """Authentication request data structure"""
+
     uri_path: str
     params: dict[str, Any]
     nonce: str
@@ -45,6 +46,7 @@ class AuthRequest:
 @dataclass
 class AuthStats:
     """Authentication statistics"""
+
     requests_count: int = 0
     successful_auths: int = 0
     failed_auths: int = 0
@@ -56,16 +58,19 @@ class AuthStats:
 
 class KrakenAuthError(Exception):
     """Base exception for Kraken authentication errors"""
+
     pass
 
 
 class NonceError(KrakenAuthError):
     """Nonce-related authentication error"""
+
     pass
 
 
 class SignatureError(KrakenAuthError):
     """Signature-related authentication error"""
+
     pass
 
 
@@ -82,7 +87,7 @@ class KrakenAuth:
         api_key: str,
         private_key: str,
         storage_dir: Optional[str] = None,
-        enable_debug: bool = False
+        enable_debug: bool = False,
     ):
         """
         Initialize Kraken authentication handler.
@@ -133,6 +138,7 @@ class KrakenAuth:
         # Test private key decoding
         try:
             import base64
+
             decoded = base64.b64decode(self.private_key)
             if len(decoded) < 32:
                 raise ValueError("Decoded private key too short")
@@ -150,7 +156,7 @@ class KrakenAuth:
 
             # Test signature generation
             test_sig = self.signature_generator.test_signature_algorithm()
-            if not test_sig['success']:
+            if not test_sig["success"]:
                 raise KrakenAuthError(f"Signature test failed: {test_sig.get('error')}")
 
             logger.info("[KRAKEN_AUTH_2025] Self-test passed successfully")
@@ -160,9 +166,7 @@ class KrakenAuth:
             raise KrakenAuthError(f"Self-test failed: {e}")
 
     def get_auth_headers(
-        self,
-        uri_path: str,
-        params: Optional[dict[str, Any]] = None
+        self, uri_path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, str]:
         """
         Generate authentication headers for Kraken API request.
@@ -181,23 +185,21 @@ class KrakenAuth:
 
         try:
             # Get fresh nonce (milliseconds format)
-            nonce = self.nonce_manager.get_nonce('rest_api')
+            nonce = self.nonce_manager.get_nonce("rest_api")
 
             # CRITICAL: Add nonce to params so it's included in request body
             if params is None:
                 params = {}
-            params['nonce'] = nonce
+            params["nonce"] = nonce
 
             # Generate signature
-            signature = self.signature_generator.generate_signature(
-                uri_path, nonce, params
-            )
+            signature = self.signature_generator.generate_signature(uri_path, nonce, params)
 
             # Create headers
             headers = {
-                'API-Key': self.api_key,
-                'API-Sign': signature,
-                'Content-Type': 'application/x-www-form-urlencoded'
+                "API-Key": self.api_key,
+                "API-Sign": signature,
+                "Content-Type": "application/x-www-form-urlencoded",
             }
 
             # Update statistics
@@ -205,8 +207,10 @@ class KrakenAuth:
             self._update_stats(True, auth_time_ms)
 
             if self.enable_debug:
-                logger.debug(f"[KRAKEN_AUTH_2025] Generated auth headers for {uri_path} "
-                           f"with nonce {nonce} in {auth_time_ms:.2f}ms")
+                logger.debug(
+                    f"[KRAKEN_AUTH_2025] Generated auth headers for {uri_path} "
+                    f"with nonce {nonce} in {auth_time_ms:.2f}ms"
+                )
 
             return headers
 
@@ -217,9 +221,7 @@ class KrakenAuth:
             raise KrakenAuthError(f"Failed to generate auth headers: {e}")
 
     async def get_auth_headers_async(
-        self,
-        uri_path: str,
-        params: Optional[dict[str, Any]] = None
+        self, uri_path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, str]:
         """
         Async version of get_auth_headers.
@@ -241,7 +243,7 @@ class KrakenAuth:
                 # CRITICAL: Add nonce to params so it's included in request body
                 if params is None:
                     params = {}
-                params['nonce'] = nonce
+                params["nonce"] = nonce
 
                 # Generate signature (async)
                 signature = await self.signature_generator.generate_signature_async(
@@ -250,9 +252,9 @@ class KrakenAuth:
 
                 # Create headers
                 headers = {
-                    'API-Key': self.api_key,
-                    'API-Sign': signature,
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    "API-Key": self.api_key,
+                    "API-Sign": signature,
+                    "Content-Type": "application/x-www-form-urlencoded",
                 }
 
                 # Update statistics
@@ -267,10 +269,7 @@ class KrakenAuth:
                 raise KrakenAuthError(f"Async auth failed: {e}")
 
     def handle_auth_error(
-        self,
-        error_message: str,
-        uri_path: str,
-        params: Optional[dict[str, Any]] = None
+        self, error_message: str, uri_path: str, params: Optional[dict[str, Any]] = None
     ) -> dict[str, str]:
         """
         Handle authentication error with automatic recovery.
@@ -297,10 +296,7 @@ class KrakenAuth:
             raise KrakenAuthError(f"Unknown auth error: {error_message}")
 
     def _handle_nonce_error(
-        self,
-        uri_path: str,
-        params: Optional[dict[str, Any]],
-        error_message: str
+        self, uri_path: str, params: Optional[dict[str, Any]], error_message: str
     ) -> dict[str, str]:
         """Handle nonce-related authentication errors"""
         self.stats.nonce_errors += 1
@@ -310,7 +306,7 @@ class KrakenAuth:
 
         try:
             # Get recovery nonce
-            recovery_nonce = self.nonce_manager.handle_invalid_nonce_error('rest_api')
+            recovery_nonce = self.nonce_manager.handle_invalid_nonce_error("rest_api")
 
             # Generate new signature with recovery nonce
             signature = self.signature_generator.generate_signature(
@@ -318,9 +314,9 @@ class KrakenAuth:
             )
 
             headers = {
-                'API-Key': self.api_key,
-                'API-Sign': signature,
-                'Content-Type': 'application/x-www-form-urlencoded'
+                "API-Key": self.api_key,
+                "API-Sign": signature,
+                "Content-Type": "application/x-www-form-urlencoded",
             }
 
             logger.info("[KRAKEN_AUTH_2025] Nonce error recovery successful")
@@ -331,10 +327,7 @@ class KrakenAuth:
             raise NonceError(f"Nonce recovery failed: {e}")
 
     def _handle_signature_error(
-        self,
-        uri_path: str,
-        params: Optional[dict[str, Any]],
-        error_message: str
+        self, uri_path: str, params: Optional[dict[str, Any]], error_message: str
     ) -> dict[str, str]:
         """Handle signature-related authentication errors"""
         self.stats.signature_errors += 1
@@ -344,15 +337,17 @@ class KrakenAuth:
 
         try:
             # Get fresh nonce and regenerate signature
-            fresh_nonce = self.nonce_manager.get_nonce('rest_api')
+            fresh_nonce = self.nonce_manager.get_nonce("rest_api")
 
             # Use debug signature generation for detailed logging
             if self.enable_debug:
                 components = self.signature_generator.generate_signature_with_debug(
                     uri_path, fresh_nonce, params
                 )
-                logger.debug(f"[KRAKEN_AUTH_2025] Debug signature components: "
-                           f"nonce={components.nonce}, post_data={components.post_data}")
+                logger.debug(
+                    f"[KRAKEN_AUTH_2025] Debug signature components: "
+                    f"nonce={components.nonce}, post_data={components.post_data}"
+                )
                 signature = components.signature
             else:
                 signature = self.signature_generator.generate_signature(
@@ -360,9 +355,9 @@ class KrakenAuth:
                 )
 
             headers = {
-                'API-Key': self.api_key,
-                'API-Sign': signature,
-                'Content-Type': 'application/x-www-form-urlencoded'
+                "API-Key": self.api_key,
+                "API-Sign": signature,
+                "Content-Type": "application/x-www-form-urlencoded",
             }
 
             logger.info("[KRAKEN_AUTH_2025] Signature error recovery successful")
@@ -397,26 +392,26 @@ class KrakenAuth:
             Dictionary with detailed status information
         """
         return {
-            'api_key': self.api_key[:8] + '...',
-            'auth_stats': {
-                'total_requests': self.stats.requests_count,
-                'successful_auths': self.stats.successful_auths,
-                'failed_auths': self.stats.failed_auths,
-                'success_rate': (
+            "api_key": self.api_key[:8] + "...",
+            "auth_stats": {
+                "total_requests": self.stats.requests_count,
+                "successful_auths": self.stats.successful_auths,
+                "failed_auths": self.stats.failed_auths,
+                "success_rate": (
                     self.stats.successful_auths / max(self.stats.requests_count, 1) * 100
                 ),
-                'nonce_errors': self.stats.nonce_errors,
-                'signature_errors': self.stats.signature_errors,
-                'recovery_attempts': self.stats.recovery_attempts,
-                'avg_auth_time_ms': self.stats.avg_auth_time_ms
+                "nonce_errors": self.stats.nonce_errors,
+                "signature_errors": self.stats.signature_errors,
+                "recovery_attempts": self.stats.recovery_attempts,
+                "avg_auth_time_ms": self.stats.avg_auth_time_ms,
             },
-            'nonce_manager': self.nonce_manager.get_status(),
-            'signature_generator': self.signature_generator.get_statistics(),
-            'configuration': {
-                'debug_enabled': self.enable_debug,
-                'max_retry_attempts': self.max_retry_attempts,
-                'retry_delay_ms': self.retry_delay_ms
-            }
+            "nonce_manager": self.nonce_manager.get_status(),
+            "signature_generator": self.signature_generator.get_statistics(),
+            "configuration": {
+                "debug_enabled": self.enable_debug,
+                "max_retry_attempts": self.max_retry_attempts,
+                "retry_delay_ms": self.retry_delay_ms,
+            },
         }
 
     def run_comprehensive_test(self) -> dict[str, Any]:
@@ -426,11 +421,7 @@ class KrakenAuth:
         Returns:
             Test results dictionary
         """
-        test_results = {
-            'timestamp': time.time(),
-            'overall_success': True,
-            'tests': {}
-        }
+        test_results = {"timestamp": time.time(), "overall_success": True, "tests": {}}
 
         try:
             # Test 1: Nonce generation
@@ -438,49 +429,51 @@ class KrakenAuth:
             nonce1 = self.nonce_manager.get_nonce("kraken_auth_test")
             nonce2 = self.nonce_manager.get_nonce("kraken_auth_test")
 
-            test_results['tests']['nonce_generation'] = {
-                'success': int(nonce2) > int(nonce1),
-                'nonce1': nonce1,
-                'nonce2': nonce2,
-                'increasing': int(nonce2) > int(nonce1)
+            test_results["tests"]["nonce_generation"] = {
+                "success": int(nonce2) > int(nonce1),
+                "nonce1": nonce1,
+                "nonce2": nonce2,
+                "increasing": int(nonce2) > int(nonce1),
             }
 
             # Test 2: Signature generation
             logger.info("[KRAKEN_AUTH_2025] Testing signature generation...")
             sig_test = self.signature_generator.test_signature_algorithm()
-            test_results['tests']['signature_generation'] = sig_test
+            test_results["tests"]["signature_generation"] = sig_test
 
             # Test 3: Full auth headers
             logger.info("[KRAKEN_AUTH_2025] Testing full auth header generation...")
-            headers = self.get_auth_headers('/0/private/Balance')
-            test_results['tests']['auth_headers'] = {
-                'success': all(key in headers for key in ['API-Key', 'API-Sign']),
-                'has_api_key': 'API-Key' in headers,
-                'has_signature': 'API-Sign' in headers,
-                'api_key_length': len(headers.get('API-Key', '')),
-                'signature_length': len(headers.get('API-Sign', ''))
+            headers = self.get_auth_headers("/0/private/Balance")
+            test_results["tests"]["auth_headers"] = {
+                "success": all(key in headers for key in ["API-Key", "API-Sign"]),
+                "has_api_key": "API-Key" in headers,
+                "has_signature": "API-Sign" in headers,
+                "api_key_length": len(headers.get("API-Key", "")),
+                "signature_length": len(headers.get("API-Sign", "")),
             }
 
             # Test 4: Nonce collision recovery
             logger.info("[KRAKEN_AUTH_2025] Testing nonce collision recovery...")
             recovery_nonce = self.nonce_manager.handle_invalid_nonce_error("kraken_auth_test")
-            test_results['tests']['nonce_recovery'] = {
-                'success': len(recovery_nonce) > 0,
-                'recovery_nonce': recovery_nonce,
-                'nonce_valid': True  # Unified manager always returns valid nonces
+            test_results["tests"]["nonce_recovery"] = {
+                "success": len(recovery_nonce) > 0,
+                "recovery_nonce": recovery_nonce,
+                "nonce_valid": True,  # Unified manager always returns valid nonces
             }
 
             # Overall success
-            test_results['overall_success'] = all(
-                test.get('success', False) for test in test_results['tests'].values()
+            test_results["overall_success"] = all(
+                test.get("success", False) for test in test_results["tests"].values()
             )
 
-            logger.info(f"[KRAKEN_AUTH_2025] Comprehensive test completed. "
-                       f"Success: {test_results['overall_success']}")
+            logger.info(
+                f"[KRAKEN_AUTH_2025] Comprehensive test completed. "
+                f"Success: {test_results['overall_success']}"
+            )
 
         except Exception as e:
-            test_results['overall_success'] = False
-            test_results['error'] = str(e)
+            test_results["overall_success"] = False
+            test_results["error"] = str(e)
             logger.error(f"[KRAKEN_AUTH_2025] Comprehensive test failed: {e}")
 
         return test_results
@@ -488,21 +481,21 @@ class KrakenAuth:
     def export_configuration(self) -> dict[str, Any]:
         """Export authentication configuration (excluding sensitive data)"""
         return {
-            'api_key_hash': self.api_key[:8] + '...',
-            'nonce_manager_config': {
-                'type': 'ConsolidatedNonceManager',
-                'status': 'singleton_instance'
+            "api_key_hash": self.api_key[:8] + "...",
+            "nonce_manager_config": {
+                "type": "ConsolidatedNonceManager",
+                "status": "singleton_instance",
             },
-            'signature_generator_config': {
-                'private_key_length': len(self.signature_generator._private_key_bytes),
-                'signatures_generated': self.signature_generator._signature_count
+            "signature_generator_config": {
+                "private_key_length": len(self.signature_generator._private_key_bytes),
+                "signatures_generated": self.signature_generator._signature_count,
             },
-            'auth_config': {
-                'debug_enabled': self.enable_debug,
-                'max_retry_attempts': self.max_retry_attempts,
-                'retry_delay_ms': self.retry_delay_ms
+            "auth_config": {
+                "debug_enabled": self.enable_debug,
+                "max_retry_attempts": self.max_retry_attempts,
+                "retry_delay_ms": self.retry_delay_ms,
             },
-            'statistics': self.stats.__dict__
+            "statistics": self.stats.__dict__,
         }
 
     def cleanup(self) -> None:
@@ -516,9 +509,11 @@ class KrakenAuth:
 
             # Log final statistics
             if self.stats.requests_count > 0:
-                logger.info(f"[KRAKEN_AUTH_2025] Final stats: "
-                           f"{self.stats.successful_auths}/{self.stats.requests_count} successful, "
-                           f"avg time: {self.stats.avg_auth_time_ms:.2f}ms")
+                logger.info(
+                    f"[KRAKEN_AUTH_2025] Final stats: "
+                    f"{self.stats.successful_auths}/{self.stats.requests_count} successful, "
+                    f"avg time: {self.stats.avg_auth_time_ms:.2f}ms"
+                )
 
             logger.info("[KRAKEN_AUTH_2025] Cleanup completed successfully")
 
@@ -526,7 +521,7 @@ class KrakenAuth:
             logger.error(f"[KRAKEN_AUTH_2025] Error during cleanup: {e}")
 
     @classmethod
-    def create_from_config(cls, config: dict[str, Any]) -> 'KrakenAuth':
+    def create_from_config(cls, config: dict[str, Any]) -> "KrakenAuth":
         """
         Create KrakenAuth instance from configuration dictionary.
 
@@ -537,10 +532,10 @@ class KrakenAuth:
             KrakenAuth instance
         """
         return cls(
-            api_key=config['api_key'],
-            private_key=config['private_key'],
-            storage_dir=config.get('storage_dir'),
-            enable_debug=config.get('enable_debug', False)
+            api_key=config["api_key"],
+            private_key=config["private_key"],
+            storage_dir=config.get("storage_dir"),
+            enable_debug=config.get("enable_debug", False),
         )
 
     @asynccontextmanager
@@ -561,9 +556,11 @@ class KrakenAuth:
 
     def __str__(self) -> str:
         """String representation"""
-        return (f"KrakenAuth(api_key={self.api_key[:8]}..., "
-                f"requests={self.stats.requests_count}, "
-                f"success_rate={self.stats.successful_auths/max(self.stats.requests_count, 1)*100:.1f}%)")
+        return (
+            f"KrakenAuth(api_key={self.api_key[:8]}..., "
+            f"requests={self.stats.requests_count}, "
+            f"success_rate={self.stats.successful_auths / max(self.stats.requests_count, 1) * 100:.1f}%)"
+        )
 
     def __repr__(self) -> str:
         """Detailed representation"""

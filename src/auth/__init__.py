@@ -40,20 +40,20 @@ from .websocket_authentication_manager import (
 # NonceManager is deprecated - use ConsolidatedNonceManager from utils.consolidated_nonce_manager
 
 __all__ = [
-    'KrakenAuth',
-    'SignatureGenerator',
-    'CredentialManager',
-    'credential_manager',
-    'get_kraken_credentials',
-    'get_kraken_rest_credentials',
-    'get_kraken_websocket_credentials',
-    'WebSocketAuthenticationManager',
-    'WebSocketAuthenticationError',
-    'TokenExpiredError',
-    'NonceValidationError',
-    'CircuitBreakerOpenError',
-    'websocket_auth_context',
-    'create_websocket_auth_manager'
+    "KrakenAuth",
+    "SignatureGenerator",
+    "CredentialManager",
+    "credential_manager",
+    "get_kraken_credentials",
+    "get_kraken_rest_credentials",
+    "get_kraken_websocket_credentials",
+    "WebSocketAuthenticationManager",
+    "WebSocketAuthenticationError",
+    "TokenExpiredError",
+    "NonceValidationError",
+    "CircuitBreakerOpenError",
+    "websocket_auth_context",
+    "create_websocket_auth_manager",
 ]
 
-__version__ = '2025.1.0'
+__version__ = "2025.1.0"

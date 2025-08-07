@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 class PortfolioStrategy(Enum):
     """Portfolio management strategies"""
+
     CONSERVATIVE = "conservative"
     BALANCED = "balanced"
     AGGRESSIVE = "aggressive"
@@ -48,6 +49,7 @@ class PortfolioStrategy(Enum):
 
 class PortfolioStatus(Enum):
     """Portfolio status"""
+
     INITIALIZING = "initializing"
     ACTIVE = "active"
     PAUSED = "paused"
@@ -59,6 +61,7 @@ class PortfolioStatus(Enum):
 @dataclass
 class PortfolioConfig:
     """Portfolio manager configuration"""
+
     # Strategy settings
     strategy: PortfolioStrategy = PortfolioStrategy.BALANCED
     target_allocations: dict[str, float] = None  # symbol -> weight
@@ -95,13 +98,13 @@ class PortfolioConfig:
                 "BTC/USDT": 0.4,
                 "ETH/USDT": 0.3,
                 "SHIB/USDT": 0.2,
-                "ADA/USDT": 0.1
+                "ADA/USDT": 0.1,
             }
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         data = asdict(self)
-        data['strategy'] = self.strategy.value
+        data["strategy"] = self.strategy.value
         return data
 
 
@@ -110,8 +113,14 @@ class PortfolioManager:
     Main portfolio management system
     """
 
-    def __init__(self, balance_manager=None, trade_executor=None,
-                 config: Optional[PortfolioConfig] = None, exchange=None, account_tier=None):
+    def __init__(
+        self,
+        balance_manager=None,
+        trade_executor=None,
+        config: Optional[PortfolioConfig] = None,
+        exchange=None,
+        account_tier=None,
+    ):
         """
         Initialize portfolio manager
 
@@ -137,29 +146,28 @@ class PortfolioManager:
 
         # Core components
         self.position_tracker = PositionTracker(
-            balance_manager=balance_manager,
-            data_path=self.config.data_path
+            balance_manager=balance_manager, data_path=self.config.data_path
         )
 
         # Risk manager with portfolio-specific limits
         risk_limits = RiskLimits(
             max_portfolio_risk_pct=self.config.max_portfolio_risk_pct,
             max_single_position_pct=self.config.max_single_position_pct,
-            max_total_drawdown_pct=self.config.max_drawdown_pct
+            max_total_drawdown_pct=self.config.max_drawdown_pct,
         )
 
         self.risk_manager = RiskManager(
             position_tracker=self.position_tracker,
             balance_manager=balance_manager,
             limits=risk_limits,
-            data_path=self.config.data_path
+            data_path=self.config.data_path,
         )
 
         # Rebalancer with portfolio-specific config
         rebalance_config = RebalanceConfig(
             max_drift_pct=self.config.rebalance_threshold_pct,
             rebalance_interval_hours=self.config.rebalance_interval_hours,
-            dry_run=False
+            dry_run=False,
         )
 
         self.rebalancer = Rebalancer(
@@ -168,13 +176,13 @@ class PortfolioManager:
             balance_manager=balance_manager,
             trade_executor=trade_executor,
             config=rebalance_config,
-            data_path=self.config.data_path
+            data_path=self.config.data_path,
         )
 
         # Analytics system
         analytics_config = AnalyticsConfig(
             benchmark_symbol=self.config.benchmark_symbol,
-            export_path=f"{self.config.data_path}/analytics"
+            export_path=f"{self.config.data_path}/analytics",
         )
 
         self.analytics = PortfolioAnalytics(
@@ -182,18 +190,18 @@ class PortfolioManager:
             risk_manager=self.risk_manager,
             balance_manager=balance_manager,
             config=analytics_config,
-            data_path=self.config.data_path
+            data_path=self.config.data_path,
         )
 
         # Event callbacks
         self._callbacks: dict[str, list[Callable]] = {
-            'position_opened': [],
-            'position_closed': [],
-            'risk_limit_exceeded': [],
-            'rebalance_completed': [],
-            'performance_update': [],
-            'status_changed': [],
-            'error': []
+            "position_opened": [],
+            "position_closed": [],
+            "risk_limit_exceeded": [],
+            "rebalance_completed": [],
+            "performance_update": [],
+            "status_changed": [],
+            "error": [],
         }
 
         # Background tasks
@@ -209,7 +217,7 @@ class PortfolioManager:
     @property
     def positions(self):
         """Get all positions from position tracker"""
-        if hasattr(self.position_tracker, 'get_all_positions'):
+        if hasattr(self.position_tracker, "get_all_positions"):
             return self.position_tracker.get_all_positions()
         return {}
 
@@ -246,7 +254,7 @@ class PortfolioManager:
                 self._initialized = True
 
                 await self._save_status()
-                await self._call_callbacks('status_changed', self._status)
+                await self._call_callbacks("status_changed", self._status)
 
                 logger.info("[PORTFOLIO_MANAGER] Initialization complete")
                 return True
@@ -254,7 +262,7 @@ class PortfolioManager:
         except Exception as e:
             self._status = PortfolioStatus.ERROR
             logger.error(f"[PORTFOLIO_MANAGER] Initialization failed: {e}")
-            await self._call_callbacks('error', e)
+            await self._call_callbacks("error", e)
             return False
 
     async def shutdown(self) -> None:
@@ -283,9 +291,15 @@ class PortfolioManager:
         self._initialized = False
         logger.info("[PORTFOLIO_MANAGER] Shutdown complete")
 
-    async def create_position(self, symbol: str, position_type: PositionType,
-                            size: Union[float, Decimal], entry_price: Union[float, Decimal],
-                            strategy: str = None, tags: list[str] = None) -> Optional[Position]:
+    async def create_position(
+        self,
+        symbol: str,
+        position_type: PositionType,
+        size: Union[float, Decimal],
+        entry_price: Union[float, Decimal],
+        strategy: str = None,
+        tags: list[str] = None,
+    ) -> Optional[Position]:
         """
         Create a new position with risk checking
 
@@ -323,18 +337,23 @@ class PortfolioManager:
             self.risk_manager.record_trade(symbol, float(size), float(entry_price))
 
             # Call callbacks
-            await self._call_callbacks('position_opened', position)
+            await self._call_callbacks("position_opened", position)
 
             logger.info(f"[PORTFOLIO_MANAGER] Created position {position.position_id}")
             return position
 
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error creating position: {e}")
-            await self._call_callbacks('error', e)
+            await self._call_callbacks("error", e)
             return None
 
-    async def close_position(self, position_id: str, price: Union[float, Decimal],
-                           size: Union[float, Decimal] = None, fees: Union[float, Decimal] = 0) -> bool:
+    async def close_position(
+        self,
+        position_id: str,
+        price: Union[float, Decimal],
+        size: Union[float, Decimal] = None,
+        fees: Union[float, Decimal] = 0,
+    ) -> bool:
         """
         Close a position (partial or full)
 
@@ -368,21 +387,25 @@ class PortfolioManager:
                     self.analytics.record_portfolio_value(current_value)
 
                 # Call callbacks
-                await self._call_callbacks('position_closed', {
-                    'position': position,
-                    'realized_pnl': float(realized_pnl),
-                    'close_size': float(close_size)
-                })
+                await self._call_callbacks(
+                    "position_closed",
+                    {
+                        "position": position,
+                        "realized_pnl": float(realized_pnl),
+                        "close_size": float(close_size),
+                    },
+                )
 
-                logger.info(f"[PORTFOLIO_MANAGER] Closed position {position_id}: "
-                           f"${realized_pnl:.2f} P&L")
+                logger.info(
+                    f"[PORTFOLIO_MANAGER] Closed position {position_id}: ${realized_pnl:.2f} P&L"
+                )
                 return True
 
             return False
 
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error closing position: {e}")
-            await self._call_callbacks('error', e)
+            await self._call_callbacks("error", e)
             return False
 
     async def update_position_price(self, symbol: str, price: Union[float, Decimal]) -> list[str]:
@@ -423,7 +446,9 @@ class PortfolioManager:
             # Performance metrics
             performance_metrics = None
             if self.config.analytics_enabled:
-                performance_metrics = await self.analytics.calculate_performance_metrics(MetricPeriod.DAILY)
+                performance_metrics = await self.analytics.calculate_performance_metrics(
+                    MetricPeriod.DAILY
+                )
 
             # Portfolio value
             total_value = await self._get_portfolio_value()
@@ -432,31 +457,33 @@ class PortfolioManager:
             drift_analysis = await self.rebalancer.calculate_portfolio_drift()
 
             return {
-                'timestamp': time.time(),
-                'status': self._status.value,
-                'total_value': total_value,
-                'positions': base_summary,
-                'risk_metrics': risk_metrics.to_dict(),
-                'performance_metrics': performance_metrics.to_dict() if performance_metrics else None,
-                'drift_analysis': drift_analysis,
-                'target_allocations': self.config.target_allocations,
-                'strategy': self.config.strategy.value
+                "timestamp": time.time(),
+                "status": self._status.value,
+                "total_value": total_value,
+                "positions": base_summary,
+                "risk_metrics": risk_metrics.to_dict(),
+                "performance_metrics": performance_metrics.to_dict()
+                if performance_metrics
+                else None,
+                "drift_analysis": drift_analysis,
+                "target_allocations": self.config.target_allocations,
+                "strategy": self.config.strategy.value,
             }
 
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error getting portfolio summary: {e}")
-            return {'error': str(e), 'timestamp': time.time()}
+            return {"error": str(e), "timestamp": time.time()}
 
     async def get_performance_report(self, periods: list[MetricPeriod] = None) -> dict[str, Any]:
         """Get comprehensive performance report"""
         if not self.config.analytics_enabled:
-            return {'error': 'Analytics not enabled'}
+            return {"error": "Analytics not enabled"}
 
         try:
             return await self.analytics.generate_performance_report(periods)
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error generating performance report: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
     async def get_risk_report(self) -> dict[str, Any]:
         """Get comprehensive risk report"""
@@ -464,10 +491,11 @@ class PortfolioManager:
             return await self.risk_manager.get_risk_report()
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error generating risk report: {e}")
-            return {'error': str(e)}
+            return {"error": str(e)}
 
-    async def rebalance_portfolio(self, strategy: RebalanceStrategy = None,
-                                custom_targets: dict[str, float] = None) -> Optional[RebalanceResult]:
+    async def rebalance_portfolio(
+        self, strategy: RebalanceStrategy = None, custom_targets: dict[str, float] = None
+    ) -> Optional[RebalanceResult]:
         """
         Manually trigger portfolio rebalancing
 
@@ -501,9 +529,11 @@ class PortfolioManager:
                 result = await self.rebalancer.execute_rebalance_plan(plan)
 
                 if result.success:
-                    await self._call_callbacks('rebalance_completed', result)
-                    logger.info(f"[PORTFOLIO_MANAGER] Rebalancing completed: "
-                               f"{result.actual_trades} trades, ${result.actual_cost:.2f} cost")
+                    await self._call_callbacks("rebalance_completed", result)
+                    logger.info(
+                        f"[PORTFOLIO_MANAGER] Rebalancing completed: "
+                        f"{result.actual_trades} trades, ${result.actual_cost:.2f} cost"
+                    )
 
                 return result
 
@@ -511,7 +541,7 @@ class PortfolioManager:
 
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error rebalancing portfolio: {e}")
-            await self._call_callbacks('error', e)
+            await self._call_callbacks("error", e)
             return None
 
     async def set_target_allocations(self, targets: dict[str, float]) -> bool:
@@ -528,7 +558,9 @@ class PortfolioManager:
             # Validate targets
             total_weight = sum(targets.values())
             if abs(total_weight - 1.0) > 0.01:  # Allow 1% tolerance
-                logger.warning(f"[PORTFOLIO_MANAGER] Target allocations sum to {total_weight:.3f}, not 1.0")
+                logger.warning(
+                    f"[PORTFOLIO_MANAGER] Target allocations sum to {total_weight:.3f}, not 1.0"
+                )
                 # Normalize
                 targets = {symbol: weight / total_weight for symbol, weight in targets.items()}
 
@@ -554,7 +586,7 @@ class PortfolioManager:
             self._status = PortfolioStatus.PAUSED
             await self.rebalancer.stop_monitoring()
             await self._save_status()
-            await self._call_callbacks('status_changed', self._status)
+            await self._call_callbacks("status_changed", self._status)
             logger.info("[PORTFOLIO_MANAGER] Portfolio paused")
             return True
         except Exception as e:
@@ -568,7 +600,7 @@ class PortfolioManager:
             if self.config.rebalance_enabled:
                 await self.rebalancer.start_monitoring()
             await self._save_status()
-            await self._call_callbacks('status_changed', self._status)
+            await self._call_callbacks("status_changed", self._status)
             logger.info("[PORTFOLIO_MANAGER] Portfolio resumed")
             return True
         except Exception as e:
@@ -593,7 +625,7 @@ class PortfolioManager:
 
             if not open_positions:
                 logger.info("[PORTFOLIO_MANAGER] No positions to liquidate")
-                return {'success': True, 'liquidated_positions': 0}
+                return {"success": True, "liquidated_positions": 0}
 
             liquidation_results = []
 
@@ -605,48 +637,56 @@ class PortfolioManager:
                     # Close position
                     success = await self.close_position(position_id, current_price)
 
-                    liquidation_results.append({
-                        'position_id': position_id,
-                        'symbol': position.symbol,
-                        'success': success,
-                        'size': float(position.current_size),
-                        'pnl': float(position.unrealized_pnl)
-                    })
+                    liquidation_results.append(
+                        {
+                            "position_id": position_id,
+                            "symbol": position.symbol,
+                            "success": success,
+                            "size": float(position.current_size),
+                            "pnl": float(position.unrealized_pnl),
+                        }
+                    )
 
                 except Exception as e:
                     logger.error(f"[PORTFOLIO_MANAGER] Error liquidating {position_id}: {e}")
-                    liquidation_results.append({
-                        'position_id': position_id,
-                        'symbol': position.symbol,
-                        'success': False,
-                        'error': str(e)
-                    })
+                    liquidation_results.append(
+                        {
+                            "position_id": position_id,
+                            "symbol": position.symbol,
+                            "success": False,
+                            "error": str(e),
+                        }
+                    )
 
-            successful_liquidations = sum(1 for result in liquidation_results if result['success'])
-            total_pnl = sum(result.get('pnl', 0) for result in liquidation_results if result['success'])
+            successful_liquidations = sum(1 for result in liquidation_results if result["success"])
+            total_pnl = sum(
+                result.get("pnl", 0) for result in liquidation_results if result["success"]
+            )
 
             self._status = PortfolioStatus.ACTIVE
             await self._save_status()
 
             result = {
-                'success': True,
-                'liquidated_positions': successful_liquidations,
-                'total_positions': len(liquidation_results),
-                'total_pnl': total_pnl,
-                'details': liquidation_results
+                "success": True,
+                "liquidated_positions": successful_liquidations,
+                "total_positions": len(liquidation_results),
+                "total_pnl": total_pnl,
+                "details": liquidation_results,
             }
 
-            logger.info(f"[PORTFOLIO_MANAGER] Liquidation complete: "
-                       f"{successful_liquidations}/{len(liquidation_results)} positions, "
-                       f"${total_pnl:.2f} total P&L")
+            logger.info(
+                f"[PORTFOLIO_MANAGER] Liquidation complete: "
+                f"{successful_liquidations}/{len(liquidation_results)} positions, "
+                f"${total_pnl:.2f} total P&L"
+            )
 
             return result
 
         except Exception as e:
             self._status = PortfolioStatus.ERROR
             logger.error(f"[PORTFOLIO_MANAGER] Liquidation error: {e}")
-            await self._call_callbacks('error', e)
-            return {'success': False, 'error': str(e)}
+            await self._call_callbacks("error", e)
+            return {"success": False, "error": str(e)}
 
     def register_callback(self, event_type: str, callback: Callable) -> None:
         """Register callback for portfolio events"""
@@ -700,11 +740,11 @@ class PortfolioManager:
             risk_report = await self.get_risk_report()
 
             export_data = {
-                'timestamp': time.time(),
-                'portfolio_summary': summary,
-                'performance_report': performance_report,
-                'risk_report': risk_report,
-                'configuration': self.config.to_dict()
+                "timestamp": time.time(),
+                "portfolio_summary": summary,
+                "performance_report": performance_report,
+                "risk_report": risk_report,
+                "configuration": self.config.to_dict(),
             }
 
             # Export based on format
@@ -712,7 +752,7 @@ class PortfolioManager:
 
             if format_type == "json":
                 filepath = f"{self.config.data_path}/portfolio_export_{timestamp_str}.json"
-                with open(filepath, 'w') as f:
+                with open(filepath, "w") as f:
                     json.dump(export_data, f, indent=2, default=str)
             else:
                 raise ValueError(f"Unsupported export format: {format_type}")
@@ -773,13 +813,15 @@ class PortfolioManager:
                 # Check risk limits
                 risk_metrics = await self.risk_manager.calculate_risk_metrics()
 
-                if risk_metrics.overall_risk_level.value in ['high', 'critical']:
-                    await self._call_callbacks('risk_limit_exceeded', risk_metrics)
+                if risk_metrics.overall_risk_level.value in ["high", "critical"]:
+                    await self._call_callbacks("risk_limit_exceeded", risk_metrics)
 
                 # Performance update callback
                 if self.config.analytics_enabled:
-                    performance_metrics = await self.analytics.calculate_performance_metrics(MetricPeriod.DAILY)
-                    await self._call_callbacks('performance_update', performance_metrics)
+                    performance_metrics = await self.analytics.calculate_performance_metrics(
+                        MetricPeriod.DAILY
+                    )
+                    await self._call_callbacks("performance_update", performance_metrics)
 
                 # Sleep until next check
                 await asyncio.sleep(300)  # 5 minutes
@@ -821,10 +863,10 @@ class PortfolioManager:
         try:
             if self.balance_manager:
                 balances = await self.balance_manager.get_all_balances()
-                return sum(balance_data.get('balance', 0) for balance_data in balances.values())
+                return sum(balance_data.get("balance", 0) for balance_data in balances.values())
             else:
                 summary = self.position_tracker.get_portfolio_summary()
-                return summary.get('total_value', 0.0)
+                return summary.get("total_value", 0.0)
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error getting portfolio value: {e}")
             return 0.0
@@ -857,7 +899,7 @@ class PortfolioManager:
                 # Update config attributes
                 for key, value in data.items():
                     if hasattr(self.config, key):
-                        if key == 'strategy':
+                        if key == "strategy":
                             self.config.strategy = PortfolioStrategy(value)
                         else:
                             setattr(self.config, key, value)
@@ -873,7 +915,7 @@ class PortfolioManager:
     async def _save_config(self) -> None:
         """Save configuration to file"""
         try:
-            with open(self.config_file, 'w') as f:
+            with open(self.config_file, "w") as f:
                 json.dump(self.config.to_dict(), f, indent=2)
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error saving configuration: {e}")
@@ -882,13 +924,13 @@ class PortfolioManager:
         """Save status to file"""
         try:
             status_data = {
-                'status': self._status.value,
-                'timestamp': time.time(),
-                'initialized': self._initialized,
-                'running': self._running
+                "status": self._status.value,
+                "timestamp": time.time(),
+                "initialized": self._initialized,
+                "running": self._running,
             }
 
-            with open(self.status_file, 'w') as f:
+            with open(self.status_file, "w") as f:
                 json.dump(status_data, f, indent=2)
 
         except Exception as e:
@@ -902,17 +944,23 @@ class PortfolioManager:
             Dict mapping symbol to balance amount
         """
         try:
-            if hasattr(self, 'exchange') and self.exchange:
+            if hasattr(self, "exchange") and self.exchange:
                 balances = await self.exchange.fetch_balance()
-                return {k: safe_decimal(v.get('free', 0)) for k, v in balances.items() if v.get('free', 0) > 0}
+                return {
+                    k: safe_decimal(v.get("free", 0))
+                    for k, v in balances.items()
+                    if v.get("free", 0) > 0
+                }
             else:
-                logger.warning("[PORTFOLIO_MANAGER] No exchange instance available for balance fetch")
+                logger.warning(
+                    "[PORTFOLIO_MANAGER] No exchange instance available for balance fetch"
+                )
                 return {}
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error fetching balances: {e}")
             return {}
 
-    async def get_balance(self, symbol: str = 'USDT') -> Decimal:
+    async def get_balance(self, symbol: str = "USDT") -> Decimal:
         """
         Get balance for specific symbol
 
@@ -924,10 +972,10 @@ class PortfolioManager:
         """
         try:
             balances = await self.get_balances()
-            return balances.get(symbol, Decimal('0'))
+            return balances.get(symbol, Decimal("0"))
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error getting balance for {symbol}: {e}")
-            return Decimal('0')
+            return Decimal("0")
 
     async def get_portfolio_value(self) -> Decimal:
         """
@@ -937,20 +985,20 @@ class PortfolioManager:
             Total portfolio value
         """
         try:
-            if hasattr(self, 'exchange') and self.exchange:
+            if hasattr(self, "exchange") and self.exchange:
                 balances = await self.get_balances()
-                total_value = Decimal('0')
+                total_value = Decimal("0")
 
                 for symbol, balance in balances.items():
                     if balance > 0:
-                        if symbol == 'USDT':
+                        if symbol == "USDT":
                             total_value += balance
                         else:
                             # Convert to USDT value
                             try:
                                 pair = f"{symbol}/USDT"
                                 ticker = await self.exchange.fetch_ticker(pair)
-                                price = safe_decimal(ticker.get('last', 0))
+                                price = safe_decimal(ticker.get("last", 0))
                                 total_value += balance * price
                             except Exception:
                                 # Skip if can't get price
@@ -958,10 +1006,10 @@ class PortfolioManager:
 
                 return total_value
             else:
-                return Decimal('0')
+                return Decimal("0")
         except Exception as e:
             logger.error(f"[PORTFOLIO_MANAGER] Error calculating portfolio value: {e}")
-            return Decimal('0')
+            return Decimal("0")
 
     async def get_open_positions(self) -> dict[str, Any]:
         """
@@ -971,9 +1019,9 @@ class PortfolioManager:
             Dictionary of open positions keyed by position ID
         """
         try:
-            if hasattr(self.position_tracker, 'get_all_open_positions'):
+            if hasattr(self.position_tracker, "get_all_open_positions"):
                 return self.position_tracker.get_all_open_positions()
-            elif hasattr(self.position_tracker, 'get_open_positions'):
+            elif hasattr(self.position_tracker, "get_open_positions"):
                 return self.position_tracker.get_open_positions()
             else:
                 # Fallback: get all positions and filter for open ones
@@ -981,7 +1029,7 @@ class PortfolioManager:
                 open_positions = {}
 
                 for pos_id, position in all_positions.items():
-                    if hasattr(position, 'status') and position.status == PositionStatus.OPEN:
+                    if hasattr(position, "status") and position.status == PositionStatus.OPEN:
                         open_positions[pos_id] = position
 
                 return open_positions
@@ -998,9 +1046,9 @@ class PortfolioManager:
             Dictionary of open positions keyed by position ID
         """
         try:
-            if hasattr(self.position_tracker, 'get_all_open_positions'):
+            if hasattr(self.position_tracker, "get_all_open_positions"):
                 return self.position_tracker.get_all_open_positions()
-            elif hasattr(self.position_tracker, 'get_open_positions'):
+            elif hasattr(self.position_tracker, "get_open_positions"):
                 return self.position_tracker.get_open_positions()
             else:
                 # Fallback: get all positions and filter for open ones
@@ -1008,7 +1056,7 @@ class PortfolioManager:
                 open_positions = {}
 
                 for pos_id, position in all_positions.items():
-                    if hasattr(position, 'status') and position.status == PositionStatus.OPEN:
+                    if hasattr(position, "status") and position.status == PositionStatus.OPEN:
                         open_positions[pos_id] = position
 
                 return open_positions
@@ -1036,11 +1084,11 @@ class PortfolioManager:
             sync_balance_manager = balance_manager or self.balance_manager
 
             # Sync balances if balance manager available
-            if sync_balance_manager and hasattr(sync_balance_manager, 'force_refresh'):
+            if sync_balance_manager and hasattr(sync_balance_manager, "force_refresh"):
                 await sync_balance_manager.force_refresh()
 
             # Update position tracker with current exchange data
-            if hasattr(self.position_tracker, 'sync_with_exchange'):
+            if hasattr(self.position_tracker, "sync_with_exchange"):
                 if sync_exchange:
                     await self.position_tracker.sync_with_exchange(sync_exchange)
                 else:

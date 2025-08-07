@@ -1,0 +1,33 @@
+{
+  "trading_mode": "ultra_scalper",
+  "fee_free": true,
+  "strategies": {
+    "micro_scalping": {
+      "enabled": true,
+      "min_profit": 0.0001,
+      "max_hold_time": 15,
+      "description": "Take 0.01% profits since no fees"
+    },
+    "high_frequency": {
+      "enabled": true,
+      "trades_per_hour_target": 20,
+      "compound_gains": true
+    },
+    "risk_management": {
+      "stop_loss": -0.003,
+      "max_position_size": 0.95,
+      "min_balance_required": 1.0
+    }
+  },
+  "alerts": {
+    "profit_threshold": 0.0001,
+    "send_notifications": true,
+    "emergency_stop": -0.01
+  },
+  "pairs": [
+    "SHIB/USDT",
+    "DOGE/USDT",
+    "PEPE/USDT"
+  ],
+  "notes": "Fee-free trading allows micro profits. Even 0.01% = pure gain!"
+}

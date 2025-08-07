@@ -12,6 +12,7 @@ from typing import Callable
 
 logger = logging.getLogger(__name__)
 
+
 class WebSocketManagerV2:
     """Simple WebSocket V2 Manager that works without complex dependencies"""
 
@@ -45,20 +46,26 @@ class WebSocketManagerV2:
 
         while retry_count < max_retries:
             try:
-                self.logger.info(f"[WEBSOCKET_V2] Connection attempt {retry_count + 1}/{max_retries}")
+                self.logger.info(
+                    f"[WEBSOCKET_V2] Connection attempt {retry_count + 1}/{max_retries}"
+                )
 
                 if await self.connect():
                     self.logger.info("[WEBSOCKET_V2] Successfully connected")
                     return True
 
             except Exception as e:
-                if 'maintenance' in str(e).lower():
+                if "maintenance" in str(e).lower():
                     # Maintenance error - wait 5 seconds
-                    self.logger.warning("[WEBSOCKET_V2] Exchange maintenance detected, waiting 5 seconds")
+                    self.logger.warning(
+                        "[WEBSOCKET_V2] Exchange maintenance detected, waiting 5 seconds"
+                    )
                     await asyncio.sleep(5)
                 else:
                     # Other errors - instant retry with small delay
-                    self.logger.warning(f"[WEBSOCKET_V2] Connection error: {e}, retrying immediately")
+                    self.logger.warning(
+                        f"[WEBSOCKET_V2] Connection error: {e}, retrying immediately"
+                    )
                     await asyncio.sleep(0.1)
 
             retry_count += 1
@@ -70,7 +77,7 @@ class WebSocketManagerV2:
         """Get WebSocket authentication token"""
         try:
             # Get token from exchange client if available
-            if self.exchange_client and hasattr(self.exchange_client, 'get_websocket_token'):
+            if self.exchange_client and hasattr(self.exchange_client, "get_websocket_token"):
                 return await self.exchange_client.get_websocket_token()
 
             # Token not required for public WebSocket
@@ -124,9 +131,9 @@ class WebSocketManagerV2:
     def get_connection_status(self):
         """Get connection status"""
         return {
-            'connected': self.connected,
-            'channels': list(self.subscribed_channels),
-            'last_message': self.last_message_time
+            "connected": self.connected,
+            "channels": list(self.subscribed_channels),
+            "last_message": self.last_message_time,
         }
 
     async def _setup_private_client(self):
@@ -171,6 +178,7 @@ class WebSocketManagerV2:
         except Exception as e:
             self.logger.error(f"[WEBSOCKET_V2_DIRECT] Run error: {e}")
             return False
+
 
 # Maintain backward compatibility with aliases
 KrakenWebSocketManagerV2 = WebSocketManagerV2

@@ -33,16 +33,17 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BalanceManagerV2Config:
     """Configuration for Balance Manager V2"""
+
     # WebSocket streaming settings
     websocket_token_refresh_interval: float = 720.0  # 12 minutes
     websocket_connection_timeout: float = 10.0
 
     # Hybrid portfolio settings
     websocket_primary_ratio: float = 0.9  # 90% WebSocket usage
-    rest_fallback_ratio: float = 0.1      # 10% REST usage
+    rest_fallback_ratio: float = 0.1  # 10% REST usage
 
     # Data freshness and validation
-    balance_max_age: float = 60.0         # Max age for balance data
+    balance_max_age: float = 60.0  # Max age for balance data
     enable_balance_validation: bool = True
     enable_balance_aggregation: bool = True
 
@@ -68,10 +69,9 @@ class BalanceManagerV2:
     WebSocket streaming as the primary source and REST API as fallback only.
     """
 
-    def __init__(self,
-                 websocket_client,
-                 exchange_client,
-                 config: Optional[BalanceManagerV2Config] = None):
+    def __init__(
+        self, websocket_client, exchange_client, config: Optional[BalanceManagerV2Config] = None
+    ):
         """
         Initialize Balance Manager V2
 
@@ -114,15 +114,15 @@ class BalanceManagerV2:
 
         # Statistics
         self.stats = {
-            'total_balance_requests': 0,
-            'websocket_requests': 0,
-            'rest_requests': 0,
-            'successful_requests': 0,
-            'failed_requests': 0,
-            'cache_hits': 0,
-            'last_request_time': 0.0,
-            'uptime_start': 0.0,
-            'balance_updates_processed': 0
+            "total_balance_requests": 0,
+            "websocket_requests": 0,
+            "rest_requests": 0,
+            "successful_requests": 0,
+            "failed_requests": 0,
+            "cache_hits": 0,
+            "last_request_time": 0.0,
+            "uptime_start": 0.0,
+            "balance_updates_processed": 0,
         }
 
         logger.info("[BALANCE_MANAGER_V2] Initialized with WebSocket-primary architecture")
@@ -142,29 +142,37 @@ class BalanceManagerV2:
             async with self._async_lock:
                 logger.info("[BALANCE_MANAGER_V2] Starting initialization...")
 
-                self.stats['uptime_start'] = time.time()
+                self.stats["uptime_start"] = time.time()
 
                 # Check if we have required components
                 if not self.websocket_client and not self.exchange_client:
-                    logger.error("[BALANCE_MANAGER_V2] No WebSocket client or exchange client provided - cannot initialize")
+                    logger.error(
+                        "[BALANCE_MANAGER_V2] No WebSocket client or exchange client provided - cannot initialize"
+                    )
                     return await self._initialize_minimal_mode()
 
                 # Phase 1: Initialize WebSocket balance stream with validation
-                logger.info("[BALANCE_MANAGER_V2] Phase 1: Initializing WebSocket balance stream...")
+                logger.info(
+                    "[BALANCE_MANAGER_V2] Phase 1: Initializing WebSocket balance stream..."
+                )
 
                 if not self.websocket_client:
-                    logger.warning("[BALANCE_MANAGER_V2] No WebSocket client provided - initializing REST-only mode")
+                    logger.warning(
+                        "[BALANCE_MANAGER_V2] No WebSocket client provided - initializing REST-only mode"
+                    )
                     return await self._initialize_rest_only_mode()
 
                 if not self.exchange_client:
-                    logger.warning("[BALANCE_MANAGER_V2] No exchange client provided - limited functionality")
+                    logger.warning(
+                        "[BALANCE_MANAGER_V2] No exchange client provided - limited functionality"
+                    )
 
                 try:
                     self.websocket_stream = WebSocketBalanceStream(
                         websocket_client=self.websocket_client,
                         exchange_client=self.exchange_client,
                         token_refresh_interval=self.config.websocket_token_refresh_interval,
-                        connection_timeout=self.config.websocket_connection_timeout
+                        connection_timeout=self.config.websocket_connection_timeout,
                     )
 
                     # Start WebSocket stream with timeout
@@ -173,20 +181,30 @@ class BalanceManagerV2:
                     websocket_started = await asyncio.wait_for(start_task, timeout=30.0)
 
                     if not websocket_started:
-                        logger.error("[BALANCE_MANAGER_V2] WebSocket balance stream failed to start")
+                        logger.error(
+                            "[BALANCE_MANAGER_V2] WebSocket balance stream failed to start"
+                        )
                         return await self._initialize_rest_fallback_mode()
 
-                    logger.info("[BALANCE_MANAGER_V2] WebSocket balance stream started successfully")
+                    logger.info(
+                        "[BALANCE_MANAGER_V2] WebSocket balance stream started successfully"
+                    )
 
                 except asyncio.TimeoutError:
-                    logger.error("[BALANCE_MANAGER_V2] WebSocket balance stream startup timed out after 30s")
+                    logger.error(
+                        "[BALANCE_MANAGER_V2] WebSocket balance stream startup timed out after 30s"
+                    )
                     return await self._initialize_rest_fallback_mode()
                 except Exception as ws_error:
-                    logger.error(f"[BALANCE_MANAGER_V2] WebSocket balance stream startup failed: {ws_error}")
+                    logger.error(
+                        f"[BALANCE_MANAGER_V2] WebSocket balance stream startup failed: {ws_error}"
+                    )
                     return await self._initialize_rest_fallback_mode()
 
                 # Phase 2: Initialize hybrid portfolio manager
-                logger.info("[BALANCE_MANAGER_V2] Phase 2: Initializing hybrid portfolio manager...")
+                logger.info(
+                    "[BALANCE_MANAGER_V2] Phase 2: Initializing hybrid portfolio manager..."
+                )
 
                 try:
                     hybrid_config = HybridPortfolioConfig(
@@ -196,13 +214,13 @@ class BalanceManagerV2:
                         enable_balance_aggregation=self.config.enable_balance_aggregation,
                         enable_circuit_breaker=self.config.enable_circuit_breaker,
                         circuit_breaker_failure_threshold=self.config.circuit_breaker_failure_threshold,
-                        circuit_breaker_recovery_timeout=self.config.circuit_breaker_recovery_timeout
+                        circuit_breaker_recovery_timeout=self.config.circuit_breaker_recovery_timeout,
                     )
 
                     self.hybrid_manager = HybridPortfolioManager(
                         websocket_stream=self.websocket_stream,
                         rest_client=self.exchange_client,
-                        config=hybrid_config
+                        config=hybrid_config,
                     )
 
                     # Start hybrid manager with timeout
@@ -210,20 +228,30 @@ class BalanceManagerV2:
                     hybrid_started = await asyncio.wait_for(hybrid_start_task, timeout=15.0)
 
                     if not hybrid_started:
-                        logger.error("[BALANCE_MANAGER_V2] Hybrid portfolio manager failed to start")
+                        logger.error(
+                            "[BALANCE_MANAGER_V2] Hybrid portfolio manager failed to start"
+                        )
                         return await self._initialize_rest_fallback_mode()
 
-                    logger.info("[BALANCE_MANAGER_V2] Hybrid portfolio manager started successfully")
+                    logger.info(
+                        "[BALANCE_MANAGER_V2] Hybrid portfolio manager started successfully"
+                    )
 
                 except asyncio.TimeoutError:
-                    logger.error("[BALANCE_MANAGER_V2] Hybrid portfolio manager startup timed out after 15s")
+                    logger.error(
+                        "[BALANCE_MANAGER_V2] Hybrid portfolio manager startup timed out after 15s"
+                    )
                     return await self._initialize_rest_fallback_mode()
                 except Exception as hybrid_error:
-                    logger.error(f"[BALANCE_MANAGER_V2] Hybrid portfolio manager startup failed: {hybrid_error}")
+                    logger.error(
+                        f"[BALANCE_MANAGER_V2] Hybrid portfolio manager startup failed: {hybrid_error}"
+                    )
                     return await self._initialize_rest_fallback_mode()
 
                 # Phase 3: Setup callbacks and background tasks
-                logger.info("[BALANCE_MANAGER_V2] Phase 3: Setting up callbacks and background tasks...")
+                logger.info(
+                    "[BALANCE_MANAGER_V2] Phase 3: Setting up callbacks and background tasks..."
+                )
 
                 # Register callbacks for real-time updates if WebSocket stream is available
                 if self.config.enable_balance_callbacks and self.websocket_stream:
@@ -231,7 +259,9 @@ class BalanceManagerV2:
                         self.websocket_stream.register_balance_callback(self._handle_balance_update)
                         logger.info("[BALANCE_MANAGER_V2] Balance update callbacks registered")
                     except Exception as callback_error:
-                        logger.warning(f"[BALANCE_MANAGER_V2] Failed to register callbacks: {callback_error}")
+                        logger.warning(
+                            f"[BALANCE_MANAGER_V2] Failed to register callbacks: {callback_error}"
+                        )
 
                 # Start background tasks
                 self._running = True
@@ -241,21 +271,30 @@ class BalanceManagerV2:
                 logger.info("[BALANCE_MANAGER_V2] Phase 4: Performing initial balance sync...")
                 try:
                     await asyncio.wait_for(self._sync_balance_data(), timeout=10.0)
-                    logger.info(f"[BALANCE_MANAGER_V2] Initial balance sync complete - {len(self.balances)} balances loaded")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] Initial balance sync complete - {len(self.balances)} balances loaded"
+                    )
                 except asyncio.TimeoutError:
-                    logger.warning("[BALANCE_MANAGER_V2] Initial balance sync timed out - will sync in background")
+                    logger.warning(
+                        "[BALANCE_MANAGER_V2] Initial balance sync timed out - will sync in background"
+                    )
                 except Exception as sync_error:
-                    logger.warning(f"[BALANCE_MANAGER_V2] Initial balance sync failed: {sync_error} - will retry in background")
+                    logger.warning(
+                        f"[BALANCE_MANAGER_V2] Initial balance sync failed: {sync_error} - will retry in background"
+                    )
 
                 self._initialized = True
 
-                logger.info(f"[BALANCE_MANAGER_V2] Initialization complete - "
-                           f"WebSocket-primary mode active with {len(self.balances)} balances")
+                logger.info(
+                    f"[BALANCE_MANAGER_V2] Initialization complete - "
+                    f"WebSocket-primary mode active with {len(self.balances)} balances"
+                )
                 return True
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Initialization failed: {e}")
             import traceback
+
             logger.error(f"[BALANCE_MANAGER_V2] Initialization traceback: {traceback.format_exc()}")
             await self._cleanup_on_error()
             return False
@@ -273,12 +312,12 @@ class BalanceManagerV2:
             # Create REST-only hybrid configuration
             rest_only_config = HybridPortfolioConfig(
                 websocket_primary_ratio=0.0,  # No WebSocket usage
-                rest_fallback_ratio=1.0,      # 100% REST usage
+                rest_fallback_ratio=1.0,  # 100% REST usage
                 enable_balance_validation=True,
                 enable_balance_aggregation=False,  # Disable aggregation for REST-only
                 enable_circuit_breaker=self.config.enable_circuit_breaker,
                 circuit_breaker_failure_threshold=self.config.circuit_breaker_failure_threshold,
-                circuit_breaker_recovery_timeout=self.config.circuit_breaker_recovery_timeout
+                circuit_breaker_recovery_timeout=self.config.circuit_breaker_recovery_timeout,
             )
 
             # Create REST-only hybrid manager
@@ -286,7 +325,7 @@ class BalanceManagerV2:
                 self.hybrid_manager = HybridPortfolioManager(
                     websocket_stream=None,  # No WebSocket stream
                     rest_client=self.exchange_client,
-                    config=rest_only_config
+                    config=rest_only_config,
                 )
 
                 # Start hybrid manager with timeout and error handling
@@ -299,7 +338,9 @@ class BalanceManagerV2:
                 logger.error("[BALANCE_MANAGER_V2] REST-only hybrid manager startup timed out")
                 return await self._initialize_minimal_mode()
             except Exception as manager_error:
-                logger.error(f"[BALANCE_MANAGER_V2] REST-only hybrid manager creation failed: {manager_error}")
+                logger.error(
+                    f"[BALANCE_MANAGER_V2] REST-only hybrid manager creation failed: {manager_error}"
+                )
                 return await self._initialize_minimal_mode()
 
             # Start background tasks
@@ -315,8 +356,10 @@ class BalanceManagerV2:
 
             self._initialized = True
 
-            logger.info(f"[BALANCE_MANAGER_V2] REST-only mode initialized successfully - "
-                       f"{len(self.balances)} balances loaded")
+            logger.info(
+                f"[BALANCE_MANAGER_V2] REST-only mode initialized successfully - "
+                f"{len(self.balances)} balances loaded"
+            )
             return True
 
         except Exception as e:
@@ -326,14 +369,16 @@ class BalanceManagerV2:
     async def _initialize_rest_fallback_mode(self) -> bool:
         """Initialize with REST fallback after WebSocket failure"""
         try:
-            logger.warning("[BALANCE_MANAGER_V2] WebSocket failed - switching to REST fallback mode...")
+            logger.warning(
+                "[BALANCE_MANAGER_V2] WebSocket failed - switching to REST fallback mode..."
+            )
 
             # Clean up failed WebSocket components
             if self.websocket_stream:
                 try:
                     await self.websocket_stream.stop()
-                except:
-                    pass
+                except Exception as e:
+                    self.logger.debug(f"Error stopping websocket stream: {e}")
                 self.websocket_stream = None
 
             # Initialize REST-only mode
@@ -346,12 +391,14 @@ class BalanceManagerV2:
     async def _initialize_minimal_mode(self) -> bool:
         """Initialize in minimal mode when no clients are available"""
         try:
-            logger.warning("[BALANCE_MANAGER_V2] Initializing in minimal mode - limited functionality")
+            logger.warning(
+                "[BALANCE_MANAGER_V2] Initializing in minimal mode - limited functionality"
+            )
 
             # Set up minimal state without external dependencies
             self._running = True
             self._initialized = True
-            self.stats['uptime_start'] = time.time()
+            self.stats["uptime_start"] = time.time()
 
             # Initialize empty balances
             with self._lock:
@@ -364,7 +411,9 @@ class BalanceManagerV2:
             # Start minimal background tasks (sync loop only)
             self._sync_task = asyncio.create_task(self._minimal_sync_loop())
 
-            logger.info("[BALANCE_MANAGER_V2] Minimal mode initialized - balance operations will return empty results")
+            logger.info(
+                "[BALANCE_MANAGER_V2] Minimal mode initialized - balance operations will return empty results"
+            )
             return True
 
         except Exception as e:
@@ -396,7 +445,9 @@ class BalanceManagerV2:
 
     # Primary balance access methods
 
-    async def get_balance(self, asset: str, force_refresh: bool = False) -> Optional[dict[str, Any]]:
+    async def get_balance(
+        self, asset: str, force_refresh: bool = False
+    ) -> Optional[dict[str, Any]]:
         """
         Get balance for specific asset
 
@@ -410,70 +461,80 @@ class BalanceManagerV2:
         if not self._initialized:
             raise RuntimeError("Balance manager not initialized")
 
-        self.stats['total_balance_requests'] += 1
-        self.stats['last_request_time'] = time.time()
+        self.stats["total_balance_requests"] += 1
+        self.stats["last_request_time"] = time.time()
 
         try:
             # Special handling for USDT - use standard Kraken code only
-            if asset == 'USDT':
+            if asset == "USDT":
                 # According to Kraken API docs, USDT uses standard "USDT" code
                 usdt_balance = None
 
                 # PRIORITY 1: Check WebSocket V2 Direct first
-                if self.websocket_client and hasattr(self.websocket_client, 'get_balance'):
-                    ws_balance = self.websocket_client.get_balance('USDT')
+                if self.websocket_client and hasattr(self.websocket_client, "get_balance"):
+                    ws_balance = self.websocket_client.get_balance("USDT")
                     if ws_balance:
                         usdt_balance = ws_balance
-                        logger.debug(f"[BALANCE_MANAGER_V2] USDT from WebSocket: {ws_balance.get('free', 0):.8f}")
+                        logger.debug(
+                            f"[BALANCE_MANAGER_V2] USDT from WebSocket: {ws_balance.get('free', 0):.8f}"
+                        )
 
                 # PRIORITY 2: Check hybrid manager
                 if not usdt_balance and self.hybrid_manager:
-                    hybrid_balance = await self.hybrid_manager.get_balance('USDT')
+                    hybrid_balance = await self.hybrid_manager.get_balance("USDT")
                     if hybrid_balance:
                         usdt_balance = hybrid_balance
-                        logger.debug(f"[BALANCE_MANAGER_V2] USDT from hybrid manager: {hybrid_balance.get('free', 0):.8f}")
+                        logger.debug(
+                            f"[BALANCE_MANAGER_V2] USDT from hybrid manager: {hybrid_balance.get('free', 0):.8f}"
+                        )
 
                 # PRIORITY 3: Direct exchange query
                 if not usdt_balance and self.exchange_client:
                     try:
                         exchange_balances = await self.exchange_client.fetch_balance()
-                        if exchange_balances and 'USDT' in exchange_balances:
-                            usdt_data = exchange_balances['USDT']
+                        if exchange_balances and "USDT" in exchange_balances:
+                            usdt_data = exchange_balances["USDT"]
                             usdt_balance = {
-                                'asset': 'USDT',
-                                'free': usdt_data.get('free', 0.0),
-                                'used': usdt_data.get('used', 0.0),
-                                'total': usdt_data.get('total', 0.0),
-                                'timestamp': time.time()
+                                "asset": "USDT",
+                                "free": usdt_data.get("free", 0.0),
+                                "used": usdt_data.get("used", 0.0),
+                                "total": usdt_data.get("total", 0.0),
+                                "timestamp": time.time(),
                             }
-                            logger.debug(f"[BALANCE_MANAGER_V2] USDT from exchange: {usdt_balance['free']:.8f}")
+                            logger.debug(
+                                f"[BALANCE_MANAGER_V2] USDT from exchange: {usdt_balance['free']:.8f}"
+                            )
                     except Exception as e:
                         logger.debug(f"[BALANCE_MANAGER_V2] Error fetching USDT from exchange: {e}")
 
-                if usdt_balance and usdt_balance.get('free', 0) >= 0:
-                    self.stats['successful_requests'] += 1
-                    await self._update_balance_atomic('USDT', usdt_balance, 'usdt_standard')
-                    logger.info(f"[BALANCE_MANAGER_V2] USDT balance: ${usdt_balance.get('free', 0):.8f}")
+                if usdt_balance and usdt_balance.get("free", 0) >= 0:
+                    self.stats["successful_requests"] += 1
+                    await self._update_balance_atomic("USDT", usdt_balance, "usdt_standard")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] USDT balance: ${usdt_balance.get('free', 0):.8f}"
+                    )
                     return usdt_balance
                 else:
                     logger.warning("[BALANCE_MANAGER_V2] Could not retrieve balance for USDT")
-                    self.stats['failed_requests'] += 1
+                    self.stats["failed_requests"] += 1
                     return None
 
             # Standard asset handling (non-USDT)
             # PRIORITY 1: Check WebSocket V2 Direct first (fastest and most accurate)
-            if self.websocket_client and hasattr(self.websocket_client, 'get_balance'):
+            if self.websocket_client and hasattr(self.websocket_client, "get_balance"):
                 ws_balance = self.websocket_client.get_balance(asset)
                 if ws_balance:
-                    self.stats['successful_requests'] += 1
-                    self.stats['websocket_requests'] += 1
+                    self.stats["successful_requests"] += 1
+                    self.stats["websocket_requests"] += 1
 
                     # RACE CONDITION FIX: Use async lock for atomic balance updates
-                    await self._update_balance_atomic(asset, ws_balance, 'websocket_v2_direct')
+                    await self._update_balance_atomic(asset, ws_balance, "websocket_v2_direct")
 
                     # Enhanced logging for key assets
-                    if asset in ['USDT', 'SHIB', 'MANA'] or ws_balance.get('free', 0) > 1.0:
-                        logger.info(f"[BALANCE_MANAGER_V2] {asset} balance from WebSocket V2: {ws_balance.get('free', 0):.8f}")
+                    if asset in ["USDT", "SHIB", "MANA"] or ws_balance.get("free", 0) > 1.0:
+                        logger.info(
+                            f"[BALANCE_MANAGER_V2] {asset} balance from WebSocket V2: {ws_balance.get('free', 0):.8f}"
+                        )
 
                     return ws_balance
 
@@ -483,18 +544,20 @@ class BalanceManagerV2:
                 balance_data = await self.hybrid_manager.get_balance(asset)
 
                 if balance_data:
-                    self.stats['successful_requests'] += 1
+                    self.stats["successful_requests"] += 1
 
                     # RACE CONDITION FIX: Use async lock for atomic balance updates
-                    await self._update_balance_atomic(asset, balance_data, 'hybrid_manager')
+                    await self._update_balance_atomic(asset, balance_data, "hybrid_manager")
 
                     # Enhanced logging for key assets
-                    if asset in ['USDT', 'SHIB', 'MANA'] or balance_data.get('free', 0) > 1.0:
-                        logger.info(f"[BALANCE_MANAGER_V2] {asset} balance from hybrid: {balance_data.get('free', 0):.8f}")
+                    if asset in ["USDT", "SHIB", "MANA"] or balance_data.get("free", 0) > 1.0:
+                        logger.info(
+                            f"[BALANCE_MANAGER_V2] {asset} balance from hybrid: {balance_data.get('free', 0):.8f}"
+                        )
 
                     return balance_data
                 else:
-                    self.stats['failed_requests'] += 1
+                    self.stats["failed_requests"] += 1
                     logger.warning(f"[BALANCE_MANAGER_V2] Could not retrieve balance for {asset}")
                     return None
             else:
@@ -502,17 +565,21 @@ class BalanceManagerV2:
                 with self._lock:
                     balance_data = self.balances.get(asset)
                     if balance_data:
-                        self.stats['successful_requests'] += 1
-                        logger.debug(f"[BALANCE_MANAGER_V2] Returning cached balance for {asset} (minimal mode)")
+                        self.stats["successful_requests"] += 1
+                        logger.debug(
+                            f"[BALANCE_MANAGER_V2] Returning cached balance for {asset} (minimal mode)"
+                        )
                         return balance_data
                     else:
-                        self.stats['failed_requests'] += 1
-                        logger.debug(f"[BALANCE_MANAGER_V2] No cached balance for {asset} (minimal mode)")
+                        self.stats["failed_requests"] += 1
+                        logger.debug(
+                            f"[BALANCE_MANAGER_V2] No cached balance for {asset} (minimal mode)"
+                        )
                         return None
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error getting balance for {asset}: {e}")
-            self.stats['failed_requests'] += 1
+            self.stats["failed_requests"] += 1
             return None
 
     async def get_all_balances(self, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
@@ -528,25 +595,27 @@ class BalanceManagerV2:
         if not self._initialized:
             raise RuntimeError("Balance manager not initialized")
 
-        self.stats['total_balance_requests'] += 1
-        self.stats['last_request_time'] = time.time()
+        self.stats["total_balance_requests"] += 1
+        self.stats["last_request_time"] = time.time()
 
         try:
             # PRIORITY 1: Check WebSocket V2 Direct first (fastest and most accurate)
-            if self.websocket_client and hasattr(self.websocket_client, 'balance_data'):
+            if self.websocket_client and hasattr(self.websocket_client, "balance_data"):
                 ws_balances = {}
                 for asset, balance_info in self.websocket_client.balance_data.items():
-                    if balance_info and balance_info.get('total', 0) > 0:
+                    if balance_info and balance_info.get("total", 0) > 0:
                         ws_balances[asset] = balance_info
 
                 if ws_balances:
-                    self.stats['successful_requests'] += 1
-                    self.stats['websocket_requests'] += 1
+                    self.stats["successful_requests"] += 1
+                    self.stats["websocket_requests"] += 1
 
                     # RACE CONDITION FIX: Use async lock for atomic balance updates
-                    await self._update_all_balances_atomic(ws_balances, 'websocket_v2_direct')
+                    await self._update_all_balances_atomic(ws_balances, "websocket_v2_direct")
 
-                    logger.info(f"[BALANCE_MANAGER_V2] Retrieved {len(ws_balances)} balances from WebSocket V2 Direct")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] Retrieved {len(ws_balances)} balances from WebSocket V2 Direct"
+                    )
                     return ws_balances
 
             # PRIORITY 2: Check if we have hybrid manager (full functionality)
@@ -555,33 +624,41 @@ class BalanceManagerV2:
                 all_balances = await self.hybrid_manager.get_all_balances()
 
                 if all_balances:
-                    self.stats['successful_requests'] += 1
+                    self.stats["successful_requests"] += 1
 
                     # RACE CONDITION FIX: Use async lock for atomic balance updates
-                    await self._update_all_balances_atomic(all_balances, 'hybrid_manager')
+                    await self._update_all_balances_atomic(all_balances, "hybrid_manager")
 
-                    logger.info(f"[BALANCE_MANAGER_V2] Retrieved {len(all_balances)} balances from hybrid manager")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] Retrieved {len(all_balances)} balances from hybrid manager"
+                    )
                     return all_balances
                 else:
-                    self.stats['failed_requests'] += 1
-                    logger.warning("[BALANCE_MANAGER_V2] Could not retrieve any balances from hybrid manager")
+                    self.stats["failed_requests"] += 1
+                    logger.warning(
+                        "[BALANCE_MANAGER_V2] Could not retrieve any balances from hybrid manager"
+                    )
                     return {}
             else:
                 # PRIORITY 3: Minimal mode - return cached balances
                 with self._lock:
                     cached_balances = self.balances.copy()
                     if cached_balances:
-                        self.stats['successful_requests'] += 1
-                        logger.debug(f"[BALANCE_MANAGER_V2] Returning {len(cached_balances)} cached balances (minimal mode)")
+                        self.stats["successful_requests"] += 1
+                        logger.debug(
+                            f"[BALANCE_MANAGER_V2] Returning {len(cached_balances)} cached balances (minimal mode)"
+                        )
                         return cached_balances
                     else:
-                        self.stats['failed_requests'] += 1
-                        logger.debug("[BALANCE_MANAGER_V2] No cached balances available (minimal mode)")
+                        self.stats["failed_requests"] += 1
+                        logger.debug(
+                            "[BALANCE_MANAGER_V2] No cached balances available (minimal mode)"
+                        )
                         return {}
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error getting all balances: {e}")
-            self.stats['failed_requests'] += 1
+            self.stats["failed_requests"] += 1
             return {}
 
     async def get_usdt_total(self) -> float:
@@ -596,35 +673,39 @@ class BalanceManagerV2:
 
         try:
             # PRIORITY 1: Calculate from WebSocket V2 Direct data first
-            if self.websocket_client and hasattr(self.websocket_client, 'balance_data'):
+            if self.websocket_client and hasattr(self.websocket_client, "balance_data"):
                 total = 0.0
-                usdt_variants = ['USDT', 'ZUSDT', 'USDT.M', 'USDT.S', 'USDT.F', 'USDT.B']
+                usdt_variants = ["USDT", "ZUSDT", "USDT.M", "USDT.S", "USDT.F", "USDT.B"]
 
                 for variant in usdt_variants:
                     balance_info = self.websocket_client.balance_data.get(variant)
                     if balance_info:
-                        total += balance_info.get('free', 0)
+                        total += balance_info.get("free", 0)
 
                 if total > 0:
-                    logger.info(f"[BALANCE_MANAGER_V2] USDT total from WebSocket V2 Direct: ${total:.8f}")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] USDT total from WebSocket V2 Direct: ${total:.8f}"
+                    )
                     return total
 
             # PRIORITY 2: Use hybrid manager if available
             if self.hybrid_manager:
                 total = await self.hybrid_manager.get_usdt_total()
                 if total > 0:
-                    logger.info(f"[BALANCE_MANAGER_V2] USDT total from hybrid manager: ${total:.8f}")
+                    logger.info(
+                        f"[BALANCE_MANAGER_V2] USDT total from hybrid manager: ${total:.8f}"
+                    )
                     return total
 
             # PRIORITY 3: Fallback to manual calculation from cached balances
             total = 0.0
-            usdt_variants = ['USDT', 'ZUSDT', 'USDT.M', 'USDT.S', 'USDT.F', 'USDT.B']
+            usdt_variants = ["USDT", "ZUSDT", "USDT.M", "USDT.S", "USDT.F", "USDT.B"]
 
             with self._lock:
                 for variant in usdt_variants:
                     balance_data = self.balances.get(variant)
                     if balance_data:
-                        total += balance_data.get('free', 0)
+                        total += balance_data.get("free", 0)
 
             if total > 0:
                 logger.info(f"[BALANCE_MANAGER_V2] USDT total from cached balances: ${total:.8f}")
@@ -647,7 +728,7 @@ class BalanceManagerV2:
 
             # Force refresh through hybrid manager if available
             if self.hybrid_manager:
-                if hasattr(self.hybrid_manager, 'force_refresh_balances'):
+                if hasattr(self.hybrid_manager, "force_refresh_balances"):
                     success = await self.hybrid_manager.force_refresh_balances()
                     if success:
                         # Sync updated data to legacy attributes
@@ -655,21 +736,29 @@ class BalanceManagerV2:
                         logger.info("[BALANCE_MANAGER_V2] Force refresh completed successfully")
                         return True
                     else:
-                        logger.warning("[BALANCE_MANAGER_V2] Force refresh failed in hybrid manager")
+                        logger.warning(
+                            "[BALANCE_MANAGER_V2] Force refresh failed in hybrid manager"
+                        )
                         return False
                 else:
                     # Fallback to getting all balances
                     all_balances = await self.hybrid_manager.get_all_balances()
                     if all_balances:
                         await self._sync_balance_data()
-                        logger.info("[BALANCE_MANAGER_V2] Force refresh completed via get_all_balances")
+                        logger.info(
+                            "[BALANCE_MANAGER_V2] Force refresh completed via get_all_balances"
+                        )
                         return True
                     else:
-                        logger.warning("[BALANCE_MANAGER_V2] Force refresh failed - no balances returned")
+                        logger.warning(
+                            "[BALANCE_MANAGER_V2] Force refresh failed - no balances returned"
+                        )
                         return False
             else:
                 # Minimal mode - can't refresh external data
-                logger.warning("[BALANCE_MANAGER_V2] No hybrid manager available for force refresh (minimal mode)")
+                logger.warning(
+                    "[BALANCE_MANAGER_V2] No hybrid manager available for force refresh (minimal mode)"
+                )
                 # Update timestamp to show activity
                 with self._lock:
                     self.last_update = time.time()
@@ -716,9 +805,11 @@ class BalanceManagerV2:
                 self.circuit_breaker_active = False
                 self.consecutive_failures = 0
 
-            self.stats['balance_updates_processed'] += len(balance_updates)
+            self.stats["balance_updates_processed"] += len(balance_updates)
 
-            logger.debug(f"[BALANCE_MANAGER_V2] Processed {len(balance_updates)} legacy WebSocket updates")
+            logger.debug(
+                f"[BALANCE_MANAGER_V2] Processed {len(balance_updates)} legacy WebSocket updates"
+            )
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error processing WebSocket update: {e}")
@@ -742,18 +833,20 @@ class BalanceManagerV2:
             asset = balance_update.asset
 
             # RACE CONDITION FIX: Use async lock for atomic balance updates
-            await self._update_balance_atomic(asset, balance_data, 'websocket_stream')
+            await self._update_balance_atomic(asset, balance_data, "websocket_stream")
 
-            self.stats['balance_updates_processed'] += 1
+            self.stats["balance_updates_processed"] += 1
 
             # Call legacy callbacks
             if self.config.enable_balance_callbacks:
                 await self._call_balance_callbacks(asset, balance_data)
 
             # Enhanced logging for key assets
-            if asset in ['USDT', 'SHIB', 'MANA'] or balance_update.free_balance > 1.0:
-                logger.info(f"[BALANCE_MANAGER_V2] {asset} updated via WebSocket: "
-                           f"{float(balance_update.free_balance):.8f}")
+            if asset in ["USDT", "SHIB", "MANA"] or balance_update.free_balance > 1.0:
+                logger.info(
+                    f"[BALANCE_MANAGER_V2] {asset} updated via WebSocket: "
+                    f"{float(balance_update.free_balance):.8f}"
+                )
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error handling balance update: {e}")
@@ -781,18 +874,18 @@ class BalanceManagerV2:
         async with self._async_lock:
             try:
                 # Check if this update is newer than existing data
-                current_timestamp = balance_data.get('timestamp', time.time())
+                current_timestamp = balance_data.get("timestamp", time.time())
                 existing_balance = self.balances.get(asset, {})
-                existing_timestamp = existing_balance.get('timestamp', 0)
+                existing_timestamp = existing_balance.get("timestamp", 0)
 
                 # Only update if this data is newer or if no existing data
                 if current_timestamp >= existing_timestamp:
                     # Add timestamp and source metadata
                     enhanced_balance_data = {
                         **balance_data,
-                        'timestamp': current_timestamp,
-                        'source': source,
-                        'last_updated': time.time()
+                        "timestamp": current_timestamp,
+                        "source": source,
+                        "last_updated": time.time(),
                     }
 
                     # Thread-safe update of shared state
@@ -803,16 +896,24 @@ class BalanceManagerV2:
                         self.circuit_breaker_active = False
                         self.consecutive_failures = 0
 
-                    logger.debug(f"[BALANCE_MANAGER_V2] Atomically updated {asset} balance from {source}")
+                    logger.debug(
+                        f"[BALANCE_MANAGER_V2] Atomically updated {asset} balance from {source}"
+                    )
                 else:
-                    logger.debug(f"[BALANCE_MANAGER_V2] Skipped outdated balance update for {asset} "
-                               f"(existing: {existing_timestamp}, new: {current_timestamp})")
+                    logger.debug(
+                        f"[BALANCE_MANAGER_V2] Skipped outdated balance update for {asset} "
+                        f"(existing: {existing_timestamp}, new: {current_timestamp})"
+                    )
 
             except Exception as e:
-                logger.error(f"[BALANCE_MANAGER_V2] Error in atomic balance update for {asset}: {e}")
+                logger.error(
+                    f"[BALANCE_MANAGER_V2] Error in atomic balance update for {asset}: {e}"
+                )
                 raise
 
-    async def _update_all_balances_atomic(self, balances_dict: dict[str, dict[str, Any]], source: str):
+    async def _update_all_balances_atomic(
+        self, balances_dict: dict[str, dict[str, Any]], source: str
+    ):
         """
         Atomically update all balances with conflict resolution
 
@@ -827,24 +928,26 @@ class BalanceManagerV2:
 
                 # Process each balance with timestamp validation
                 for asset, balance_data in balances_dict.items():
-                    balance_timestamp = balance_data.get('timestamp', current_time)
+                    balance_timestamp = balance_data.get("timestamp", current_time)
                     existing_balance = self.balances.get(asset, {})
-                    existing_timestamp = existing_balance.get('timestamp', 0)
+                    existing_timestamp = existing_balance.get("timestamp", 0)
 
                     # Only include newer balance data
                     if balance_timestamp >= existing_timestamp:
                         updated_balances[asset] = {
                             **balance_data,
-                            'timestamp': balance_timestamp,
-                            'source': source,
-                            'last_updated': current_time
+                            "timestamp": balance_timestamp,
+                            "source": source,
+                            "last_updated": current_time,
                         }
 
                 if updated_balances:
                     # Thread-safe bulk update of shared state
                     with self._lock:
                         # Clear existing balances only if we have replacements
-                        if len(updated_balances) >= len(self.balances) * 0.8:  # 80% coverage threshold
+                        if (
+                            len(updated_balances) >= len(self.balances) * 0.8
+                        ):  # 80% coverage threshold
                             self.balances.clear()
                             self.websocket_balances.clear()
 
@@ -857,9 +960,13 @@ class BalanceManagerV2:
                         self.circuit_breaker_active = False
                         self.consecutive_failures = 0
 
-                    logger.debug(f"[BALANCE_MANAGER_V2] Atomically updated {len(updated_balances)} balances from {source}")
+                    logger.debug(
+                        f"[BALANCE_MANAGER_V2] Atomically updated {len(updated_balances)} balances from {source}"
+                    )
                 else:
-                    logger.debug(f"[BALANCE_MANAGER_V2] No newer balance data to update from {source}")
+                    logger.debug(
+                        f"[BALANCE_MANAGER_V2] No newer balance data to update from {source}"
+                    )
 
             except Exception as e:
                 logger.error(f"[BALANCE_MANAGER_V2] Error in atomic all-balances update: {e}")
@@ -884,7 +991,9 @@ class BalanceManagerV2:
 
                 self.last_update = time.time()
 
-            logger.info(f"[BALANCE_MANAGER_V2] Synced {len(all_balances)} balances to legacy attributes")
+            logger.info(
+                f"[BALANCE_MANAGER_V2] Synced {len(all_balances)} balances to legacy attributes"
+            )
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error syncing balance data: {e}")
@@ -970,20 +1079,25 @@ class BalanceManagerV2:
     async def _log_performance_metrics(self):
         """Log performance metrics"""
         try:
-            uptime = time.time() - self.stats['uptime_start']
-            success_rate = (self.stats['successful_requests'] /
-                           max(self.stats['total_balance_requests'], 1) * 100)
+            uptime = time.time() - self.stats["uptime_start"]
+            success_rate = (
+                self.stats["successful_requests"]
+                / max(self.stats["total_balance_requests"], 1)
+                * 100
+            )
 
             # Get component statuses
             ws_status = self.websocket_stream.get_status() if self.websocket_stream else {}
             self.hybrid_manager.get_status() if self.hybrid_manager else {}
 
-            logger.info(f"[BALANCE_MANAGER_V2] Performance Summary - "
-                       f"Uptime: {uptime:.1f}s, "
-                       f"Requests: {self.stats['total_balance_requests']}, "
-                       f"Success Rate: {success_rate:.1f}%, "
-                       f"WebSocket: {ws_status.get('state', 'unknown')}, "
-                       f"Balances Cached: {len(self.balances)}")
+            logger.info(
+                f"[BALANCE_MANAGER_V2] Performance Summary - "
+                f"Uptime: {uptime:.1f}s, "
+                f"Requests: {self.stats['total_balance_requests']}, "
+                f"Success Rate: {success_rate:.1f}%, "
+                f"WebSocket: {ws_status.get('state', 'unknown')}, "
+                f"Balances Cached: {len(self.balances)}"
+            )
 
         except Exception as e:
             logger.error(f"[BALANCE_MANAGER_V2] Error logging performance metrics: {e}")
@@ -1002,41 +1116,46 @@ class BalanceManagerV2:
 
     def get_status(self) -> dict[str, Any]:
         """Get comprehensive status information"""
-        uptime = time.time() - self.stats['uptime_start'] if self.stats['uptime_start'] > 0 else 0
-        success_rate = (self.stats['successful_requests'] /
-                       max(self.stats['total_balance_requests'], 1) * 100)
+        uptime = time.time() - self.stats["uptime_start"] if self.stats["uptime_start"] > 0 else 0
+        success_rate = (
+            self.stats["successful_requests"] / max(self.stats["total_balance_requests"], 1) * 100
+        )
 
         status = {
-            'initialized': self._initialized,
-            'running': self._running,
-            'uptime_seconds': uptime,
-            'balance_count': len(self.balances),
-            'websocket_balance_count': len(self.websocket_balances),
-            'last_update': self.last_update,
-            'time_since_update': time.time() - self.last_update if self.last_update > 0 else float('inf'),
-            'circuit_breaker_active': self.circuit_breaker_active,
-            'consecutive_failures': self.consecutive_failures,
-            'success_rate_percent': success_rate,
-            'statistics': dict(self.stats),
-            'mode': 'minimal' if not self.hybrid_manager else ('websocket_primary' if self.websocket_stream else 'rest_only')
+            "initialized": self._initialized,
+            "running": self._running,
+            "uptime_seconds": uptime,
+            "balance_count": len(self.balances),
+            "websocket_balance_count": len(self.websocket_balances),
+            "last_update": self.last_update,
+            "time_since_update": time.time() - self.last_update
+            if self.last_update > 0
+            else float("inf"),
+            "circuit_breaker_active": self.circuit_breaker_active,
+            "consecutive_failures": self.consecutive_failures,
+            "success_rate_percent": success_rate,
+            "statistics": dict(self.stats),
+            "mode": "minimal"
+            if not self.hybrid_manager
+            else ("websocket_primary" if self.websocket_stream else "rest_only"),
         }
 
         # Add component statuses if available
         if self.websocket_stream:
             try:
-                status['websocket_stream'] = self.websocket_stream.get_status()
+                status["websocket_stream"] = self.websocket_stream.get_status()
             except Exception as e:
-                status['websocket_stream'] = {'error': str(e), 'status': 'error'}
+                status["websocket_stream"] = {"error": str(e), "status": "error"}
         else:
-            status['websocket_stream'] = {'status': 'not_available'}
+            status["websocket_stream"] = {"status": "not_available"}
 
         if self.hybrid_manager:
             try:
-                status['hybrid_manager'] = self.hybrid_manager.get_status()
+                status["hybrid_manager"] = self.hybrid_manager.get_status()
             except Exception as e:
-                status['hybrid_manager'] = {'error': str(e), 'status': 'error'}
+                status["hybrid_manager"] = {"error": str(e), "status": "error"}
         else:
-            status['hybrid_manager'] = {'status': 'not_available'}
+            status["hybrid_manager"] = {"status": "not_available"}
 
         return status
 
@@ -1054,9 +1173,9 @@ class BalanceManagerV2:
 
 
 # Factory function for easy integration
-async def create_balance_manager_v2(websocket_client,
-                                   exchange_client,
-                                   config: Optional[BalanceManagerV2Config] = None) -> BalanceManagerV2:
+async def create_balance_manager_v2(
+    websocket_client, exchange_client, config: Optional[BalanceManagerV2Config] = None
+) -> BalanceManagerV2:
     """
     Factory function to create and initialize Balance Manager V2
 

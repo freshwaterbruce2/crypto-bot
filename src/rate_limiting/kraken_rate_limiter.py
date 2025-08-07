@@ -46,8 +46,9 @@ class TokenBucket:
     Implements the token bucket algorithm with configurable capacity,
     refill rate, and burst handling.
     """
-    capacity: int                    # Maximum tokens
-    refill_rate: float              # Tokens per second
+
+    capacity: int  # Maximum tokens
+    refill_rate: float  # Tokens per second
     tokens: float = field(init=False)  # Current token count
     last_refill: float = field(default_factory=time.time)
 
@@ -114,8 +115,9 @@ class SlidingWindow:
     Maintains a time-based sliding window of requests to provide
     precise rate limiting over specific time periods.
     """
-    window_size: float              # Window size in seconds
-    max_requests: int               # Maximum requests in window
+
+    window_size: float  # Window size in seconds
+    max_requests: int  # Maximum requests in window
     requests: deque = field(default_factory=deque)  # Request timestamps
 
     def add_request(self, timestamp: Optional[float] = None):
@@ -201,9 +203,10 @@ class PenaltyTracker:
     Implements Kraken's penalty point system with tier-based
     maximum limits and decay rates.
     """
-    max_points: int                 # Maximum penalty points
-    decay_rate: float               # Points per second decay
-    points: float = 0.0             # Current penalty points
+
+    max_points: int  # Maximum penalty points
+    decay_rate: float  # Points per second decay
+    points: float = 0.0  # Current penalty points
     last_update: float = field(default_factory=time.time)
 
     def add_penalty(self, points: int):
@@ -273,10 +276,7 @@ class CircuitBreaker:
     """
 
     def __init__(
-        self,
-        failure_threshold: int = 5,
-        recovery_timeout: float = 30.0,
-        success_threshold: int = 3
+        self, failure_threshold: int = 5, recovery_timeout: float = 30.0, success_threshold: int = 3
     ):
         """
         Initialize circuit breaker.
@@ -295,7 +295,9 @@ class CircuitBreaker:
         self.success_count = 0
         self.last_failure_time = 0.0
 
-        logger.info(f"Circuit breaker initialized: threshold={failure_threshold}, timeout={recovery_timeout}s")
+        logger.info(
+            f"Circuit breaker initialized: threshold={failure_threshold}, timeout={recovery_timeout}s"
+        )
 
     def can_proceed(self) -> bool:
         """
@@ -348,7 +350,7 @@ class CircuitBreaker:
             "failure_count": self.failure_count,
             "success_count": self.success_count,
             "time_since_last_failure": time.time() - self.last_failure_time,
-            "can_proceed": self.can_proceed()
+            "can_proceed": self.can_proceed(),
         }
 
 
@@ -377,7 +379,7 @@ class KrakenRateLimiter2025:
         api_key: Optional[str] = None,
         enable_queue: bool = True,
         enable_circuit_breaker: bool = True,
-        persistence_path: Optional[str] = None
+        persistence_path: Optional[str] = None,
     ):
         """
         Initialize Kraken rate limiter.
@@ -405,17 +407,13 @@ class KrakenRateLimiter2025:
         # Circuit breaker
         self.circuit_breaker = None
         if enable_circuit_breaker:
-            self.circuit_breaker = CircuitBreaker(
-                failure_threshold=5,
-                recovery_timeout=30.0
-            )
+            self.circuit_breaker = CircuitBreaker(failure_threshold=5, recovery_timeout=30.0)
 
         # Request queue
         self.request_queue = None
         if enable_queue:
             self.request_queue = RequestQueue(
-                max_size=self.config.max_queue_size,
-                cleanup_interval=30.0
+                max_size=self.config.max_queue_size, cleanup_interval=30.0
             )
 
         # Order tracking for age-based penalties
@@ -423,18 +421,15 @@ class KrakenRateLimiter2025:
 
         # Statistics and monitoring
         self.stats = {
-            'requests_made': 0,
-            'requests_blocked': 0,
-            'requests_queued': 0,
-            'penalty_points_added': 0,
-            'circuit_breaker_trips': 0,
-            'average_response_time': 0.0,
-            'endpoint_stats': defaultdict(lambda: {
-                'requests': 0,
-                'blocks': 0,
-                'penalties': 0,
-                'average_time': 0.0
-            })
+            "requests_made": 0,
+            "requests_blocked": 0,
+            "requests_queued": 0,
+            "penalty_points_added": 0,
+            "circuit_breaker_trips": 0,
+            "average_response_time": 0.0,
+            "endpoint_stats": defaultdict(
+                lambda: {"requests": 0, "blocks": 0, "penalties": 0, "average_time": 0.0}
+            ),
         }
 
         # Persistence
@@ -457,16 +452,16 @@ class KrakenRateLimiter2025:
         self.token_buckets = {
             EndpointType.PRIVATE: TokenBucket(
                 capacity=self.config.private_limit,
-                refill_rate=self.config.private_limit / 60.0  # per second
+                refill_rate=self.config.private_limit / 60.0,  # per second
             ),
             EndpointType.PUBLIC: TokenBucket(
                 capacity=self.config.public_limit,
-                refill_rate=self.config.public_limit / 60.0  # per second
+                refill_rate=self.config.public_limit / 60.0,  # per second
             ),
             EndpointType.WEBSOCKET: TokenBucket(
                 capacity=60,  # Higher limit for WebSocket
-                refill_rate=1.0  # 60 per minute
-            )
+                refill_rate=1.0,  # 60 per minute
+            ),
         }
 
     def _init_sliding_windows(self):
@@ -474,24 +469,23 @@ class KrakenRateLimiter2025:
         self.sliding_windows = {
             EndpointType.PRIVATE: SlidingWindow(
                 window_size=60.0,  # 1 minute window
-                max_requests=self.config.private_limit
+                max_requests=self.config.private_limit,
             ),
             EndpointType.PUBLIC: SlidingWindow(
                 window_size=60.0,  # 1 minute window
-                max_requests=self.config.public_limit
+                max_requests=self.config.public_limit,
             ),
             EndpointType.WEBSOCKET: SlidingWindow(
                 window_size=60.0,  # 1 minute window
-                max_requests=60
-            )
+                max_requests=60,
+            ),
         }
 
     def _init_penalty_trackers(self):
         """Initialize penalty point trackers."""
         # Global penalty tracker
         self.penalty_tracker = PenaltyTracker(
-            max_points=self.config.max_penalty_points,
-            decay_rate=self.config.penalty_decay_rate
+            max_points=self.config.max_penalty_points, decay_rate=self.config.penalty_decay_rate
         )
 
         # Per-endpoint penalty tracking
@@ -539,7 +533,7 @@ class KrakenRateLimiter2025:
         endpoint: str,
         weight: Optional[int] = None,
         order_age_seconds: Optional[float] = None,
-        priority: RequestPriority = RequestPriority.NORMAL
+        priority: RequestPriority = RequestPriority.NORMAL,
     ) -> tuple[bool, str, float]:
         """
         Check if request can proceed within rate limits.
@@ -563,7 +557,7 @@ class KrakenRateLimiter2025:
 
             # Check circuit breaker
             if self.circuit_breaker and not self.circuit_breaker.can_proceed():
-                self.stats['requests_blocked'] += 1
+                self.stats["requests_blocked"] += 1
                 return False, "Circuit breaker open", 30.0
 
             # Calculate penalty points
@@ -574,34 +568,46 @@ class KrakenRateLimiter2025:
             # Check global penalty limit
             if not self.penalty_tracker.can_add_points(penalty_points):
                 wait_time = self.penalty_tracker.time_until_available(penalty_points)
-                self.stats['requests_blocked'] += 1
-                return False, f"Penalty limit exceeded ({self.penalty_tracker.get_current_points():.1f}/{self.config.max_penalty_points})", wait_time
+                self.stats["requests_blocked"] += 1
+                return (
+                    False,
+                    f"Penalty limit exceeded ({self.penalty_tracker.get_current_points():.1f}/{self.config.max_penalty_points})",
+                    wait_time,
+                )
 
             # Check token bucket
             token_bucket = self.token_buckets[endpoint_config.endpoint_type]
             if not token_bucket.consume(weight):
                 wait_time = token_bucket.time_until_available(weight)
-                self.stats['requests_blocked'] += 1
-                return False, f"Token bucket depleted ({token_bucket.get_available_tokens()}/{token_bucket.capacity})", wait_time
+                self.stats["requests_blocked"] += 1
+                return (
+                    False,
+                    f"Token bucket depleted ({token_bucket.get_available_tokens()}/{token_bucket.capacity})",
+                    wait_time,
+                )
 
             # Check sliding window
             sliding_window = self.sliding_windows[endpoint_config.endpoint_type]
             if not sliding_window.can_make_request():
                 wait_time = sliding_window.time_until_available()
-                self.stats['requests_blocked'] += 1
+                self.stats["requests_blocked"] += 1
                 # Return tokens since we can't proceed
                 token_bucket.tokens = min(token_bucket.capacity, token_bucket.tokens + weight)
-                return False, f"Sliding window limit exceeded ({sliding_window.get_request_count()}/{sliding_window.max_requests})", wait_time
+                return (
+                    False,
+                    f"Sliding window limit exceeded ({sliding_window.get_request_count()}/{sliding_window.max_requests})",
+                    wait_time,
+                )
 
             # All checks passed - record the request
             sliding_window.add_request()
             self.penalty_tracker.add_penalty(penalty_points)
 
             # Update statistics
-            self.stats['requests_made'] += 1
-            self.stats['penalty_points_added'] += penalty_points
-            self.stats['endpoint_stats'][endpoint]['requests'] += 1
-            self.stats['endpoint_stats'][endpoint]['penalties'] += penalty_points
+            self.stats["requests_made"] += 1
+            self.stats["penalty_points_added"] += penalty_points
+            self.stats["endpoint_stats"][endpoint]["requests"] += 1
+            self.stats["endpoint_stats"][endpoint]["penalties"] += penalty_points
 
             processing_time = time.time() - start_time
             self._update_response_time_stats(endpoint, processing_time)
@@ -626,7 +632,7 @@ class KrakenRateLimiter2025:
         weight: Optional[int] = None,
         order_age_seconds: Optional[float] = None,
         priority: RequestPriority = RequestPriority.NORMAL,
-        timeout_seconds: Optional[float] = None
+        timeout_seconds: Optional[float] = None,
     ) -> bool:
         """
         Wait until request can proceed within rate limits.
@@ -664,7 +670,7 @@ class KrakenRateLimiter2025:
                 attempt,
                 self.config.base_backoff_seconds,
                 self.config.backoff_multiplier,
-                min(wait_time, self.config.max_backoff_seconds)
+                min(wait_time, self.config.max_backoff_seconds),
             )
 
             logger.info(
@@ -690,7 +696,7 @@ class KrakenRateLimiter2025:
         order_age_seconds: Optional[float] = None,
         priority: RequestPriority = RequestPriority.NORMAL,
         timeout_seconds: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ) -> Any:
         """
         Execute function with automatic rate limit handling.
@@ -738,9 +744,9 @@ class KrakenRateLimiter2025:
             # Record failure
             if self.circuit_breaker:
                 self.circuit_breaker.record_failure()
-                self.stats['circuit_breaker_trips'] += 1
+                self.stats["circuit_breaker_trips"] += 1
 
-            self.stats['endpoint_stats'][endpoint]['blocks'] += 1
+            self.stats["endpoint_stats"][endpoint]["blocks"] += 1
             logger.error(f"Function execution failed for {endpoint}: {e}")
             raise
 
@@ -787,49 +793,43 @@ class KrakenRateLimiter2025:
     def get_status(self) -> dict[str, Any]:
         """Get comprehensive rate limiter status."""
         status = {
-            'account_tier': self.account_tier.value,
-            'api_key': self.api_key[:8] + "..." if self.api_key else None,
-            'uptime_seconds': time.time() - getattr(self, '_start_time', time.time()),
-
+            "account_tier": self.account_tier.value,
+            "api_key": self.api_key[:8] + "..." if self.api_key else None,
+            "uptime_seconds": time.time() - getattr(self, "_start_time", time.time()),
             # Token bucket status
-            'token_buckets': {
+            "token_buckets": {
                 endpoint_type.value: {
-                    'available': bucket.get_available_tokens(),
-                    'capacity': bucket.capacity,
-                    'utilization': 1.0 - (bucket.get_available_tokens() / bucket.capacity)
+                    "available": bucket.get_available_tokens(),
+                    "capacity": bucket.capacity,
+                    "utilization": 1.0 - (bucket.get_available_tokens() / bucket.capacity),
                 }
                 for endpoint_type, bucket in self.token_buckets.items()
             },
-
             # Sliding window status
-            'sliding_windows': {
+            "sliding_windows": {
                 endpoint_type.value: {
-                    'current_requests': window.get_request_count(),
-                    'max_requests': window.max_requests,
-                    'utilization': window.get_request_count() / window.max_requests
+                    "current_requests": window.get_request_count(),
+                    "max_requests": window.max_requests,
+                    "utilization": window.get_request_count() / window.max_requests,
                 }
                 for endpoint_type, window in self.sliding_windows.items()
             },
-
             # Penalty tracker status
-            'penalty_tracker': {
-                'current_points': round(self.penalty_tracker.get_current_points(), 1),
-                'max_points': self.penalty_tracker.max_points,
-                'utilization': self.penalty_tracker.get_current_points() / self.penalty_tracker.max_points,
-                'decay_rate': self.penalty_tracker.decay_rate
+            "penalty_tracker": {
+                "current_points": round(self.penalty_tracker.get_current_points(), 1),
+                "max_points": self.penalty_tracker.max_points,
+                "utilization": self.penalty_tracker.get_current_points()
+                / self.penalty_tracker.max_points,
+                "decay_rate": self.penalty_tracker.decay_rate,
             },
-
             # Circuit breaker status
-            'circuit_breaker': self.circuit_breaker.get_state() if self.circuit_breaker else None,
-
+            "circuit_breaker": self.circuit_breaker.get_state() if self.circuit_breaker else None,
             # Queue status
-            'request_queue': self.request_queue.get_stats() if self.request_queue else None,
-
+            "request_queue": self.request_queue.get_stats() if self.request_queue else None,
             # Order tracking
-            'tracked_orders': len(self.order_times),
-
+            "tracked_orders": len(self.order_times),
             # Statistics
-            'statistics': self.stats.copy()
+            "statistics": self.stats.copy(),
         }
 
         return status
@@ -845,49 +845,44 @@ class KrakenRateLimiter2025:
             Endpoint statistics
         """
         if endpoint:
-            return self.stats['endpoint_stats'].get(endpoint, {})
-        return dict(self.stats['endpoint_stats'])
+            return self.stats["endpoint_stats"].get(endpoint, {})
+        return dict(self.stats["endpoint_stats"])
 
     def reset_stats(self):
         """Reset all statistics."""
         self.stats = {
-            'requests_made': 0,
-            'requests_blocked': 0,
-            'requests_queued': 0,
-            'penalty_points_added': 0,
-            'circuit_breaker_trips': 0,
-            'average_response_time': 0.0,
-            'endpoint_stats': defaultdict(lambda: {
-                'requests': 0,
-                'blocks': 0,
-                'penalties': 0,
-                'average_time': 0.0
-            })
+            "requests_made": 0,
+            "requests_blocked": 0,
+            "requests_queued": 0,
+            "penalty_points_added": 0,
+            "circuit_breaker_trips": 0,
+            "average_response_time": 0.0,
+            "endpoint_stats": defaultdict(
+                lambda: {"requests": 0, "blocks": 0, "penalties": 0, "average_time": 0.0}
+            ),
         }
         logger.info("Rate limiter statistics reset")
 
     def _update_response_time_stats(self, endpoint: str, response_time: float):
         """Update response time statistics."""
         # Global average
-        total_requests = self.stats['requests_made']
+        total_requests = self.stats["requests_made"]
         if total_requests == 1:
-            self.stats['average_response_time'] = response_time
+            self.stats["average_response_time"] = response_time
         else:
-            self.stats['average_response_time'] = (
-                (self.stats['average_response_time'] * (total_requests - 1) + response_time) /
-                total_requests
-            )
+            self.stats["average_response_time"] = (
+                self.stats["average_response_time"] * (total_requests - 1) + response_time
+            ) / total_requests
 
         # Endpoint-specific average
-        endpoint_stats = self.stats['endpoint_stats'][endpoint]
-        endpoint_requests = endpoint_stats['requests']
+        endpoint_stats = self.stats["endpoint_stats"][endpoint]
+        endpoint_requests = endpoint_stats["requests"]
         if endpoint_requests == 1:
-            endpoint_stats['average_time'] = response_time
+            endpoint_stats["average_time"] = response_time
         else:
-            endpoint_stats['average_time'] = (
-                (endpoint_stats['average_time'] * (endpoint_requests - 1) + response_time) /
-                endpoint_requests
-            )
+            endpoint_stats["average_time"] = (
+                endpoint_stats["average_time"] * (endpoint_requests - 1) + response_time
+            ) / endpoint_requests
 
     async def _background_cleanup(self):
         """Background task for cleanup operations."""
@@ -900,7 +895,8 @@ class KrakenRateLimiter2025:
                 cutoff_time = current_time - 3600  # Remove orders older than 1 hour
 
                 old_orders = [
-                    order_id for order_id, timestamp in self.order_times.items()
+                    order_id
+                    for order_id, timestamp in self.order_times.items()
                     if timestamp < cutoff_time
                 ]
 
@@ -922,17 +918,17 @@ class KrakenRateLimiter2025:
 
         try:
             state = {
-                'account_tier': self.account_tier.value,
-                'api_key': self.api_key,
-                'timestamp': time.time(),
-                'penalty_points': self.penalty_tracker.get_current_points(),
-                'order_times': self.order_times.copy(),
-                'statistics': self.stats.copy()
+                "account_tier": self.account_tier.value,
+                "api_key": self.api_key,
+                "timestamp": time.time(),
+                "penalty_points": self.penalty_tracker.get_current_points(),
+                "order_times": self.order_times.copy(),
+                "statistics": self.stats.copy(),
             }
 
             self.persistence_path.parent.mkdir(parents=True, exist_ok=True)
 
-            with open(self.persistence_path, 'w') as f:
+            with open(self.persistence_path, "w") as f:
                 json.dump(state, f, indent=2)
 
             logger.debug(f"Rate limiter state saved to {self.persistence_path}")
@@ -951,20 +947,24 @@ class KrakenRateLimiter2025:
 
             # Restore order times (only recent ones)
             current_time = time.time()
-            saved_time = state.get('timestamp', current_time)
+            saved_time = state.get("timestamp", current_time)
             age_limit = 3600  # 1 hour
 
             if (current_time - saved_time) < age_limit:
-                self.order_times = state.get('order_times', {})
+                self.order_times = state.get("order_times", {})
 
                 # Apply penalty decay since last save
                 elapsed = current_time - saved_time
-                saved_penalty = state.get('penalty_points', 0)
-                decayed_penalty = max(0, saved_penalty - (elapsed * self.penalty_tracker.decay_rate))
+                saved_penalty = state.get("penalty_points", 0)
+                decayed_penalty = max(
+                    0, saved_penalty - (elapsed * self.penalty_tracker.decay_rate)
+                )
                 self.penalty_tracker.points = decayed_penalty
                 self.penalty_tracker.last_update = current_time
 
-                logger.info(f"Rate limiter state loaded: penalty_points={decayed_penalty:.1f}, orders={len(self.order_times)}")
+                logger.info(
+                    f"Rate limiter state loaded: penalty_points={decayed_penalty:.1f}, orders={len(self.order_times)}"
+                )
 
         except Exception as e:
             logger.error(f"Failed to load rate limiter state: {e}")
