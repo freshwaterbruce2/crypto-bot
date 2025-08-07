@@ -11,4 +11,5 @@ from src.core.bot import KrakenTradingBot
 
 # Make sure the main class is available for legacy imports
 TradingBot = KrakenTradingBot  # Alias for compatibility
-__all__ = ['KrakenTradingBot', 'TradingBot']
+# IDE integration test - this comment can be removed
+__all__ = ["KrakenTradingBot", "TradingBot"]
