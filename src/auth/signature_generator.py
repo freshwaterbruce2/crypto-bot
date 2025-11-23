@@ -358,6 +358,3 @@ class SignatureGenerator:
             f"key_length={len(self._private_key_bytes)})"
         )
 
-    def __repr__(self) -> str:
-        """Detailed representation for debugging"""
-        return self.__str__()
