@@ -1,6 +1,6 @@
 # Kraken REST API Client
 
-Comprehensive async REST API client for Kraken with full integration support including authentication, rate limiting, circuit breaker protection, and comprehensive error handling.
+Comprehensive async REST API client for Kraken with full integration support. Includes authentication, rate limiting, circuit breaker protection, and comprehensive error handling.
 
 ## Features
 
