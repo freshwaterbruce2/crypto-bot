@@ -90,3 +90,4 @@ nox==2023.4.22
 pydoc-markdown==4.8.2
 mkdocs==1.5.3
 mkdocs-material==9.5.3
+marshmallow>=3.26.2 # not directly required, pinned by Snyk to avoid a vulnerability
